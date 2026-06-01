@@ -12,6 +12,7 @@
 
 pub use super::class_handles::{
     event_emitter_async_resource_handle_probe, event_emitter_handle_probe, event_emitter_on,
+    fetch_handle_kind_probe, js_register_fetch_handle_kind_probe, FetchHandleKindProbeFn,
     handle_method_dispatch, handle_own_property_names_dispatch, handle_property_dispatch,
     handle_property_set_dispatch, handle_prototype_dispatch,
     js_register_event_emitter_async_resource_handle_probe, js_register_event_emitter_handle_probe,
