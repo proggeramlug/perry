@@ -11,15 +11,19 @@ runtime (`PERRY_WEBVIEW=servo`), so Servo can be compared/tested as it matures.
 - ✅ **Servo runs and renders, verified headlessly** — a `SoftwareRenderingContext`
   probe loaded a page, composited frames, and reading back the pixel buffer
   showed the expected content (see "Proof" below).
-- ⛔ **In-process integration is BLOCKED by a dependency conflict**: servo pulls
-  `rusqlite 0.37 → libsqlite3-sys 0.35`; perry uses `rusqlite 0.32 →
-  libsqlite3-sys 0.30`. Both declare `links = "sqlite3"`, and Cargo forbids two
-  versions of a `links` native lib in one workspace lockfile. This fails at
-  **dependency-resolution time**, so `servo` cannot be added even as an
-  *optional* dep of any perry crate until perry's `rusqlite` is aligned to 0.37.
+- ⛔ **In-process integration is BLOCKED by a `libsqlite3-sys` conflict that
+  cascades across perry's whole DB layer.** servo needs `rusqlite 0.37 →
+  libsqlite3-sys 0.35`; perry uses `rusqlite 0.32 → libsqlite3-sys 0.30` AND
+  `sqlx 0.8.6 → sqlx-sqlite → libsqlite3-sys 0.30`. Only one `links="sqlite3"`
+  version is allowed per workspace lockfile, and it fails at **resolution time**
+  (so `servo` can't be added even as an optional dep). Bumping rusqlite alone
+  doesn't help — it then collides with sqlx. Unblocking requires a **coordinated
+  `rusqlite 0.32→0.37` + `sqlx 0.8→0.9` migration** across sqlite/mysql/postgres,
+  or running Servo **out-of-process**.
 
 So the **engine is proven workable**; the **perry integration has a hard
-prerequisite** (a perry-core `rusqlite` bump) or needs an out-of-process design.
+prerequisite** — a coordinated rusqlite+sqlx DB-layer migration, or an
+out-of-process Servo design (recommended).
 
 ## Proof (reproducible)
 
@@ -83,18 +87,34 @@ bindgen output, and servo's storage can't drop sqlite. The conflict is at
 resolution time, so it breaks the *whole workspace* the moment `servo` appears
 in any Cargo.toml.
 
+### It is NOT just rusqlite — it cascades into sqlx (attempted + reverted)
+
+Bumping perry to `rusqlite 0.37` (→ libsqlite3-sys 0.35) was attempted. It then
+collides with perry's **`sqlx 0.8.6`**: `sqlx 0.8.6` hard-pins
+`sqlx-sqlite = "=0.8.6"` (pulled via the `macros` feature for `query!` offline
+checking), and `sqlx-sqlite 0.8.6` pins `libsqlite3-sys` to the **0.30-era**
+version — irreconcilable with rusqlite 0.37's 0.35. Three crates consume sqlx
+(`perry-ext-mysql2`, `perry-ext-pg`, `perry-stdlib`). So the in-process unblock
+is a **coordinated `rusqlite 0.32→0.37` AND `sqlx 0.8→0.9` migration across
+perry's entire sqlite/mysql/postgres DB layer** — a large, high-regression-risk
+change (validated only with live MySQL/Postgres + the full adapter suites), far
+beyond a webview toggle. Attempt reverted; workspace restored.
+
 ## Paths forward
 
-1. **Align perry to `rusqlite 0.37` (libsqlite3-sys 0.35)** — bump it in
-   `perry-stdlib` + `perry-ext-better-sqlite3`, migrate the API deltas (0.32→0.37),
-   and re-validate perry's sqlite (better-sqlite3 / node:sqlite / Drizzle). This
-   is a **separate, breaking, test-heavy perry-core change** and the gating
-   prerequisite for *any* in-process Servo embedding. Once done, the
-   `servo-webview` feature + `ServoEngine` (below) drop in.
-2. **Out-of-process Servo** — run Servo in a child helper binary (its own dep
-   graph, so no `libsqlite3-sys` clash) and share a render surface (IOSurface)
-   + an IPC channel with perry. Bigger architecture (the Verso/`versoview`
-   model, now archived), but it sidesteps the conflict and isolates crashes.
+1. **Coordinated DB-layer migration** — bump `rusqlite 0.32→0.37` AND
+   `sqlx 0.8→0.9` so the whole workspace unifies on `libsqlite3-sys 0.35`,
+   migrating the API deltas in `perry-stdlib` (sqlite + sqlx), `perry-ext-better-sqlite3`,
+   `perry-ext-mysql2`, `perry-ext-pg`, then re-validate sqlite/MySQL/Postgres/Drizzle.
+   This is the gating prerequisite for *any* in-process Servo embedding and a
+   significant standalone effort with real regression risk to perry's DB stack.
+2. **Out-of-process Servo (recommended)** — run Servo in a child helper binary
+   (its own dep graph, so the `libsqlite3-sys`/sqlx clash simply doesn't exist)
+   and share a render surface (IOSurface) + an IPC channel with perry. Bigger
+   architecture (the Verso/`versoview` model, now archived), but it sidesteps
+   the entire conflict, isolates Servo crashes, and decouples Servo's heavy/
+   churning dep tree from the perry workspace. Given the cascade above, this is
+   the cleaner path.
 
 ## Integration design (for when unblocked)
 
