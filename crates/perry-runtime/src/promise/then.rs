@@ -181,6 +181,13 @@ pub extern "C" fn js_promise_report_unhandled_rejections() {
             eprintln!("Uncaught (in promise) {reason_str}");
         }
     }
+    // arm64_32 watch diagnostics: mirror the rejection into the data-container
+    // trace (watchOS stderr is unobservable).
+    {
+        let reason_str_ptr = crate::value::js_jsvalue_to_string(reason);
+        let reason_str = unsafe { crate::exception::string_header_to_string(reason_str_ptr) };
+        crate::diag_checkpoint(&format!("UNHANDLED REJECTION: {}", reason_str));
+    }
     // Match Node's unhandled-rejection exit code (1). The event loop has
     // already drained, so there is no pending work to lose.
     std::process::exit(1);

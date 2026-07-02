@@ -152,6 +152,10 @@ pub extern "C" fn js_throw(value: f64) -> ! {
         }
 
         if (*s).try_depth == 0 {
+            // arm64_32 watch diagnostics: stderr is invisible on watchOS, so
+            // mirror the uncaught-exception report into the data-container
+            // trace before exiting (no-op when PANIC_LOG_DIR is unset).
+            log_uncaught_to_diag(value);
             print_uncaught(value);
             std::process::exit(1);
         }
@@ -257,6 +261,34 @@ pub(crate) unsafe fn string_header_to_string(ptr: *const crate::string::StringHe
 /// regular objects probe for `.message`/`.stack`, everything else goes
 /// through the generic `js_jsvalue_to_string` (which handles strings,
 /// numbers, booleans, arrays, user `[Symbol.toPrimitive]`, etc.).
+/// arm64_32 watch diagnostics: write the uncaught-exception report to the
+/// data-container trace file (watchOS stderr is unobservable). Mirrors
+/// `print_uncaught`'s ErrorHeader fast path with a to-string fallback.
+fn log_uncaught_to_diag(value: f64) {
+    let bits = value.to_bits();
+    let top16 = bits >> 48;
+    let mut out = format!("UNCAUGHT EXCEPTION (bits=0x{:016X})\n", bits);
+    if top16 == 0x7FFD {
+        let ptr = (bits & 0x0000_FFFF_FFFF_FFFF) as usize;
+        if ptr >= 0x10000 {
+            let object_type = unsafe { *(ptr as *const u32) };
+            if object_type == crate::error::OBJECT_TYPE_ERROR {
+                let eh = ptr as *const crate::error::ErrorHeader;
+                let name = unsafe { string_header_to_string((*eh).name) };
+                let msg = unsafe { string_header_to_string((*eh).message) };
+                let stack = unsafe { string_header_to_string((*eh).stack) };
+                out.push_str(&format!("{}: {}\n{}\n", name, msg, stack));
+                crate::diag_checkpoint(&out);
+                return;
+            }
+        }
+    }
+    let s_ptr = crate::value::js_jsvalue_to_string(value);
+    let s = unsafe { string_header_to_string(s_ptr) };
+    out.push_str(&s);
+    crate::diag_checkpoint(&out);
+}
+
 fn print_uncaught(value: f64) {
     let bits = value.to_bits();
     let top16 = bits >> 48;
