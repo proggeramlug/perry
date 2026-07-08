@@ -66,6 +66,17 @@ fn strict_buffer_from_value(value: f64) -> *const BufferHeader {
 /// Validate that a manifest `f64` parameter is a JavaScript number.
 #[no_mangle]
 pub extern "C" fn js_native_abi_check_f64(value: f64) -> f64 {
+    // arm64_32 watch diagnostics: identify the offending value before the
+    // throw (tag nibble says undefined / pointer / string / etc.).
+    {
+        let js_value = JSValue::from_bits(value.to_bits());
+        if !js_value.is_int32() && !js_value.is_number() {
+            crate::diag_checkpoint(&format!(
+                "FFI f64 check FAIL bits=0x{:016X}",
+                value.to_bits()
+            ));
+        }
+    }
     strict_number(value, "Expected number for native f64 parameter")
 }
 

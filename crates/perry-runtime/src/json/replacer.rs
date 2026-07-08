@@ -78,7 +78,10 @@ unsafe fn root_holder(value_f64: f64) -> f64 {
 /// dereferenceable `GcHeader` — feeding it to `gc_obj_type` SIGBUSes.
 #[inline]
 fn ptr_derefable(ptr: usize) -> bool {
-    (ptr >> 48) <= 1 && ptr >= 0x10000 && (ptr & 0x7) == 0
+    // Cast before shifting: on ILP32 (arm64_32/wasm32) `usize` is 32-bit and
+    // `>> 48` is a compile error; as u64 the top-16 check is trivially true
+    // there (a 32-bit pointer's top bits are 0), matching the intent.
+    ((ptr as u64) >> 48) <= 1 && ptr >= 0x10000 && (ptr & 0x7) == 0
 }
 
 unsafe fn apply_to_json(value: f64) -> f64 {

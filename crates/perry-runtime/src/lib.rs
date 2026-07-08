@@ -534,6 +534,57 @@ mod init_guard {
     }
 }
 
+extern "C" {
+    /// The codegen-emitted game entry (PERRY_ENTRY_SYMBOL=_perry_user_main →
+    /// Mach-O `__perry_user_main`).
+    fn _perry_user_main();
+}
+
+/// arm64_32 watch diagnostics: run the game entry on a Rust `std::thread`
+/// (the watch Swift entry calls this instead of Thread(block:)).
+#[no_mangle]
+pub extern "C" fn perry_run_game_on_std_thread() {
+    std::thread::Builder::new()
+        .name("bloom-game".to_string())
+        .stack_size(2 * 1024 * 1024)
+        .spawn(|| unsafe { _perry_user_main() })
+        .expect("spawn bloom-game std::thread");
+}
+
+/// arm64_32 watch diagnostics: writable data-container dir supplied by Swift.
+pub(crate) static PANIC_LOG_DIR: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+/// arm64_32 watch diagnostics: append a line to `{dir}/trace.txt` (watchOS has
+/// no visible stderr and lldb is broken on arm64_32).
+pub(crate) fn diag_checkpoint(label: &str) {
+    if let Some(dir) = PANIC_LOG_DIR.get() {
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(format!("{}/trace.txt", dir))
+        {
+            let _ = writeln!(f, "{}", label);
+        }
+    }
+}
+
+/// arm64_32 watch diagnostics: Swift passes NSHomeDirectory()/Documents here at
+/// app init; stash it for diag_checkpoint and reset the per-launch trace.
+#[no_mangle]
+pub extern "C" fn perry_install_panic_log_hook(dir_ptr: *const std::os::raw::c_char) {
+    let dir = if dir_ptr.is_null() {
+        String::new()
+    } else {
+        unsafe { std::ffi::CStr::from_ptr(dir_ptr) }
+            .to_string_lossy()
+            .into_owned()
+    };
+    let _ = PANIC_LOG_DIR.set(dir.clone());
+    let _ = std::fs::write(format!("{}/perry-hook-installed.txt", dir), b"installed\n");
+    let _ = std::fs::write(format!("{}/trace.txt", dir), b"--- start ---\n");
+}
+
 /// Lightweight runtime init for widget extensions.
 /// Sets up GC, arena, and string interning without starting tokio or the full async runtime.
 /// Called from generated Swift/Kotlin glue before invoking the native provider function.
