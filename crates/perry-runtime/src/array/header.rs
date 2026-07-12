@@ -678,8 +678,14 @@ pub(crate) fn normalize_array_receiver(arr: *const ArrayHeader) -> *const ArrayH
     // memory, so the stale `0x1008` floor used to SIGSEGV (the addr_class.rs
     // band-map documents this exact #4665/#4800/#5432 shape). Treat any
     // handle-band payload as "not an array" and fall through to clean_arr_ptr,
-    // which nulls it — a safe empty-result no-op instead of a crash.
-    if crate::value::addr_class::is_above_handle_band(raw_addr) {
+    // which nulls it — a safe empty-result no-op instead of a crash. The upper
+    // bound matters too: a type-erased array-method fold can reach here with a
+    // primitive `number` whose f64 bits alias a sub-heap address (a denormal
+    // ~415 GB), which clears the band floor but is NOT a mapped GcHeader — pair
+    // the band check with `is_valid_obj_ptr` so that byte read can't SIGBUS.
+    if crate::value::addr_class::is_above_handle_band(raw_addr)
+        && crate::value::addr_class::is_valid_obj_ptr(raw_addr as *const u8)
+    {
         // Hot path first: read the GC-header obj_type byte. A genuine Array is
         // GC_TYPE_ARRAY and falls straight through to `clean_arr_ptr` — the
         // only added cost for `[1,2,3].map(...)` etc. is this one byte read and

@@ -12,11 +12,37 @@ use std::fmt::Write as FmtWrite;
 // ─── JSON.stringify ───────────────────────────────────────────────────────────
 
 #[inline]
+/// True only when `ptr` is an address the GC actually tracks — an arena
+/// allocation (nursery/old/longlived per the page-map) or a registered malloc
+/// object. Both checks are dereference-FREE (page-metadata / registry lookups),
+/// so this rejects a forged pointer before any field read.
+///
+/// A magnitude check alone is not enough here: a type-erased `JSON.stringify`
+/// walk can reach `is_object_pointer` with a primitive `number` whose f64 bits
+/// land INSIDE the heap magnitude window (~2–5 TB, e.g. `0x0000_0347_0000_0000`)
+/// yet point at an UNMAPPED page — `is_valid_obj_ptr` accepts it and the
+/// subsequent `(*obj).keys_array` read then SIGSEGVs. Mirrors the `path.rs` /
+/// `current_heap_header_for_user_ptr` Unknown→malloc rule.
+#[inline]
+unsafe fn ptr_is_tracked_heap_object(ptr: *const u8) -> bool {
+    if crate::value::addr_class::is_handle_band(ptr as usize) {
+        return false;
+    }
+    let gc_header = (ptr as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
+    !matches!(
+        crate::arena::classify_heap_generation(ptr as usize),
+        crate::arena::HeapGeneration::Unknown
+    ) || crate::gc::gc_malloc_header_is_tracked(gc_header)
+}
+
 pub(crate) unsafe fn is_object_pointer(ptr: *const u8) -> bool {
     // A small-handle-band id (revocable-Proxy id, fetch/zlib/stream handle) is
     // never a real ObjectHeader; reading its `keys_array` field would deref
     // unmapped memory (#4904/#1843 pattern). Reject by magnitude before any load.
-    if crate::value::addr_class::is_handle_band(ptr as usize) {
+    // The upper end matters too: a plausible-but-unmapped in-range garbage
+    // address (a denormal number) would likewise SIGSEGV on the `keys_array`
+    // read — require the address be a genuinely GC-tracked allocation first.
+    if !ptr_is_tracked_heap_object(ptr) {
         return false;
     }
     let obj = ptr as *const crate::ObjectHeader;
@@ -58,6 +84,13 @@ pub(crate) unsafe fn is_object_pointer(ptr: *const u8) -> bool {
 /// to disambiguate an empty object from a corrupted pointer after the
 /// `keys_len > 0` `is_object_pointer` probe fails.
 pub(crate) unsafe fn object_has_no_own_keys(ptr: *const u8) -> bool {
+    // Same deref-safety gate as `is_object_pointer`: this is called on the same
+    // value right after that probe returns false (to tell an empty object apart
+    // from a corrupted pointer), so an unmapped in-range garbage address must be
+    // rejected here too before the `keys_array` field read.
+    if !ptr_is_tracked_heap_object(ptr) {
+        return false;
+    }
     let keys = (*(ptr as *const crate::ObjectHeader)).keys_array;
     if keys.is_null() {
         return true;

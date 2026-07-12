@@ -39,7 +39,27 @@ pub extern "C" fn js_jsvalue_same_value_zero(a: f64, b: f64) -> i32 {
 #[inline(always)]
 pub(crate) fn normalize_raw_object_bits(bits: u64) -> u64 {
     if bits >> 48 == 0 && bits >= 0x10000 {
-        POINTER_TAG | bits
+        // Only recover a raw-bitcast pointer when the address is an actually
+        // GC-tracked allocation. A bare `number`'s denormal bits can land in the
+        // heap magnitude window (~2–5 TB, e.g. `0x0000_04b2_ffff_fffa`) yet point
+        // at an UNMAPPED page; reboxing it as POINTER_TAG would then make
+        // equality's string/object compare — or `Array.indexOf`/`includes`,
+        // `Set`/`Map` membership, all of which funnel through this helper —
+        // dereference unmapped memory (SIGSEGV). The page-map / malloc-registry
+        // probes are dereference-free, so untracked bits stay as-is and compare
+        // as an ordinary number.
+        let addr = bits as usize;
+        let tracked = !matches!(
+            crate::arena::classify_heap_generation(addr),
+            crate::arena::HeapGeneration::Unknown
+        ) || crate::gc::gc_malloc_header_is_tracked(
+            (addr - crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader,
+        );
+        if tracked {
+            POINTER_TAG | bits
+        } else {
+            bits
+        }
     } else {
         bits
     }

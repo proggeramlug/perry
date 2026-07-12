@@ -343,9 +343,19 @@ pub(super) unsafe fn dispatch_raw_pointer(
     // Perry sometimes bitcasts I64 pointers to F64 without NaN-boxing (POINTER_TAG).
     // These appear as subnormal floats with bits in the valid heap address range
     // (above the handle band, below 0x0000_FFFF_FFFF_FFFF, upper 16 bits = 0).
+    //
+    // `is_above_handle_band` alone (>= 1 MB) is NOT sufficient: a type-erased
+    // dynamic method dispatch can arrive here with a primitive `number` whose
+    // f64 bits merely LOOK like a low address — e.g. a denormal `0x…60900001fa`
+    // (~415 GB). That clears the band check and `>> 48 == 0`, gets reboxed as a
+    // POINTER_TAG value, and the `(*gc_header).obj_type` read below then
+    // dereferences unmapped memory (SIGBUS; real macOS allocations are ~3–5 TB).
+    // Gate on `is_valid_obj_ptr` — the canonical heap-range predicate — so a
+    // non-heap value falls through to the primitive/undefined handling instead.
     if !jsval.is_pointer()
         && !object.is_nan()
         && crate::value::addr_class::is_above_handle_band(raw_bits as usize)
+        && crate::value::addr_class::is_valid_obj_ptr(raw_bits as *const u8)
         && (raw_bits >> 48) == 0
     {
         // Looks like a raw heap pointer — re-wrap as POINTER_TAG and retry
