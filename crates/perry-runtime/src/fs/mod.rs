@@ -75,9 +75,19 @@ fn std_fd_registry() -> StdHashMap<i32, fs::File> {
     {
         use std::os::fd::FromRawFd;
         for fd in 0..=2 {
-            // SAFETY: `dup` returns a fresh descriptor we exclusively own, so
-            // handing it to `File` (which closes on drop) cannot double-close.
-            let duped = unsafe { libc::dup(fd) };
+            // `F_DUPFD_CLOEXEC` rather than `dup`: the duplicate must not
+            // survive an `exec`. A plain `dup` leaves close-on-exec clear, so
+            // every `child_process` spawn would inherit these copies of the
+            // std streams — and a child holding a write end open is exactly
+            // what makes a pipe reader hang waiting for an EOF that never
+            // comes. Duplicating and setting the flag atomically also closes
+            // the window where a concurrent spawn could inherit the fd before
+            // a follow-up `fcntl(F_SETFD)` ran.
+            //
+            // SAFETY: the call returns a fresh descriptor we exclusively own,
+            // so handing it to `File` (which closes on drop) cannot
+            // double-close.
+            let duped = unsafe { libc::fcntl(fd, libc::F_DUPFD_CLOEXEC, 0) };
             if duped >= 0 {
                 map.insert(fd, unsafe { fs::File::from_raw_fd(duped) });
             }

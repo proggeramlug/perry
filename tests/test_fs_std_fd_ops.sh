@@ -30,10 +30,8 @@ env PERRY_ALLOW_UNIMPLEMENTED=1 PERRY_RUNTIME_DIR="$RUNTIME_DIR" "$PERRY" compil
     exit 1
   }
 
-set +e
-"$BIN" >"$STDOUT_LOG" 2>"$STDERR_LOG" </dev/null
-run_rc=$?
-set -e
+run_rc=0
+"$BIN" >"$STDOUT_LOG" 2>"$STDERR_LOG" </dev/null || run_rc=$?
 if [[ "$run_rc" -ne 0 ]]; then
   echo "Perry fs std-fd fixture failed with exit code $run_rc" >&2
   echo "--- stdout ---" >&2
