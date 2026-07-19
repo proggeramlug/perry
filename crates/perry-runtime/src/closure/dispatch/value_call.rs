@@ -94,6 +94,17 @@ pub unsafe extern "C" fn js_native_call_value(
         return f64::from_bits(JSValue::undefined().bits());
     }
 
+    // PERRY_GC_EVAC_TRAP: snapshot-check the incoming args at ENTRY vs just before
+    // dispatch (PREDISP). If ENTRY is clean but PREDISP fires, this fn moved the
+    // args across its own allocation (raw args_ptr into a movable buffer). If
+    // ENTRY fires, the caller already handed us stale args.
+    #[cfg(target_pointer_width = "64")]
+    if crate::gc::gc_evac_trap_enabled() && !args_ptr.is_null() {
+        for i in 0..args_len.min(16) {
+            crate::gc::gc_evac_trap_check_value(unsafe { *args_ptr.add(i) }, "native_call_arg_ENTRY");
+        }
+    }
+
     // #3716: a built-in prototype method invoked *as a value* (the uncurry-this
     // idiom `Function.prototype.call.bind(method)`) lands here as a no-op-backed
     // closure that would just return `undefined`. Re-dispatch it by name through
@@ -182,6 +193,16 @@ pub unsafe extern "C" fn js_native_call_value(
         if let Some((fixed_arity, synth)) = lookup_closure_rest_full(func_ptr) {
             let all: Vec<f64> = (0..args_len).map(arg_at).collect();
             return dispatch_rest_bundled(closure, func_ptr, &all, fixed_arity, synth);
+        }
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    if crate::gc::gc_evac_trap_enabled() && !args_ptr.is_null() {
+        for i in 0..args_len.min(16) {
+            crate::gc::gc_evac_trap_check_value(
+                unsafe { *args_ptr.add(i) },
+                "native_call_arg_PREDISP",
+            );
         }
     }
 

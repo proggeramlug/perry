@@ -434,6 +434,22 @@ pub(crate) fn gc_evac_trap_check(user_ptr: usize, site: &str) {
     }
 }
 
+/// PERRY_GC_EVAC_TRAP WRITE-side check: if a NaN-boxed pointer/string `bits`
+/// value being STORED into a native slot (closure capture, etc.) points at an
+/// evacuated original (morgue), the storer held it un-rewritten — backtrace the
+/// store to find the holder. Unboxes the pointer first; no-op for non-pointers.
+#[cfg(target_pointer_width = "64")]
+#[inline]
+pub(crate) fn gc_evac_trap_check_value(bits: u64, site: &str) {
+    if !gc_evac_trap_enabled() {
+        return;
+    }
+    let tag = bits & crate::value::TAG_MASK;
+    if tag == crate::value::POINTER_TAG || tag == crate::value::STRING_TAG {
+        gc_evac_trap_check((bits & crate::value::POINTER_MASK) as usize, site);
+    }
+}
+
 /// DIAGNOSTIC (PERRY_GC_EVAC_ONLY_TYPE=<u8>): restrict evacuation to a single
 /// GC object type, to bisect which type's relocation corrupts a reference under
 /// the PERRY_GC_INCREMENTAL=0 repro. None = no restriction.

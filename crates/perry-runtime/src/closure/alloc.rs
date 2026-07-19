@@ -475,6 +475,11 @@ pub extern "C" fn js_closure_set_capture_bits(
     if closure.is_null() {
         return;
     }
+    // PERRY_GC_EVAC_TRAP write-side: a STALE (evacuated-original) value being
+    // captured means the compiled storer held it un-rewritten across an alloc —
+    // backtrace pins the holder (e.g. an async-fn closure captured pre-frame-alloc).
+    #[cfg(target_pointer_width = "64")]
+    crate::gc::gc_evac_trap_check_value(value_bits, "closure_capture_STORE");
     unsafe {
         let captures_ptr = closure_capture_slots_mut(closure);
         // GC_STORE_AUDIT(BARRIERED): closure bits capture write is immediately recorded via note_closure_capture_slot.
