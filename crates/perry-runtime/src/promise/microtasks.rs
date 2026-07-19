@@ -338,6 +338,18 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
                         // exception-trap routing — intact. This mirrors the
                         // INLINE_TRAP save/restore in the Inline/AsyncStep arms.
                         let scope = crate::gc::RuntimeHandleScope::new();
+                        // #GC (moving-evac): the awaited value must be rooted, not
+                        // just parked in the (scanned) CURRENT_MICROTASK_VALUE cell —
+                        // the LOCAL `value` is what we forward to the callback below,
+                        // and `async_hooks::before` / `promise_hook_before` (and the
+                        // handle-stack pushes here) can allocate → a moving GC then
+                        // relocates the value object, leaving the local `value` a
+                        // pre-move address. Forwarding that stale local handed a
+                        // resumed async step a moved (non-string) awaited value →
+                        // "path argument must be of type string" under
+                        // PERRY_GC_INCREMENTAL=0. Root it and re-read the rewritten
+                        // value at the call site (mirrors the promise/next handles).
+                        let value_handle = scope.root_nanbox_f64(value);
                         let promise_handle = scope.root_raw_mut_ptr(promise);
                         let next_handle = scope.root_raw_mut_ptr((*promise).next);
                         let prev_promise = CURRENT_MICROTASK_PROMISE.with(|c| c.get());
@@ -349,7 +361,7 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
 
                         CURRENT_MICROTASK_PROMISE.with(|c| c.set(promise));
                         CURRENT_MICROTASK_CALLBACK.with(|c| c.set(callback));
-                        CURRENT_MICROTASK_VALUE.with(|c| c.set(value));
+                        CURRENT_MICROTASK_VALUE.with(|c| c.set(value_handle.get_nanbox_f64()));
                         CURRENT_MICROTASK_NEXT.with(|c| c.set((*promise).next));
 
                         let t1 = if prof {
@@ -368,7 +380,8 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
                         let trigger_async_id = (*promise).trigger_async_id;
                         crate::async_hooks::before(async_id, trigger_async_id);
                         crate::v8::promise_hook_before(promise);
-                        let result = crate::closure::js_closure_call1(callback, value);
+                        let result =
+                            crate::closure::js_closure_call1(callback, value_handle.get_nanbox_f64());
                         // Keep the callback result rooted across `after()` (which
                         // can run JS when async_hooks are active) via the value
                         // cell, then reload promise/next from our handles — never
