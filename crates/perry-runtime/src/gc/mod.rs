@@ -322,6 +322,24 @@ pub(crate) fn gc_evac_trap_morgue_enabled() -> bool {
     })
 }
 
+/// PERRY_GC_REWRITE_INACTIVE_SHADOW (default OFF): during the evacuation rewrite
+/// pass, ALSO rewrite forwarded references in INACTIVE shadow-stack slots — slots
+/// codegen marked dead. Tests the hypothesis that the residual moving-GC
+/// corruption is a premature-deactivation liveness bug: a compiled function
+/// deactivates a shadow-stack slot while its value is still live-and-read, so the
+/// GC skips rewriting it and the later read gets a stale (pre-move) address. Safe
+/// because try_rewrite_value only touches slots pointing at a FORWARDED original.
+pub(crate) fn gc_rewrite_inactive_shadow_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_REWRITE_INACTIVE_SHADOW").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
 /// PERRY_GC_EVAC_NOREUSE (default OFF): under the evac trap, never reset/reuse
 /// general-arena blocks so an evacuated original's freed slot keeps its sentinel
 /// obj_type instead of being overwritten by a reused allocation. This turns the

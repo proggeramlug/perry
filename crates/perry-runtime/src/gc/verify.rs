@@ -902,6 +902,14 @@ pub(super) fn rewrite_mutable_root_slots_with_sources(
     mut shadow_stats: Option<&mut ShadowRootTraceStats>,
     mut root_sources: Option<&mut RootSourcesTraceStats>,
 ) {
+    // PERRY_GC_REWRITE_INACTIVE_SHADOW diagnostic: include INACTIVE shadow-stack
+    // slots in this REWRITE pass only (never the mark pass) to test the
+    // premature-deactivation liveness hypothesis. try_rewrite_value only rewrites
+    // slots that point at a FORWARDED original, so touching inactive slots is safe.
+    let include_inactive = super::gc_rewrite_inactive_shadow_enabled();
+    if include_inactive {
+        super::roots::SHADOW_VISIT_INACTIVE.with(|c| c.set(true));
+    }
     visit_mutable_root_slots(|slot| unsafe {
         let bits = slot.read();
         record_mutable_slot_scan_source(slot, bits, valid_ptrs, &mut root_sources);
@@ -918,6 +926,9 @@ pub(super) fn rewrite_mutable_root_slots_with_sources(
             }
         }
     });
+    if include_inactive {
+        super::roots::SHADOW_VISIT_INACTIVE.with(|c| c.set(false));
+    }
 }
 
 pub(super) fn rewrite_mutable_registered_roots(valid_ptrs: &ValidPointerSet) {

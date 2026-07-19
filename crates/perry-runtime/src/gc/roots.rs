@@ -1480,7 +1480,18 @@ impl MutableRootSlot {
 /// Visit every live shadow-stack slot. The visitor receives real
 /// mutable slot addresses so the same walk can support mark-only
 /// scanning and post-forwarding rewrites.
+thread_local! {
+    /// PERRY_GC_REWRITE_INACTIVE_SHADOW diagnostic: set ONLY around the rewrite
+    /// pass so `visit_shadow_stack_root_slots` also yields INACTIVE slots (so the
+    /// rewrite can fix a stale forwarded ref in a slot codegen deactivated while
+    /// its value was still live-and-read). Never set during the MARK pass (marking
+    /// an inactive slot's garbage as live would retain/corrupt).
+    pub(super) static SHADOW_VISIT_INACTIVE: std::cell::Cell<bool> =
+        const { std::cell::Cell::new(false) };
+}
+
 pub(super) fn visit_shadow_stack_root_slots(mut visit: impl FnMut(MutableRootSlot)) {
+    let include_inactive = SHADOW_VISIT_INACTIVE.with(|c| c.get());
     SHADOW.with(|cell| unsafe {
         let s = &mut *cell.get();
         if s.stack.is_empty() {
@@ -1500,7 +1511,7 @@ pub(super) fn visit_shadow_stack_root_slots(mut visit: impl FnMut(MutableRootSlo
             let base = s.stack.as_mut_ptr().add(top);
             for i in 0..slot_count {
                 let slot_idx = top + i;
-                if !s.active.get(slot_idx).copied().unwrap_or(false) {
+                if !include_inactive && !s.active.get(slot_idx).copied().unwrap_or(false) {
                     continue;
                 }
                 let bound_ptr = s.slot_ptrs.get(slot_idx).copied().unwrap_or(0) as *mut u64;
