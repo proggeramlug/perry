@@ -379,17 +379,22 @@ pub(crate) fn gc_evac_trap_check(user_ptr: usize, site: &str) {
         // slot still carries the sentinel obj_type. Reliable because block_reclaim
         // is ~0 for the app, so freed interior slots are not reused/zeroed.
         let sentinel = obj_type == EVAC_TRAP_SENTINEL_OBJ_TYPE;
+        // When morgue mode is on, do the morgue lookup on EVERY read (not just
+        // when the cheap header checks miss). Two reasons: (1) with
+        // PERRY_GC_EVAC_NOREUSE the evacuated original keeps its sentinel header,
+        // so `sentinel` matches and the reused-branch would be skipped — but we
+        // still want the lookup to CONFIRM it's a genuine evacuated original and
+        // to keep per-read timing consistent; (2) the per-read morgue lookup is
+        // what perturbs the timing-sensitive bug into the reachable-read path
+        // instead of the early 96-byte hang the cheap fast path falls into.
+        let in_morgue = gc_evac_trap_morgue_enabled() && evac_trap_in_morgue(user_ptr);
         // A FORWARDED header is only interesting if it's an evacuation ORIGINAL
         // (still in the narrow pre-release window). Array-growth stubs (#6228) are
-        // permanently FORWARDED and benign — exclude them via the morgue gate. The
-        // morgue lookup here only runs when FORWARDED is set (rare).
+        // permanently FORWARDED and benign — exclude them via the morgue gate.
         let forwarded_original =
-            (flags & GC_FLAG_FORWARDED != 0) && evac_trap_in_morgue(user_ptr);
-        // OPT-IN reused-slot detection (per-read morgue lookup on valid headers).
-        let reused = !sentinel
-            && !forwarded_original
-            && gc_evac_trap_morgue_enabled()
-            && evac_trap_in_morgue(user_ptr);
+            (flags & GC_FLAG_FORWARDED != 0) && (in_morgue || evac_trap_in_morgue(user_ptr));
+        // Reused-slot / morgue-confirmed detection.
+        let reused = !sentinel && !forwarded_original && in_morgue;
         if sentinel || forwarded_original || reused {
             use std::sync::atomic::{AtomicU32, Ordering};
             static N: AtomicU32 = AtomicU32::new(0);
