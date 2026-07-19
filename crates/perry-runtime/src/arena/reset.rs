@@ -153,6 +153,13 @@ pub(crate) fn copying_reset_from_spaces_and_flip() -> ArenaResetStats {
 /// in place and the inline allocator keeps reusing the same ~8MB
 /// arena block forever.
 pub fn arena_reset_empty_blocks(block_has_live: &[bool]) -> ArenaResetStats {
+    // PERRY_GC_EVAC_NOREUSE diagnostic: skip all general-arena block reset/dealloc
+    // so an evacuated original's freed slot is never reused — its sentinel obj_type
+    // persists and a stale read hits the sentinel unambiguously. Memory grows;
+    // diagnostic only (the PERRY_GC_INCREMENTAL=0 repro crashes fast).
+    if crate::gc::gc_evac_noreuse_enabled() {
+        return ArenaResetStats::default();
+    }
     let n_live = block_has_live.iter().filter(|&&b| b).count();
     let n_total = block_has_live.len();
     // Issue #179: only reset general-arena blocks. Longlived-arena blocks

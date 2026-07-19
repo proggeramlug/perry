@@ -322,6 +322,26 @@ pub(crate) fn gc_evac_trap_morgue_enabled() -> bool {
     })
 }
 
+/// PERRY_GC_EVAC_NOREUSE (default OFF): under the evac trap, never reset/reuse
+/// general-arena blocks so an evacuated original's freed slot keeps its sentinel
+/// obj_type instead of being overwritten by a reused allocation. This turns the
+/// AMBIGUOUS morgue signal (reused-slot reads look like both the bug and benign
+/// fresh reads) into an UNAMBIGUOUS sentinel signal: any read that lands on a
+/// preserved evacuated original is a genuinely un-rewritten reference. Grows
+/// memory (no block reclaim) — diagnostic only, for the short PERRY_GC_INCREMENTAL=0
+/// repro. Separate from the trap flag so the same binary can also do a control
+/// run (bug still reproduces with NOREUSE off).
+pub(crate) fn gc_evac_noreuse_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_EVAC_NOREUSE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
 /// PERRY_GC_L7_SKIP (default OFF): stopgap that skips evacuating objects owning
 /// address-keyed side-allocation registries. Off by default so the evacuation
 /// repro matches the clean base; the migration hook already handles Set/Map.
