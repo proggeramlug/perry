@@ -498,12 +498,6 @@ pub(super) unsafe fn dispatch_common(
                 } else {
                     f64::from_bits(crate::value::TAG_UNDEFINED)
                 };
-                let rest_ptr = if args_len > 1 && !args_ptr.is_null() {
-                    args_ptr.add(1)
-                } else {
-                    std::ptr::null()
-                };
-                let rest_len = args_len.saturating_sub(1);
                 let prev_this = IMPLICIT_THIS.with(|c| c.replace(this_arg.to_bits()));
                 // Static bound-method value (`C.m.call(x)`): arm the one-shot
                 // static-`this` override so the method body sees `x` instead
@@ -516,6 +510,21 @@ pub(super) unsafe fn dispatch_common(
                 // capture slot, not IMPLICIT_THIS; rebind to the explicit
                 // `.call(thisArg)` receiver (no-op for arrows / plain fns).
                 let call_target = crate::closure::rebind_explicit_this(object, this_arg);
+                // GC-correctness (moving-evac / #6206-family): rebind_explicit_this
+                // js_closure_alloc's whenever the callee reads `this` (any ordinary
+                // non-arrow fn), which can move the argument objects. The raw
+                // `args_ptr` snapshot then encodes PRE-move addresses, so forwarding
+                // it to js_native_call_value hands the callee a stale container
+                // (repro: an async callback's `.path` arg read back as a non-string
+                // under PERRY_GC_INCREMENTAL=0). Re-read the forwarded args from the
+                // rooted `arg_handles` (rewritten across the collection) instead —
+                // mirrors primitive_methods.rs / symbol/iterator.rs discipline.
+                let refreshed = refreshed_args();
+                let (rest_ptr, rest_len) = if refreshed.len() > 1 {
+                    (refreshed.as_ptr().add(1), refreshed.len() - 1)
+                } else {
+                    (std::ptr::null(), 0)
+                };
                 let result = crate::closure::js_native_call_value(call_target, rest_ptr, rest_len);
                 if static_target {
                     super::static_this_disarm();
@@ -573,8 +582,24 @@ pub(super) unsafe fn dispatch_common(
                 } else {
                     f64::from_bits(crate::value::TAG_UNDEFINED)
                 };
-                let args_arr_val = if args_len >= 2 && !args_ptr.is_null() {
-                    *args_ptr.add(1)
+                let prev_this = IMPLICIT_THIS.with(|c| c.replace(this_arg.to_bits()));
+                // Static bound-method value — see the matching `call` arm.
+                let static_target = super::native_module::is_static_bound_method_value(object);
+                if static_target {
+                    super::static_this_arm(this_arg);
+                }
+                // Rebind a concise/object-literal method's baked `this` slot to
+                // the explicit `.apply(thisArg)` receiver (no-op for arrows /
+                // plain fns) — see the matching `call` arm.
+                let apply_target = crate::closure::rebind_explicit_this(object, this_arg);
+                // GC-correctness (see the matching `call` arm): rebind_explicit_this
+                // can js_closure_alloc → move the argArray AND its elements. Re-read
+                // the argArray from the rooted arg_handles and build the spread buffer
+                // from its CURRENT (post-move) elements; a pre-rebind args_ptr / buf
+                // snapshot would forward the callee stale argument objects.
+                let refreshed = refreshed_args();
+                let args_arr_val = if refreshed.len() >= 2 {
+                    refreshed[1]
                 } else {
                     f64::from_bits(crate::value::TAG_UNDEFINED)
                 };
@@ -640,16 +665,6 @@ pub(super) unsafe fn dispatch_common(
                 } else {
                     (buf.as_ptr(), buf.len())
                 };
-                let prev_this = IMPLICIT_THIS.with(|c| c.replace(this_arg.to_bits()));
-                // Static bound-method value — see the matching `call` arm.
-                let static_target = super::native_module::is_static_bound_method_value(object);
-                if static_target {
-                    super::static_this_arm(this_arg);
-                }
-                // Rebind a concise/object-literal method's baked `this` slot to
-                // the explicit `.apply(thisArg)` receiver (no-op for arrows /
-                // plain fns) — see the matching `call` arm.
-                let apply_target = crate::closure::rebind_explicit_this(object, this_arg);
                 let result = crate::closure::js_native_call_value(
                     apply_target,
                     call_args_ptr,
