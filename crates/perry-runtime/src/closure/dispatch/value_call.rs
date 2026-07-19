@@ -101,7 +101,7 @@ pub unsafe extern "C" fn js_native_call_value(
     #[cfg(target_pointer_width = "64")]
     if crate::gc::gc_evac_trap_enabled() && !args_ptr.is_null() {
         for i in 0..args_len.min(16) {
-            crate::gc::gc_evac_trap_check_value(unsafe { *args_ptr.add(i) }, "native_call_arg_ENTRY");
+            crate::gc::gc_evac_trap_check_value(unsafe { (*args_ptr.add(i)).to_bits() }, "native_call_arg_ENTRY");
         }
     }
 
@@ -200,7 +200,7 @@ pub unsafe extern "C" fn js_native_call_value(
     if crate::gc::gc_evac_trap_enabled() && !args_ptr.is_null() {
         for i in 0..args_len.min(16) {
             crate::gc::gc_evac_trap_check_value(
-                unsafe { *args_ptr.add(i) },
+                unsafe { (*args_ptr.add(i)).to_bits() },
                 "native_call_arg_PREDISP",
             );
         }
