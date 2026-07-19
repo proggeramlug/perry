@@ -226,6 +226,32 @@ pub struct CompileArgs {
     #[arg(long)]
     pub debug_symbols: bool,
 
+    /// Force-drop function source text from the binary, overriding auto-detection.
+    ///
+    /// Function source (≈1× the bundle size, more with nested functions) exists only so
+    /// `Function.prototype.toString()` can return real source — dead weight for apps that
+    /// never inspect function bodies, which is nearly all CLIs/TUIs. By default Perry
+    /// keeps it only when the entry bundle looks like it reads function bodies (see
+    /// `--keep-function-source`); this flag (or `PERRY_NO_FUNCTION_SOURCE=1`) forces
+    /// elision regardless. When elided, `toString()` on a user function returns
+    /// `function name() { /* source unavailable */ }` (a valid, spec-permitted form —
+    /// `HostHasSourceTextAvailable` → false — that deliberately avoids `[native code]` so
+    /// native-detection sniffs are unaffected). Do not force this if your app or its
+    /// dependencies parse function bodies via `toString` (dependency-injection parameter
+    /// extraction, `new Function(fn.toString())` reserialization).
+    #[arg(long)]
+    pub no_function_source: bool,
+
+    /// Force-keep function source text in the binary, overriding auto-detection.
+    ///
+    /// By default Perry auto-elides function source when the entry bundle shows no sign
+    /// of reading function bodies via `toString`. Pass this flag to always retain full
+    /// source (so `Function.prototype.toString()` returns exact source) — e.g. for a
+    /// multi-module project whose non-entry modules parse function bodies, which the
+    /// entry-only auto scan does not see.
+    #[arg(long)]
+    pub keep_function_source: bool,
+
     /// Disable the per-module object cache.
     /// By default Perry caches each module's object bytes keyed by a
     /// hash of the source plus every `CompileOptions` field that can

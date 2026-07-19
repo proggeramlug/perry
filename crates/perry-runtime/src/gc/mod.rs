@@ -225,6 +225,185 @@ fn gc_force_evacuate_enabled() -> bool {
         )
 }
 
+/// Memory-parity lever: sound promotion under budgeted (incremental) GC.
+/// An idle/interactive app runs only budgeted cycles, which are non-moving AND
+/// non-tenuring by design — so long-lived survivors never leave the young gen
+/// (idle heap ~3.7x node). This opts budgeted cycles into (a) age-bumping and
+/// (b) evacuating GENUINE survivors — those in arena blocks allocated BEFORE the
+/// current cycle began (a bump-allocator frontier snapshot cleanly excludes this
+/// cycle's allocate-black births, so dead churn is never false-tenured — the
+/// #6224 700MB-garbage trap is avoided by construction). Evacuation still runs
+/// only at the atomic-finalize STW safepoint with the cycle's PRECISE shadow-
+/// stack roots. Old-page defrag stays independently gated (#6206).
+pub(super) fn gc_promote_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        gen_gc_evacuate_enabled()
+            && matches!(
+                std::env::var("PERRY_GC_PROMOTE").as_deref(),
+                Ok("1") | Ok("on") | Ok("true")
+            )
+    })
+}
+
+/// DIAGNOSTIC (PERRY_GC_EVAC_TRAP): keep evacuated originals alive+FORWARDED
+/// (skip the MARKED-clear and the stub release) so any reference the rewrite
+/// MISSED still points at a FORWARDED header instead of freed/reused memory —
+/// then a reader-side FORWARDED check (see `is_valid_string_ptr`) backtraces the
+/// exact site that holds the un-rewritten pointer, identifying the reference
+/// source not covered by a mutable root scanner. Repro: PERRY_GC_INCREMENTAL=0.
+pub(crate) fn gc_evac_trap_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_EVAC_TRAP").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
+/// PERRY_GC_EVAC_TRAP sentinel obj_type stamped onto an evacuated original when
+/// its forwarding stub is released, so a stale read of the not-yet-reused slot
+/// is unmistakable. It is out of the valid `GC_TYPE_MAX`=18 range, so
+/// `gc_type_info` returns `None` and every obj_type-keyed dispatch
+/// (finalize/side-table/layout) becomes a safe no-op. `size` is left intact so
+/// sweep free-math stays correct.
+pub(crate) const EVAC_TRAP_SENTINEL_OBJ_TYPE: u8 = 0xEE;
+
+/// PERRY_GC_EVAC_TRAP "morgue": the user-addresses of every object the moving
+/// collector evacuated this run. TRUE-quarantine diagnostic — unlike the failed
+/// marked-in-place retention (which crashed the tracer), we let the original be
+/// freed normally and instead record its address here + stamp a sentinel
+/// obj_type. A reader that touches one of these addresses is following an
+/// un-rewritten reference to an evacuated original (either its still-forwarded /
+/// sentinel-stamped header if the slot was not reused, or a slot the allocator
+/// has since reused — the app crashes fast in the repro, so reuse is rare).
+/// Global Mutex so the evac writer and any mutator reader reach it regardless of
+/// which thread runs.
+fn evac_trap_morgue() -> &'static std::sync::Mutex<std::collections::HashSet<usize>> {
+    use std::sync::OnceLock;
+    static MORGUE: OnceLock<std::sync::Mutex<std::collections::HashSet<usize>>> = OnceLock::new();
+    MORGUE.get_or_init(|| std::sync::Mutex::new(std::collections::HashSet::new()))
+}
+
+/// Record an evacuated original's user-address in the morgue (no-op unless the
+/// trap is on). Called from the evacuation forwarding-stub release path.
+pub(crate) fn gc_evac_trap_note_original(user_ptr: usize) {
+    if !gc_evac_trap_enabled() {
+        return;
+    }
+    if let Ok(mut m) = evac_trap_morgue().lock() {
+        m.insert(user_ptr);
+    }
+}
+
+fn evac_trap_in_morgue(user_ptr: usize) -> bool {
+    evac_trap_morgue()
+        .lock()
+        .map(|m| m.contains(&user_ptr))
+        .unwrap_or(false)
+}
+
+/// PERRY_GC_EVAC_TRAP_MORGUE (opt-in on top of the trap): also flag reads of a
+/// morgue address whose slot the allocator has REUSED for a different live
+/// object (the stale ref now reads valid-but-wrong data — the likely rc=1
+/// "path must be string" mode). Costs a morgue lookup on essentially every
+/// property read, so it is separate from the cheap sentinel/forwarded checks.
+pub(crate) fn gc_evac_trap_morgue_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_EVAC_TRAP_MORGUE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
+/// PERRY_GC_L7_SKIP (default OFF): stopgap that skips evacuating objects owning
+/// address-keyed side-allocation registries. Off by default so the evacuation
+/// repro matches the clean base; the migration hook already handles Set/Map.
+pub(crate) fn gc_l7_skip_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_L7_SKIP").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
+/// PERRY_GC_EVAC_TRAP reader-side check: if `user_ptr` is a live heap object
+/// whose GcHeader is FORWARDED, an un-rewritten reference to an evacuated object
+/// reached this reader — backtrace it. `site` labels the read path so the source
+/// (unscanned native structure) is identifiable. No-op unless the trap is on.
+#[cfg(target_pointer_width = "64")]
+#[inline]
+pub(crate) fn gc_evac_trap_check(user_ptr: usize, site: &str) {
+    // Lower bound skips the small fake-pointer bands (proxy handles live in
+    // [0xF0000, 0x100000), SSO/tagged values set high bits) so we never deref a
+    // non-heap pointer; upper bound rejects NaN-boxed/tagged values. This upper
+    // bound is what the earlier hand-written inline traps were MISSING — without
+    // it a tagged JSValue (0x7ffd…) gets dereferenced and SIGSEGVs the trap.
+    if user_ptr < 0x0010_0000 || user_ptr > 0x0000_FFFF_FFFF_FFFF || !gc_evac_trap_enabled() {
+        return;
+    }
+    unsafe {
+        let hdr = (user_ptr as *const u8).sub(GC_HEADER_SIZE) as *const GcHeader;
+        let flags = (*hdr).gc_flags;
+        let obj_type = (*hdr).obj_type;
+        // PRIMARY (cheap, no morgue, no false positives): the freed original's
+        // slot still carries the sentinel obj_type. Reliable because block_reclaim
+        // is ~0 for the app, so freed interior slots are not reused/zeroed.
+        let sentinel = obj_type == EVAC_TRAP_SENTINEL_OBJ_TYPE;
+        // A FORWARDED header is only interesting if it's an evacuation ORIGINAL
+        // (still in the narrow pre-release window). Array-growth stubs (#6228) are
+        // permanently FORWARDED and benign — exclude them via the morgue gate. The
+        // morgue lookup here only runs when FORWARDED is set (rare).
+        let forwarded_original =
+            (flags & GC_FLAG_FORWARDED != 0) && evac_trap_in_morgue(user_ptr);
+        // OPT-IN reused-slot detection (per-read morgue lookup on valid headers).
+        let reused = !sentinel
+            && !forwarded_original
+            && gc_evac_trap_morgue_enabled()
+            && evac_trap_in_morgue(user_ptr);
+        if sentinel || forwarded_original || reused {
+            use std::sync::atomic::{AtomicU32, Ordering};
+            static N: AtomicU32 = AtomicU32::new(0);
+            if N.fetch_add(1, Ordering::Relaxed) < 8 {
+                let reason = if forwarded_original {
+                    "FORWARDED-original"
+                } else if sentinel {
+                    "SENTINEL(freed original, slot not reused)"
+                } else {
+                    "MORGUE(reused slot — stale ref reads a different object)"
+                };
+                eprintln!(
+                    "[EVAC-TRAP] {site} on evacuated-original {user_ptr:#x} reason={reason} \
+                     obj_type={obj_type}\n{}",
+                    std::backtrace::Backtrace::force_capture()
+                );
+            }
+        }
+    }
+}
+
+/// DIAGNOSTIC (PERRY_GC_EVAC_ONLY_TYPE=<u8>): restrict evacuation to a single
+/// GC object type, to bisect which type's relocation corrupts a reference under
+/// the PERRY_GC_INCREMENTAL=0 repro. None = no restriction.
+pub(crate) fn gc_evac_only_type() -> Option<u8> {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<Option<u8>> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_EVAC_ONLY_TYPE")
+            .ok()
+            .and_then(|s| s.trim().parse::<u8>().ok())
+    })
+}
+
 fn gc_verify_evacuation_enabled() -> bool {
     matches!(
         std::env::var("PERRY_GC_VERIFY_EVACUATION").as_deref(),

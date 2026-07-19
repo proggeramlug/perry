@@ -34,6 +34,8 @@ pub extern "C" fn js_object_get_field(obj: *const ObjectHeader, field_index: u32
     if obj.is_null() || (obj as usize) < 0x10000 {
         return JSValue::undefined();
     }
+    #[cfg(target_pointer_width = "64")]
+    crate::gc::gc_evac_trap_check(obj as usize, "get_field[idx]");
     unsafe {
         // Bounds check: check inline fields first, then overflow map
         let fc = (*obj).field_count;
@@ -73,6 +75,10 @@ pub(crate) unsafe fn own_data_field_by_name(
     if key.is_null() {
         return None;
     }
+    // PERRY_GC_EVAC_TRAP: catch a stale evacuated container reaching the own-data
+    // field reader before the obj_type gate below silently rejects the sentinel.
+    #[cfg(target_pointer_width = "64")]
+    crate::gc::gc_evac_trap_check(obj as usize, "own_data_by_name");
     if obj.is_null() || !is_valid_obj_ptr(obj as *const u8) {
         return None;
     }
@@ -94,7 +100,7 @@ pub(crate) unsafe fn own_data_field_by_name(
     if key_count > 65536 {
         return None;
     }
-    let alloc_limit = std::cmp::max((*obj).field_count, 8) as usize;
+    let alloc_limit = std::cmp::max((*obj).field_count, crate::object::INLINE_SLOT_FLOOR as u32) as usize;
     for i in 0..key_count {
         let key_val = crate::array::js_array_get(keys, i as u32);
         // #1781: accept inline SSO short keys — `is_string()` is

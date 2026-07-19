@@ -1094,7 +1094,14 @@ impl GcCycleState {
             // cycles keep the exact set: they force the conservative
             // scan, whose TRACED roots cannot tolerate a heuristic
             // false positive.
-            if self.progress_kind.is_budgeted() {
+            // Under PERRY_GC_PROMOTE budgeted cycles MOVE (evacuate tenured
+            // survivors), so the reference rewrite must correctly re-point at
+            // forwarded objects — which the classifier deliberately rejects
+            // ("forwarded = stale" assumes non-moving, trace.rs). Build the
+            // exact census for them instead. It uses precise (shadow-stack)
+            // roots, not a conservative scan, so the classifier_mode
+            // no-conservative-scan invariant is preserved.
+            if self.progress_kind.is_budgeted() && !super::oldgen::gc_promote_evac_this_cycle() {
                 ValidPointerSetBuilder::new_classifier()
             } else {
                 ValidPointerSetBuilder::new()
@@ -1536,7 +1543,9 @@ impl GcCycleState {
             trace.evacuation_policy = minor.evacuation_policy;
         }
         assert!(
-            !progress_kind.is_budgeted() || !minor.evacuation_policy.enabled,
+            !progress_kind.is_budgeted()
+                || !minor.evacuation_policy.enabled
+                || super::gc_promote_enabled(),
             "budgeted low-pause minor GC must remain non-moving"
         );
 
@@ -1544,6 +1553,13 @@ impl GcCycleState {
         let mut evacuation_sticky = StickyRememberedSet::default();
         if minor.evacuation_policy.enabled {
             let phase_start = trace_phase_start(&self.trace);
+            // NOTE: an earlier attempt pinned native/C-stack refs here at the
+            // atomic-finalize, but (a) it SIGSEGV'd (wrong stack context — GC
+            // frames, not mutator frames) and (b) it was the wrong fix: forcing a
+            // full conservative scan does NOT fix the base evacuation corruption
+            // (PERRY_CONSERVATIVE_STACK_SCAN=full still corrupts), so the missed
+            // reference is NOT on the stack — it's a heap/side-table/native
+            // structure ref not rewritten, or a try_rewrite_value misidentify.
             let mut evacuated_new_headers = Vec::new();
             let mut evacuated_original_headers = Vec::new();
             evacuation = evacuate_tenured_nursery_objects_collecting(
@@ -1587,8 +1603,25 @@ impl GcCycleState {
                     verify_evacuated_no_stale_forwarded_refs(valid_ptrs);
                     trace_phase_record(&mut self.trace, "evacuation_verify", phase_start);
                 }
-                let released =
-                    release_evacuated_original_forwarding_stubs(&evacuated_original_headers);
+                // Budgeted promote cycles use precise-only roots (no
+                // conservative scan) and an incremental mark, so they cannot
+                // prove EVERY reference to an evacuated original was rewritten
+                // (a missed one — e.g. via the finalize->sweep gap — would dangle
+                // once the original is freed and its slot reused, reading back
+                // garbage like a small string "trac..."). So DON'T free the
+                // originals now: retain the forwarding stubs (the minor sweep
+                // already keeps them, retain_all_forwarded_stubs=true) so a missed
+                // reference safely follows the forwarding pointer, and let a later
+                // full trace reclaim the genuinely-unreferenced stubs.
+                // PERRY_GC_EVAC_TRAP no longer skips the release (the old
+                // marked-in-place retention crashed the tracer). The trap now
+                // lets the originals be freed normally and detects stale reads
+                // via the morgue + sentinel that the release path stamps.
+                let released = if super::oldgen::gc_promote_evac_this_cycle() {
+                    EvacuationTraceStats::default()
+                } else {
+                    release_evacuated_original_forwarding_stubs(&evacuated_original_headers)
+                };
                 evacuation.released_original_objects = released.released_original_objects;
                 evacuation.released_original_bytes = released.released_original_bytes;
                 evacuation.released_original_reusable_bytes =
@@ -1600,6 +1633,12 @@ impl GcCycleState {
 
         minor.evacuation = evacuation;
         minor.evacuation_sticky = evacuation_sticky;
+        // This evacuating cycle consumed the accumulated tenured estimate;
+        // reset it so the census/evac only re-triggers once enough new
+        // survivors have tenured again.
+        if super::oldgen::gc_promote_evac_this_cycle() {
+            super::oldgen::gc_promote_reset_tenured();
+        }
     }
 
     fn step_sweep(&mut self, budget: GcWorkBudget) {
@@ -1633,7 +1672,15 @@ impl GcCycleState {
                     // block counts). Promotion under incremental happens via
                     // the copied-minor path, which runs between budgeted
                     // cycles and ages genuinely-surviving objects only.
-                    let age_bump = !self.progress_kind.is_budgeted();
+                    // Budgeted cycles normally skip age-bump: allocate-black
+                    // (#6224) marks mid-cycle births MARKED and age-bump reads
+                    // MARKED as "survived" → dead churn would false-tenure. Under
+                    // PERRY_GC_PROMOTE we DO age-bump budgeted cycles, but the
+                    // sweep restricts it to objects in blocks allocated BEFORE
+                    // this cycle's frontier (genuine survivors), so allocate-black
+                    // births are never aged — soundness is preserved by position.
+                    let age_bump =
+                        !self.progress_kind.is_budgeted() || super::gc_promote_enabled();
                     (age_bump, false, targeted_old_blocks, minor.malloc_sweep_due)
                 } else {
                     (false, true, None, true)

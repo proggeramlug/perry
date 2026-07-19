@@ -114,6 +114,7 @@ unchanged modules, leaving the trace dir empty).
 | Flag | Description |
 |------|-------------|
 | `--minify` | Minify and obfuscate output (auto-enabled for `--target web`) |
+| `--no-function-source` / `--keep-function-source` | Control whether function source text is embedded in the binary. By **default (auto)** Perry drops it unless the entry bundle looks like it reads function bodies via `toString` — smaller binary and lower RSS. When dropped, `Function.prototype.toString()` returns `function name() { /* source unavailable */ }` (a spec-permitted form that, unlike `[native code]`, does not trip native-detection sniffs). `--no-function-source` (or `PERRY_NO_FUNCTION_SOURCE=1`) forces drop; `--keep-function-source` forces keep. See [Function source & `toString`](no-function-source.md). |
 | `--march <CPU>` | CPU baseline for the generated machine code: an LLVM CPU name (`x86-64-v2`, `x86-64-v3`, `znver2`, `apple-m1`, …), `native` (tune to the build machine — the default for host builds), or `generic` (the target architecture's portable baseline — the default for cross builds). Pin this when the binary runs on other machines: a host-native build on an AVX-512 box otherwise SIGILLs on older x86-64 CPUs. Also settable via `PERRY_TARGET_CPU` or perry.toml `[build] march`; `[build] native_tuning = false` is shorthand for `generic`. Applies to app code and the auto-optimized runtime/stdlib rebuild. |
 
 Minification strips comments, collapses whitespace, and mangles local variable/parameter/non-exported function names for smaller output.

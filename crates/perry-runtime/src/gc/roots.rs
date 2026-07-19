@@ -649,6 +649,17 @@ pub(super) fn try_mark_conservative_word(
 
     unsafe {
         let header = header_from_user_ptr(target as *const u8);
+        // PERRY_GC_PROMOTE finalize pre-pin: pin every stack-referenced object
+        // (young OR old, marked or not) WITHOUT tracing, so budgeted evacuation
+        // never moves an object a native/C frame still points at. Must run before
+        // the MARKED early-out — survivors are already marked but still need
+        // pinning to stay put.
+        if super::barrier::CONS_PIN_STACK_NO_MARK.with(|c| c.get()) {
+            if (*header).gc_flags & GC_FLAG_PINNED != 0 {
+                return false;
+            }
+            return pin_conservative_root_header(header);
+        }
         if (*header).gc_flags & GC_FLAG_MARKED != 0 {
             return false;
         }
@@ -1740,6 +1751,19 @@ pub(super) fn pin_conservative_root_header(header: *mut GcHeader) -> bool {
         let mut pinned = s.borrow_mut();
         pinned.insert(header as usize)
     })
+}
+
+/// PERRY_GC_PROMOTE: pin every object reachable from the native/C stack (young
+/// or old) so the budgeted evacuation that immediately follows never moves an
+/// object a native frame still references — those raw pointers aren't GC slots
+/// and can't be rewritten. Pure pinning (no marking/tracing); runs at the STW
+/// finalize, so a conservative false positive just pins a non-object address,
+/// which is harmless. Fills the gap that budgeted cycles' precise-only scanning
+/// leaves (they skip the conservative scan non-budgeted evacuation relies on).
+pub(super) fn pin_native_stack_roots_for_evacuation(valid_ptrs: &ValidPointerSet) {
+    super::barrier::CONS_PIN_STACK_NO_MARK.with(|c| c.set(true));
+    let _ = mark_stack_roots_unchecked(valid_ptrs, true);
+    super::barrier::CONS_PIN_STACK_NO_MARK.with(|c| c.set(false));
 }
 
 #[inline]

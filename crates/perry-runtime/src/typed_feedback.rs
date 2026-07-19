@@ -952,7 +952,20 @@ pub extern "C" fn js_typed_feedback_object_set_field_by_name_fast(
 ) {
     let object_addr = normalize_raw_object_addr(obj as u64);
     let (shape_addr, class_id, gc_type) = object_shape(object_addr);
-    let handled = crate::object::js_object_set_field_by_name_transition_fast(obj, key, value) != 0;
+    // Dead-branch elimination for the dynamic-constructor store hot path.
+    // `js_object_set_field_by_name_transition_fast` unconditionally returns 0 when
+    // `(*obj).class_id != 0` (field_set_by_name.rs), but only *after* building a
+    // RuntimeHandleScope and re-validating the pointer. Instances of plain
+    // `function`-constructors always carry a nonzero synthetic class id, so that call
+    // is guaranteed futile on every one of their stores — the dominant cost on
+    // fiber-shaped churn. `object_shape` above already read the same `class_id`, so
+    // skip the doomed attempt when it is nonzero and fall straight through to the real
+    // store path. Behavior is identical (`handled` would have been false either way);
+    // only the futile call and its handle-scope setup are removed. The `class_id == 0`
+    // case keeps the original attempt, which also safely bails on invalid/non-regular
+    // objects (object_shape reports class_id 0 for those too).
+    let handled = class_id == 0
+        && crate::object::js_object_set_field_by_name_transition_fast(obj, key, value) != 0;
     let observation = Observation {
         source: ObservationSource::Property,
         object_addr: shape_keyed_object_addr(ObservationSource::Property, object_addr),
@@ -1355,7 +1368,7 @@ fn object_key_matches_field(
     }
     unsafe {
         let obj = object_addr as *mut ObjectHeader;
-        let alloc_limit = std::cmp::max((*obj).field_count, 8);
+        let alloc_limit = std::cmp::max((*obj).field_count, crate::object::INLINE_SLOT_FLOOR as u32);
         if field_index >= alloc_limit {
             return false;
         }

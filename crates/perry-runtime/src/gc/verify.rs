@@ -561,14 +561,14 @@ pub(super) fn verify_old_to_young_edges_collect() -> OldYoungEdgeVerifyStats {
     crate::arena::old_arena_walk_objects(|hp| unsafe {
         verify_old_young_parent_slots_covered(&snapshot, &mut stats, hp as *mut GcHeader);
     });
-    MALLOC_STATE.with(|s| {
-        let s = s.borrow();
-        for &header in s.objects.iter() {
-            unsafe {
-                verify_old_young_parent_slots_covered(&snapshot, &mut stats, header);
-            }
+    // Snapshot before iterating (see rewrite_heap_objects): the callback may
+    // re-borrow MALLOC_STATE via the classifier under budgeted evacuation.
+    let malloc_headers: Vec<*mut GcHeader> = MALLOC_STATE.with(|s| s.borrow().objects.clone());
+    for header in malloc_headers {
+        unsafe {
+            verify_old_young_parent_slots_covered(&snapshot, &mut stats, header);
         }
-    });
+    }
     stats
 }
 
@@ -854,12 +854,18 @@ pub(super) fn rewrite_heap_objects(valid_ptrs: &ValidPointerSet) {
         }
     };
     crate::arena::arena_walk_objects(|hp| rewrite_one(hp as *mut GcHeader));
-    MALLOC_STATE.with(|s| {
-        let s = s.borrow();
-        for &h in s.objects.iter() {
-            rewrite_one(h);
-        }
-    });
+    // Snapshot the malloc-tracked headers before rewriting, then drop the
+    // MALLOC_STATE borrow. Under budgeted evacuation (PERRY_GC_PROMOTE) the
+    // ValidPointerSet runs in classifier_mode, so `rewrite_one`'s per-slot
+    // `contains()` calls `gc_malloc_header_is_tracked`, which itself borrows
+    // MALLOC_STATE — a re-entrant `borrow_mut` panic if we held the borrow
+    // across the loop. `rewrite_one` only edits object fields (never the
+    // registry), so the cloned header list stays valid for the whole walk.
+    let malloc_headers: Vec<*mut GcHeader> =
+        MALLOC_STATE.with(|s| s.borrow().objects.clone());
+    for h in malloc_headers {
+        rewrite_one(h);
+    }
 }
 
 pub(super) fn rewrite_remembered_dirty_ranges(valid_ptrs: &ValidPointerSet) {
@@ -1055,12 +1061,12 @@ pub(super) fn verify_heap_objects(valid_ptrs: &ValidPointerSet) {
         verify_heap_object_fields(header, valid_ptrs, "heap fields");
     };
     crate::arena::arena_walk_objects(|hp| verify_one(hp as *mut GcHeader));
-    MALLOC_STATE.with(|s| {
-        let s = s.borrow();
-        for &h in s.objects.iter() {
-            verify_one(h);
-        }
-    });
+    // Snapshot before iterating: verify_one -> contains() re-borrows MALLOC_STATE
+    // under budgeted classifier_mode. See rewrite_heap_objects for the rationale.
+    let malloc_headers: Vec<*mut GcHeader> = MALLOC_STATE.with(|s| s.borrow().objects.clone());
+    for h in malloc_headers {
+        verify_one(h);
+    }
 }
 
 pub(super) fn verify_evacuated_no_stale_forwarded_refs(valid_ptrs: &ValidPointerSet) {

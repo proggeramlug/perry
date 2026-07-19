@@ -133,6 +133,27 @@ pub fn run_with_parse_cache(
         std::env::set_var("PERRY_DEBUG_SYMBOLS", "1");
     }
 
+    // Function-source retention → PERRY_NO_FUNCTION_SOURCE, honored by codegen's
+    // function-source emission (artifacts.rs) and folded into the object-cache key so
+    // toggling re-compiles affected modules. Three modes:
+    //   --keep-function-source  → always keep (full `toString` fidelity)
+    //   --no-function-source     → always elide
+    //   neither (default)        → AUTO: elide unless the entry bundle looks like it
+    //                              reads function bodies via `toString`.
+    // An explicit env var already set wins (e.g. a `perry dev` session that opted in).
+    if std::env::var_os("PERRY_NO_FUNCTION_SOURCE").is_none() {
+        let elide = if args.keep_function_source {
+            false
+        } else if args.no_function_source {
+            true
+        } else {
+            !entry_reads_function_source(&args.input)
+        };
+        if elide {
+            std::env::set_var("PERRY_NO_FUNCTION_SOURCE", "1");
+        }
+    }
+
     // #6125: resolve the CPU-baseline knob (`--march` / env / perry.toml
     // `[build] march` / `[build] native_tuning`) into the canonical
     // PERRY_TARGET_CPU env var, exactly like `--debug-symbols` above.
@@ -5806,6 +5827,34 @@ pub fn run_with_parse_cache(
 /// consults `--target`. Without these flags the linker happily consumes a correctly
 /// cross-compiled iOS object and emits a **host-arch** dylib — the failure the user
 /// sees is a link error or a dylib that will never load on device.
+/// Auto-detection for function-source retention (`--function-source` default mode).
+///
+/// Returns `true` if the entry bundle appears to read function *bodies* via
+/// `Function.prototype.toString` — the only reason to keep source text in the binary.
+/// Conservative by design: any of the tell-tale substrings forces source retention, and
+/// an unreadable entry also returns `true` (keep). The residual risk is a false negative
+/// (a program that dynamically parses a function body with none of these markers), which
+/// is mitigated three ways: the neutral `/* source unavailable */` `toString` form (no
+/// `[native code]` false-positive), the `--keep-function-source` escape hatch, and the
+/// fact that source retention is nearly free at runtime anyway (kept source stays in cold
+/// rodata unless `toString` is actually called).
+///
+/// NOTE: scans only the entry file. For a bundled app (Perry's typical deployment) that
+/// is the whole program; a multi-module project whose *non-entry* modules parse function
+/// bodies should pass `--keep-function-source`.
+fn entry_reads_function_source(entry: &Path) -> bool {
+    let Ok(src) = std::fs::read_to_string(entry) else {
+        return true;
+    };
+    const SIGNALS: [&str; 4] = [
+        "new Function(",
+        "Function.prototype.toString",
+        ".toString.call",
+        ".toString.apply",
+    ];
+    SIGNALS.iter().any(|needle| src.contains(needle))
+}
+
 fn apple_dylib_cross_target(target: &str) -> Option<(&'static str, &'static str)> {
     Some(match target {
         "ios" => ("iphoneos", "arm64-apple-ios17.0"),

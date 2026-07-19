@@ -760,6 +760,13 @@ thread_local! {
     pub(crate) static CONS_PINNED: std::cell::RefCell<std::collections::HashSet<usize>> =
         std::cell::RefCell::new(std::collections::HashSet::new());
 
+    /// PERRY_GC_PROMOTE: while set, a conservative stack scan PINS every valid
+    /// object it finds (young included) WITHOUT marking/tracing, so budgeted
+    /// evacuation never moves an object a native/C frame still references (those
+    /// pointers aren't GC slots and can't be rewritten). Set only across the
+    /// STW finalize pre-pin scan of an evacuating promote cycle.
+    pub(crate) static CONS_PIN_STACK_NO_MARK: Cell<bool> = const { Cell::new(false) };
+
     pub(super) static WRITE_BARRIER_TRACE_COUNTERS: Cell<BarrierTraceCounters> =
         const { Cell::new(BarrierTraceCounters::zero()) };
 }

@@ -152,6 +152,7 @@
 - [Commands](cli/commands.md)
 - [Compiler Flags](cli/flags.md)
 - [Fast-math (`--fast-math`)](cli/fast-math.md)
+- [Function source & `toString`](cli/no-function-source.md)
 - [Dynamic Stdlib Dispatch](cli/dynamic-dispatch.md)
 - [JS Runtime Opt-In](cli/allow-js-runtime.md)
 - [`PERRY_SANDBOX_BUILDRS`](cli/sandbox-buildrs.md)

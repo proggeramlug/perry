@@ -23,9 +23,117 @@
 // arm64_32: mimalloc on a 32-bit-pointer (ILP32) tier-3 target is unproven and
 // a corruption suspect; use the system allocator (libsystem_malloc, solid on
 // watchOS) on 32-bit. Keep mimalloc's speed on 64-bit.
+// DIAGNOSTIC (memory-parity campaign): a thin wrapper over mimalloc that histograms
+// LIVE bytes by size-class, so `[gc] alloc-histogram` (under PERRY_GC_DIAG) can attribute
+// the non-arena heap by allocation size without depending on mimalloc's version-specific
+// heap-walk API. All hot ops just do atomic add/sub (no allocation → no recursion).
+#[cfg(target_pointer_width = "64")]
+pub(crate) mod diag_alloc {
+    use std::alloc::{GlobalAlloc, Layout};
+    use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
+
+    pub(crate) const NBUCKETS: usize = 48;
+    pub(crate) static LIVE_BYTES: [AtomicUsize; NBUCKETS] = [const { AtomicUsize::new(0) }; NBUCKETS];
+    pub(crate) static LIVE_COUNT: [AtomicUsize; NBUCKETS] = [const { AtomicUsize::new(0) }; NBUCKETS];
+
+    /// Backtraces of large (>4 MB) allocations, captured to identify the ~33 fat buffers
+    /// that dominate non-arena memory. Bounded to 64 entries.
+    pub(crate) static LARGE_ALLOCS: std::sync::Mutex<Vec<(usize, String)>> =
+        std::sync::Mutex::new(Vec::new());
+    thread_local! {
+        // Re-entrancy guard: backtrace capture / formatting allocates; skip instrumenting
+        // those allocations so we neither recurse nor pollute the large-alloc log.
+        static IN_DIAG: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+        // Optional context tag a subsystem sets around a suspected large allocation
+        // (e.g. the regex pattern being compiled) so the large-alloc log names the source.
+        pub(crate) static ALLOC_TAG: std::cell::RefCell<String> =
+            const { std::cell::RefCell::new(String::new()) };
+    }
+
+    #[inline(never)]
+    fn capture_large(size: usize) {
+        if IN_DIAG.with(|f| f.replace(true)) {
+            return; // already inside a capture on this thread
+        }
+        let tag = ALLOC_TAG.with(|t| t.borrow().clone());
+        let bt = std::backtrace::Backtrace::force_capture();
+        let s = format!("TAG[{tag}]\n{bt}");
+        if let Ok(mut v) = LARGE_ALLOCS.lock() {
+            if v.len() < 64 {
+                v.push((size, s));
+            }
+        }
+        IN_DIAG.with(|f| f.set(false));
+    }
+
+    /// Size class = position of the highest set bit (`ceil`-ish log2): class `b` holds
+    /// sizes in `[2^(b-1), 2^b)`.
+    #[inline(always)]
+    fn bucket(size: usize) -> usize {
+        let b = (usize::BITS - (size as u64).leading_zeros()) as usize;
+        if b >= NBUCKETS {
+            NBUCKETS - 1
+        } else {
+            b
+        }
+    }
+
+    pub(crate) struct DiagAlloc;
+    unsafe impl GlobalAlloc for DiagAlloc {
+        unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+            let p = mimalloc::MiMalloc.alloc(layout);
+            if !p.is_null() {
+                let b = bucket(layout.size());
+                LIVE_BYTES[b].fetch_add(layout.size(), Relaxed);
+                LIVE_COUNT[b].fetch_add(1, Relaxed);
+                if layout.size() > 4 * 1024 * 1024 {
+                    capture_large(layout.size());
+                }
+            }
+            p
+        }
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+            let b = bucket(layout.size());
+            LIVE_BYTES[b].fetch_sub(layout.size(), Relaxed);
+            LIVE_COUNT[b].fetch_sub(1, Relaxed);
+            mimalloc::MiMalloc.dealloc(ptr, layout);
+        }
+        unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+            let p = mimalloc::MiMalloc.alloc_zeroed(layout);
+            if !p.is_null() {
+                let b = bucket(layout.size());
+                LIVE_BYTES[b].fetch_add(layout.size(), Relaxed);
+                LIVE_COUNT[b].fetch_add(1, Relaxed);
+                if layout.size() > 4 * 1024 * 1024 {
+                    capture_large(layout.size());
+                }
+            }
+            p
+        }
+        unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+            let ob = bucket(layout.size());
+            LIVE_BYTES[ob].fetch_sub(layout.size(), Relaxed);
+            LIVE_COUNT[ob].fetch_sub(1, Relaxed);
+            let p = mimalloc::MiMalloc.realloc(ptr, layout, new_size);
+            if !p.is_null() {
+                let nb = bucket(new_size);
+                LIVE_BYTES[nb].fetch_add(new_size, Relaxed);
+                LIVE_COUNT[nb].fetch_add(1, Relaxed);
+                if new_size > 4 * 1024 * 1024 {
+                    capture_large(new_size);
+                }
+            } else {
+                LIVE_BYTES[ob].fetch_add(layout.size(), Relaxed);
+                LIVE_COUNT[ob].fetch_add(1, Relaxed);
+            }
+            p
+        }
+    }
+}
+
 #[cfg(target_pointer_width = "64")]
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: diag_alloc::DiagAlloc = diag_alloc::DiagAlloc;
 #[cfg(not(target_pointer_width = "64"))]
 #[global_allocator]
 static GLOBAL: std::alloc::System = std::alloc::System;

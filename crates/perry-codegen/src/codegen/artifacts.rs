@@ -1796,19 +1796,30 @@ pub(super) fn emit_module_artifacts(c: ModuleArtifactsCtx<'_>) -> Result<()> {
     // materialized, so gate those on `materialized_closure_ids` to avoid
     // referencing an undefined global (the #318/#343 clang-failure class).
     let mut user_fn_source: Vec<(String, String)> = Vec::new();
-    for f in &hir.functions {
-        if let Some(src) = hir.closure_source_text.get(&f.id) {
-            if let Some(sym) = func_names.get(&f.id) {
-                user_fn_source.push((format!("__perry_wrap_{}", sym), src.clone()));
+    // `--no-function-source` (PERRY_NO_FUNCTION_SOURCE): elide every function's original
+    // source text from the binary. When set, no source constants or
+    // `js_register_function_source` calls are emitted, so `Function.prototype.toString()`
+    // falls back to the synthesized `function <name>() { [native code] }` form instead of
+    // the real source. This removes the source rodata (≈1× bundle size, more with nested
+    // functions) plus the per-function registration — a large binary-size and resident-
+    // memory win for apps that never inspect function source (most CLIs/TUIs). Opt-in and
+    // off by default because some code parses function bodies via `toString` (Angular-style
+    // DI param extraction, `new Function(fn.toString())` reserialization).
+    if std::env::var_os("PERRY_NO_FUNCTION_SOURCE").is_none() {
+        for f in &hir.functions {
+            if let Some(src) = hir.closure_source_text.get(&f.id) {
+                if let Some(sym) = func_names.get(&f.id) {
+                    user_fn_source.push((format!("__perry_wrap_{}", sym), src.clone()));
+                }
             }
         }
-    }
-    for (func_id, src) in &hir.closure_source_text {
-        if registered_fn_ids.contains(func_id) || !materialized_closure_ids.contains(func_id) {
-            continue;
+        for (func_id, src) in &hir.closure_source_text {
+            if registered_fn_ids.contains(func_id) || !materialized_closure_ids.contains(func_id) {
+                continue;
+            }
+            let sym = format!("perry_closure_{}__{}", module_prefix, func_id);
+            user_fn_source.push((sym, src.clone()));
         }
-        let sym = format!("perry_closure_{}__{}", module_prefix, func_id);
-        user_fn_source.push((sym, src.clone()));
     }
 
     // Wall 51: the standalone-ctor arity registered into CLASS_CONSTRUCTORS must

@@ -1127,6 +1127,14 @@ pub(crate) unsafe fn decode_path_value_named(path_value: f64, arg_name: &str) ->
     }
 
     let jsval = crate::value::JSValue::from_bits(path_value.to_bits());
+    // PERRY_GC_EVAC_TRAP: this is the SYMPTOM site of the evacuation bug — if the
+    // decoded path value is itself a (stale) pointer to an evacuated object, flag
+    // it with the fs call stack. If it fires here the garbage IS a moved pointer;
+    // if not, the container read that produced this value was upstream.
+    #[cfg(target_pointer_width = "64")]
+    if crate::gc::gc_evac_trap_enabled() && jsval.is_pointer() {
+        crate::gc::gc_evac_trap_check(jsval.as_pointer::<u8>() as usize, "fs_decode_path");
+    }
     // #1781: a path <= 5 bytes ("a.ts", "x", ".", "..", "/tmp") is an
     // inline SSO value that `is_string()` (STRING_TAG-only) misses,
     // so short relative paths silently decoded to None. Read the inline

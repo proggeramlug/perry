@@ -9,6 +9,129 @@ pub(super) const MAX_PREVIOUS_PAUSE_US: u64 = 20_000;
 pub(super) const EVACUATION_POLICY_DISABLED_REASON: &str = "disabled";
 pub(super) const EVACUATION_POLICY_LOW_PAUSE_NON_MOVING_REASON: &str = "low_pause_non_moving";
 
+thread_local! {
+    /// PERRY_GC_PROMOTE frontier: the general-block count captured at the END of
+    /// the previous sweep. General blocks with index `+ 1 < frontier` were
+    /// allocated BEFORE this cycle began, so their live objects are genuine
+    /// cross-cycle survivors — safe to age-bump/promote even under budgeted
+    /// (allocate-black) collection. Blocks at/after the frontier hold this
+    /// cycle's births (incl. allocate-black churn) and must NOT be aged, or dead
+    /// churn false-tenures (#6224). 0 until the first sweep completes (no aging).
+    static GC_PROMOTE_FRONTIER: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    /// Running estimate of TENURED-flagged nursery bytes not yet evacuated,
+    /// accumulated by the sweep age-bump. Read at cycle start to decide whether
+    /// this cycle should pay for the exact census + evacuation, so the O(heap)
+    /// census is built ONLY on cycles that actually move objects (a churn
+    /// workload never crosses the threshold and stays classifier-mode/cheap).
+    static GC_PROMOTE_TENURED_BYTES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    /// Set at cycle start: does THIS budgeted cycle build the census + evacuate?
+    static GC_PROMOTE_EVAC_THIS_CYCLE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Evacuation runs (and the census is built) once accumulated tenured bytes
+/// clear the policy's nursery threshold — same bar the evac policy uses, so we
+/// never build the census for a cycle the policy would then decline.
+pub(super) fn gc_promote_note_tenured(bytes: usize) {
+    GC_PROMOTE_TENURED_BYTES.with(|c| c.set(c.get().saturating_add(bytes)));
+}
+
+/// Decide at cycle start whether this budgeted cycle evacuates. True once the
+/// accumulated tenured estimate clears `MIN_TENURED_NURSERY_BYTES`.
+pub(super) fn gc_promote_begin_cycle_decide_evac() -> bool {
+    let due = crate::gc::gc_promote_enabled()
+        && GC_PROMOTE_TENURED_BYTES.with(|c| c.get()) >= MIN_TENURED_NURSERY_BYTES;
+    GC_PROMOTE_EVAC_THIS_CYCLE.with(|c| c.set(due));
+    due
+}
+
+/// Whether the in-flight budgeted cycle is an evacuating (census-built) one.
+#[inline]
+pub(super) fn gc_promote_evac_this_cycle() -> bool {
+    GC_PROMOTE_EVAC_THIS_CYCLE.with(|c| c.get())
+}
+
+/// Called after an evacuating cycle completes: reset the accumulated estimate
+/// (the tenured bytes just moved to old-gen).
+pub(super) fn gc_promote_reset_tenured() {
+    GC_PROMOTE_TENURED_BYTES.with(|c| c.set(0));
+}
+
+/// Snapshot the general-block frontier at the START of a GC cycle (before any of
+/// this cycle's allocate-black births). Called from the cycle setup when
+/// `gc_promote_enabled()`. Objects in blocks below this frontier at sweep time
+/// are genuine cross-cycle survivors.
+pub(super) fn gc_promote_begin_cycle() {
+    GC_PROMOTE_FRONTIER.with(|f| f.set(crate::arena::general_block_count()));
+}
+
+/// The frontier gate value for the age-bump: general blocks with
+/// `index + 1 < gc_promote_frontier()` predate this cycle. Returns `usize::MAX`
+/// when promotion is disabled so the age-bump is unrestricted (unchanged
+/// behavior for the default non-promote build).
+#[inline]
+pub(super) fn gc_promote_frontier() -> usize {
+    if crate::gc::gc_promote_enabled() {
+        GC_PROMOTE_FRONTIER.with(|f| f.get())
+    } else {
+        usize::MAX
+    }
+}
+
+/// PERRY_GC_DIAG memory-composition probe: dump the DiagAlloc live-bytes histogram
+/// (`crate::diag_alloc`), which counts live allocated bytes per size-class (`[2^(b-1),2^b)`)
+/// across the whole process via atomic add/sub in the global allocator. This isolates WHERE
+/// the non-arena Rust memory lives — the ~1MB class is the GC arena's blocks; everything
+/// else is Rust-side data (Vec/HashMap/String/buffers/side-tables). Version-independent
+/// (no mimalloc heap-walk API needed).
+#[cfg(target_pointer_width = "64")]
+fn print_mimalloc_size_histogram() {
+    use crate::diag_alloc::{LIVE_BYTES, LIVE_COUNT, NBUCKETS};
+    use std::sync::atomic::Ordering::Relaxed;
+    let mut total = 0usize;
+    let mut rows: Vec<(usize, usize, usize, usize)> = Vec::new(); // (lo, hi, bytes, count)
+    for b in 0..NBUCKETS {
+        let bytes = LIVE_BYTES[b].load(Relaxed);
+        let count = LIVE_COUNT[b].load(Relaxed);
+        total += bytes;
+        if bytes >= 1024 * 1024 {
+            let lo = if b == 0 { 0 } else { 1usize << (b - 1) };
+            let hi = 1usize << b;
+            rows.push((lo, hi, bytes, count));
+        }
+    }
+    rows.sort_by_key(|&(_, _, bytes, _)| std::cmp::Reverse(bytes));
+    eprintln!(
+        "[gc] alloc-histogram: TOTAL live = {}MB (size-classes >1MB, largest first):",
+        total / 1048576
+    );
+    for (lo, hi, bytes, count) in rows {
+        eprintln!(
+            "[gc]   [{:>10}..{:<10}B] {:>6}MB  ({} live allocs)",
+            lo,
+            hi,
+            bytes / 1048576,
+            count
+        );
+    }
+    // Backtraces of the large (>4MB) allocations — the fat buffers to eliminate.
+    if let Ok(v) = crate::diag_alloc::LARGE_ALLOCS.lock() {
+        eprintln!("[gc] LARGE (>4MB) allocations captured: {}", v.len());
+        for (i, (sz, bt)) in v.iter().enumerate().take(16) {
+            let tagline = bt.lines().next().unwrap_or("");
+            eprintln!("[gc]  --- large #{i} size={}MB  {} ---", sz / 1048576, tagline);
+            for line in bt.lines().skip(1).take(6) {
+                let t = line.trim();
+                if !t.is_empty() {
+                    eprintln!("[gc]      {t}");
+                }
+            }
+        }
+    }
+}
+
+#[cfg(not(target_pointer_width = "64"))]
+fn print_mimalloc_size_histogram() {}
+
 #[derive(Clone, Copy, Default)]
 pub(super) struct EvacuationPolicySnapshot {
     pub(super) tenured_still_in_nursery_bytes: usize,
@@ -904,6 +1027,9 @@ fn legacy_sweep_with_age_bump_and_old_reclaim_targets(
     // is the first non-general index; objects with `block_idx < general_n`
     // are nursery-resident and need the age-bump update.
     let resettable_general_n = crate::arena::general_block_count();
+    // PERRY_GC_PROMOTE: only age-bump objects in blocks that predate this cycle
+    // (index + 1 < frontier). `usize::MAX` when promotion is off (no restriction).
+    let promote_frontier = gc_promote_frontier();
     let old_block_start = crate::arena::longlived_end();
     crate::arena::old_pages_reset_sweep_accounting();
 
@@ -929,7 +1055,8 @@ fn legacy_sweep_with_age_bump_and_old_reclaim_targets(
             // age-bump's gate (skip old-gen, skip already-tenured, skip
             // unmarked-and-unpinned) and runs BEFORE the mark bit is
             // cleared so the MARKED check stays meaningful.
-            let age_bump_this = do_age_bump && block_idx < resettable_general_n;
+            let age_bump_this =
+                do_age_bump && block_idx < resettable_general_n && block_idx + 1 < promote_frontier;
             let flags = (*header).gc_flags;
             // Fast path: `flags == 0` means the object is dead (MARKED=0)
             // AND has no special bits (PINNED/FORWARDED/HAS_SURVIVED/
@@ -1425,11 +1552,28 @@ impl ArenaSweepObjectsState {
             self.retained_forwarded_stub_bytes,
             self.retained_forwarded_stub_objects,
         );
+        // Full arena footprint (main-thread, so the thread-local counters are real).
+        // Compare `arena.total_bytes` against mimalloc's committed total (PERRY_MEM_REPORT)
+        // to isolate NON-arena Rust allocations (side tables, interning, buffers) from the
+        // GC object heap.
+        eprintln!(
+            "[gc] arena: total_bytes={} in_use_bytes={} old_gen_in_use={} block_count={}",
+            crate::arena::arena_total_bytes(),
+            crate::arena::arena_in_use_bytes(),
+            crate::arena::old_gen_in_use_bytes(),
+            crate::arena::arena_block_count(),
+        );
+        print_mimalloc_size_histogram();
     }
 
     fn process_object(&mut self, header: *mut GcHeader, block_idx: usize) {
         unsafe {
-            let age_bump_this = self.do_age_bump && block_idx < self.resettable_general_n;
+            // PERRY_GC_PROMOTE frontier gate: only age-bump objects in blocks that
+            // predate this cycle (genuine survivors); `gc_promote_frontier()` is
+            // usize::MAX when promotion is off, leaving default behavior unchanged.
+            let age_bump_this = self.do_age_bump
+                && block_idx < self.resettable_general_n
+                && block_idx + 1 < gc_promote_frontier();
             let flags = (*header).gc_flags;
             if flags == 0 {
                 self.reclaim_dead_object(header, block_idx);
@@ -1476,6 +1620,9 @@ impl ArenaSweepObjectsState {
             if flags & GC_FLAG_HAS_SURVIVED != 0 {
                 (*header).gc_flags =
                     (flags | GC_FLAG_TENURED) & !GC_FLAG_HAS_SURVIVED & !GC_FLAG_MARKED;
+                // Just became TENURED: feed the cycle-start evac predictor so the
+                // next cycle builds the census only once enough has accumulated.
+                gc_promote_note_tenured((*header).size as usize);
             } else {
                 (*header).gc_flags = (flags | GC_FLAG_HAS_SURVIVED) & !GC_FLAG_MARKED;
             }
@@ -1730,6 +1877,32 @@ pub(super) fn evacuate_tenured_nursery_objects_collecting(
             if !gc_type_is_movable((*header).obj_type) {
                 return;
             }
+            // DIAGNOSTIC bisect (PERRY_GC_EVAC_ONLY_TYPE): move only one type.
+            if let Some(only) = crate::gc::gc_evac_only_type() {
+                if (*header).obj_type != only {
+                    return;
+                }
+            }
+            // Never evacuate objects that own an address-keyed side-allocation
+            // registry (Set/Map entry tables, external buffers, …). Those
+            // registries are keyed by the owner's ADDRESS and have no
+            // migrate-on-move hook (perry's design assumes such owners are never
+            // relocated — set.rs/map.rs literally note "conservative + non-moving").
+            // Moving one orphans its owner record → "grown Set must retain its
+            // side-allocation owner record" abort. Skipping them costs a little
+            // promotion but is correct until those tables gain a re-key path.
+            // L7 is a stopgap and now env-gated (PERRY_GC_L7_SKIP): the migration
+            // hook gc_type_after_payload_move already re-keys Set/Map; only
+            // buffers/typed-arrays truly lack a move hook. Default OFF so the
+            // evacuation repro matches the clean base for diagnostics.
+            if crate::gc::gc_l7_skip_enabled()
+                && !matches!(
+                    gc_type_external_byte_policy((*header).obj_type),
+                    crate::gc::types::GcExternalBytePolicy::None
+                )
+            {
+                return;
+            }
             // Conservative-pinning blocks evacuation.
             if is_conservatively_pinned(header) {
                 return;
@@ -1752,6 +1925,13 @@ pub(super) fn evacuate_tenured_nursery_objects_collecting(
             // FORWARDED bit is released, sweep frees its (now-stale)
             // nursery slot. The block can reset once every object in it
             // is either a released evacuation original or unmarked dead.
+            // NOTE: the PERRY_GC_EVAC_TRAP diagnostic used to KEEP this MARKED to
+            // retain the forwarded original for the reader trap — but a
+            // marked-in-place FORWARDED original crashes the tracer (some
+            // trace/rewrite/remembered path touches its forwarding-overwritten
+            // payload). The TRUE-quarantine trap instead lets the normal free
+            // happen and detects stale reads via the morgue + sentinel stamped
+            // at release, so MARKED is always cleared now.
             (*header).gc_flags &= !GC_FLAG_MARKED;
             // Mark the new copy so (a) the rewrite walk visits
             // its fields and (b) sweep keeps it alive. The mark
@@ -1903,6 +2083,16 @@ pub(super) fn release_evacuated_original_forwarding_stubs(
                     header as usize,
                     (*header).size as usize,
                 );
+            }
+            // PERRY_GC_EVAC_TRAP TRUE-quarantine: record this evacuated original's
+            // user-address in the morgue and stamp an out-of-range sentinel
+            // obj_type so a later stale read of the freed (not-yet-reused) slot is
+            // detectable at the reader chokepoints. `size` is untouched so sweep
+            // free-math stays correct; obj_type 0xEE => gc_type_info None => every
+            // finalize/side-table dispatch is a no-op. No-op unless the trap is on.
+            if crate::gc::gc_evac_trap_enabled() {
+                crate::gc::gc_evac_trap_note_original(user_ptr as usize);
+                (*header).obj_type = crate::gc::EVAC_TRAP_SENTINEL_OBJ_TYPE;
             }
             released.released_original_objects += 1;
             released.released_original_bytes += (*header).size as usize;

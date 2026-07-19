@@ -303,6 +303,8 @@ fn build_once(
         minimal_stdlib: false,
         no_auto_optimize: false,
         debug_symbols: false,
+        no_function_source: false,
+        keep_function_source: false,
         no_cache: false,
         // `perry dev` has no `--cache-dir` flag of its own; the resolver
         // still honors `PERRY_CACHE_DIR` / perry.toml `[perry] cacheDir` /

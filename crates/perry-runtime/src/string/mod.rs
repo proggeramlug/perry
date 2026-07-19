@@ -142,7 +142,15 @@ pub extern "C" fn js_get_empty_string() -> *const StringHeader {
 /// 48-bit AND yields 1, which passes is_null() but crashes on dereference.
 #[inline]
 pub fn is_valid_string_ptr(p: *const StringHeader) -> bool {
-    !p.is_null() && (p as usize) >= 0x1000
+    let valid = !p.is_null() && (p as usize) >= 0x1000;
+    // PERRY_GC_EVAC_TRAP: a string pointer to an evacuated original is an
+    // un-rewritten reference — the shared checker (morgue + sentinel + forwarded)
+    // backtraces the exact reader. Bounds-guarded internally.
+    #[cfg(target_pointer_width = "64")]
+    if valid {
+        crate::gc::gc_evac_trap_check(p as usize, "string_read");
+    }
+    valid
 }
 
 /// Borrowed byte view for a Perry string-like dispatch key.

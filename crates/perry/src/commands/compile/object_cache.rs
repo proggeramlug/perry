@@ -773,6 +773,10 @@ fn compute_object_cache_key_with_env(
         env_var("PERRY_DEBUG_SYMBOLS").as_deref().unwrap_or(""),
     );
     h.field(
+        "env_no_function_source",
+        env_var("PERRY_NO_FUNCTION_SOURCE").as_deref().unwrap_or(""),
+    );
+    h.field(
         "env_llvm_clang",
         env_var("PERRY_LLVM_CLANG").as_deref().unwrap_or(""),
     );

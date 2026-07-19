@@ -219,6 +219,10 @@ pub extern "C" fn js_object_get_field_ic_miss(
     key: *const crate::StringHeader,
     cache: *mut [i64; 2],
 ) -> f64 {
+    // PERRY_GC_EVAC_TRAP: catch a stale evacuated-container reference reaching the
+    // IC-miss getter (bounds-guarded; no-op unless the trap is on).
+    #[cfg(target_pointer_width = "64")]
+    crate::gc::gc_evac_trap_check(obj as usize, "ic_miss");
     // SSO receiver — never cacheable. Route through the SSO-aware
     // `js_object_get_field_by_name` which handles `.length` inline
     // and returns undefined for other keys.
@@ -408,7 +412,7 @@ pub extern "C" fn js_object_get_field_ic_miss(
             }
             let key_count = *(keys as *const u32) as usize;
             let keys_data = (keys as *const u8).add(8) as *const f64;
-            let alloc_limit = std::cmp::max((*obj).field_count, 8) as usize;
+            let alloc_limit = std::cmp::max((*obj).field_count, crate::object::INLINE_SLOT_FLOOR as u32) as usize;
             for i in 0..key_count {
                 let k_bits = (*keys_data.add(i)).to_bits();
                 let k_ptr = (k_bits & 0x0000_FFFF_FFFF_FFFF) as *const crate::StringHeader;

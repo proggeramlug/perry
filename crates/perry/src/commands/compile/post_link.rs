@@ -46,6 +46,11 @@ pub(super) fn strip_final_binary(
         // no_mangle JNI/FFI symbols PerryActivity resolves at load.
         || target == Some("wearos")
         || std::env::var("PERRY_DEBUG_SYMBOLS").is_ok()
+        // PERRY_KEEP_SYMBOLS: keep the linker's symbol table (function names) WITHOUT the
+        // `-g` DWARF codegen that `--debug-symbols` also enables — lets `dladdr`/`atos`
+        // resolve function names for profiling/backtraces on bundles where `-g` codegen
+        // hits the node-submodule duplicate-global bug.
+        || std::env::var("PERRY_KEEP_SYMBOLS").is_ok()
     {
         return;
     }

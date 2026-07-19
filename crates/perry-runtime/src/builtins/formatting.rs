@@ -408,10 +408,16 @@ pub fn function_name_for_ptr(func_ptr: usize) -> Option<String> {
 /// time user code runs the map is fully populated. Mirrors the function-name
 /// registry's single-writer, last-write-wins semantics.
 fn function_source_registry(
-) -> &'static std::sync::Mutex<std::collections::HashMap<usize, std::sync::Arc<str>>> {
+) -> &'static std::sync::Mutex<std::collections::HashMap<usize, (usize, u32)>> {
     use std::sync::OnceLock;
+    // Value is `(rodata_ptr, len)` of the function's source text, NOT an owned copy.
+    // Codegen emits each function's source as a static rodata global (see
+    // string_pool.rs `@source_const`), so the bytes outlive the process; storing the
+    // pointer avoids duplicating every function's source into permanently-retained
+    // heap (tens of MB in large bundles). Materialized to a String lazily, only when
+    // `Function.prototype.toString()` is actually called (rare — a TUI never does).
     static REGISTRY: OnceLock<
-        std::sync::Mutex<std::collections::HashMap<usize, std::sync::Arc<str>>>,
+        std::sync::Mutex<std::collections::HashMap<usize, (usize, u32)>>,
     > = OnceLock::new();
     REGISTRY.get_or_init(|| std::sync::Mutex::new(std::collections::HashMap::new()))
 }
@@ -433,12 +439,15 @@ pub unsafe extern "C" fn js_register_function_source(
     if func_ptr.is_null() || src_ptr.is_null() || src_len == 0 {
         return;
     }
-    let bytes = std::slice::from_raw_parts(src_ptr, src_len as usize);
-    let Ok(src) = std::str::from_utf8(bytes) else {
-        return;
-    };
+    // Deliberately do NOT read the source bytes here. Reading them (even just to
+    // UTF-8-validate) would fault the rodata pages into RSS at module-init for EVERY
+    // function, defeating the purpose — `Function.prototype.toString()` is almost never
+    // called (a TUI never does). Store only the (pointer, len); the source pages stay
+    // demand-paged (cold, out of RSS) until `.toString()` actually materializes the
+    // string, where UTF-8 is validated lazily. This means unused function source costs
+    // ~zero resident memory — only the tiny (ptr,len) map entry.
     if let Ok(mut map) = function_source_registry().lock() {
-        map.insert(func_ptr as usize, std::sync::Arc::from(src));
+        map.insert(func_ptr as usize, (src_ptr as usize, src_len));
     }
 }
 
@@ -447,24 +456,42 @@ pub fn function_source_for_ptr(func_ptr: usize) -> Option<String> {
     if func_ptr == 0 {
         return None;
     }
-    function_source_registry()
+    let (src_ptr, src_len) = function_source_registry()
         .lock()
         .ok()
-        .and_then(|map| map.get(&func_ptr).map(|s| s.to_string()))
-        .filter(|s| !s.is_empty())
+        .and_then(|map| map.get(&func_ptr).copied())?;
+    if src_ptr == 0 || src_len == 0 {
+        return None;
+    }
+    // SAFETY: `src_ptr` points into the module's static rodata (registered by
+    // `js_register_function_source`), valid for the process lifetime. This is the
+    // FIRST and only read of the bytes — validating UTF-8 lazily here rather than at
+    // registration is what keeps the source pages cold (out of RSS) until (if ever)
+    // `.toString()` is called.
+    let bytes = unsafe { std::slice::from_raw_parts(src_ptr as *const u8, src_len as usize) };
+    let src = std::str::from_utf8(bytes).ok()?;
+    Some(src.to_string()).filter(|s| !s.is_empty())
 }
 
 /// #4101: build the `Function.prototype.toString` result for a closure whose
-/// `ClosureHeader.func_ptr` is `func_ptr`. Returns the retained source text
-/// when codegen registered it, otherwise a synthesized native form
-/// (`function <name>() { [native code] }`) matching Node's output for
-/// functions without recoverable source (built-ins / bound natives).
+/// `ClosureHeader.func_ptr` is `func_ptr`. Returns the retained source text when
+/// codegen registered it. When source is unavailable — elided at compile time via
+/// `--no-function-source`, or never registered — return a syntactically valid
+/// function with a neutral `/* source unavailable */` body rather than
+/// `{ [native code] }`. Per the ES2019 `Function.prototype.toString` revision a host
+/// may report no source text (`HostHasSourceTextAvailable` → false) and the result
+/// only needs to parse as a function. `[native code]` is deliberately avoided here:
+/// this is a USER function, and that marker would false-positive the ubiquitous
+/// native-detection sniff (`fn.toString().includes('[native code]')`, e.g. lodash's
+/// `isNative`) — the exact reason J. D. Dalton, who wrote that sniff and the spec
+/// revision, recommends `/* source unavailable */`. Genuine built-ins / bound natives
+/// keep `[native code]` via their own toString paths.
 pub fn function_source_for_func_ptr(func_ptr: usize) -> String {
     if let Some(src) = function_source_for_ptr(func_ptr) {
         return src;
     }
     let name = function_name_for_ptr(func_ptr).unwrap_or_default();
-    format!("function {name}() {{ [native code] }}")
+    format!("function {name}() {{ /* source unavailable */ }}")
 }
 
 /// Per-thread override for the `showHidden` inspect option. Defaults to

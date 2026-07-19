@@ -1466,10 +1466,24 @@ fn gc_start_budgeted_minor_fallback_cycle_with_snapshot(
     }
     let start = Instant::now();
     crate::arena::old_pages_begin_gc_cycle();
+    if gc_promote_enabled() {
+        // Snapshot the block frontier before this cycle's allocate-black births
+        // so the sweep only age-bumps genuine cross-cycle survivors, and decide
+        // (from accumulated tenured bytes) whether THIS cycle pays for the
+        // census + evacuation — so the O(heap) census is built only when moving.
+        super::oldgen::gc_promote_begin_cycle();
+        super::oldgen::gc_promote_begin_cycle_decide_evac();
+    }
     clear_mark_seeds();
     let previous_pause_us = gc_last_pause_us();
     let current_rss_bytes = crate::process::get_rss_bytes();
-    let low_pause_non_moving = progress_kind.is_budgeted();
+    // Budgeted (low-pause incremental) cycles are normally non-moving so a TUI
+    // never takes a moving-GC pause — but that also strands long-lived survivors
+    // in the young gen forever (RSS ~3-4x node). PERRY_GC_PROMOTE opts budgeted
+    // cycles into the (safe, post-mark, precise-root, reference-rewriting)
+    // tenured-nursery evacuation. Old-page defrag stays separately gated (#6206).
+    let low_pause_non_moving =
+        progress_kind.is_budgeted() && !super::oldgen::gc_promote_evac_this_cycle();
     let evacuation_policy_allowed = !low_pause_non_moving && gen_gc_evacuate_enabled();
     let force_evacuation = !low_pause_non_moving && gc_force_evacuate_enabled();
     let evacuation_policy_disabled_reason = if low_pause_non_moving {

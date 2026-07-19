@@ -452,6 +452,11 @@ pub extern "C" fn js_closure_get_capture_bits(closure: *const ClosureHeader, ind
     if closure.is_null() {
         return 0;
     }
+    // PERRY_GC_EVAC_TRAP: an async frame / captured-env is a closure; catch a
+    // stale evacuated-closure reference reaching a capture read (bounds-guarded;
+    // no-op unless the trap is on).
+    #[cfg(target_pointer_width = "64")]
+    crate::gc::gc_evac_trap_check(closure as usize, "closure_capture");
     unsafe {
         if index as usize >= real_capture_count((*closure).capture_count) as usize {
             return 0;

@@ -27,6 +27,12 @@ pub extern "C" fn js_object_get_field_by_name(
     obj: *const ObjectHeader,
     key: *const crate::StringHeader,
 ) -> JSValue {
+    // PERRY_GC_EVAC_TRAP: a property read on an evacuated container object means a
+    // reference to a moved object was NOT rewritten — backtrace the reader to find
+    // the un-scanned native structure that held it. The shared checker bounds-
+    // guards the pointer (rejecting NaN-boxed/tagged values) before it derefs.
+    #[cfg(target_pointer_width = "64")]
+    crate::gc::gc_evac_trap_check(obj as usize, "get_by_name");
     // #5972: a null key reaches here when the property-key expression didn't
     // yield a usable string handle — e.g. `js_get_string_pointer_unified`
     // returned 0 for a NaN/number key that fell through its coercion branches.
@@ -120,7 +126,7 @@ pub extern "C" fn js_object_get_field_by_name(
                             && ((keys as u64) >> 48) == 0
                             && crate::value::addr_class::is_above_handle_band(keys as usize)
                         {
-                            let alloc_limit = std::cmp::max((*o).field_count, 8) as usize;
+                            let alloc_limit = std::cmp::max((*o).field_count, crate::object::INLINE_SLOT_FLOOR as u32) as usize;
                             if let Some(idx) = super::super::prop_plan::read_plan_lookup(
                                 keys as usize,
                                 key as usize,
