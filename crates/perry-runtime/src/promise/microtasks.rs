@@ -471,12 +471,16 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
                     // a non-transformed async closure's busy-wait.
                     let prev_trap = INLINE_TRAP.with(|c| c.get());
                     let trap_scope = crate::gc::RuntimeHandleScope::new();
+                    // #GC (moving-evac): root the awaited value — promise_hook_before
+                    // below can allocate → a moving GC would leave the raw local a
+                    // pre-move address forwarded to the callback (see Task::Promise).
+                    let value_handle = trap_scope.root_nanbox_f64(value);
                     let prev_trap_next_handle = trap_scope.root_raw_mut_ptr(prev_trap.trap_next);
                     let prev_trap_step_handle = trap_scope.root_raw_const_ptr(
                         prev_trap.current_step as *const crate::closure::ClosureHeader,
                     );
                     CURRENT_MICROTASK_CALLBACK.with(|c| c.set(callback));
-                    CURRENT_MICROTASK_VALUE.with(|c| c.set(value));
+                    CURRENT_MICROTASK_VALUE.with(|c| c.set(value_handle.get_nanbox_f64()));
                     CURRENT_MICROTASK_NEXT.with(|c| c.set(next));
                     INLINE_TRAP.with(|c| {
                         c.set(InlineTrap {
@@ -491,7 +495,8 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
                         None
                     };
                     crate::v8::promise_hook_before(next);
-                    let result = crate::closure::js_closure_call1(callback, value);
+                    let result =
+                        crate::closure::js_closure_call1(callback, value_handle.get_nanbox_f64());
                     CURRENT_MICROTASK_VALUE.with(|c| c.set(result));
                     let next_for_after = CURRENT_MICROTASK_NEXT.with(|c| c.get());
                     crate::v8::promise_hook_after(next_for_after);
@@ -688,6 +693,13 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
                     // explicit return expression.
                     let prev_trap = INLINE_TRAP.with(|c| c.get());
                     let trap_scope = crate::gc::RuntimeHandleScope::new();
+                    // #GC (moving-evac): root the awaited value — async_hooks::before /
+                    // promise_hook_before below can allocate → a moving GC relocates
+                    // the value object, and the raw local passed to the step would be a
+                    // pre-move address (an async fn's awaited value read back as a moved
+                    // non-string → "path argument must be of type string"). Mirrors the
+                    // Task::Promise arm's value_handle.
+                    let value_handle = trap_scope.root_nanbox_f64(value);
                     let prev_trap_next_handle = trap_scope.root_raw_mut_ptr(prev_trap.trap_next);
                     let prev_trap_step_handle = trap_scope.root_raw_const_ptr(
                         prev_trap.current_step as *const crate::closure::ClosureHeader,
@@ -730,7 +742,11 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
                     };
                     crate::async_hooks::before(step_async_id, step_trigger_id);
                     crate::v8::promise_hook_before(next);
-                    let result = call_async_step_direct(step_closure, value, is_error_bits);
+                    let result = call_async_step_direct(
+                        step_closure,
+                        value_handle.get_nanbox_f64(),
+                        is_error_bits,
+                    );
                     CURRENT_MICROTASK_VALUE.with(|c| c.set(result));
                     if let Some(t) = t1 {
                         MT_TIME_NS_CALLBACK
