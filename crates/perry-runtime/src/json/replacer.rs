@@ -932,8 +932,16 @@ pub(crate) unsafe fn stringify_object_pretty(
     // Only own ENUMERABLE keys are serialized (gated for the common case).
     let filter_non_enum = crate::object::descriptors_in_use();
 
-    // Collect non-undefined, non-closure fields
-    let mut entries: Vec<(String, f64)> = Vec::new();
+    // Collect non-undefined, non-closure fields. Field VALUES are rooted in
+    // `entry_scope`: they're held only in this native `entries` Vec across the
+    // serialization loop below, whose recursive `stringify_value_pretty` calls
+    // allocate (key strings, nested toJSON, deeper entries) — a mid-walk GC would
+    // otherwise sweep a value still referenced only from this Vec (getter returns
+    // aren't even reachable from the parent's fields) or move it without rewriting
+    // the Vec copy, leaving a stale pointer the recursion derefs → SIGSEGV. Same
+    // live-sweep class as the toJSON-intermediate rooting above.
+    let entry_scope = crate::gc::RuntimeHandleScope::new();
+    let mut entries: Vec<(String, crate::gc::RuntimeHandle)> = Vec::new();
     for f in 0..actual_fields {
         // Skip non-enumerable own keys (`Object.defineProperty(o, k,
         // { enumerable: false })`) before touching the value.
@@ -975,7 +983,7 @@ pub(crate) unsafe fn stringify_object_pretty(
         } else {
             format!("field{}", f)
         };
-        entries.push((key_name, field_val));
+        entries.push((key_name, entry_scope.root_nanbox_f64(field_val)));
     }
 
     if entries.is_empty() {
@@ -986,7 +994,7 @@ pub(crate) unsafe fn stringify_object_pretty(
 
     buf.push_str("{\n");
     let inner_indent_count = depth + 1;
-    for (i, (key_name, field_val)) in entries.iter().enumerate() {
+    for (i, (key_name, field_handle)) in entries.iter().enumerate() {
         for _ in 0..inner_indent_count {
             buf.push_str(indent);
         }
@@ -994,7 +1002,15 @@ pub(crate) unsafe fn stringify_object_pretty(
         // matching fix (test262 JSON/stringify/value-string-escape-ascii).
         write_escaped_string(buf, key_name);
         buf.push_str(": ");
-        stringify_value_pretty(*field_val, TYPE_UNKNOWN, buf, indent, inner_indent_count);
+        // Re-read the (rooted, possibly-rewritten) field value; the raw Vec copy
+        // would be stale after a mid-walk moving GC.
+        stringify_value_pretty(
+            field_handle.get_nanbox_f64(),
+            TYPE_UNKNOWN,
+            buf,
+            indent,
+            inner_indent_count,
+        );
         if i + 1 < entries.len() {
             buf.push(',');
         }
@@ -1020,9 +1036,16 @@ pub(crate) unsafe fn stringify_array_pretty(
         buf.push_str("null");
         return;
     }
+    // Root the array across the element walk: the per-element
+    // `stringify_value_pretty` recursion allocates, and a moving GC (PROMOTE
+    // evacuation) would relocate the array — a raw `arr`/`elements` local captured
+    // once would then read element slots from the stale pre-move address. Refresh
+    // the base pointer from the rooted handle each iteration. Same live-sweep /
+    // relocation class as the object walk's entry rooting.
+    let arr_scope = crate::gc::RuntimeHandleScope::new();
+    let arr_handle = arr_scope.root_raw_const_ptr(ptr);
     let arr = ptr as *const crate::ArrayHeader;
     let len = (*arr).length;
-    let elements = (arr as *const u8).add(std::mem::size_of::<crate::ArrayHeader>()) as *const f64;
 
     if len == 0 {
         buf.push_str("[]");
@@ -1035,6 +1058,9 @@ pub(crate) unsafe fn stringify_array_pretty(
         for _ in 0..inner_indent_count {
             buf.push_str(indent);
         }
+        let arr = arr_handle.get_raw_const_ptr::<crate::ArrayHeader>();
+        let elements =
+            (arr as *const u8).add(std::mem::size_of::<crate::ArrayHeader>()) as *const f64;
         let elem = *elements.add(i as usize);
         let elem_bits = elem.to_bits();
         // TAG_HOLE: sparse-array holes serialize as null, same as undefined.
