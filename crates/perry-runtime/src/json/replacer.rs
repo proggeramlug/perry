@@ -355,6 +355,11 @@ pub(crate) unsafe fn stringify_object_with_replacer_pretty(
     indent: &str,
     depth: usize,
 ) {
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: stringify derefs `ptr` directly
+    // (field_count / keys_array) bypassing the barriered get_field, so follow a
+    // retained forwarded stub to the live copy here.
+    #[cfg(target_pointer_width = "64")]
+    let ptr = crate::gc::gc_follow_forwarded(ptr as usize) as *const u8;
     // Circular-reference detection (mirrors the pretty/array-replacer paths).
     if STRINGIFY_STACK.with(|s| s.borrow().contains(&(ptr as usize))) {
         let msg = "Converting circular structure to JSON";
@@ -865,6 +870,11 @@ pub(crate) unsafe fn stringify_object_pretty(
     indent: &str,
     depth: usize,
 ) {
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: stringify derefs `ptr` directly
+    // (field_count / keys_array) bypassing the barriered get_field, so follow a
+    // retained forwarded stub to the live copy here.
+    #[cfg(target_pointer_width = "64")]
+    let ptr = crate::gc::gc_follow_forwarded(ptr as usize) as *const u8;
     // Same deref-safety gate the plain path applies in `is_object_pointer`: the
     // `field_count` / `keys_array` reads below load straight through `ptr`, so an
     // in-range-but-unmapped garbage address (a denormal double that survived the
@@ -1058,6 +1068,11 @@ pub(crate) unsafe fn stringify_object_with_array_replacer(
     depth: usize,
     use_pretty: bool,
 ) {
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: stringify derefs `ptr` directly
+    // (field_count / keys_array) bypassing the barriered get_field, so follow a
+    // retained forwarded stub to the live copy here.
+    #[cfg(target_pointer_width = "64")]
+    let ptr = crate::gc::gc_follow_forwarded(ptr as usize) as *const u8;
     // Circular reference check
     if STRINGIFY_STACK.with(|s| s.borrow().contains(&(ptr as usize))) {
         let msg = "Converting circular structure to JSON";

@@ -55,6 +55,8 @@ pub(super) unsafe fn ptr_is_tracked_heap_object(ptr: *const u8) -> bool {
 }
 
 pub(crate) unsafe fn is_object_pointer(ptr: *const u8) -> bool {
+    #[cfg(target_pointer_width = "64")]
+    let ptr = crate::gc::gc_follow_forwarded(ptr as usize) as *const u8;
     // A small-handle-band id (revocable-Proxy id, fetch/zlib/stream handle) is
     // never a real ObjectHeader; reading its `keys_array` field would deref
     // unmapped memory (#4904/#1843 pattern). Reject by magnitude before any load.
@@ -840,6 +842,8 @@ pub(crate) unsafe fn write_url_href_json(url: *mut crate::ObjectHeader, buf: &mu
 }
 
 pub(crate) unsafe fn stringify_object_inner(ptr: *const u8, buf: &mut String, depth: u32) {
+    #[cfg(target_pointer_width = "64")]
+    let ptr = crate::gc::gc_follow_forwarded(ptr as usize) as *const u8;
     // #6519: a WHATWG `URL` instance is a plain `GC_TYPE_OBJECT` (class_id 0)
     // whose `searchParams` field points back at the URL — walking its fields
     // trips the circular-structure detector. Node serializes a URL via
