@@ -786,6 +786,11 @@ pub(crate) unsafe fn keys_contain_array_index(keys: *const ArrayHeader) -> bool 
 /// Otherwise (the common case), this returns the stored keys array directly.
 #[no_mangle]
 pub extern "C" fn js_object_keys(obj: *const ObjectHeader) -> *mut ArrayHeader {
+    // Self-heal: if `obj` is a retained forwarded stub (PROMOTE evacuation),
+    // follow it to the moved object before the walk. No-op when disabled or
+    // when `obj` is not forwarded. See gc::gc_follow_forwarded.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *const ObjectHeader;
     if obj.is_null() || !is_valid_obj_ptr(obj as *const u8) {
         // Issue #893: defensive sibling of `js_object_entries`'s
         // is_valid_obj_ptr filter — `Object.keys(undefined)` /
@@ -1127,6 +1132,9 @@ pub extern "C" fn js_object_values(obj: *const ObjectHeader) -> *mut ArrayHeader
             obj
         }
     };
+    // Self-heal: follow a retained forwarded stub after tag-strip (PROMOTE evac).
+    #[cfg(target_pointer_width = "64")]
+    let stripped = crate::gc::gc_follow_forwarded(stripped as usize) as *const ObjectHeader;
     // Map/Set receiver → no own enumerable properties; see the matching
     // guard in `js_object_keys` for the rationale.
     if crate::map::is_registered_map(stripped as usize)
@@ -1276,6 +1284,9 @@ pub extern "C" fn js_object_entries(obj: *const ObjectHeader) -> *mut ArrayHeade
             obj
         }
     };
+    // Self-heal: follow a retained forwarded stub after tag-strip (PROMOTE evac).
+    #[cfg(target_pointer_width = "64")]
+    let stripped = crate::gc::gc_follow_forwarded(stripped as usize) as *const ObjectHeader;
     // Map/Set receiver → no own enumerable properties; see the matching
     // guard in `js_object_keys` for the rationale.
     if crate::map::is_registered_map(stripped as usize)

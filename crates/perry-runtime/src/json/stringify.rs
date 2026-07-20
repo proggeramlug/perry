@@ -140,6 +140,10 @@ pub(crate) unsafe fn object_has_no_own_keys(ptr: *const u8) -> bool {
 pub(super) unsafe fn object_keys_array_checked(
     obj: *const crate::ObjectHeader,
 ) -> Option<*const crate::ArrayHeader> {
+    // Self-heal: follow a retained forwarded stub before reading keys_array
+    // (PROMOTE evacuation). No-op when disabled / not forwarded.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *const crate::ObjectHeader;
     let keys = (*obj).keys_array as *const crate::ArrayHeader;
     if keys.is_null() || !ptr_is_tracked_heap_object(keys as *const u8) {
         return None;

@@ -68,6 +68,12 @@ pub(crate) unsafe fn extract_obj_ptr(value: f64) -> *mut ObjectHeader {
         if !crate::value::addr_class::is_above_handle_band(ptr as usize) {
             return ptr::null_mut();
         }
+        // Self-heal: follow a retained forwarded stub (PROMOTE evacuation) so
+        // every object op that unboxes through here (descriptors, hasOwnProperty,
+        // getOwnPropertyNames, ...) reads the moved object. Gated + no-op when
+        // not forwarded.
+        #[cfg(target_pointer_width = "64")]
+        let ptr = crate::gc::gc_follow_forwarded(ptr as usize) as *mut ObjectHeader;
         ptr
     } else {
         let bits = value.to_bits();
@@ -84,7 +90,15 @@ pub(crate) unsafe fn extract_obj_ptr(value: f64) -> *mut ObjectHeader {
             && crate::value::addr_class::is_above_handle_band(bits as usize)
             && bits & 0x7 == 0
         {
-            bits as *mut ObjectHeader
+            // Self-heal: follow a retained forwarded stub (raw-pointer fallback).
+            #[cfg(target_pointer_width = "64")]
+            {
+                crate::gc::gc_follow_forwarded(bits as usize) as *mut ObjectHeader
+            }
+            #[cfg(not(target_pointer_width = "64"))]
+            {
+                bits as *mut ObjectHeader
+            }
         } else {
             ptr::null_mut()
         }
