@@ -2075,6 +2075,62 @@ pub(super) fn evacuate_selected_old_pages_collecting(
     evacuated
 }
 
+thread_local! {
+    /// PERRY_GC_PROMOTE_SELFHEAL bounded retention: each retained forwarding stub
+    /// with its age in evac-cycles. A stub is kept only long enough for any
+    /// TRANSIENT stale reference (an async-continuation / codegen local) that
+    /// might still point at it to die — those die within a turn (a cycle or two);
+    /// a genuinely-live reference gets rewritten to the new copy by the trace, so
+    /// it no longer references the stub. After SELFHEAL_STUB_RETAIN_CYCLES the stub
+    /// is released (FORWARDED cleared → swept → its nursery block can reclaim).
+    /// Bounds the retained-stub count so the ValidPointerSet census stays small.
+    static SELFHEAL_RETAINED_STUBS: std::cell::RefCell<Vec<(*mut GcHeader, u32)>> =
+        const { std::cell::RefCell::new(Vec::new()) };
+}
+
+fn selfheal_stub_retain_cycles() -> u32 {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<u32> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_SELFHEAL_RETAIN_CYCLES")
+            .ok()
+            .and_then(|s| s.trim().parse::<u32>().ok())
+            .filter(|&k| k >= 1)
+            .unwrap_or(4)
+    })
+}
+
+/// PERRY_GC_PROMOTE_SELFHEAL: retain the just-evacuated originals as forwarding
+/// stubs, age the previously-retained ones, and RELEASE those past the retention
+/// window (bounded retention — the fix for the retain-never-release census blowup).
+pub(super) fn selfheal_retain_and_release_aged(
+    new_stubs: &[*mut GcHeader],
+) -> EvacuationTraceStats {
+    let k = selfheal_stub_retain_cycles();
+    let to_release: Vec<*mut GcHeader> = SELFHEAL_RETAINED_STUBS.with(|r| {
+        let mut r = r.borrow_mut();
+        let mut to_release = Vec::new();
+        r.retain_mut(|(hdr, age)| {
+            *age += 1;
+            if *age >= k {
+                to_release.push(*hdr);
+                false
+            } else {
+                true
+            }
+        });
+        for &hdr in new_stubs {
+            if !hdr.is_null() {
+                r.push((hdr, 0));
+            }
+        }
+        to_release
+    });
+    // Releasing clears FORWARDED so the next sweep frees the stub and its block
+    // can reset — this is what actually delivers the nursery-reclaim RSS win.
+    release_evacuated_original_forwarding_stubs(&to_release)
+}
+
 pub(super) fn release_evacuated_original_forwarding_stubs(
     evacuated_original_headers: &[*mut GcHeader],
 ) -> EvacuationTraceStats {

@@ -1623,9 +1623,12 @@ impl GcCycleState {
                 // never reused. The self-heal read barrier then follows the forward,
                 // making any un-rewritten stale reference benign. A later full trace
                 // reclaims genuinely-dead stubs.
-                let released = if super::oldgen::gc_promote_evac_this_cycle()
-                    || super::gc_promote_selfheal_enabled()
-                {
+                let released = if super::gc_promote_selfheal_enabled() {
+                    // BOUNDED retention: retain the new stubs, age the prior ones,
+                    // release those past the window (fixes the retain-never-release
+                    // census blowup and unblocks the nursery-reclaim RSS drain).
+                    super::oldgen::selfheal_retain_and_release_aged(&evacuated_original_headers)
+                } else if super::oldgen::gc_promote_evac_this_cycle() {
                     EvacuationTraceStats::default()
                 } else {
                     release_evacuated_original_forwarding_stubs(&evacuated_original_headers)
