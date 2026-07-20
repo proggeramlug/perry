@@ -1391,6 +1391,44 @@ fn gc_budgeted_due_trigger() -> Option<BudgetedGcTrigger> {
 /// non-moving minor. Trigger detection + re-baseline mirror the nursery-churn
 /// arm; this is purely additive (the alloc-point fallback is untouched) and
 /// gated by `gc_moving_safepoint_enabled` (default off).
+thread_local! {
+    /// Phase 1.5: arena in-use bytes recorded at the last safepoint moving-minor.
+    /// The next safepoint fires the compacting minor once the nursery has grown by
+    /// `gc_safepoint_evac_threshold_bytes` since then — draining the survivors the
+    /// non-moving alloc-triggered cycles left in place (they consume the general
+    /// budgeted trigger, so without this the safepoint minor never runs → idle RSS
+    /// stays ~3-4x node because partially-live blocks never compact/empty).
+    static LAST_SAFEPOINT_EVAC_IN_USE: Cell<usize> = const { Cell::new(0) };
+}
+
+/// Phase 1.5 tunable: nursery-growth bytes since the last safepoint moving-minor
+/// that trigger the next one. `PERRY_GC_SAFEPOINT_EVAC_MB` (default 24 MB) — big
+/// enough not to compact on every microtask boundary (keystroke latency), small
+/// enough to drain during startup's heavy allocation and periodically at idle.
+fn gc_safepoint_evac_threshold_bytes() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_SAFEPOINT_EVAC_MB")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .map(|mb| mb * 1024 * 1024)
+            .unwrap_or(24 * 1024 * 1024)
+    })
+}
+
+/// Phase 1.5: has the nursery grown past the safepoint-evac threshold since the
+/// last safepoint moving-minor? Gated on PROMOTE so baseline behavior is
+/// unchanged (the safe compacting evac is the PROMOTE-config reclaim path).
+fn gc_safepoint_evac_due() -> bool {
+    if !crate::gc::gc_promote_enabled() {
+        return false;
+    }
+    let cur = crate::arena::arena_in_use_bytes();
+    let last = LAST_SAFEPOINT_EVAC_IN_USE.with(|c| c.get());
+    cur.saturating_sub(last) >= gc_safepoint_evac_threshold_bytes()
+}
+
 pub(crate) fn gc_safepoint_moving_minor() {
     // Same start guards the budgeted collector uses, minus the (here
     // irrelevant) scanner block: never collect mid-allocation, inside a
@@ -1412,6 +1450,13 @@ pub(crate) fn gc_safepoint_moving_minor() {
     let kind = match gc_budgeted_due_trigger() {
         Some(BudgetedGcTrigger::ArenaBytes) => GcTriggerKind::ArenaBytes,
         Some(BudgetedGcTrigger::MallocCount) => GcTriggerKind::MallocCount,
+        // Phase 1.5: fire the compacting safepoint minor even without a general
+        // budgeted trigger when the nursery has grown past the safepoint-evac
+        // threshold since the last one. The alloc-triggered (non-moving under
+        // Phase 1) cycles consume the general trigger, so this is the only path
+        // that lets accumulated survivors compact through the safe unwound-stack
+        // copying/evacuating minor.
+        None if gc_safepoint_evac_due() => GcTriggerKind::ArenaBytes,
         _ => return,
     };
     let pre_in_use = crate::arena::arena_in_use_bytes();
@@ -1436,6 +1481,9 @@ pub(crate) fn gc_safepoint_moving_minor() {
             gc_finish_arena_trigger_collection(pre_in_use, outcome);
         }
     }
+    // Phase 1.5: record post-collection in-use so the next safepoint measures
+    // nursery growth from the compacted baseline.
+    LAST_SAFEPOINT_EVAC_IN_USE.with(|c| c.set(crate::arena::arena_in_use_bytes()));
 }
 
 /// Phase 2 of the moving-GC project: codegen emits a call to this at loop
