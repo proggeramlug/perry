@@ -1417,7 +1417,17 @@ pub(crate) fn gc_safepoint_moving_minor() {
     let pre_in_use = crate::arena::arena_in_use_bytes();
     let pre_malloc_count = malloc_object_count();
     // No `force_full_scan`: roots are precise at this safepoint.
+    //
+    // Phase 1 safepoint-gated evacuation: this collection runs at the unwound-JS-
+    // stack safepoint (microtask boundary / loop back-edge), so PERRY_GC_PROMOTE
+    // evacuation is SAFE here — no native Rust local/Vec still references a nursery
+    // object un-rooted. Flag the cycle so `gc_promote_begin_cycle_decide_evac`
+    // permits evacuation; alloc-triggered cycles (deep stack) never set this and
+    // stay non-moving. Restore the prior value (safepoint minors don't nest, but
+    // keep it robust).
+    let prev_safepoint = super::oldgen::gc_promote_set_evac_at_safepoint(true);
     let outcome = super::gc_collect_minor_with_trigger(GcTriggerSnapshot::capture(kind));
+    super::oldgen::gc_promote_set_evac_at_safepoint(prev_safepoint);
     match kind {
         GcTriggerKind::MallocCount => {
             gc_finish_malloc_trigger_collection(pre_malloc_count, outcome);

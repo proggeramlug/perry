@@ -26,6 +26,16 @@ thread_local! {
     static GC_PROMOTE_TENURED_BYTES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     /// Set at cycle start: does THIS budgeted cycle build the census + evacuate?
     static GC_PROMOTE_EVAC_THIS_CYCLE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    /// Phase-1 safepoint-gated evacuation (retrofit for SAFE PERRY_GC_PROMOTE).
+    /// True ONLY while the in-flight collection is the microtask/loop-boundary
+    /// safepoint minor (`gc_safepoint_moving_minor`), where the JS stack has fully
+    /// unwound so no native Rust local/`Vec` still holds an un-rooted JS pointer.
+    /// Alloc-triggered budgeted cycles leave this false → they stay NON-MOVING
+    /// (mark/sweep in place), deferring compaction to the next safepoint. This is
+    /// what makes PROMOTE evacuation safe against the native-held-local live-sweep
+    /// class (evacuating mid-native-call swept JS objects referenced only from a
+    /// transient Rust container → slot reused → SIGSEGV in the JSON.stringify walk).
+    static GC_PROMOTE_EVAC_AT_SAFEPOINT: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 /// Evacuation runs (and the census is built) once accumulated tenured bytes
@@ -39,9 +49,27 @@ pub(super) fn gc_promote_note_tenured(bytes: usize) {
 /// accumulated tenured estimate clears `MIN_TENURED_NURSERY_BYTES`.
 pub(super) fn gc_promote_begin_cycle_decide_evac() -> bool {
     let due = crate::gc::gc_promote_enabled()
+        // Phase 1: evacuate ONLY at the shallow-stack safepoint minor. An
+        // alloc-triggered budgeted cycle (deep native stack, transient Rust
+        // containers holding un-rooted JS pointers) stays non-moving here; the
+        // accumulated tenured survivors are compacted at the next safepoint.
+        && GC_PROMOTE_EVAC_AT_SAFEPOINT.with(|c| c.get())
         && GC_PROMOTE_TENURED_BYTES.with(|c| c.get()) >= MIN_TENURED_NURSERY_BYTES;
     GC_PROMOTE_EVAC_THIS_CYCLE.with(|c| c.set(due));
     due
+}
+
+/// Phase-1 safepoint gate: mark/unmark that the in-flight collection is the safe
+/// safepoint minor (JS stack unwound). Returns the previous value so the caller
+/// restores it (nesting-safe, though safepoint minors never nest). Set by
+/// `gc_safepoint_moving_minor` around its collection; read by
+/// `gc_promote_begin_cycle_decide_evac`.
+pub(super) fn gc_promote_set_evac_at_safepoint(value: bool) -> bool {
+    GC_PROMOTE_EVAC_AT_SAFEPOINT.with(|c| {
+        let prev = c.get();
+        c.set(value);
+        prev
+    })
 }
 
 /// Whether the in-flight budgeted cycle is an evacuating (census-built) one.
