@@ -900,8 +900,13 @@ pub(crate) unsafe fn stringify_object_pretty(
     // Check for toJSON method
     if let Some(to_json_val) = object_get_to_json(ptr) {
         STRINGIFY_STACK.with(|s| s.borrow_mut().pop());
-        arm_to_json_result_guard(to_json_val);
-        stringify_value_pretty(to_json_val, TYPE_UNKNOWN, buf, indent, depth);
+        // Root the nested `toJSON` result across its sub-walk: it's a fresh graph
+        // NOT reachable from the parent's fields (toJSON REPLACES the value), so
+        // the walk's allocations could sweep it if left in a native local only.
+        let tj_scope = crate::gc::RuntimeHandleScope::new();
+        let tj_handle = tj_scope.root_nanbox_f64(to_json_val);
+        arm_to_json_result_guard(tj_handle.get_nanbox_f64());
+        stringify_value_pretty(tj_handle.get_nanbox_f64(), TYPE_UNKNOWN, buf, indent, depth);
         SUPPRESS_NEXT_TO_JSON.with(|c| c.set(false));
         return;
     }
@@ -1691,12 +1696,28 @@ pub unsafe extern "C" fn js_json_stringify_full(
         if after_bits != value.to_bits() {
             arm_to_json_result_guard(value_after_to_json);
         }
+        // Root the (possibly `toJSON`-substituted) root value across the buffer
+        // walk. When `toJSON` substituted a fresh object graph, `value_after_to_json`
+        // is held ONLY in this native local — the recursive walk allocates (key
+        // strings, nested `toJSON`), and a mid-walk GC would sweep that graph while
+        // still referenced; its slot is then reused for a string, which the walk
+        // derefs → SIGSEGV inside `stringify_object_pretty` (the telemetry-export
+        // crash). JSON.parse roots its intermediates (PARSE_ROOTS + gc_suppress);
+        // stringify historically had NO such rooting — this closes that asymmetry.
+        let walk_scope = crate::gc::RuntimeHandleScope::new();
+        let root_handle = walk_scope.root_nanbox_f64(value_after_to_json);
         if use_pretty {
             // No replacer, but has spacer — pretty-print
-            stringify_value_pretty(value_after_to_json, TYPE_UNKNOWN, &mut buf, &indent_str, 0);
+            stringify_value_pretty(
+                root_handle.get_nanbox_f64(),
+                TYPE_UNKNOWN,
+                &mut buf,
+                &indent_str,
+                0,
+            );
         } else {
             // Plain stringify
-            stringify_value(value_after_to_json, TYPE_UNKNOWN, &mut buf);
+            stringify_value(root_handle.get_nanbox_f64(), TYPE_UNKNOWN, &mut buf);
         }
         SUPPRESS_NEXT_TO_JSON.with(|c| c.set(false));
     }
