@@ -145,7 +145,19 @@ pub extern "C" fn js_closure_alloc(func_ptr: *const u8, capture_count: u32) -> *
     crate::promise::bump(&CLOSURE_ALLOC_COUNT);
     let actual_count = real_capture_count(capture_count) as usize;
 
-    let raw = closure_alloc_storage(actual_count);
+    // PERRY_GC_CLOSURE_ALLOC_SAFE: codegen emits `js_closure_alloc` then a
+    // sequence of `js_closure_set_capture_bits`, holding the (freshly computed)
+    // capture values across THIS allocation. A moving GC firing here would
+    // relocate them and the subsequent store would write pre-move addresses
+    // (confirmed root cause of the async-fn "path argument must be of type
+    // string" evac crash). Suppress GC for just the storage alloc so the
+    // collection defers until after the captures are stored.
+    let raw = if crate::gc::gc_closure_alloc_safe_enabled() {
+        let _suppress = crate::gc::GcAllocSuppressGuard::new();
+        closure_alloc_storage(actual_count)
+    } else {
+        closure_alloc_storage(actual_count)
+    };
     let ptr = raw as *mut ClosureHeader;
 
     unsafe {

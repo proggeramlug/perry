@@ -322,6 +322,22 @@ pub(crate) fn gc_evac_trap_morgue_enabled() -> bool {
     })
 }
 
+/// PERRY_GC_CLOSURE_ALLOC_SAFE (default OFF for A/B; ship-default should be ON):
+/// suppress GC for the duration of `js_closure_alloc`'s own storage allocation so
+/// an evacuating collection can't relocate a capture value the caller is holding
+/// across the alloc→store gap (the boxed-capture / #6497 family). Closes the
+/// closure-capture reference-coverage hole that keeps PERRY_GC_PROMOTE unsound.
+pub(crate) fn gc_closure_alloc_safe_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_CLOSURE_ALLOC_SAFE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
 /// PERRY_GC_REWRITE_INACTIVE_SHADOW (default OFF): during the evacuation rewrite
 /// pass, ALSO rewrite forwarded references in INACTIVE shadow-stack slots — slots
 /// codegen marked dead. Tests the hypothesis that the residual moving-GC

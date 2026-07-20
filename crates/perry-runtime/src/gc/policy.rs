@@ -643,6 +643,49 @@ pub fn gc_unsuppress() {
     GC_FLAGS.with(|f| f.set(f.get() & !GC_FLAG_SUPPRESSED));
 }
 
+/// Minimal scoped GC suppression — toggles ONLY `GC_FLAG_SUPPRESSED` (none of
+/// `gc_suppress`'s fresh-block / byte-snapshot side effects, which are wrong for
+/// a hot per-alloc window), restoring the PRIOR flag state on drop so it nests
+/// safely inside an outer suppression (e.g. a JSON.parse).
+///
+/// Use for a tiny allocation window where a moving GC firing mid-alloc would
+/// relocate a value the CALLER is holding across the alloc, stranding it: closure
+/// construction does `v = compute(); c = js_closure_alloc(...); set_capture(c, v)`
+/// — an evacuating GC inside `js_closure_alloc` moves `v`, and codegen stores the
+/// pre-move address (the boxed-capture / #6497 family). Suppressing GC for just
+/// the closure's own allocation defers the collection to the next safepoint,
+/// after the captures are stored (and the stored slots then rewrite normally).
+pub struct GcAllocSuppressGuard {
+    was_suppressed: bool,
+}
+
+impl GcAllocSuppressGuard {
+    #[inline]
+    pub fn new() -> Self {
+        let was_suppressed = GC_FLAGS.with(|f| {
+            let v = f.get();
+            f.set(v | GC_FLAG_SUPPRESSED);
+            v & GC_FLAG_SUPPRESSED != 0
+        });
+        GcAllocSuppressGuard { was_suppressed }
+    }
+}
+
+impl Default for GcAllocSuppressGuard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Drop for GcAllocSuppressGuard {
+    #[inline]
+    fn drop(&mut self) {
+        if !self.was_suppressed {
+            GC_FLAGS.with(|f| f.set(f.get() & !GC_FLAG_SUPPRESSED));
+        }
+    }
+}
+
 /// Rebaseline the malloc-count AND arena-bytes triggers to the current
 /// live set so that objects just created during a GC-suppressed window
 /// (e.g. JSON.parse) don't immediately trip a collection on the next
