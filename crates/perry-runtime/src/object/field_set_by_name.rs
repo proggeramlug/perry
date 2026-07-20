@@ -23,6 +23,9 @@ pub extern "C" fn js_object_set_field_by_name_transition_fast(
     if key.is_null() || (key as usize) < 0x10000 {
         return 0;
     }
+    // PERRY_GC_PROMOTE_SELFHEAL WRITE barrier (see js_object_set_field_by_name).
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *mut ObjectHeader;
 
     let obj = {
         let bits = obj as u64;
@@ -298,6 +301,13 @@ pub extern "C" fn js_object_set_field_by_name(
     key: *const crate::StringHeader,
     value: f64,
 ) {
+    // PERRY_GC_PROMOTE_SELFHEAL WRITE barrier: a stale ref must write to the LIVE
+    // copy, not the retained forwarded stub — otherwise reads (which follow the
+    // forward) and writes land on different objects, splitting the object's state
+    // and hanging any async continuation waiting on a field the write went to the
+    // stub. Bounds-guarded; no-op for proxy ids / tagged values / non-stubs.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *mut ObjectHeader;
     // #5135: the receiver may be a Proxy id arriving with its NaN-box tag
     // already masked off (the `obj.prop++` / `PropertyUpdate` codegen path
     // hands us the bare pointer band, not the full POINTER_TAG value). A Proxy

@@ -99,6 +99,9 @@ fn record_warn_null_ptr(obj: *mut ObjectHeader, field_index: u32, class_id: u32)
 /// Set a field on an object by index
 #[no_mangle]
 pub extern "C" fn js_object_set_field(obj: *mut ObjectHeader, field_index: u32, value: JSValue) {
+    // PERRY_GC_PROMOTE_SELFHEAL WRITE barrier (see js_object_set_field_by_name).
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *mut ObjectHeader;
     let obj = {
         let b = obj as u64;
         let t = b >> 48;
@@ -322,6 +325,9 @@ pub extern "C" fn js_object_set_field_by_index(
     if obj.is_null() || (obj as usize) < 0x10000 {
         return;
     }
+    // PERRY_GC_PROMOTE_SELFHEAL WRITE barrier (see js_object_set_field_by_name).
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *mut ObjectHeader;
     unsafe {
         // Frozen objects reject all writes.
         let gc = (obj as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
