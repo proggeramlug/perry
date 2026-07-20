@@ -322,6 +322,48 @@ pub(crate) fn gc_evac_trap_morgue_enabled() -> bool {
     })
 }
 
+/// PERRY_GC_PROMOTE_SELFHEAL (default OFF): make promote-evacuation self-healing
+/// instead of requiring complete reference rewrite. When on, promote-evac (1)
+/// evacuates ONLY plain GC_TYPE_OBJECTs (strings/closures/arrays keep their word-0
+/// header fields that inlined reads depend on, so they are left in place), and
+/// (2) RETAINS each evacuated object as a FORWARDED stub for the rest of the cycle
+/// (no reuse) — the shelved L8 retention. A read barrier (`gc_follow_forwarded`)
+/// on the object read paths then follows the forward, so an un-rewritten stale
+/// reference (held in some GC-invisible codegen local) is BENIGN regardless of
+/// which local held it — closing the whole missed-reference class at once, only
+/// on the moving path (no read-barrier cost in the default non-moving path).
+pub(crate) fn gc_promote_selfheal_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_PROMOTE_SELFHEAL").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
+/// Self-heal read barrier: if `obj` (a user pointer) has a FORWARDED header — a
+/// retained promote-evac stub — return the object's new location; otherwise
+/// return `obj` unchanged. Bounds-guarded so a non-heap/tagged value is a no-op.
+/// Cheap flag test on the hot read paths; only ever finds a stub when
+/// promote-selfheal is active and retaining stubs.
+#[cfg(target_pointer_width = "64")]
+#[inline]
+pub(crate) fn gc_follow_forwarded(obj: usize) -> usize {
+    if obj < 0x0010_0000 || obj > 0x0000_FFFF_FFFF_FFFF || !gc_promote_selfheal_enabled() {
+        return obj;
+    }
+    unsafe {
+        let hdr = (obj as *const u8).sub(GC_HEADER_SIZE) as *const GcHeader;
+        if (*hdr).gc_flags & GC_FLAG_FORWARDED != 0 {
+            forwarding_address(hdr) as usize
+        } else {
+            obj
+        }
+    }
+}
+
 /// PERRY_GC_CLOSURE_ALLOC_SAFE (default OFF for A/B; ship-default should be ON):
 /// suppress GC for the duration of `js_closure_alloc`'s own storage allocation so
 /// an evacuating collection can't relocate a capture value the caller is holding

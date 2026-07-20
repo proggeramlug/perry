@@ -33,6 +33,11 @@ pub extern "C" fn js_object_get_field_by_name(
     // guards the pointer (rejecting NaN-boxed/tagged values) before it derefs.
     #[cfg(target_pointer_width = "64")]
     crate::gc::gc_evac_trap_check(obj as usize, "get_by_name");
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: if `obj` is a retained forwarded
+    // stub (an un-rewritten stale reference to a promote-evacuated object),
+    // follow the forward to the live copy. No-op unless self-heal is active.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *const ObjectHeader;
     // #5972: a null key reaches here when the property-key expression didn't
     // yield a usable string handle — e.g. `js_get_string_pointer_unified`
     // returned 0 for a NaN/number key that fell through its coercion branches.

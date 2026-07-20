@@ -1617,7 +1617,15 @@ impl GcCycleState {
                 // marked-in-place retention crashed the tracer). The trap now
                 // lets the originals be freed normally and detects stale reads
                 // via the morgue + sentinel that the release path stamps.
-                let released = if super::oldgen::gc_promote_evac_this_cycle() {
+                // PERRY_GC_PROMOTE_SELFHEAL: DON'T release the evacuated originals —
+                // keep them FORWARDED so the minor sweep retains them as stubs
+                // (retain_all_forwarded_stubs=true for minors) and their slots are
+                // never reused. The self-heal read barrier then follows the forward,
+                // making any un-rewritten stale reference benign. A later full trace
+                // reclaims genuinely-dead stubs.
+                let released = if super::oldgen::gc_promote_evac_this_cycle()
+                    || super::gc_promote_selfheal_enabled()
+                {
                     EvacuationTraceStats::default()
                 } else {
                     release_evacuated_original_forwarding_stubs(&evacuated_original_headers)

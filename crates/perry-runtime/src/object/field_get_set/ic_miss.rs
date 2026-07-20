@@ -223,6 +223,9 @@ pub extern "C" fn js_object_get_field_ic_miss(
     // IC-miss getter (bounds-guarded; no-op unless the trap is on).
     #[cfg(target_pointer_width = "64")]
     crate::gc::gc_evac_trap_check(obj as usize, "ic_miss");
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: follow a retained forwarded stub.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *const ObjectHeader;
     // SSO receiver — never cacheable. Route through the SSO-aware
     // `js_object_get_field_by_name` which handles `.length` inline
     // and returns undefined for other keys.

@@ -36,6 +36,9 @@ pub extern "C" fn js_object_get_field(obj: *const ObjectHeader, field_index: u32
     }
     #[cfg(target_pointer_width = "64")]
     crate::gc::gc_evac_trap_check(obj as usize, "get_field[idx]");
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: follow a retained forwarded stub.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *const ObjectHeader;
     unsafe {
         // Bounds check: check inline fields first, then overflow map
         let fc = (*obj).field_count;
@@ -79,6 +82,9 @@ pub(crate) unsafe fn own_data_field_by_name(
     // field reader before the obj_type gate below silently rejects the sentinel.
     #[cfg(target_pointer_width = "64")]
     crate::gc::gc_evac_trap_check(obj as usize, "own_data_by_name");
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: follow a retained forwarded stub.
+    #[cfg(target_pointer_width = "64")]
+    let obj = crate::gc::gc_follow_forwarded(obj as usize) as *const ObjectHeader;
     if obj.is_null() || !is_valid_obj_ptr(obj as *const u8) {
         return None;
     }

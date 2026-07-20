@@ -1877,6 +1877,19 @@ pub(super) fn evacuate_tenured_nursery_objects_collecting(
             if !gc_type_is_movable((*header).obj_type) {
                 return;
             }
+            // PERRY_GC_PROMOTE_SELFHEAL: evacuate ONLY plain objects. Strings /
+            // closures / arrays keep type-specific fields at payload word 0
+            // (utf16_len / func_ptr / length) that INLINED reads depend on and
+            // that set_forwarding_address would clobber — the self-heal read
+            // barrier only covers the runtime object read paths, not inlined
+            // string/closure/array ops. Leaving them in place means they never go
+            // stale; a stale OBJECT ref self-heals via the barrier and its
+            // rewritten fields then point at the (unmoved) strings correctly.
+            if crate::gc::gc_promote_selfheal_enabled()
+                && (*header).obj_type != crate::gc::GC_TYPE_OBJECT
+            {
+                return;
+            }
             // DIAGNOSTIC bisect (PERRY_GC_EVAC_ONLY_TYPE): move only one type.
             if let Some(only) = crate::gc::gc_evac_only_type() {
                 if (*header).obj_type != only {

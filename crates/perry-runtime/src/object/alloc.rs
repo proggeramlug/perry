@@ -1139,7 +1139,9 @@ pub unsafe extern "C" fn js_object_assign_one(target_f64: f64, source_f64: f64) 
     if !target_value.is_pointer() {
         return target_f64;
     }
-    let tgt_raw = target_value.as_pointer::<u8>() as usize;
+    // PERRY_GC_PROMOTE_SELFHEAL read barrier: follow retained forwarded stubs so
+    // Object.assign reads/writes the live copies, not a stale evacuated original.
+    let tgt_raw = crate::gc::gc_follow_forwarded(target_value.as_pointer::<u8>() as usize);
     // A real `ObjectHeader` is heap-allocated and #[repr(C)] with u64 /
     // pointer fields, so a valid object pointer is always 8-byte aligned.
     // If a non-object target reaches here after nullish validation, skip
@@ -1187,7 +1189,7 @@ pub unsafe extern "C" fn js_object_assign_one(target_f64: f64, source_f64: f64) 
     if !source.is_pointer() {
         return target_f64;
     }
-    let src_raw = source.as_pointer::<u8>() as usize;
+    let src_raw = crate::gc::gc_follow_forwarded(source.as_pointer::<u8>() as usize);
     // Same alignment guard as the target above — `src` is dereferenced at
     // `(*src).keys_array` just below; an unaligned non-object source must
     // be skipped, not dereferenced.
