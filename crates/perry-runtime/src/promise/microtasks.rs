@@ -864,7 +864,17 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
     // nursery pressure is due so programs that yield to the event loop get
     // compacting, O(survivors) young collection instead of the non-moving
     // alloc-point fallback. Gated (default off); additive.
+    // Phase 2 (startup corner): also require the true EventLoop drain. A top-level
+    // `await` during startup drains via AwaitLoop and IS the outermost (depth==1)
+    // drain, but its stack is deep in the async frame (NOT unwound) — evacuating
+    // there live-sweeps native module-init Rust locals/Vecs still holding JS
+    // pointers → the "value is not a function" startup crash. Only the EventLoop
+    // drain is the genuinely-unwound top-level event-loop boundary (reached
+    // post-startup, and each steady-state TUI turn), where the moving evacuation
+    // is safe. Accumulated startup nursery then compacts at the first EventLoop
+    // drain once module init has returned.
     if crate::gc::gc_moving_safepoint_enabled()
+        && matches!(mode, MicrotaskDrainMode::EventLoop)
         && MICROTASK_RUN_DEPTH.with(|depth| depth.get()) == 1
     {
         crate::gc::gc_safepoint_moving_minor();
