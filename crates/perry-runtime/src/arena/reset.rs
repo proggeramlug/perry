@@ -70,6 +70,9 @@ fn reset_region_to_zero(arena: &mut Arena) -> (usize, usize) {
 fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, usize) {
     let mut reset_blocks = 0usize;
     let mut reusable_bytes = 0usize;
+    let mut fs_dealloc_blocks = 0usize;
+    let mut fs_dealloc_bytes = 0usize;
+    let nblocks = arena.blocks.len();
     for (i, block) in arena.blocks.iter_mut().enumerate() {
         if block.data.is_null() {
             continue;
@@ -81,6 +84,8 @@ fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, 
         block.offset = 0;
         block.dead_cycles = 0;
         if dealloc_empty && i != 0 {
+            fs_dealloc_blocks += 1;
+            fs_dealloc_bytes = fs_dealloc_bytes.saturating_add(block.size);
             // Return this emptied from-space block to the OS. Block 0 is kept as
             // the allocator target; the free list is cleared by the caller.
             let base = block.data as usize;
@@ -104,6 +109,16 @@ fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, 
         old_gen_in_use_bytes_sub(reusable_bytes);
     }
     arena.current = 0;
+    if dealloc_empty && std::env::var_os("PERRY_GC_DIAG").is_some() {
+        eprintln!(
+            "[fs-dealloc] gen={:?} nblocks={} reset={} freed_blocks={} freed_mb={}",
+            arena.generation,
+            nblocks,
+            reset_blocks,
+            fs_dealloc_blocks,
+            fs_dealloc_bytes / 1048576,
+        );
+    }
     (reset_blocks, reusable_bytes)
 }
 
