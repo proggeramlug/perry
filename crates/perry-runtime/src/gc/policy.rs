@@ -1420,8 +1420,33 @@ fn gc_safepoint_evac_threshold_bytes() -> usize {
 /// Phase 1.5: has the nursery grown past the safepoint-evac threshold since the
 /// last safepoint moving-minor? Gated on PROMOTE so baseline behavior is
 /// unchanged (the safe compacting evac is the PROMOTE-config reclaim path).
+/// Phase 2 (startup corner): safepoint evacuation is only safe once the app has
+/// reached the event-loop OS wait (`js_wait_for_event`) at least once — i.e. the
+/// synchronous + microtask startup burst has fully unwound past module init.
+/// Evacuating BEFORE that live-sweeps native module-init Rust locals/Vecs still
+/// holding JS pointers (the "value is not a function" startup crash). No byte
+/// threshold can defer past init — the bundle allocates far more than any
+/// threshold *during* init — so this is a STATE gate, not a size gate. Sticky.
+static GC_STARTUP_SETTLED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Called from the event-loop OS wait the first time the app blocks for external
+/// events — marks the end of the module-init phase that is unsafe to evacuate.
+pub(crate) fn gc_mark_startup_settled() {
+    GC_STARTUP_SETTLED.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
+fn gc_startup_settled() -> bool {
+    GC_STARTUP_SETTLED.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 fn gc_safepoint_evac_due() -> bool {
     if !crate::gc::gc_promote_enabled() {
+        return false;
+    }
+    // Phase 2: never evacuate during the module-init phase (see above) — accumulated
+    // startup nursery compacts at the first safepoint after the app first idles.
+    if !gc_startup_settled() {
         return false;
     }
     let cur = crate::arena::arena_in_use_bytes();

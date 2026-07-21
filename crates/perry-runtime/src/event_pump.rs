@@ -480,6 +480,10 @@ pub extern "C" fn js_event_loop_host_driven() -> i32 {
 /// and `await` busy-wait.
 #[no_mangle]
 pub extern "C" fn js_wait_for_event() {
+    // Phase 2 (moving-GC startup corner): reaching the event-loop OS wait means
+    // startup has fully unwound past module init, so the safepoint moving
+    // evacuation is safe from here on. Sticky; cheap relaxed store on every entry.
+    crate::gc::gc_mark_startup_settled();
     // FAST PATH: a notify was already issued since the last wait. The
     // hot async/await steady-state hits this every iteration.
     //

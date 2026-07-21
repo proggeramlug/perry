@@ -37,6 +37,7 @@ mod types;
 pub use types::*;
 mod policy;
 pub(crate) use policy::gc_runtime_safepoint;
+pub(crate) use policy::gc_mark_startup_settled;
 pub use policy::*;
 mod progress;
 pub use progress::*;
