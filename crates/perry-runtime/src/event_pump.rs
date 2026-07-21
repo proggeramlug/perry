@@ -551,6 +551,16 @@ pub extern "C" fn js_wait_for_event() {
         // notified/microtask path above guards against. Give it the same brief
         // driven turn. No-op (atomic loads) when no driver is registered or
         // nothing native is in flight. #1114: this path does NOT reset the streak.
+        //
+        // Phase 5.2: fire the growth-gated idle mark-compact here too. A TUI's
+        // render/cursor-blink timer keeps this due-timer branch hot at idle while
+        // the genuine-idle block below is essentially never reached — so this is
+        // where idle compaction must run. gc_idle_mark_compact's startup_settled
+        // gate keeps it off during module init (settled is set only past the
+        // genuine-idle block, i.e. once init has returned). No-op unless
+        // PERRY_GC_GENERAL_EVAC and the arena grew past its 16MB floor, so a truly
+        // steady REPL compacts once then quiesces.
+        crate::gc::gc_idle_mark_compact();
         invoke_wait_driver_fast();
         return;
     }

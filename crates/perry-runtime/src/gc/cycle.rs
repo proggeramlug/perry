@@ -755,6 +755,26 @@ fn run_malloc_trim(progress_kind: GcProgressKind) -> MallocTrimOutcome {
     // the OS (2026-07-09 audit finding). Trim runs at Reclaim, outside the
     // atomic tail, and is itself bounded allocator maintenance.
 
+    // mimalloc OS-return (64-bit): perry's global allocator is mimalloc, which
+    // RETAINS freed arena segments — so when the idle mark-compact frees blocks,
+    // arena in_use drops but RSS stays high until mimalloc returns them. Neither
+    // glibc malloc_trim nor macOS malloc_zone_pressure_relief reaches mimalloc's
+    // own mmap'd segments (it's a #[global_allocator], not a registered zone).
+    // mi_collect(true) is the real primitive (MADV_FREE_REUSABLE on macOS ⇒
+    // immediate RSS drop); "expensive" per its docs, so gate to NON-budgeted
+    // cycles (full / explicit / emergency / idle mark-compact) — never the hot
+    // budgeted incremental/mutator-assist steps. Single-threaded GC/event loop,
+    // so the calling-thread collect is process-complete for our purposes.
+    #[cfg(target_pointer_width = "64")]
+    if !progress_kind.is_budgeted() {
+        unsafe extern "C" {
+            fn mi_collect(force: bool);
+        }
+        unsafe {
+            mi_collect(true);
+        }
+    }
+
     #[cfg(target_env = "gnu")]
     {
         #[cfg(test)]
