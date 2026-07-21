@@ -1513,7 +1513,16 @@ pub(crate) fn gc_idle_mark_compact() {
     // minor is the sound path (no evacuator corruption); prepare-to-space uses the
     // non-dealloc reset so the copy target is never freed.
     let prev_aggr = crate::arena::arena_set_aggressive_dealloc(true);
-    gc_safepoint_moving_minor();
+    // FORCE the copying minor (bypass gc_safepoint_moving_minor's due-gate, which
+    // no-ops at idle). Set evac-at-safepoint so the copying fast path evacuates;
+    // when eligible (no pinned young / precise roots) it consolidates live Eden →
+    // to-space and copying_reset frees the from-spaces (aggressive). When it bails
+    // (pinned), no reclaim this cycle but no corruption — the sound path.
+    let prev_sp = super::oldgen::gc_promote_set_evac_at_safepoint(true);
+    let _ = super::gc_collect_minor_with_trigger(GcTriggerSnapshot::capture(
+        GcTriggerKind::ArenaBytes,
+    ));
+    super::oldgen::gc_promote_set_evac_at_safepoint(prev_sp);
     crate::arena::arena_set_aggressive_dealloc(prev_aggr);
     super::gc_return_freed_to_os();
     if diag {
