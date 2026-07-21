@@ -38,6 +38,7 @@ pub use types::*;
 mod policy;
 pub(crate) use policy::gc_runtime_safepoint;
 pub(crate) use policy::gc_mark_startup_settled;
+pub(crate) use policy::gc_idle_mark_compact;
 pub use policy::*;
 mod progress;
 pub use progress::*;
@@ -224,6 +225,31 @@ fn gc_force_evacuate_enabled() -> bool {
             std::env::var("PERRY_GC_FORCE_EVACUATE").as_deref(),
             Ok("1") | Ok("on") | Ok("true")
         )
+}
+
+/// Phase 5 opt-in: enable full-cycle mark-compact evacuation of tenured-in-place
+/// general-block survivors (the ~250MB the copying minor never consolidates), and
+/// arm the idle trigger that fires the compacting full GC. Off by default — the
+/// underlying evacuator has a documented missed-reference risk (cycle.rs:1556),
+/// but a FULL cycle's rewrite is complete (vs a minor's partial), which is the
+/// hypothesis this gate tests. Experimental/measurement.
+pub fn general_block_evac_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_GENERAL_EVAC").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
+/// Idle trigger entry: run a full mark-compact collection (compaction happens in
+/// cycle.rs's full-cycle AtomicFinalize when general_block_evac_enabled()). The
+/// full path drains any active budgeted cycle itself, so unlike the safepoint
+/// minor this does not gate on gc_budgeted_cycle_active().
+pub(super) fn gc_collect_full_mark_compact_idle() -> GcCollectOutcome {
+    gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(GcTriggerKind::Manual))
 }
 
 /// Memory-parity lever: sound promotion under budgeted (incremental) GC.

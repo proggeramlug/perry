@@ -1399,6 +1399,10 @@ thread_local! {
     /// budgeted trigger, so without this the safepoint minor never runs → idle RSS
     /// stays ~3-4x node because partially-live blocks never compact/empty).
     static LAST_SAFEPOINT_EVAC_IN_USE: Cell<usize> = const { Cell::new(0) };
+    /// Arena in-use after the last idle mark-compact (Phase 5). Gates re-firing
+    /// so a steady REPL doesn't run a full compacting GC every idle second.
+    /// `MAX` = never ⇒ first idle after startup always fires.
+    static LAST_IDLE_MARK_COMPACT_IN_USE: Cell<usize> = const { Cell::new(usize::MAX) };
 }
 
 /// Phase 1.5 tunable: nursery-growth bytes since the last safepoint moving-minor
@@ -1452,6 +1456,40 @@ fn gc_safepoint_evac_due() -> bool {
     let cur = crate::arena::arena_in_use_bytes();
     let last = LAST_SAFEPOINT_EVAC_IN_USE.with(|c| c.get());
     cur.saturating_sub(last) >= gc_safepoint_evac_threshold_bytes()
+}
+
+/// Phase 5: idle-triggered full mark-compact. At the genuinely-idle event-loop
+/// OS-wait, run a compacting full GC (the compaction itself lives in cycle.rs's
+/// full-cycle AtomicFinalize, gated by the same env) to consolidate the ~250MB of
+/// tenured-in-place general-block survivors the copying minor never reaches. Only
+/// the FULL cycle has the complete liveness needed to prove the moved objects'
+/// forwarding stubs unreferenced (so the full-trace sweep frees them and the
+/// blocks empty). Env-gated (PERRY_GC_GENERAL_EVAC), PROMOTE-only, past startup.
+/// Does NOT gate on gc_budgeted_cycle_active() — the full collection drains any
+/// in-flight budgeted cycle itself. Fires only when the arena grew ≥16MB since
+/// the last idle compaction (first idle always), so a steady REPL compacts once
+/// then quiesces.
+pub(crate) fn gc_idle_mark_compact() {
+    if !crate::gc::general_block_evac_enabled()
+        || !crate::gc::gc_promote_enabled()
+        || !gc_startup_settled()
+    {
+        return;
+    }
+    if GC_FLAGS.with(|f| f.get()) & (GC_FLAG_IN_ALLOC | GC_FLAG_SUPPRESSED) != 0
+        || gc_blocked_by_unsafe_zone()
+        || GC_ROOT_LOCK_DEPTH.with(|depth| depth.get() != 0)
+    {
+        return;
+    }
+    const IDLE_COMPACT_GROWTH_BYTES: usize = 16 * 1024 * 1024;
+    let cur = crate::arena::arena_in_use_bytes();
+    let last = LAST_IDLE_MARK_COMPACT_IN_USE.with(|c| c.get());
+    if last != usize::MAX && cur.saturating_sub(last) < IDLE_COMPACT_GROWTH_BYTES {
+        return;
+    }
+    let _ = super::gc_collect_full_mark_compact_idle();
+    LAST_IDLE_MARK_COMPACT_IN_USE.with(|c| c.set(crate::arena::arena_in_use_bytes()));
 }
 
 pub(crate) fn gc_safepoint_moving_minor() {

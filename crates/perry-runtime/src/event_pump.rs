@@ -562,6 +562,11 @@ pub extern "C" fn js_wait_for_event() {
     // becomes permitted from here; evacuating any earlier live-sweeps native
     // module-init Rust locals/Vecs. Sticky; cheap relaxed store.
     crate::gc::gc_mark_startup_settled();
+    // Phase 5 (PERRY_GC_GENERAL_EVAC, default off): at genuine idle, run a
+    // compacting full GC to consolidate the ~250MB of tenured-in-place general
+    // blocks the copying minor can't reach. No-op unless the arena grew past its
+    // last-compaction floor. Safe here (unwound stack, past startup-settle).
+    crate::gc::gc_idle_mark_compact();
     // Unified single-thread async model: when perry-stdlib has installed a
     // wait-driver (i.e. async work exists), drive ONE bounded tick of the
     // current-thread tokio runtime here instead of parking on the condvar. The

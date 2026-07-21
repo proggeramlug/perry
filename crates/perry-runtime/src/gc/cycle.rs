@@ -1498,12 +1498,65 @@ impl GcCycleState {
                     state.subphase = AtomicFinalizeSubphase::Done;
                 }
                 self.atomic_finalize = None;
+                // Full-cycle mark-compact (PERRY_GC_GENERAL_EVAC): only FULL cycles
+                // (self.minor is None) — marking is now COMPLETE, so we can evacuate
+                // every marked+tenured general-block survivor and rewrite EVERY
+                // reference to it (a full valid-pointer set covers all references,
+                // unlike a minor's partial rewrite). The following non-moving sweep
+                // runs with full_trace=true, so it reclaims the now-provably-
+                // unreferenced forwarding stubs and empties the source blocks — the
+                // mechanism the copying minor lacks for the ~250MB tenured-in-place
+                // mass. Minor cycles keep their own evacuation prelude.
+                if self.minor.is_none() {
+                    self.full_cycle_mark_compact_evac();
+                }
                 self.phase = GcCyclePhase::Sweep;
             }
             AtomicFinalizeSubphase::Done => {
                 self.atomic_finalize = None;
                 self.phase = GcCyclePhase::Sweep;
             }
+        }
+    }
+
+    /// Full-cycle mark-compact evacuation. See the call site in the
+    /// AtomicFinalize `DisableBarrier` arm. Runs ONLY for full cycles, where
+    /// marking is complete, so the reference rewrite is complete and the moved
+    /// objects' forwarding stubs become provably unreferenced (freed by the
+    /// following full-trace sweep). This consolidates the ~250MB of tenured
+    /// survivors stranded in partially-live general blocks, which the copying
+    /// minor never reaches (nursery scope) and a minor's partial rewrite could
+    /// never prove safe to free. Env-gated (PERRY_GC_GENERAL_EVAC), PROMOTE-only.
+    fn full_cycle_mark_compact_evac(&mut self) {
+        if !super::general_block_evac_enabled() || !super::gc_promote_enabled() {
+            return;
+        }
+        let phase_start = trace_phase_start(&self.trace);
+        let mut evacuated_new_headers = Vec::new();
+        let mut evacuated_original_headers = Vec::new();
+        // force_evacuation=true: a full cycle has complete liveness, so every
+        // marked+tenured general-block survivor is safe to move.
+        let evacuation = evacuate_tenured_nursery_objects_collecting(
+            true,
+            &mut evacuated_new_headers,
+            &mut evacuated_original_headers,
+        );
+        trace_phase_record(&mut self.trace, "full_mark_compact_evac", phase_start);
+        if evacuation.objects > 0 {
+            let phase_start = trace_phase_start(&self.trace);
+            let valid_ptrs = self.valid_ptrs.as_ref().expect("valid pointer set built");
+            match self.trace.as_mut() {
+                Some(trace) => rewrite_forwarded_references(
+                    valid_ptrs,
+                    Some(&mut trace.shadow_roots),
+                    Some(&mut trace.root_sources),
+                ),
+                None => rewrite_forwarded_references(valid_ptrs, None, None),
+            }
+            trace_phase_record(&mut self.trace, "full_mark_compact_rewrite", phase_start);
+            // The full-trace sweep (step_sweep, full_trace = self.minor.is_none())
+            // frees the now-unreferenced forwarding stubs; the Reclaim phase's
+            // RememberedSetRebuild re-derives old→young edges for the moved objects.
         }
     }
 
