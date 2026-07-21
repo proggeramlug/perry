@@ -1548,6 +1548,17 @@ impl GcCycleState {
     /// minor never reaches (nursery scope) and a minor's partial rewrite could
     /// never prove safe to free. Env-gated (PERRY_GC_GENERAL_EVAC), PROMOTE-only.
     fn full_cycle_mark_compact_evac(&mut self) {
+        // DISABLED by default: this tenured-evacuator route has a live missed-ref
+        // corruption ("SYM" SIGSEGV) and never emptied blocks anyway. The reclaim
+        // path is now the idle from-space dealloc via the SOUND copying minor
+        // (gc_idle_mark_compact), which PERRY_GC_GENERAL_EVAC drives. Keep this
+        // behind its own opt-in so GENERAL_EVAC no longer triggers the corruption.
+        if !matches!(
+            std::env::var("PERRY_GC_MARK_COMPACT").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        ) {
+            return;
+        }
         if !super::general_block_evac_enabled() || !super::gc_promote_enabled() {
             return;
         }
