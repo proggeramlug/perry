@@ -69,11 +69,11 @@ pub(crate) use walk::{
 
 // reset.rs
 pub(crate) use reset::{
-    active_survivor_block_index_range, copying_active_survivor_in_use_bytes,
-    copying_from_space_in_use_bytes, copying_prepare_to_space, copying_reset_from_spaces_and_flip,
-    old_arena_reclaim_dead_blocks, old_arena_reclaim_selected_dead_blocks,
-    survivor_arena_reclaim_dead_blocks, ArenaResetEmptyBlocksState, OldArenaReclaimDeadBlocksState,
-    SurvivorArenaReclaimDeadBlocksState,
+    active_survivor_block_index_range, arena_set_aggressive_dealloc,
+    copying_active_survivor_in_use_bytes, copying_from_space_in_use_bytes, copying_prepare_to_space,
+    copying_reset_from_spaces_and_flip, old_arena_reclaim_dead_blocks,
+    old_arena_reclaim_selected_dead_blocks, survivor_arena_reclaim_dead_blocks,
+    ArenaResetEmptyBlocksState, OldArenaReclaimDeadBlocksState, SurvivorArenaReclaimDeadBlocksState,
 };
 pub use reset::{arena_reset_all_blocks_to_zero, arena_reset_empty_blocks};
 

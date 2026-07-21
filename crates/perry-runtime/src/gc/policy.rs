@@ -1505,7 +1505,12 @@ pub(crate) fn gc_idle_mark_compact() {
     if diag {
         eprintln!("[mc-fire] running full mark-compact n={n} cur_mb={}", cur / 1048576);
     }
+    // Return the blocks this compaction empties to the OS in one pass (idle ⇒ no
+    // reuse to preserve), so RSS follows the arena's internal drop instead of the
+    // freed blocks sitting mimalloc-committed until 2 GC cycles that never come.
+    let prev_aggr = crate::arena::arena_set_aggressive_dealloc(true);
     let outcome = super::gc_collect_full_mark_compact_idle();
+    crate::arena::arena_set_aggressive_dealloc(prev_aggr);
     if diag {
         eprintln!(
             "[mc-done] n={n} freed_mb={} new_in_use_mb={}",

@@ -1,5 +1,26 @@
 use super::*;
 
+thread_local! {
+    /// Set by the idle mark-compact (Phase 5.2): empty general blocks dealloc
+    /// back to the OS in ONE reset pass instead of waiting `DEALLOC_DEAD_CYCLES`.
+    /// At idle there's no bump-allocator reuse to preserve, and the blocks the
+    /// mark-compact just emptied must return promptly so RSS tracks the arena's
+    /// internal in_use (otherwise the freed blocks sit mimalloc-committed and the
+    /// footprint never drops). The keep-window exclusion below still applies, so
+    /// the conservative-scan register-miss safety is preserved.
+    static AGGRESSIVE_DEALLOC: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Enable/disable one-pass dealloc of idle-empty blocks; returns the prior value
+/// so callers restore it. Used by `gc_idle_mark_compact` around its collection.
+pub(crate) fn arena_set_aggressive_dealloc(v: bool) -> bool {
+    AGGRESSIVE_DEALLOC.with(|c| {
+        let prev = c.get();
+        c.set(v);
+        prev
+    })
+}
+
 /// Fast path for the common case where the entire arena is empty
 /// after GC (every object dead). Resets every block's offset to 0,
 /// clears the free list, sets `current = 0`, and resyncs the inline
@@ -303,7 +324,15 @@ pub fn arena_reset_empty_blocks(block_has_live: &[bool]) -> ArenaResetStats {
                 continue;
             }
             block.dead_cycles += 1;
-            if block.dead_cycles >= DEALLOC_DEAD_CYCLES {
+            // Idle mark-compact (Phase 5.2): dealloc freshly-emptied blocks in one
+            // pass — at idle there's no reuse to wait for, and the compacted-empty
+            // blocks must return to the OS now for RSS to follow the arena.
+            let dealloc_threshold = if AGGRESSIVE_DEALLOC.with(|c| c.get()) {
+                1
+            } else {
+                DEALLOC_DEAD_CYCLES
+            };
+            if block.dead_cycles >= dealloc_threshold {
                 let base = block.data as usize;
                 let size = block.size;
                 let layout = Layout::from_size_align(block.size, 16).unwrap();
