@@ -252,6 +252,22 @@ pub(super) fn gc_collect_full_mark_compact_idle() -> GcCollectOutcome {
     gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(GcTriggerKind::Manual))
 }
 
+/// Return blocks freed back to mimalloc (via std::alloc::dealloc) to the OS.
+/// mimalloc retains freed segments; mi_collect(true) aggressively purges them
+/// (MADV_FREE_REUSABLE on macOS ⇒ immediate RSS drop). Called from the idle
+/// arena-shrink after the copying minor's from-space dealloc.
+#[cfg(target_pointer_width = "64")]
+pub(super) fn gc_return_freed_to_os() {
+    unsafe extern "C" {
+        fn mi_collect(force: bool);
+    }
+    unsafe {
+        mi_collect(true);
+    }
+}
+#[cfg(not(target_pointer_width = "64"))]
+pub(super) fn gc_return_freed_to_os() {}
+
 /// Memory-parity lever: sound promotion under budgeted (incremental) GC.
 /// An idle/interactive app runs only budgeted cycles, which are non-moving AND
 /// non-tenuring by design — so long-lived survivors never leave the young gen

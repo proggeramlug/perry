@@ -57,9 +57,20 @@ pub fn arena_reset_all_blocks_to_zero() {
 }
 
 fn reset_region_to_zero(arena: &mut Arena) -> (usize, usize) {
+    reset_region_to_zero_impl(arena, false)
+}
+
+/// Reset every block's offset to 0. When `dealloc_empty` (idle from-space reset
+/// only — NEVER the pre-copy to-space prepare, which would free the copy target),
+/// also hand the now-empty blocks back to the OS (all but block 0, kept as the
+/// allocator target) instead of leaving the whole semispace committed at its
+/// high-water-mark. This is what lets idle RSS follow the live set: the copying
+/// minor consolidates live into the to-space, and this returns the emptied
+/// from-space (Eden + just-flipped survivor) to the OS.
+fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, usize) {
     let mut reset_blocks = 0usize;
     let mut reusable_bytes = 0usize;
-    for block in arena.blocks.iter_mut() {
+    for (i, block) in arena.blocks.iter_mut().enumerate() {
         if block.data.is_null() {
             continue;
         }
@@ -69,6 +80,21 @@ fn reset_region_to_zero(arena: &mut Arena) -> (usize, usize) {
         }
         block.offset = 0;
         block.dead_cycles = 0;
+        if dealloc_empty && i != 0 {
+            // Return this emptied from-space block to the OS. Block 0 is kept as
+            // the allocator target; the free list is cleared by the caller.
+            let base = block.data as usize;
+            let layout = Layout::from_size_align(block.size, 16).unwrap();
+            unregister_block_generation(base, block.size);
+            ARENA_TOTAL_BYTES.with(|t| t.set(t.get().saturating_sub(block.size)));
+            if !cfg!(test) {
+                unsafe {
+                    std::alloc::dealloc(block.data, layout);
+                }
+            }
+            block.data = std::ptr::null_mut();
+            block.size = 0;
+        }
     }
     // Delta-maintain the cached old-gen in-use counter. Only Eden and
     // the survivor semispaces are reset through here today, but this
@@ -124,11 +150,15 @@ pub(crate) fn active_survivor_block_index_range() -> std::ops::Range<usize> {
 /// roles so the to-space populated by the copying collector becomes active.
 pub(crate) fn copying_reset_from_spaces_and_flip() -> ArenaResetStats {
     sync_inline_arena_state();
+    // Idle: return the emptied from-spaces to the OS (see reset_region_to_zero_impl).
+    // These ARE the from-spaces (post-copy Eden + the survivor about to become
+    // inactive), so freeing their empty blocks is safe; the live is in the to-space.
+    let dealloc_empty = AGGRESSIVE_DEALLOC.with(|c| c.get());
     let mut reset_blocks = 0usize;
     let mut reusable_bytes = 0usize;
     ARENA.with(|arena| unsafe {
         let arena = &mut *arena.get();
-        let (blocks, bytes) = reset_region_to_zero(arena);
+        let (blocks, bytes) = reset_region_to_zero_impl(arena, dealloc_empty);
         reset_blocks += blocks;
         reusable_bytes = reusable_bytes.saturating_add(bytes);
         crate::gc::ARENA_FREE_LIST.with(|fl| fl.borrow_mut().clear());
@@ -145,7 +175,8 @@ pub(crate) fn copying_reset_from_spaces_and_flip() -> ArenaResetStats {
     });
 
     let active = ACTIVE_SURVIVOR.with(|active| active.get());
-    let (blocks, bytes) = with_survivor_arena_mut(active, reset_region_to_zero);
+    let (blocks, bytes) =
+        with_survivor_arena_mut(active, |a| reset_region_to_zero_impl(a, dealloc_empty));
     reset_blocks += blocks;
     reusable_bytes = reusable_bytes.saturating_add(bytes);
     ACTIVE_SURVIVOR.with(|active_cell| active_cell.set(1 - active));

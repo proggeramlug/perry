@@ -1505,16 +1505,20 @@ pub(crate) fn gc_idle_mark_compact() {
     if diag {
         eprintln!("[mc-fire] running full mark-compact n={n} cur_mb={}", cur / 1048576);
     }
-    // Return the blocks this compaction empties to the OS in one pass (idle ⇒ no
-    // reuse to preserve), so RSS follows the arena's internal drop instead of the
-    // freed blocks sitting mimalloc-committed until 2 GC cycles that never come.
+    // Idle arena shrink: fire the SOUND copying minor (consolidates live Eden →
+    // to-space) with aggressive-dealloc set, so copying_reset returns the emptied
+    // from-spaces (Eden + just-flipped survivor) to mimalloc instead of keeping the
+    // whole semispace committed at its high-water-mark; then mi_collect purges
+    // those freed segments to the OS so idle RSS follows the live set. The copying
+    // minor is the sound path (no evacuator corruption); prepare-to-space uses the
+    // non-dealloc reset so the copy target is never freed.
     let prev_aggr = crate::arena::arena_set_aggressive_dealloc(true);
-    let outcome = super::gc_collect_full_mark_compact_idle();
+    gc_safepoint_moving_minor();
     crate::arena::arena_set_aggressive_dealloc(prev_aggr);
+    super::gc_return_freed_to_os();
     if diag {
         eprintln!(
-            "[mc-done] n={n} freed_mb={} new_in_use_mb={}",
-            outcome.freed_bytes / 1048576,
+            "[mc-done] n={n} new_in_use_mb={}",
             crate::arena::arena_in_use_bytes() / 1048576,
         );
     }
