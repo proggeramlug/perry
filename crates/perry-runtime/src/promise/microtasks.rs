@@ -878,6 +878,15 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
         && MICROTASK_RUN_DEPTH.with(|depth| depth.get()) == 1
     {
         crate::gc::gc_safepoint_moving_minor();
+        // Phase 5.1: also drive the growth-gated full mark-compact from this
+        // frequently-reached microtask-boundary safepoint. The genuine-idle
+        // event_pump hook never fires for a TUI that always has a pending render
+        // timer (Phase 5 measured 0 compacting full GCs), so the general-block
+        // consolidation never ran. Here roots are precise (stack unwound,
+        // EventLoop depth 1) and gc_idle_mark_compact only runs the expensive full
+        // compact once its own growth floor is crossed — consolidating tenured
+        // general blocks as garbage accumulates. No-op unless PERRY_GC_GENERAL_EVAC.
+        crate::gc::gc_idle_mark_compact();
     }
 
     MICROTASK_RUN_DEPTH.with(|depth| {
