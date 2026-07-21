@@ -1476,19 +1476,43 @@ pub(crate) fn gc_idle_mark_compact() {
     {
         return;
     }
-    if GC_FLAGS.with(|f| f.get()) & (GC_FLAG_IN_ALLOC | GC_FLAG_SUPPRESSED) != 0
-        || gc_blocked_by_unsafe_zone()
-        || GC_ROOT_LOCK_DEPTH.with(|depth| depth.get() != 0)
-    {
-        return;
-    }
+    let flags = GC_FLAGS.with(|f| f.get());
+    let in_alloc_supp = flags & (GC_FLAG_IN_ALLOC | GC_FLAG_SUPPRESSED) != 0;
+    let unsafe_zone = gc_blocked_by_unsafe_zone();
+    let root_lock = GC_ROOT_LOCK_DEPTH.with(|depth| depth.get());
     const IDLE_COMPACT_GROWTH_BYTES: usize = 16 * 1024 * 1024;
     let cur = crate::arena::arena_in_use_bytes();
     let last = LAST_IDLE_MARK_COMPACT_IN_USE.with(|c| c.get());
+    // DIAG (PERRY_GC_DIAG): trace why the compaction fires or is gated — three
+    // trigger attempts (Phase 3/5/5.1) reached this fn but never ran a full GC.
+    thread_local! { static MC_CALLS: Cell<u32> = const { Cell::new(0) }; }
+    let n = MC_CALLS.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+    let diag = std::env::var_os("PERRY_GC_DIAG").is_some() && (n <= 10 || n % 300 == 0);
+    if diag {
+        eprintln!(
+            "[mc-gate] n={n} in_alloc_supp={in_alloc_supp} unsafe={unsafe_zone} rootlock={root_lock} cur_mb={} last_mb={} grew={}",
+            cur / 1048576,
+            if last == usize::MAX { -1i64 } else { (last / 1048576) as i64 },
+            if last == usize::MAX { -1i64 } else { (cur.saturating_sub(last) / 1048576) as i64 },
+        );
+    }
+    if in_alloc_supp || unsafe_zone || root_lock != 0 {
+        return;
+    }
     if last != usize::MAX && cur.saturating_sub(last) < IDLE_COMPACT_GROWTH_BYTES {
         return;
     }
-    let _ = super::gc_collect_full_mark_compact_idle();
+    if diag {
+        eprintln!("[mc-fire] running full mark-compact n={n} cur_mb={}", cur / 1048576);
+    }
+    let outcome = super::gc_collect_full_mark_compact_idle();
+    if diag {
+        eprintln!(
+            "[mc-done] n={n} freed_mb={} new_in_use_mb={}",
+            outcome.freed_bytes / 1048576,
+            crate::arena::arena_in_use_bytes() / 1048576,
+        );
+    }
     LAST_IDLE_MARK_COMPACT_IN_USE.with(|c| c.set(crate::arena::arena_in_use_bytes()));
 }
 
