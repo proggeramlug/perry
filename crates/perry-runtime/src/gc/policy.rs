@@ -9,6 +9,16 @@ thread_local! {
     pub(super) static GC_FLAGS: Cell<u8> = const { Cell::new(0) };
 }
 
+/// PERRY_GC_STALE_DIAG: set true once a real idle reclaim has run, so the
+/// reclaim-induced primary `js_throw` can be identified with a backtrace.
+pub(crate) static RECLAIM_HAPPENED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Whether a real idle reclaim has already run this process.
+pub(crate) fn reclaim_happened() -> bool {
+    RECLAIM_HAPPENED.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Threshold: run GC when total arena bytes exceed this.
 ///
 /// Current app-pattern tuning: 128 MB. The earlier 64 MB setting reduced
@@ -1900,6 +1910,9 @@ pub(crate) fn gc_idle_reclaim() {
             GcTriggerKind::ArenaBytes,
         ));
         super::gc_return_freed_to_os();
+        // PERRY_GC_STALE_DIAG: mark that a real idle reclaim ran, so the very
+        // next `js_throw` (the reclaim-induced primary fault) dumps a backtrace.
+        RECLAIM_HAPPENED.store(true, std::sync::atomic::Ordering::Relaxed);
     }
     if diag {
         eprintln!(

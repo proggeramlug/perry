@@ -144,9 +144,46 @@ pub(crate) fn current_try_depth() -> usize {
     with_exception_state(|s| unsafe { (*s).try_depth })
 }
 
+/// PERRY_GC_STALE_DIAG: the visible reclaim crash ("value is not a function")
+/// is a SECONDARY error — thrown by a `catch` body whose callee codegen-folded
+/// to a constant `undefined`; that `catch` only runs because the reclaim made
+/// the `try` body throw a PRIMARY exception it never throws in normal operation.
+/// To find the real stale-ref fault, dump a symbolized backtrace + the thrown
+/// value's identity on the FIRST few throws AFTER an idle reclaim ran. In an
+/// idle TUI nothing else throws in that window, so the first is the fault.
+#[cold]
+#[inline(never)]
+fn stale_throw_diag(value: f64) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static DUMPED: AtomicU32 = AtomicU32::new(0);
+    if !crate::gc::reclaim_happened() {
+        return;
+    }
+    if std::env::var_os("PERRY_GC_STALE_DIAG").is_none() {
+        return;
+    }
+    if DUMPED.fetch_add(1, Ordering::Relaxed) >= 4 {
+        return;
+    }
+    let bits = value.to_bits();
+    // Decode the thrown value: an Error object (pointer) vs a bare primitive.
+    let kind = if bits & crate::value::TAG_MASK == crate::value::POINTER_TAG {
+        let addr = (bits & crate::value::POINTER_MASK) as usize;
+        format!("POINTER 0x{addr:x}")
+    } else if bits >> 48 == 0 && bits >= 0x0010_0000 {
+        format!("BARE-ADDRESS 0x{bits:x} (likely stale forwarding bytes)")
+    } else {
+        format!("bits=0x{bits:x}")
+    };
+    eprintln!("[throw-diag] post-reclaim throw #{} value={kind}", DUMPED.load(Ordering::Relaxed));
+    let bt = std::backtrace::Backtrace::force_capture();
+    eprintln!("[throw-diag] backtrace:\n{bt}");
+}
+
 /// Throw an exception with the given value
 #[no_mangle]
 pub extern "C" fn js_throw(value: f64) -> ! {
+    stale_throw_diag(value);
     // Pull the jmp_buf pointer out under the TLS borrow, then drop the
     // borrow before calling longjmp (longjmp doesn't return, so leaving
     // the TLS access "open" would leave the cell permanently borrowed
