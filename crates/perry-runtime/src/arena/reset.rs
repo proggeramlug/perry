@@ -34,10 +34,26 @@ pub(crate) fn arena_set_aggressive_dealloc(v: bool) -> bool {
 pub fn arena_reset_all_blocks_to_zero() {
     // Only the general arena is reset (issue #179). The longlived arena
     // holds cached data that must not be reclaimed.
+    let keep_blocks = arena_reserve_blocks();
     ARENA.with(|arena| unsafe {
         let arena = &mut *arena.get();
-        for block in arena.blocks.iter_mut() {
+        for (i, block) in arena.blocks.iter_mut().enumerate() {
             block.offset = 0;
+            block.dead_cycles = 0;
+            // Bound the arena to the live set + reserve: free empty blocks beyond
+            // the reuse reserve back to the allocator (node keeps a bounded
+            // new-space rather than pinning at the allocation high-water mark).
+            // Default keep_blocks = usize::MAX = retain all (historical).
+            if i >= keep_blocks.max(1) && !block.data.is_null() {
+                let layout = Layout::from_size_align(block.size, 16).unwrap();
+                unregister_block_generation(block.data as usize, block.size);
+                ARENA_TOTAL_BYTES.with(|t| t.set(t.get().saturating_sub(block.size)));
+                if !cfg!(test) {
+                    free_block_memory(block.data, layout);
+                }
+                block.data = std::ptr::null_mut();
+                block.size = 0;
+            }
         }
         arena.current = 0;
         // Free list is now invalid (all entries point into reset blocks).
@@ -57,7 +73,26 @@ pub fn arena_reset_all_blocks_to_zero() {
 }
 
 fn reset_region_to_zero(arena: &mut Arena) -> (usize, usize) {
-    reset_region_to_zero_impl(arena, false)
+    reset_region_to_zero_impl(arena, usize::MAX)
+}
+
+/// Number of emptied from-space blocks to RETAIN for reuse after a copying minor
+/// (the rest are freed back to the allocator so the arena follows the live set
+/// instead of pinning at its high-water mark). Default `usize::MAX` = retain all
+/// (historical behavior — the arena only shrinks via the idle aggressive path).
+/// `PERRY_GC_ARENA_RESERVE_MB=N` retains N one-MB blocks and frees the excess on
+/// EVERY copying reset, bounding idle RSS to roughly live-set + N MB (node keeps
+/// a bounded new-space + scavenges frequently; this is the equivalent).
+pub(crate) fn arena_reserve_blocks() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_ARENA_RESERVE_MB")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .map(|mb| mb.max(1))
+            .unwrap_or(usize::MAX)
+    })
 }
 
 /// Reset every block's offset to 0. When `dealloc_empty` (idle from-space reset
@@ -67,7 +102,7 @@ fn reset_region_to_zero(arena: &mut Arena) -> (usize, usize) {
 /// high-water-mark. This is what lets idle RSS follow the live set: the copying
 /// minor consolidates live into the to-space, and this returns the emptied
 /// from-space (Eden + just-flipped survivor) to the OS.
-fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, usize) {
+fn reset_region_to_zero_impl(arena: &mut Arena, keep_blocks: usize) -> (usize, usize) {
     let mut reset_blocks = 0usize;
     let mut reusable_bytes = 0usize;
     let mut fs_dealloc_blocks = 0usize;
@@ -83,7 +118,10 @@ fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, 
         }
         block.offset = 0;
         block.dead_cycles = 0;
-        if dealloc_empty && i != 0 {
+        // Retain the first `keep_blocks` blocks (block 0 is always the allocator
+        // target) for reuse; free the rest back to the allocator so the arena
+        // follows the live set instead of pinning at its high-water mark.
+        if i >= keep_blocks.max(1) {
             fs_dealloc_blocks += 1;
             fs_dealloc_bytes = fs_dealloc_bytes.saturating_add(block.size);
             // Return this emptied from-space block to the OS. Block 0 is kept as
@@ -93,9 +131,7 @@ fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, 
             unregister_block_generation(base, block.size);
             ARENA_TOTAL_BYTES.with(|t| t.set(t.get().saturating_sub(block.size)));
             if !cfg!(test) {
-                unsafe {
-                    std::alloc::dealloc(block.data, layout);
-                }
+                free_block_memory(block.data, layout);
             }
             block.data = std::ptr::null_mut();
             block.size = 0;
@@ -109,7 +145,7 @@ fn reset_region_to_zero_impl(arena: &mut Arena, dealloc_empty: bool) -> (usize, 
         old_gen_in_use_bytes_sub(reusable_bytes);
     }
     arena.current = 0;
-    if dealloc_empty && std::env::var_os("PERRY_GC_DIAG").is_some() {
+    if keep_blocks != usize::MAX && std::env::var_os("PERRY_GC_DIAG").is_some() {
         eprintln!(
             "[fs-dealloc] gen={:?} nblocks={} reset={} freed_blocks={} freed_mb={}",
             arena.generation,
@@ -165,15 +201,45 @@ pub(crate) fn active_survivor_block_index_range() -> std::ops::Range<usize> {
 /// roles so the to-space populated by the copying collector becomes active.
 pub(crate) fn copying_reset_from_spaces_and_flip() -> ArenaResetStats {
     sync_inline_arena_state();
-    // Idle: return the emptied from-spaces to the OS (see reset_region_to_zero_impl).
-    // These ARE the from-spaces (post-copy Eden + the survivor about to become
-    // inactive), so freeing their empty blocks is safe; the live is in the to-space.
-    let dealloc_empty = AGGRESSIVE_DEALLOC.with(|c| c.get());
+    // PERRY_GC_PROMOTE_SELFHEAL: leave the from-spaces INTACT (no reset, no
+    // free-list reuse, no dealloc) and only flip the survivor space. The copying
+    // minor installed FORWARDED stubs in from-space for every moved object; a
+    // root the precise enumeration missed (native registry, main-loop frame
+    // slot) still points at those stubs, and the self-heal read barrier
+    // (`gc_follow_forwarded`) can heal such a reference ONLY while the stub
+    // bytes stay readable. Resetting for reuse clobbers the stubs with fresh
+    // allocations → the stale ref reads a number/garbage → "value is not a
+    // function" (observed: forced idle copy at the microtask drain collected
+    // in_use 262→41MB then crashed exactly this way). With retention, the next
+    // FULL mark-sweep — whose sweep already retains referenced FORWARDED stubs
+    // and reclaims unreferenced ones by mark (#6471) — frees these blocks
+    // soundly, so the footprint drop lands one full cycle later instead of
+    // instantly-but-unsoundly.
+    if crate::gc::gc_promote_selfheal_enabled() {
+        // Still drop any free-list entries — they point into from-space holes and
+        // reusing one would clobber a stub. Bump allocation itself is safe: it
+        // writes ABOVE each block's offset, and stubs live below it.
+        crate::gc::ARENA_FREE_LIST.with(|fl| fl.borrow_mut().clear());
+        crate::gc::ARENA_FREE_LIST_NONEMPTY.with(|c| c.set(false));
+        let active = ACTIVE_SURVIVOR.with(|active| active.get());
+        ACTIVE_SURVIVOR.with(|active_cell| active_cell.set(1 - active));
+        return ArenaResetStats::default();
+    }
+    // Return emptied from-space blocks to the allocator so the arena follows the
+    // live set. These ARE the from-spaces (post-copy Eden + the survivor about to
+    // become inactive), so freeing their empty blocks is safe; the live is in the
+    // to-space. Idle aggressive-dealloc frees ALL but block 0; otherwise retain a
+    // reuse reserve (PERRY_GC_ARENA_RESERVE_MB, default retain-all = historical).
+    let keep_blocks = if AGGRESSIVE_DEALLOC.with(|c| c.get()) {
+        1
+    } else {
+        arena_reserve_blocks()
+    };
     let mut reset_blocks = 0usize;
     let mut reusable_bytes = 0usize;
     ARENA.with(|arena| unsafe {
         let arena = &mut *arena.get();
-        let (blocks, bytes) = reset_region_to_zero_impl(arena, dealloc_empty);
+        let (blocks, bytes) = reset_region_to_zero_impl(arena, keep_blocks);
         reset_blocks += blocks;
         reusable_bytes = reusable_bytes.saturating_add(bytes);
         crate::gc::ARENA_FREE_LIST.with(|fl| fl.borrow_mut().clear());
@@ -191,7 +257,7 @@ pub(crate) fn copying_reset_from_spaces_and_flip() -> ArenaResetStats {
 
     let active = ACTIVE_SURVIVOR.with(|active| active.get());
     let (blocks, bytes) =
-        with_survivor_arena_mut(active, |a| reset_region_to_zero_impl(a, dealloc_empty));
+        with_survivor_arena_mut(active, |a| reset_region_to_zero_impl(a, keep_blocks));
     reset_blocks += blocks;
     reusable_bytes = reusable_bytes.saturating_add(bytes);
     ACTIVE_SURVIVOR.with(|active_cell| active_cell.set(1 - active));
@@ -352,6 +418,16 @@ pub fn arena_reset_empty_blocks(block_has_live: &[bool]) -> ArenaResetStats {
         // per run) while still letting tight allocation loops keep
         // hot blocks alive across consecutive resets.
         const DEALLOC_DEAD_CYCLES: u32 = 2;
+        // Reuse reserve: blocks at index >= `reserve` are freed the moment they
+        // empty (offset==0, no live objects, outside the register-miss window)
+        // instead of waiting DEALLOC_DEAD_CYCLES — the 2-cycle grace exists to let
+        // the bump allocator reuse a hot block, but a long-running program (a TUI
+        // at idle) refills the same low blocks every render burst so the high-index
+        // blocks from a past peak never accumulate 2 consecutive dead cycles and
+        // pin the arena at its high-water mark. Retaining a bounded reserve keeps
+        // the reuse fast path; freeing the excess makes the arena follow the live
+        // set. Default usize::MAX = retain-all (historical), PERRY_GC_ARENA_RESERVE_MB.
+        let reserve = arena_reserve_blocks();
         let mut deallocated_ranges: Vec<(usize, usize)> = Vec::new();
         for (i, block) in arena.blocks.iter_mut().enumerate() {
             if block.data.is_null() {
@@ -378,7 +454,7 @@ pub fn arena_reset_empty_blocks(block_has_live: &[bool]) -> ArenaResetStats {
             } else {
                 DEALLOC_DEAD_CYCLES
             };
-            if block.dead_cycles >= dealloc_threshold {
+            if block.dead_cycles >= dealloc_threshold || i >= reserve.max(1) {
                 let base = block.data as usize;
                 let size = block.size;
                 let layout = Layout::from_size_align(block.size, 16).unwrap();
@@ -388,7 +464,7 @@ pub fn arena_reset_empty_blocks(block_has_live: &[bool]) -> ArenaResetStats {
                 // unit tests holding raw GC pointers across a collection read stale
                 // bytes instead of SIGSEGV-ing on an unmapped page.
                 if !cfg!(test) {
-                    std::alloc::dealloc(block.data, layout);
+                    free_block_memory(block.data, layout);
                 }
                 ARENA_TOTAL_BYTES.with(|t| t.set(t.get().saturating_sub(block.size)));
                 block.data = std::ptr::null_mut();
@@ -664,7 +740,7 @@ impl ArenaResetEmptyBlocksState {
             // unit tests holding raw GC pointers across a collection read stale
             // bytes instead of SIGSEGV-ing on an unmapped page.
             if !cfg!(test) {
-                std::alloc::dealloc(block.data, layout);
+                free_block_memory(block.data, layout);
             }
             ARENA_TOTAL_BYTES.with(|total| total.set(total.get().saturating_sub(size)));
             block.data = std::ptr::null_mut();
@@ -860,7 +936,7 @@ impl SurvivorArenaReclaimState {
             // unit tests holding raw GC pointers across a collection read stale
             // bytes instead of SIGSEGV-ing on an unmapped page.
             if !cfg!(test) {
-                std::alloc::dealloc(block.data, layout);
+                free_block_memory(block.data, layout);
             }
             ARENA_TOTAL_BYTES.with(|total| total.set(total.get().saturating_sub(size)));
             block.data = std::ptr::null_mut();
@@ -1117,7 +1193,7 @@ impl OldArenaReclaimDeadBlocksState {
             // unit tests holding raw GC pointers across a collection read stale
             // bytes instead of SIGSEGV-ing on an unmapped page.
             if !cfg!(test) {
-                std::alloc::dealloc(block.data, layout);
+                free_block_memory(block.data, layout);
             }
             ARENA_TOTAL_BYTES.with(|total| total.set(total.get().saturating_sub(size)));
             block.data = std::ptr::null_mut();
@@ -1209,7 +1285,7 @@ pub(crate) fn old_arena_reclaim_dead_blocks(block_has_live: &[bool]) -> ArenaRes
             // unit tests holding raw GC pointers across a collection read stale
             // bytes instead of SIGSEGV-ing on an unmapped page.
             if !cfg!(test) {
-                std::alloc::dealloc(block.data, layout);
+                free_block_memory(block.data, layout);
             }
             ARENA_TOTAL_BYTES.with(|total| total.set(total.get().saturating_sub(size)));
             block.data = std::ptr::null_mut();
@@ -1309,7 +1385,7 @@ pub(crate) fn old_arena_reclaim_selected_dead_blocks(
             // unit tests holding raw GC pointers across a collection read stale
             // bytes instead of SIGSEGV-ing on an unmapped page.
             if !cfg!(test) {
-                std::alloc::dealloc(block.data, layout);
+                free_block_memory(block.data, layout);
             }
             ARENA_TOTAL_BYTES.with(|total| total.set(total.get().saturating_sub(size)));
             block.data = std::ptr::null_mut();
@@ -1409,7 +1485,7 @@ fn reclaim_dead_survivor_arena_blocks(
             // unit tests holding raw GC pointers across a collection read stale
             // bytes instead of SIGSEGV-ing on an unmapped page.
             if !cfg!(test) {
-                std::alloc::dealloc(block.data, layout);
+                free_block_memory(block.data, layout);
             }
             ARENA_TOTAL_BYTES.with(|total| total.set(total.get().saturating_sub(size)));
             block.data = std::ptr::null_mut();

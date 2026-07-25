@@ -532,6 +532,30 @@ mod stdlib_pump {
         // compile-time `external-*-pump` arms aren't present).
         run_aux_pumps();
         let _ = crate::gc::gc_runtime_safepoint();
+        // DIAG (PERRY_GC_IDLE_TRACE): is js_run_stdlib_pump reached at idle, and at
+        // what arena size? If reached at ~322MB, the compaction hook below should
+        // fire (so a gate blocks it); if NOT reached at 322, the render/park is on
+        // a path that bypasses this function.
+        if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+            thread_local! { static PC: std::cell::Cell<u32> = const { std::cell::Cell::new(0) }; }
+            let n = PC.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+            if n <= 4 || n % 100 == 0 {
+                eprintln!("[pump] #{n} arena_in_use_mb={}", crate::arena::arena_in_use_bytes() / 1048576);
+            }
+        }
+        // Idle-compaction safepoint. The generated top-level event loop calls
+        // js_run_stdlib_pump every turn (codegen entry.rs), and the STDLIB pump
+        // above just ran the queued JS callbacks — the timer/render callbacks that
+        // drive an Ink/React repaint at idle — and they have RETURNED, so the JS
+        // stack is fully unwound here: a precise-root safepoint reached EVERY turn,
+        // including steady-state idle (unlike js_wait_for_event / microtask-boundary
+        // hooks, which the async-driven idle render path bypasses). This is where
+        // the SOUND copying minor must run to keep the general arena from climbing
+        // to its high-water mark. gc_idle_mark_compact is growth-gated + startup-
+        // settled-gated (no-op unless PERRY_GC_GENERAL_EVAC + the arena grew past
+        // its floor since the last compaction), so a steady REPL compacts the
+        // accumulated Eden periodically and returns it to the OS.
+        crate::gc::gc_idle_mark_compact();
     }
 
     static STDLIB_HAS_ACTIVE_FN: AtomicPtr<()> = AtomicPtr::new(null_mut());

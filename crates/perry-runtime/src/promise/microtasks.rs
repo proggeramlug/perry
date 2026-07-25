@@ -873,10 +873,52 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
     // post-startup, and each steady-state TUI turn), where the moving evacuation
     // is safe. Accumulated startup nursery then compacts at the first EventLoop
     // drain once module init has returned.
-    if crate::gc::gc_moving_safepoint_enabled()
-        && matches!(mode, MicrotaskDrainMode::EventLoop)
-        && MICROTASK_RUN_DEPTH.with(|depth| depth.get()) == 1
+    // The top-level EventLoop drain at depth 1 is THE genuinely-unwound,
+    // post-startup, every-turn safepoint for the async/tokio-driven TUI — precise
+    // roots, no nested microtask frame. (Stack sampling confirmed the generated
+    // loop reaches run_microtasks(EventLoop) every turn while js_wait_for_event
+    // itself just blocks in tokio's park, bypassing its own idle hooks.) This is
+    // the ONLY place a forced collection is safe: firing gc_collect_minor from the
+    // js_wait_for_event entry or perry_poll instead crashes the bundle (exit 1)
+    // because those points are reached mid-startup with live native roots.
+    let top_level_boundary = matches!(mode, MicrotaskDrainMode::EventLoop)
+        && MICROTASK_RUN_DEPTH.with(|depth| depth.get()) == 1;
+    if top_level_boundary && std::env::var_os("PERRY_MEM_TRACE").is_some() {
+        // Snapshot arena in-use for the bg trace thread (clean channel). Rate-
+        // limited: arena_in_use_bytes walks every block, so only every ~30th drain.
+        thread_local! { static IN: std::cell::Cell<u32> = const { std::cell::Cell::new(0) }; }
+        let n = IN.with(|c| {
+            let v = c.get().wrapping_add(1);
+            c.set(v);
+            v
+        });
+        if n % 30 == 1 {
+            crate::arena::note_arena_in_use(crate::arena::arena_in_use_bytes());
+        }
+    }
+    // Startup-settled for the async/tokio bundle (whose event_pump genuine-idle
+    // settler is bypassed by the run_one_tick park path, and which never truly
+    // idles — constant render churn). The top-level EventLoop drain IS a per-turn
+    // precise-root safepoint (JS stack unwound); it is unsafe ONLY while module
+    // init's native stack is live. "init returned" is signalled robustly by the
+    // arena's committed size going FLAT: init grows it ~0→270MB fast, then a steady
+    // REPL only creeps (<1MB/s). We mark settled once it hasn't grown by >8MB for a
+    // sustained wall-clock window — a per-drain delta was too loose (init's many
+    // frequent drains each grow <threshold). Gated on gc_promote_enabled so default
+    // builds are unaffected (they still settle only via event_pump). Once settled,
+    // the moving safepoint below + the promote frontier engage and reclaim the
+    // scattered startup survivors.
+    if top_level_boundary
+        && (crate::gc::gc_promote_enabled() || crate::gc::general_block_evac_enabled())
     {
+        // Robust settle (12s uptime + 6s arena-flat + >100MB) — the shared
+        // heuristic in gc::policy; ALL settle points route through it so no path
+        // can mark settled mid-init (the event_pump OS-wait settle used to fire
+        // unconditionally at the first park, ~2-8s, DURING init's awaits —
+        // enabling the post-init GC modes while init's roots were still live).
+        crate::gc::gc_maybe_mark_startup_settled();
+    }
+    if crate::gc::gc_moving_safepoint_enabled() && top_level_boundary {
         crate::gc::gc_safepoint_moving_minor();
         // Phase 5.1: also drive the growth-gated full mark-compact from this
         // frequently-reached microtask-boundary safepoint. The genuine-idle
@@ -887,6 +929,16 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
         // compact once its own growth floor is crossed — consolidating tenured
         // general blocks as garbage accumulates. No-op unless PERRY_GC_GENERAL_EVAC.
         crate::gc::gc_idle_mark_compact();
+    }
+    if top_level_boundary {
+        // Idle reclaim at the every-turn precise safepoint (post-settle). For a
+        // GENERAL_EVAC build this runs the SOUND copying minor (which is stable
+        // even during init — unlike promote) — it consolidates the scattered live
+        // survivors to survivor to-space and frees the from-space (the dead), then
+        // returns the emptied blocks to the OS. No-op unless PERRY_GC_IDLE_RECLAIM
+        // is set and committed exceeds its floor; self-limiting (committed drops
+        // below the floor after a reclaim). This is the promote-free reclaim path.
+        crate::gc::gc_idle_reclaim();
     }
 
     MICROTASK_RUN_DEPTH.with(|depth| {

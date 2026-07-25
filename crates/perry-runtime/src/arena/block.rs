@@ -43,7 +43,251 @@ pub(crate) const BLOCK_SIZE: usize = 1024 * 1024;
 pub(crate) const FRESH_GENERAL_BLOCK_MIN_USED_BYTES: usize = 256 * 1024;
 
 /// Create a block of at least the given size (for oversized allocations)
-fn alloc_block(min_size: usize) -> ArenaBlock {
+/// Dedicated mimalloc heap for the arena's 1 MB blocks (PERRY_GC_ARENA_DEDICATED_HEAP,
+/// default off = std::alloc as before). Isolating the blocks into their own heap
+/// means freed blocks occupy their own 32 MB mimalloc segments, so
+/// `arena_block_heap_collect()` (called at idle from gc_return_freed_to_os) can
+/// return whole emptied segments to the OS — a block freed to the shared global
+/// heap shares segments with the small-object non-arena churn and never purges.
+pub(crate) mod arena_block_heap {
+    use std::cell::Cell;
+    use std::sync::OnceLock;
+
+    thread_local! {
+        static HEAP: Cell<*mut libmimalloc_sys::mi_heap_t> =
+            const { Cell::new(std::ptr::null_mut()) };
+    }
+
+    pub(crate) fn enabled() -> bool {
+        static CACHED: OnceLock<bool> = OnceLock::new();
+        *CACHED.get_or_init(|| {
+            matches!(
+                std::env::var("PERRY_GC_ARENA_DEDICATED_HEAP").as_deref(),
+                Ok("1") | Ok("on") | Ok("true")
+            )
+        })
+    }
+
+    fn heap() -> *mut libmimalloc_sys::mi_heap_t {
+        HEAP.with(|h| {
+            let mut p = h.get();
+            if p.is_null() {
+                p = unsafe { libmimalloc_sys::mi_heap_new() };
+                h.set(p);
+            }
+            p
+        })
+    }
+
+    /// Allocate `size` bytes (16-aligned) from the dedicated arena-block heap.
+    pub(super) fn alloc(size: usize) -> *mut u8 {
+        unsafe { libmimalloc_sys::mi_heap_malloc_aligned(heap(), size, 16) as *mut u8 }
+    }
+
+    /// Return this thread's dedicated-heap freed segments to the OS. No-op if the
+    /// heap was never created (feature off / no arena blocks on this thread).
+    pub(crate) fn collect() {
+        HEAP.with(|h| {
+            let p = h.get();
+            if !p.is_null() {
+                unsafe { libmimalloc_sys::mi_heap_collect(p, true) };
+            }
+        });
+    }
+}
+
+/// Back the arena's 1 MB blocks with direct `mmap`/`munmap`
+/// (PERRY_GC_ARENA_MMAP, default off = the allocator paths below).
+///
+/// Blocks are large (≥ BLOCK_SIZE = 1 MB) and reclaimed in bulk by the GC, so a
+/// dedicated mapping per block gives per-block OS-return with **zero
+/// fragmentation**: `munmap` returns exactly that block's pages regardless of
+/// any other block's liveness. The mimalloc paths (global heap or the dedicated
+/// arena heap) pack several 1 MB blocks into one multi-MB segment, so a single
+/// surviving block — e.g. a copying-GC to-space survivor allocated from a
+/// just-freed page — pins the whole segment against `mi_heap_collect`'s purge.
+/// Measured at idle on the claude-code bundle: after the settle mark-compact
+/// freed 188 blocks (188 MB) to the dedicated heap, `mi_heap_collect(force)`
+/// returned ~1 MB (footprint 301→300); with `mmap` the same 188 blocks'
+/// `munmap` returns all 188 MB to the OS.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum BlockBacking {
+    /// Default: the allocator paths (global heap, or the dedicated arena heap).
+    Alloc,
+    /// mmap per block; `munmap` on free (returns pages AND unmaps the VA, so a
+    /// stale read into a freed block faults — surfaces GC bugs loudly).
+    Munmap,
+    /// mmap per block; `madvise(MADV_FREE)` on free (returns physical pages but
+    /// keeps the VA mapped, so a stale read reads zero/old bytes instead of
+    /// faulting — same safety as the allocator paths, still drops footprint).
+    MadvFree,
+}
+
+/// Backing mode for the arena's 1 MB blocks (PERRY_GC_ARENA_MMAP; default
+/// `Alloc` = unchanged). `1`/`on`/`true`/`munmap` → Munmap; `free`/`madvfree` →
+/// MadvFree.
+fn block_backing() -> BlockBacking {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<u8> = OnceLock::new();
+    let v = *CACHED.get_or_init(|| match std::env::var("PERRY_GC_ARENA_MMAP").as_deref() {
+        Ok("1") | Ok("on") | Ok("true") | Ok("munmap") => 1,
+        Ok("free") | Ok("madvfree") => 2,
+        _ => 0,
+    });
+    match v {
+        1 => BlockBacking::Munmap,
+        2 => BlockBacking::MadvFree,
+        _ => BlockBacking::Alloc,
+    }
+}
+
+/// Reserve backing memory for one arena block of `layout.size()` bytes in
+/// `space`. Returns null on failure (caller retries after an emergency GC).
+///
+/// Routing:
+/// - `PERRY_GC_ARENA_MMAP` (experimental, default off): mmap per block for all
+///   spaces. `MAP_ANON` pages are kernel-zeroed, matching the arena's
+///   zeroed-block expectation. NOTE: this exposes latent stale-pointer reads
+///   into freed blocks (the allocator paths mask them by keeping bytes intact),
+///   so it currently breaks even trivial programs — kept for diagnostics only.
+/// - Dedicated arena heap (`PERRY_GC_ARENA_DEDICATED_HEAP`): only the transient
+///   `NurseryEden` arena routes here. Eden is wholesale-freed at every
+///   compaction, so a heap holding ONLY Eden blocks has pure-Eden mimalloc
+///   segments that fully empty on collection and can be returned to the OS
+///   (`arena_block_heap_collect` → `mi_heap_collect`). Survivor/Old/Longlived
+///   blocks survive, so isolating them buys nothing and would just fragment
+///   their own heap — they stay on the global heap. Sharing one dedicated heap
+///   across all spaces (the previous behavior) let surviving Survivor/Old blocks
+///   pin the segments the freed Eden blocks lived in, so nothing returned
+///   (measured: 188 MB freed, ~1 MB returned).
+/// - Default: the global (mimalloc) heap.
+pub(super) fn alloc_block_memory(layout: Layout, space: HeapSpace) -> *mut u8 {
+    mem_trace::note_alloc(layout.size());
+    if block_backing() != BlockBacking::Alloc {
+        let p = unsafe {
+            libc::mmap(
+                std::ptr::null_mut(),
+                layout.size(),
+                libc::PROT_READ | libc::PROT_WRITE,
+                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+                -1,
+                0,
+            )
+        };
+        return if p == libc::MAP_FAILED {
+            std::ptr::null_mut()
+        } else {
+            p as *mut u8
+        };
+    }
+    if space == HeapSpace::NurseryEden && arena_block_heap::enabled() {
+        return arena_block_heap::alloc(layout.size());
+    }
+    unsafe { alloc(layout) }
+}
+
+/// Cross-thread committed-block accounting + a background trace thread
+/// (PERRY_MEM_TRACE). `GLOBAL_ARENA_COMMITTED` sums live arena block bytes across
+/// ALL threads (thread-local `ARENA_TOTAL_BYTES` can't be read off-thread), so the
+/// trace thread can print committed-arena vs process phys_footprint every 2s —
+/// definitively separating arena growth from non-arena (churn-leak) footprint
+/// over startup AND true idle, independent of any pty measurement harness.
+pub(crate) mod mem_trace {
+    use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
+    pub(crate) static GLOBAL_ARENA_COMMITTED: AtomicI64 = AtomicI64::new(0);
+    /// Last main-thread arena_in_use snapshot (bytes). Written from a safepoint
+    /// (the EventLoop drain), read by the bg trace thread — so the LIVE-vs-retained
+    /// number rides the clean [mem] channel instead of a main-thread eprintln that
+    /// interleaves with the TUI's pty render output.
+    pub(crate) static GLOBAL_ARENA_IN_USE: AtomicI64 = AtomicI64::new(-1);
+    static STARTED: AtomicBool = AtomicBool::new(false);
+
+    /// Record the main thread's current arena in-use (live/bumped) bytes.
+    pub(crate) fn note_in_use(v: usize) {
+        GLOBAL_ARENA_IN_USE.store(v as i64, Ordering::Relaxed);
+    }
+
+    fn enabled() -> bool {
+        use std::sync::OnceLock;
+        static CACHED: OnceLock<bool> = OnceLock::new();
+        *CACHED.get_or_init(|| std::env::var_os("PERRY_MEM_TRACE").is_some())
+    }
+
+    fn phys_footprint_mb() -> i64 {
+        #[repr(C)]
+        struct RUsageInfoV2 {
+            _uuid: [u8; 16],
+            _a: [u64; 7],
+            ri_phys_footprint: u64,
+            _rest: [u64; 10],
+        }
+        unsafe extern "C" {
+            fn proc_pid_rusage(pid: i32, flavor: i32, buffer: *mut core::ffi::c_void) -> i32;
+        }
+        let mut buf = [0u8; 512];
+        let pid = unsafe { libc::getpid() };
+        let rc = unsafe { proc_pid_rusage(pid, 2, buf.as_mut_ptr() as *mut _) };
+        if rc != 0 {
+            return -1;
+        }
+        // ri_phys_footprint @ byte offset 72
+        let fp = u64::from_ne_bytes(buf[72..80].try_into().unwrap());
+        (fp / 1_048_576) as i64
+    }
+
+    pub(crate) fn note_alloc(_size: usize) {
+        GLOBAL_ARENA_COMMITTED.fetch_add(_size as i64, Ordering::Relaxed);
+        if enabled() && !STARTED.swap(true, Ordering::Relaxed) {
+            std::thread::spawn(|| {
+                let t0 = std::time::Instant::now();
+                loop {
+                    std::thread::sleep(std::time::Duration::from_secs(2));
+                    let arena_mb = GLOBAL_ARENA_COMMITTED.load(Ordering::Relaxed) / 1_048_576;
+                    let in_use = GLOBAL_ARENA_IN_USE.load(Ordering::Relaxed);
+                    let in_use_mb = if in_use < 0 { -1 } else { in_use / 1_048_576 };
+                    eprintln!(
+                        "[mem] t={}s arena_committed={}MB arena_in_use={}MB footprint={}MB nonarena≈{}MB",
+                        t0.elapsed().as_secs(),
+                        arena_mb,
+                        in_use_mb,
+                        phys_footprint_mb(),
+                        phys_footprint_mb() - arena_mb,
+                    );
+                }
+            });
+        }
+    }
+
+    pub(crate) fn note_free(size: usize) {
+        GLOBAL_ARENA_COMMITTED.fetch_sub(size as i64, Ordering::Relaxed);
+    }
+}
+
+/// Release an arena block's backing memory to the OS. Mirrors
+/// `alloc_block_memory`'s mode. `munmap` returns the block's pages immediately;
+/// the dedicated/global mimalloc paths free via the global allocator (which is
+/// mimalloc, so `dealloc` routes to `mi_free` back to the owning heap).
+/// Caller is responsible for the `cfg!(test)` keep-mapped guard (unit tests hold
+/// raw GC pointers across collections and must read stale bytes, not fault).
+pub(crate) fn free_block_memory(data: *mut u8, layout: Layout) {
+    if data.is_null() {
+        return;
+    }
+    mem_trace::note_free(layout.size());
+    match block_backing() {
+        BlockBacking::Munmap => unsafe {
+            libc::munmap(data as *mut libc::c_void, layout.size());
+        },
+        BlockBacking::MadvFree => unsafe {
+            // Return the physical pages; leave the VA mapped (caller tombstones
+            // the block pointer, so the mapping is intentionally not reused).
+            libc::madvise(data as *mut libc::c_void, layout.size(), libc::MADV_FREE);
+        },
+        BlockBacking::Alloc => unsafe { std::alloc::dealloc(data, layout) },
+    }
+}
+
+fn alloc_block(min_size: usize, space: HeapSpace) -> ArenaBlock {
     let size = if min_size <= BLOCK_SIZE {
         BLOCK_SIZE
     } else {
@@ -51,13 +295,13 @@ fn alloc_block(min_size: usize) -> ArenaBlock {
         min_size.div_ceil(BLOCK_SIZE) * BLOCK_SIZE
     };
     let layout = Layout::from_size_align(size, 16).unwrap();
-    let mut data = unsafe { alloc(layout) };
+    let mut data = alloc_block_memory(layout, space);
     if data.is_null() {
         // The OS refused memory. Try one emergency full collection —
         // idle-block dealloc and malloc sweep can return real pages —
         // then retry once before giving up.
         if crate::gc::gc_try_emergency_reclaim() {
-            data = unsafe { alloc(layout) };
+            data = alloc_block_memory(layout, space);
         }
     }
     if data.is_null() {
@@ -91,8 +335,8 @@ pub(crate) struct ArenaBlock {
 }
 
 impl ArenaBlock {
-    fn new() -> Self {
-        alloc_block(BLOCK_SIZE)
+    fn new(space: HeapSpace) -> Self {
+        alloc_block(BLOCK_SIZE, space)
     }
 
     /// Try to allocate within this block, respecting alignment
@@ -183,13 +427,11 @@ impl Drop for Arena {
                 continue;
             }
             let layout = std::alloc::Layout::from_size_align(block.size, 16).unwrap();
-            unsafe {
-                // #4665: in test builds keep freed blocks mapped (no munmap) so
-                // unit tests holding raw GC pointers across a collection read stale
-                // bytes instead of SIGSEGV-ing on an unmapped page.
-                if !cfg!(test) {
-                    std::alloc::dealloc(block.data, layout);
-                }
+            // #4665: in test builds keep freed blocks mapped (no munmap/dealloc) so
+            // unit tests holding raw GC pointers across a collection read stale
+            // bytes instead of SIGSEGV-ing on an unmapped page.
+            if !cfg!(test) {
+                free_block_memory(block.data, layout);
             }
         }
     }
@@ -197,7 +439,7 @@ impl Drop for Arena {
 
 impl Arena {
     fn new(generation: HeapGeneration, space: HeapSpace) -> Self {
-        let initial = ArenaBlock::new();
+        let initial = ArenaBlock::new(space);
         register_block_space(initial.data as usize, initial.size, generation, space);
         ARENA_TOTAL_BYTES.with(|t| t.set(t.get() + initial.size));
         Arena {
@@ -294,7 +536,7 @@ impl Arena {
     }
 
     pub(crate) fn install_fresh_block(&mut self, size: usize) {
-        let fresh = alloc_block(size);
+        let fresh = alloc_block(size, self.space);
         let fresh_size = fresh.size;
         let fresh_base = fresh.data as usize;
         register_block_space(fresh_base, fresh_size, self.generation, self.space);

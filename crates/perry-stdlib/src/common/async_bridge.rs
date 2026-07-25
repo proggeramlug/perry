@@ -287,9 +287,18 @@ extern "C" fn stdlib_wait_driver(budget_ms: u64) {
 pub fn run_one_tick(budget_ms: u64) {
     extern "C" {
         fn js_main_thread_notified() -> i32;
+        /// Genuine-idle safepoint hook (perry-runtime). Called only when this tick
+        /// parked for the FULL budget with no wake — the tokio equivalent of the
+        /// event-loop's genuine-idle block. See `js_gc_idle_parked`.
+        fn js_gc_idle_parked();
     }
     let budget = std::time::Duration::from_millis(budget_ms.max(1));
-    RUNTIME.block_on(async {
+    // `timed_out` = we parked on the reactor and the whole budget elapsed with no
+    // wake ⇒ the loop had no JS work for the full budget = genuinely idle. A
+    // notify (fresh work) instead resolves the future early (Ok), so this stays
+    // false during init's busy async churn and first becomes true once init
+    // quiesces — a robust "post-init + fully-unwound" signal.
+    let timed_out = RUNTIME.block_on(async {
         let notified = EVENT_READY.notified();
         tokio::pin!(notified);
         // Register as a waiter BEFORE checking the condition: a `notify_waiters`
@@ -302,14 +311,19 @@ pub fn run_one_tick(budget_ms: u64) {
         // stale wake can't make us skip parking on the reactor). The main loop
         // cleared `NOTIFIED` before this tick, so a set flag is fresh work.
         if unsafe { js_main_thread_notified() } != 0 {
-            return;
+            return false;
         }
         // Otherwise park: `block_on` drives every spawned native task (reqwest /
         // net / ws) and parks on the I/O reactor on this thread until a producer
         // queues a result (`notify_waiters` wakes us; we re-check NOTIFIED) or the
-        // budget elapses.
-        let _ = tokio::time::timeout(budget, notified).await;
+        // budget elapses. `is_err()` ⇒ the timeout elapsed (no wake).
+        tokio::time::timeout(budget, notified).await.is_err()
     });
+    if timed_out {
+        // Fully unwound here (block_on returned, JS stack empty between turns) and
+        // genuinely idle/post-init. Safe safepoint for the idle GC/compaction.
+        unsafe { js_gc_idle_parked() };
+    }
 }
 
 /// Drive the runtime for the full `budget_ms` (floored to 1 ms), parking on the

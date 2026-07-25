@@ -306,6 +306,86 @@ pub extern "C" fn js_main_thread_notified() -> i32 {
     i32::from(NOTIFIED.load(Ordering::Acquire))
 }
 
+/// EXPERIMENT (PERRY_GC_IDLE_POKE_MS): spawn ONE background thread that wakes the
+/// main event loop every N ms. The idle render loop turns only ~2x/idle (it runs
+/// long synchronous JS between event-loop boundaries), so the sound idle
+/// compaction hook (js_run_stdlib_pump → gc_idle_mark_compact, needs
+/// PERRY_GC_IDLE_FORCE) is almost never reached — the fragmented Eden then pins
+/// the footprint at its high-water mark. Poking the loop forces frequent turns so
+/// the compaction runs periodically and the arena follows the live set. Default
+/// off (no thread). Tests whether frequent compaction reaches node parity; if so,
+/// replace the poke with an arena-growth-gated wake (only when compaction is due).
+pub(crate) static POKE_TICKS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub(crate) static WAIT_CALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Print the main thread's arena in_use vs committed at idle (PERRY_MEM_TRACE),
+/// rate-limited to every ~40th idle turn. `arena_in_use_bytes` is thread-local so
+/// only the mutator thread that owns the churning arena can read it — the
+/// mem_trace bg thread can only see the cross-thread committed total. Together
+/// they reveal how much of the retained committed arena is reclaimable (empty)
+/// vs genuinely live.
+fn mem_trace_inuse_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| std::env::var_os("PERRY_MEM_TRACE").is_some())
+}
+
+pub(crate) fn mem_trace_inuse(where_: &str) {
+    if !mem_trace_inuse_enabled() {
+        return;
+    }
+    thread_local! { static N: std::cell::Cell<u32> = const { std::cell::Cell::new(0) }; }
+    let n = N.with(|c| {
+        let v = c.get().wrapping_add(1);
+        c.set(v);
+        v
+    });
+    if n % 40 != 1 {
+        return;
+    }
+    let total = crate::arena::arena_total_bytes();
+    let in_use = crate::arena::arena_in_use_bytes();
+    eprintln!(
+        "[mem-inuse:{}] arena_total={}MB arena_in_use={}MB reclaimable≈{}MB",
+        where_,
+        total / 1048576,
+        in_use / 1048576,
+        total.saturating_sub(in_use) / 1048576,
+    );
+}
+
+pub(crate) fn ensure_idle_poke_thread() {
+    use std::sync::OnceLock;
+    static STARTED: OnceLock<bool> = OnceLock::new();
+    STARTED.get_or_init(|| {
+        match std::env::var("PERRY_GC_IDLE_POKE_MS")
+            .ok()
+            .and_then(|s| s.trim().parse::<u64>().ok())
+            .filter(|&m| m > 0)
+        {
+            Some(ms) => {
+                let trace = std::env::var_os("PERRY_GC_IDLE_TRACE").is_some();
+                if trace {
+                    eprintln!("[poke] thread started ms={ms}");
+                }
+                std::thread::spawn(move || loop {
+                    std::thread::sleep(std::time::Duration::from_millis(ms));
+                    let n = POKE_TICKS.fetch_add(1, Ordering::Relaxed) + 1;
+                    js_notify_main_thread();
+                    if trace && n % 20 == 0 {
+                        eprintln!(
+                            "[poke] tick #{n} (wait_calls={})",
+                            WAIT_CALLS.load(Ordering::Relaxed)
+                        );
+                    }
+                });
+                true
+            }
+            None => false,
+        }
+    });
+}
+
 /// Wake the main thread from `js_wait_for_event` (or a future call).
 ///
 /// Safe to call from any thread, including the main thread itself.
@@ -397,6 +477,18 @@ pub extern "C" fn perry_poll() -> i32 {
     unsafe {
         let microtasks = js_promise_run_microtasks();
         js_run_stdlib_pump();
+        // Idle-compaction safepoint for the async-runtime-driven TUI. The stdlib
+        // pump above just ran the queued JS callbacks (timer/render callbacks that
+        // drive an Ink/React repaint at idle) and they have RETURNED — so the JS
+        // stack is fully unwound here at the top-level event-loop turn: a precise-
+        // root safepoint where the SOUND copying minor can MOVE survivors. This is
+        // the point the TUI actually reaches every turn — unlike js_wait_for_event's
+        // hooks (bypassed by the async-churn fast path) and the microtask-boundary
+        // hook (only promise microtasks, not stdlib callbacks). gc_idle_mark_compact
+        // is growth-gated (no-op unless PERRY_GC_GENERAL_EVAC + the arena grew past
+        // its floor) and startup-settled-gated, so a steady REPL compacts the
+        // accumulated Eden periodically instead of climbing to its high-water mark.
+        crate::gc::gc_idle_mark_compact();
         microtasks
     }
 }
@@ -473,6 +565,36 @@ pub extern "C" fn js_event_loop_host_driven() -> i32 {
     EVENT_LOOP_HOST_DRIVEN.load(Ordering::Relaxed) as i32
 }
 
+/// Genuine-idle hook for the async/tokio bundle. Called by the stdlib wait-driver
+/// (`async_bridge::run_one_tick`) ONLY when a bounded tick parked and TIMED OUT
+/// with no wake — the event loop had no JS work for the entire budget. That is
+/// the tokio equivalent of the genuine-idle block in `js_wait_for_event` (which
+/// the run_one_tick park path bypasses): the JS stack is fully unwound (block_on
+/// returned between event-loop turns) and, crucially, it is genuinely POST-INIT —
+/// module init's async steps keep notifying, so a full-budget timeout cannot
+/// happen until init has quiesced. This is the safe safepoint the copying
+/// compaction needs (dbg5 proved the copying minor reclaims the scattered startup
+/// survivors here — 391→196 MB — without corruption; the crashes only happened
+/// when a collection was forced at points reached mid-init with live native
+/// roots). All the hooks below are individually env-gated / no-op unless their
+/// feature is on, so this is inert by default.
+#[no_mangle]
+pub extern "C" fn js_gc_idle_parked() {
+    // NOTE: this does NOT declare startup settled. A bounded tick timing out is
+    // NOT a reliable post-init signal — module init has I/O waits (config/file
+    // reads) where the tick also times out, and setting settled there would let
+    // the moving GC run mid-init with live imprecise native roots (the "value is
+    // not a function" crash). Settled is set only by the robust arena-flat signal
+    // in promise/microtasks.rs. The hooks below are settled-gated, so they stay
+    // no-ops until that fires.
+    mem_trace_inuse("idle-parked");
+    // Copying/moving compaction: consolidates the scattered tenured survivors so
+    // whole general blocks empty and free (PERRY_GC_GENERAL_EVAC + PROMOTE).
+    crate::gc::gc_idle_mark_compact();
+    // Non-moving reclaim of any now-fully-dead blocks (PERRY_GC_IDLE_RECLAIM).
+    crate::gc::gc_idle_reclaim();
+}
+
 /// Block until the next scheduled timer fires, a notify arrives, or the
 /// 1-second idle cap elapses — whichever is earliest. Returns immediately
 /// if a notify arrived since the last call (the flag is cleared on
@@ -480,6 +602,21 @@ pub extern "C" fn js_event_loop_host_driven() -> i32 {
 /// and `await` busy-wait.
 #[no_mangle]
 pub extern "C" fn js_wait_for_event() {
+    // Lazily start the idle-poke thread (no-op after first call / when the env is
+    // unset). Placed here so it starts once the app reaches the event loop.
+    ensure_idle_poke_thread();
+    // Count loop turns (diag) + fire the idle compaction at the loop-turn ENTRY —
+    // reached on EVERY event-loop turn before any fast-path early return, so if the
+    // poke thread successfully wakes the loop this fires the compaction at the
+    // arena's post-startup high-water mark. Growth-gated + startup-settled-gated +
+    // needs PERRY_GC_IDLE_FORCE (no-op otherwise), so default behavior is unchanged.
+    WAIT_CALLS.fetch_add(1, Ordering::Relaxed);
+    crate::gc::gc_idle_mark_compact();
+    // NOTE: the idle reclaim is NOT called here. Stack sampling showed this entry
+    // is reached mid-startup with live native roots (forcing a collection here
+    // exits the bundle with code 1); the ONLY safe every-turn safepoint is the
+    // top-level EventLoop microtask drain (promise/microtasks.rs), where the
+    // reclaim + startup-settled now live.
     // FAST PATH: a notify was already issued since the last wait. The
     // hot async/await steady-state hits this every iteration.
     //
@@ -508,6 +645,16 @@ pub extern "C" fn js_wait_for_event() {
     let was_notified = NOTIFIED.swap(false, Ordering::Acquire);
     if was_notified || unsafe { js_microtasks_pending() } > 0 {
         invoke_wait_driver_fast();
+        // A TUI's steady state is constant async/promise churn, so this NOTIFIED
+        // fast path is taken every event-loop turn and the genuine-idle compaction
+        // sites below are never reached — the general arena then grows unbounded
+        // (Eden never gets evacuated). Fire the growth-gated idle compaction here
+        // too: it no-ops unless PERRY_GC_GENERAL_EVAC is set AND the arena grew
+        // past its floor since the last compaction, so a steady REPL compacts
+        // periodically instead of climbing to its high-water mark. The copying
+        // minor it runs is the sound, self-guarding path (bails to non-moving if
+        // it can't prove safety), and startup_settled gates it off during init.
+        crate::gc::gc_idle_mark_compact();
         return;
     }
 
@@ -572,6 +719,13 @@ pub extern "C" fn js_wait_for_event() {
     // becomes permitted from here; evacuating any earlier live-sweeps native
     // module-init Rust locals/Vecs. Sticky; cheap relaxed store.
     crate::gc::gc_mark_startup_settled();
+    if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+        thread_local! { static GI: std::cell::Cell<u32> = const { std::cell::Cell::new(0) }; }
+        let n = GI.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+        if n <= 6 || n % 50 == 0 {
+            eprintln!("[genuine-idle] #{n} arena_in_use_mb={}", crate::arena::arena_in_use_bytes() / 1048576);
+        }
+    }
     // Phase 5 (PERRY_GC_GENERAL_EVAC, default off): at genuine idle, run a
     // compacting full GC to consolidate the ~250MB of tenured-in-place general
     // blocks the copying minor can't reach. No-op unless the arena grew past its

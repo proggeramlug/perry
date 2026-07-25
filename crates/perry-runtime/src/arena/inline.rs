@@ -63,7 +63,7 @@ pub extern "C" fn js_inline_arena_slow_alloc(
     align: usize,
 ) -> *mut u8 {
     let state_ref = unsafe { &mut *state };
-    ARENA.with(|a| unsafe {
+    let ptr = ARENA.with(|a| unsafe {
         let arena = &mut *a.get();
         // Sync inline-state offset back to underlying block (so
         // arena_walk_objects and the slow-path GC trigger see the
@@ -77,7 +77,27 @@ pub extern "C" fn js_inline_arena_slow_alloc(
         state_ref.offset = block.offset;
         state_ref.size = block.size;
         ptr
-    })
+    });
+    // Connect ARENA growth to the moving-loop-poll deferral: a pure-arena
+    // allocation burst (a synchronous render) never calls gc_check_trigger via the
+    // malloc path, so the arena-bytes trigger never fires and the copying minor is
+    // never deferred to a loop back-edge — the arena grows unbounded to its
+    // high-water mark. With PERRY_GC_MOVING_LOOP_POLLS on, check the trigger here at
+    // the block boundary: when the arena-bytes trigger is due it DEFERS (sets
+    // GC_SAFEPOINT_PENDING, no collection at this register-imprecise point) and the
+    // next codegen loop back-edge poll drains it with the sound copying minor.
+    // Gated on loop-polls so default (no polls) behavior is unchanged.
+    if crate::gc::gc_moving_loop_polls_enabled() {
+        if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+            thread_local! { static SA: std::cell::Cell<u32> = const { std::cell::Cell::new(0) }; }
+            let n = SA.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+            if n <= 3 || n % 500 == 0 {
+                eprintln!("[slow-alloc] js_inline_arena_slow_alloc #{n} (calling gc_check_trigger)");
+            }
+        }
+        crate::gc::gc_check_trigger();
+    }
+    ptr
 }
 
 /// Sync the inline arena state's offset back to the underlying arena

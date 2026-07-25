@@ -197,6 +197,15 @@ socket2 = { version = "0.6", features = ["all"] }
 # avoid compiling mimalloc's C on that target entirely.
 [target.'cfg(target_pointer_width = "64")'.dependencies]
 mimalloc = { version = "0.1", default-features = false }
+# Direct access to mimalloc's extended API (mi_heap_new / mi_heap_malloc_aligned /
+# mi_heap_collect) so arena's 1 MB blocks can live in a DEDICATED heap. Freed
+# blocks then occupy their own segments and mi_heap_collect returns them to the OS
+# at idle — a block freed to the shared heap shares 32 MB segments with the
+# small-object non-arena churn, so a partially-live segment never purges (the
+# reason idle footprint pins at the arena high-water mark). Same underlying C lib
+# as the `mimalloc` crate above (Cargo dedups libmimalloc-sys), so the dedicated
+# heap lives in the same allocator instance as the GlobalAlloc.
+libmimalloc-sys = { version = "0.1.49", features = ["extended"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = [

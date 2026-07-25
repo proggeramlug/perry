@@ -69,6 +69,29 @@ pub(super) const GC_THRESHOLD_MAX_BYTES: usize = 1024 * 1024 * 1024; // 1 GB
 /// which is exactly the bench-RSS scenario this is targeting.
 pub(super) const GC_TRIGGER_ABSOLUTE_CEILING: usize = 128 * 1024 * 1024;
 
+/// Per-program nursery step / trigger size in bytes. Default 128 MB
+/// (`GC_THRESHOLD_INITIAL_BYTES`, chosen so allocation-heavy benchmarks pay zero
+/// GC cost). The nursery is allowed to grow ~`step` past the post-collection
+/// baseline before a minor fires, so this is what sets peak nursery occupancy —
+/// and therefore idle RSS/footprint on a long-running program (a TUI at idle
+/// accumulates a 128 MB+ Eden between collections, holding ~300 MB resident vs
+/// node's bounded ~16 MB new-space). `PERRY_GC_ARENA_STEP_MB` shrinks it to
+/// collect the nursery more frequently (node-like) — trading a little throughput
+/// on alloc-heavy loops for a far smaller resident set. Also caps step-doubling
+/// so a productive sweep can't grow the nursery back above the configured size.
+pub(super) fn gc_arena_step_bytes() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_ARENA_STEP_MB")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .filter(|mb| *mb > 0)
+            .map(|mb| mb.saturating_mul(1024 * 1024))
+            .unwrap_or(GC_THRESHOLD_INITIAL_BYTES)
+    })
+}
+
 // Device-derived heap budget: see gc/heap_budget.rs (split out for the
 // 2000-line file lint).
 
@@ -107,7 +130,7 @@ thread_local! {
     /// floor) so live-set-bound programs don't grow their working
     /// set unboundedly between collections.
     pub(super) static GC_NEXT_TRIGGER_BYTES: std::cell::Cell<usize> =
-        const { std::cell::Cell::new(GC_THRESHOLD_INITIAL_BYTES) };
+        std::cell::Cell::new(gc_arena_step_bytes());
 
     /// Whether GC_NEXT_TRIGGER_BYTES has been explicitly set on this thread
     /// (re-arm after a collection, parse bump, tiny-parse lowering). While
@@ -123,7 +146,7 @@ thread_local! {
     /// little. Used to compute the next trigger after each GC as
     /// `post_total + step`.
     pub(super) static GC_STEP_BYTES: std::cell::Cell<usize> =
-        const { std::cell::Cell::new(GC_THRESHOLD_INITIAL_BYTES) };
+        std::cell::Cell::new(gc_arena_step_bytes());
 
     /// Lower bound for the next malloc-count-based GC trigger. After each
     /// collection, this is reset to `survivor_count + GC_MALLOC_COUNT_STEP`
@@ -324,6 +347,27 @@ pub(crate) fn gc_incremental_enabled() -> bool {
 /// vectorization; when it's emitted only for allocating loops this can flip on.
 /// Must match the codegen `moving_safepoint_polls_enabled` (same env) so the
 /// deferral and the polls that drain it stay coherent.
+/// Hard cap (bytes) below which an alloc-point nursery trigger DEFERS to a loop
+/// back-edge poll (moving compaction) instead of collecting non-moving in place.
+/// Default = the device-scaled `GC_MOVING_DEFER_HARD_CAP_BYTES` (128 MB). At idle
+/// a long-running program's arena sits WAY above that, so the deferral never
+/// happens and the copying minor never fires from a loop poll — the whole
+/// MOVING_LOOP_POLLS mechanism is inert past 128 MB. `PERRY_GC_MOVING_DEFER_CAP_MB`
+/// raises it so the deferral (and thus the back-edge copying minor) runs even
+/// with a large live arena — the key to compacting the fragmented Eden at idle.
+pub(crate) fn gc_moving_defer_cap_bytes() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_MOVING_DEFER_CAP_MB")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .filter(|mb| *mb > 0)
+            .map(|mb| mb.saturating_mul(1024 * 1024))
+            .unwrap_or_else(gc_moving_defer_hard_cap_dyn_bytes)
+    })
+}
+
 pub(crate) fn gc_moving_loop_polls_enabled() -> bool {
     static CACHED: OnceLock<bool> = OnceLock::new();
     *CACHED.get_or_init(|| {
@@ -1032,9 +1076,12 @@ fn gc_finish_arena_trigger_collection(pre_in_use: usize, outcome: GcCollectOutco
         // ceiling; the doubling branch is kept for the bisection
         // escape hatch.
         if !(10..=84).contains(&pct_freed) {
-            step = (step * 2).min(GC_THRESHOLD_MAX_BYTES);
+            // Cap step growth at the configured nursery size (default 128 MB =
+            // GC_THRESHOLD_MAX supersedes anyway) so a productive sweep can't
+            // grow peak nursery occupancy back above PERRY_GC_ARENA_STEP_MB.
+            step = (step * 2).min(gc_arena_step_bytes()).min(GC_THRESHOLD_MAX_BYTES);
         } else if pct_freed >= 25 {
-            step = (step / 2).max(16 * 1024 * 1024);
+            step = (step / 2).max((16 * 1024 * 1024).min(gc_arena_step_bytes()));
         }
         // 10-25% freed → keep step unchanged (marginal churn).
         GC_STEP_BYTES.with(|c| c.set(step));
@@ -1117,22 +1164,47 @@ fn gc_finish_malloc_trigger_collection(pre_count: usize, outcome: GcCollectOutco
 /// `GC_MUTATOR_ASSIST_WORK_UNITS` and only enter phases that already consume
 /// that budget; unsliced phases stay active for host-driven budgeted steps.
 pub fn gc_check_trigger() {
+    // DIAG (PERRY_GC_IDLE_TRACE): which early-return blocks the arena-burst
+    // trigger from reaching the direct_kind deferral. Prints the first few of each.
+    macro_rules! ck_diag {
+        ($tag:literal) => {{
+            if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+                thread_local! { static CKD: Cell<u32> = const { Cell::new(0) }; }
+                let n = CKD.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+                if n <= 20 || n % 2000 == 0 {
+                    eprintln!("[ck] early-return #{}: {}", n, $tag);
+                }
+            }
+        }};
+    }
     if GC_BUDGETED_STEP_ACTIVE.with(Cell::get) {
+        ck_diag!("budgeted_step_active");
         return;
     }
     // Issue #62: single TLS access covers both `in_alloc` and `suppressed`.
     let flags = GC_FLAGS.with(|f| f.get());
     if flags & GC_FLAG_SUPPRESSED != 0 {
+        ck_diag!("suppressed");
         return;
     }
     if !gc_budgeted_cycle_active() && flags & GC_FLAG_IN_ALLOC != 0 {
+        ck_diag!("in_alloc");
         return;
     }
     if gc_blocked_by_unsafe_zone() {
+        ck_diag!("unsafe_zone");
         return;
     }
     if defer_gc_request(DeferredGcRequest::CheckTrigger) {
+        ck_diag!("defer_gc_request");
         return;
+    }
+    if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+        thread_local! { static REACHED: Cell<u32> = const { Cell::new(0) }; }
+        let n = REACHED.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+        if n <= 3 || n % 500 == 0 {
+            eprintln!("[ck] reached-trigger-check #{n} due={:?}", gc_budgeted_due_trigger());
+        }
     }
 
     // #5476: a workload that churns *large* temporaries (>16 KB, born directly
@@ -1186,6 +1258,33 @@ pub fn gc_check_trigger() {
     // live only in registers, so the conservative native scan retains it —
     // which also makes copied-minor ineligible for THIS cycle, so the
     // non-moving minor runs (no relocation hazards at alloc points).
+    // Moving-loop-polls (PERRY_GC_MOVING_LOOP_POLLS): DEFER any due nursery trigger
+    // to the next codegen loop back-edge poll so the SOUND copying minor moves
+    // survivors there — regardless of whether the budgeted stepper is available
+    // (the `registered_root_scanners_block_budgeted_gc` gate below). Without this,
+    // a synchronous render burst whose arena-bytes trigger fires while the budgeted
+    // stepper IS available goes to the incremental mutator-assist step, which a
+    // compute-only burst never drives to completion → the arena grows unbounded to
+    // its high-water mark. Safety valve: past the hard cap, fall through to the
+    // normal (non-moving) collection so growth stays bounded even if no poll runs.
+    if gc_moving_loop_polls_enabled()
+        && !gc_budgeted_cycle_active()
+        && matches!(
+            gc_budgeted_due_trigger(),
+            Some(BudgetedGcTrigger::ArenaBytes) | Some(BudgetedGcTrigger::MallocCount)
+        )
+        && crate::arena::arena_total_bytes() < gc_moving_defer_cap_bytes()
+    {
+        if std::env::var_os("PERRY_GC_DIAG").is_some() {
+            thread_local! { static D2: Cell<u32> = const { Cell::new(0) }; }
+            let n = D2.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+            if n <= 4 || n % 500 == 0 {
+                eprintln!("[defer2] n={n} arena_mb={}", crate::arena::arena_total_bytes() / 1048576);
+            }
+        }
+        GC_SAFEPOINT_PENDING.with(|p| p.set(true));
+        return;
+    }
     if !gc_budgeted_cycle_active() && super::roots::registered_root_scanners_block_budgeted_gc() {
         let direct_kind = match gc_budgeted_due_trigger() {
             Some(BudgetedGcTrigger::ArenaBytes) => Some(GcTriggerKind::ArenaBytes),
@@ -1200,8 +1299,22 @@ pub fn gc_check_trigger() {
             // register-imprecise point. Safety valve: once committed arena bytes
             // pass the hard cap (a mega-expression that reached no poll), fall
             // through and collect non-moving here so growth stays bounded.
+            {
+                thread_local! { static DEFER_DIAG: Cell<u32> = const { Cell::new(0) }; }
+                if std::env::var_os("PERRY_GC_DIAG").is_some() {
+                    let n = DEFER_DIAG.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
+                    if n <= 6 || n % 200 == 0 {
+                        eprintln!(
+                            "[defer] n={n} polls={} arena_mb={} cap_mb={}",
+                            gc_moving_loop_polls_enabled(),
+                            crate::arena::arena_total_bytes() / 1048576,
+                            gc_moving_defer_cap_bytes() / 1048576,
+                        );
+                    }
+                }
+            }
             if gc_moving_loop_polls_enabled()
-                && crate::arena::arena_total_bytes() < gc_moving_defer_hard_cap_dyn_bytes()
+                && crate::arena::arena_total_bytes() < gc_moving_defer_cap_bytes()
             {
                 GC_SAFEPOINT_PENDING.with(|p| p.set(true));
                 return;
@@ -1436,11 +1549,56 @@ static GC_STARTUP_SETTLED: std::sync::atomic::AtomicBool =
 
 /// Called from the event-loop OS wait the first time the app blocks for external
 /// events — marks the end of the module-init phase that is unsafe to evacuate.
+///
+/// NOTE: reaching the OS wait once is NOT sufficient for a large async bundle —
+/// init has awaits (config/file I/O) where the loop parks with the arena still
+/// growing, so an unconditional settle here fires at ~2-8s MID-INIT and the
+/// "post-init" GC modes (evac/reclaim) then live-sweep init state ("value is not
+/// a function"). All callers therefore route through
+/// `gc_maybe_mark_startup_settled`, which additionally requires the arena to
+/// have been FLAT for a sustained wall-clock window.
 pub(crate) fn gc_mark_startup_settled() {
-    GC_STARTUP_SETTLED.store(true, std::sync::atomic::Ordering::Relaxed);
+    gc_maybe_mark_startup_settled();
 }
 
-fn gc_startup_settled() -> bool {
+/// Robust settle: mark settled only once (a) ≥12s of process uptime, (b) the
+/// committed arena hasn't grown by >8MB for ≥6s, and (c) it is non-trivially
+/// sized (>100MB — a real app past init; tiny programs never settle, which is
+/// fine because the settled-gated modes only matter for big idle apps). Init
+/// grows the arena fast and continuously, so (b) cannot hold mid-init; a steady
+/// REPL creeps <1MB/s, so it settles ~12-18s. Sticky once set.
+pub(crate) fn gc_maybe_mark_startup_settled() {
+    use std::sync::OnceLock;
+    use std::time::Instant;
+    if GC_STARTUP_SETTLED.load(std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    static PROC_START: OnceLock<Instant> = OnceLock::new();
+    thread_local! {
+        static MAX_TOTAL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+        static LAST_GROW_MS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+    }
+    let now_ms = PROC_START.get_or_init(Instant::now).elapsed().as_millis() as u64;
+    let total = crate::arena::arena_total_bytes();
+    if total > MAX_TOTAL.with(|c| c.get()) + 8 * 1024 * 1024 {
+        MAX_TOTAL.with(|c| c.set(total));
+        LAST_GROW_MS.with(|c| c.set(now_ms));
+    }
+    let flat_ms = now_ms.saturating_sub(LAST_GROW_MS.with(|c| c.get()));
+    if total > 100 * 1024 * 1024 && now_ms > 12_000 && flat_ms > 6_000 {
+        GC_STARTUP_SETTLED.store(true, std::sync::atomic::Ordering::Relaxed);
+        if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+            eprintln!(
+                "[settled] at {}ms total_mb={} flat_ms={}",
+                now_ms,
+                total / 1048576,
+                flat_ms
+            );
+        }
+    }
+}
+
+pub(crate) fn gc_startup_settled() -> bool {
     GC_STARTUP_SETTLED.load(std::sync::atomic::Ordering::Relaxed)
 }
 
@@ -1469,6 +1627,59 @@ fn gc_safepoint_evac_due() -> bool {
 /// in-flight budgeted cycle itself. Fires only when the arena grew ≥16MB since
 /// the last idle compaction (first idle always), so a steady REPL compacts once
 /// then quiesces.
+/// Idle-compaction growth floor in bytes (default 16 MiB). Tunable via
+/// PERRY_GC_IDLE_COMPACT_MB to measure how firing the sound copying minor more
+/// often at idle drives footprint toward the live set.
+fn gc_idle_compact_growth_bytes() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_IDLE_COMPACT_MB")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .map(|mb| mb.saturating_mul(1024 * 1024))
+            .unwrap_or(16 * 1024 * 1024)
+    })
+}
+
+/// Committed-slack trigger for the idle compaction (PERRY_GC_IDLE_SLACK_MB,
+/// default off = usize::MAX). The in-use-growth floor above misses the dominant
+/// idle-footprint source: a churning REPL's *normal* minor GC keeps
+/// `arena_in_use_bytes` (sum of block offsets) low by resetting emptied blocks
+/// for reuse, but leaves them committed — so committed `arena_total_bytes` grows
+/// (footprint climbs) while in-use stays flat and the growth floor never trips.
+/// When `total - in_use` (reclaimable committed slack) exceeds this threshold,
+/// fire the compaction (aggressive-dealloc + mi_collect) to return that slack to
+/// the OS, so idle footprint tracks the live set the way node's continuous GC
+/// does.
+fn gc_idle_slack_bytes() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_IDLE_SLACK_MB")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .map(|mb| mb.saturating_mul(1024 * 1024))
+            .unwrap_or(usize::MAX)
+    })
+}
+
+/// EXPERIMENT (PERRY_GC_IDLE_FORCE, default off): bypass the IN_ALLOC/SUPPRESSED
+/// gate on the idle copying-minor compaction. See the call site — the copying
+/// minor is self-guarding, so this tests whether that gate is over-conservative
+/// at the event-loop-turn safepoint (js_run_stdlib_pump) where IN_ALLOC appears
+/// to be a stale cross-turn flag rather than a genuine mid-allocation.
+fn gc_idle_force_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_IDLE_FORCE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
 pub(crate) fn gc_idle_mark_compact() {
     if !crate::gc::general_block_evac_enabled()
         || !crate::gc::gc_promote_enabled()
@@ -1477,31 +1688,89 @@ pub(crate) fn gc_idle_mark_compact() {
         return;
     }
     let flags = GC_FLAGS.with(|f| f.get());
-    let in_alloc_supp = flags & (GC_FLAG_IN_ALLOC | GC_FLAG_SUPPRESSED) != 0;
+    let in_alloc = flags & GC_FLAG_IN_ALLOC != 0;
+    let suppressed = flags & GC_FLAG_SUPPRESSED != 0;
+    let in_alloc_supp = in_alloc || suppressed;
     let unsafe_zone = gc_blocked_by_unsafe_zone();
     let root_lock = GC_ROOT_LOCK_DEPTH.with(|depth| depth.get());
-    const IDLE_COMPACT_GROWTH_BYTES: usize = 16 * 1024 * 1024;
+    // Idle-compaction growth floor. The sound copying minor evacuates the whole
+    // general arena and returns emptied blocks (via aggressive-dealloc +
+    // mi_collect), so firing it more often at idle keeps Eden small and footprint
+    // near the live set. Tunable via PERRY_GC_IDLE_COMPACT_MB for measurement.
+    let idle_compact_growth_bytes: usize = gc_idle_compact_growth_bytes();
     let cur = crate::arena::arena_in_use_bytes();
     let last = LAST_IDLE_MARK_COMPACT_IN_USE.with(|c| c.get());
-    // DIAG (PERRY_GC_DIAG): trace why the compaction fires or is gated — three
-    // trigger attempts (Phase 3/5/5.1) reached this fn but never ran a full GC.
-    thread_local! { static MC_CALLS: Cell<u32> = const { Cell::new(0) }; }
+    // Committed slack = total committed − live/bumped. A churning REPL grows this
+    // (footprint) even while `cur` stays flat (normal minor resets-for-reuse), so
+    // the in-use-growth floor alone under-fires. When slack is large there's real
+    // footprint to reclaim, so let it override the growth floor.
+    let slack = crate::arena::arena_total_bytes().saturating_sub(cur);
+    let slack_fires = slack >= gc_idle_slack_bytes();
+    let floor_block =
+        !slack_fires && last != usize::MAX && cur.saturating_sub(last) < idle_compact_growth_bytes;
+    // DIAG (PERRY_GC_DIAG): full gate breakdown so the idle-compaction frequency
+    // bottleneck is unambiguous — count total calls and each block reason, print
+    // the running tally every 200 calls plus the first 10.
+    thread_local! {
+        static MC_CALLS: Cell<u32> = const { Cell::new(0) };
+        static MC_BLK_ALLOC: Cell<u32> = const { Cell::new(0) };
+        static MC_BLK_SUPP: Cell<u32> = const { Cell::new(0) };
+        static MC_BLK_UNSAFE: Cell<u32> = const { Cell::new(0) };
+        static MC_BLK_ROOT: Cell<u32> = const { Cell::new(0) };
+        static MC_BLK_FLOOR: Cell<u32> = const { Cell::new(0) };
+        static MC_FIRED: Cell<u32> = const { Cell::new(0) };
+    }
     let n = MC_CALLS.with(|c| { let v = c.get().wrapping_add(1); c.set(v); v });
-    let diag = std::env::var_os("PERRY_GC_DIAG").is_some() && (n <= 10 || n % 300 == 0);
+    if in_alloc { MC_BLK_ALLOC.with(|c| c.set(c.get() + 1)); }
+    if suppressed { MC_BLK_SUPP.with(|c| c.set(c.get() + 1)); }
+    if unsafe_zone { MC_BLK_UNSAFE.with(|c| c.set(c.get() + 1)); }
+    if root_lock != 0 { MC_BLK_ROOT.with(|c| c.set(c.get() + 1)); }
+    if !in_alloc_supp && !unsafe_zone && root_lock == 0 && floor_block {
+        MC_BLK_FLOOR.with(|c| c.set(c.get() + 1));
+    }
+    // Gate on PERRY_GC_IDLE_TRACE (lightweight) rather than PERRY_GC_DIAG — the
+    // latter also enables the heavy full-cycle heap histogram (backtrace capture
+    // per large alloc) which perturbs startup enough to change idle timing. This
+    // diag is a few eprintln!s, so it can ride the light flag and show the
+    // call/fire/block pattern without distorting the measurement.
+    let diag = std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() && (n <= 10 || n % 100 == 0);
     if diag {
         eprintln!(
-            "[mc-gate] n={n} in_alloc_supp={in_alloc_supp} unsafe={unsafe_zone} rootlock={root_lock} cur_mb={} last_mb={} grew={}",
+            "[mc-gate] n={n} fired={} blk[alloc={} supp={} unsafe={} root={} floor={}] cur_mb={} last_mb={} grew={} floorMB={} slack_mb={} slack_fires={}",
+            MC_FIRED.with(|c| c.get()),
+            MC_BLK_ALLOC.with(|c| c.get()), MC_BLK_SUPP.with(|c| c.get()),
+            MC_BLK_UNSAFE.with(|c| c.get()), MC_BLK_ROOT.with(|c| c.get()),
+            MC_BLK_FLOOR.with(|c| c.get()),
             cur / 1048576,
             if last == usize::MAX { -1i64 } else { (last / 1048576) as i64 },
             if last == usize::MAX { -1i64 } else { (cur.saturating_sub(last) / 1048576) as i64 },
+            idle_compact_growth_bytes / 1048576,
+            slack / 1048576,
+            slack_fires,
         );
     }
-    if in_alloc_supp || unsafe_zone || root_lock != 0 {
+    // PERRY_GC_IDLE_FORCE: bypass the IN_ALLOC/SUPPRESSED gate. The copying minor
+    // this runs is SELF-GUARDING — its preflight bails to non-moving on any genuine
+    // hazard (ConservativeStack/PinnedYoung*/BarriersInactive/MallocRegistryUnavailable),
+    // so if IN_ALLOC here is merely a stale cross-turn flag (the incremental
+    // collector's), forcing is safe and lets the compaction actually run at idle.
+    // EXPERIMENT (default off): if this compacts crash-free the gate was
+    // over-conservative HERE; if it crashes, IN_ALLOC was a genuine mid-alloc.
+    let force = gc_idle_force_enabled();
+    if force && in_alloc && std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
+        MC_BLK_ALLOC.with(|c| {
+            if c.get() <= 3 {
+                eprintln!("[mc-force] IN_ALLOC held at idle compaction; backtrace:\n{}", std::backtrace::Backtrace::force_capture());
+            }
+        });
+    }
+    if (!force && in_alloc_supp) || unsafe_zone || root_lock != 0 {
         return;
     }
-    if last != usize::MAX && cur.saturating_sub(last) < IDLE_COMPACT_GROWTH_BYTES {
+    if floor_block {
         return;
     }
+    MC_FIRED.with(|c| c.set(c.get() + 1));
     if diag {
         eprintln!("[mc-fire] running full mark-compact n={n} cur_mb={}", cur / 1048576);
     }
@@ -1532,6 +1801,115 @@ pub(crate) fn gc_idle_mark_compact() {
         );
     }
     LAST_IDLE_MARK_COMPACT_IN_USE.with(|c| c.set(crate::arena::arena_in_use_bytes()));
+}
+
+/// Idle-reclaim committed-total floor (PERRY_GC_IDLE_RECLAIM=<MB>, default off/0).
+/// When the arena's COMMITTED bytes exceed this, run a SAFE non-moving reclaim at
+/// the idle safepoint. Gated on committed total, NOT on committed-vs-live slack:
+/// at the high-water mark the general blocks are ~full (offset≈size) so
+/// `total − in_use` is tiny even though most of the bumped region is uncollected
+/// dead — only the minor's mark can find it. So we trigger on absolute committed
+/// size and let the non-moving minor mark+sweep+dealloc do the reclaiming; it
+/// self-limits (after a reclaim committed drops toward the live set, below the
+/// floor, until the arena regrows).
+fn gc_idle_reclaim_floor_bytes() -> usize {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<usize> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_IDLE_RECLAIM")
+            .ok()
+            .and_then(|s| s.trim().parse::<usize>().ok())
+            .map(|mb| mb.saturating_mul(1024 * 1024))
+            .unwrap_or(0)
+    })
+}
+
+/// SAFE idle memory reclaim (PERRY_GC_IDLE_RECLAIM, default off). Unlike
+/// `gc_idle_mark_compact` this runs the ordinary NON-MOVING minor
+/// (`gc_collect_minor`) — it marks live objects and, with aggressive-dealloc set,
+/// returns every dead/empty general block to the allocator, then `mi_collect`
+/// returns those to the OS. Because nothing moves, there is no evacuator
+/// corruption or codegen-local-reference hazard, so it is safe to call from the
+/// hot due-timer idle path (where IN_ALLOC may be set and the moving compaction
+/// is NOT safe). It reclaims the retained high-water-mark empty blocks that a
+/// steady REPL accumulates but never releases (measured: arena holds ~271 MB
+/// committed at idle while the live set is far smaller). Fires only when the
+/// committed-vs-live slack exceeds the floor, and is self-limiting: after a
+/// reclaim the slack drops below the floor until the arena regrows.
+pub(crate) fn gc_idle_reclaim() {
+    let floor = gc_idle_reclaim_floor_bytes();
+    if floor == 0 || !gc_startup_settled() {
+        return;
+    }
+    // Never reenter a collection or run mid-suppression/unsafe-zone.
+    let flags = GC_FLAGS.with(|f| f.get());
+    if flags & (GC_FLAG_SUPPRESSED | GC_FLAG_IN_ALLOC) != 0 || gc_blocked_by_unsafe_zone() {
+        return;
+    }
+    if GC_ROOT_LOCK_DEPTH.with(|d| d.get()) != 0 {
+        return;
+    }
+    let total = crate::arena::arena_total_bytes();
+    if total < floor {
+        return;
+    }
+    let in_use_before = crate::arena::arena_in_use_bytes();
+    let diag = std::env::var_os("PERRY_GC_IDLE_TRACE").is_some();
+    // PERRY_GC_IDLE_RECLAIM_MODE=copy: the (currently UNSOUND-at-this-site)
+    // moving variant — copying minor + full sweep. Every moving attempt here has
+    // crashed the same way: a reference the precise enumeration misses keeps the
+    // moved object's old address, and an ordinary generated-code field load
+    // through it reads the forwarding pointer's bytes as the value (a number) →
+    // "value is not a function". Ordinary loads never call the read barrier, so
+    // selfheal stub retention can't cover them. Kept for experiments only.
+    let moving_mode = matches!(
+        std::env::var("PERRY_GC_IDLE_RECLAIM_MODE").as_deref(),
+        Ok("copy")
+    );
+    if moving_mode {
+        // Rate limit the heavy 2-phase variant: fire only when committed grew
+        // ≥32MB past the last reclaim's end state (first fire always).
+        thread_local! {
+            static LAST_RECLAIM_TOTAL: Cell<usize> = const { Cell::new(usize::MAX) };
+        }
+        let last = LAST_RECLAIM_TOTAL.with(|c| c.get());
+        if last != usize::MAX && total < last.saturating_add(32 * 1024 * 1024) {
+            return;
+        }
+        if !super::gc_promote_selfheal_enabled() {
+            return;
+        }
+        let _ = super::gc_collect_minor();
+        let _ = super::gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(
+            GcTriggerKind::ArenaBytes,
+        ));
+        super::gc_return_freed_to_os();
+        LAST_RECLAIM_TOTAL.with(|c| c.set(crate::arena::arena_total_bytes()));
+    } else {
+        // DEFAULT: full mark-sweep only — NON-moving, conservative stack scan +
+        // every registered root scanner = the ordinary sound collector, safe
+        // anywhere. It can't compact a partially-live block, but it frees every
+        // FULLY-dead block (dead_cycles advances each pass; blocks dealloc after
+        // DEALLOC_DEAD_CYCLES=2 consecutive dead passes, then mi_collect returns
+        // them). This directly tests how much of the idle heap is whole-dead
+        // blocks vs genuinely scattered — if most of the ~220MB startup garbage
+        // sits in fully-dead blocks, this reclaims it with NO moving at all.
+        // Self-limiting via the committed floor: once blocks free and committed
+        // drops below the floor, this stops firing.
+        let _ = super::gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(
+            GcTriggerKind::ArenaBytes,
+        ));
+        super::gc_return_freed_to_os();
+    }
+    if diag {
+        eprintln!(
+            "[idle-reclaim] total_mb {}→{} in_use_mb {}→{}",
+            total / 1048576,
+            crate::arena::arena_total_bytes() / 1048576,
+            in_use_before / 1048576,
+            crate::arena::arena_in_use_bytes() / 1048576
+        );
+    }
 }
 
 pub(crate) fn gc_safepoint_moving_minor() {
@@ -1575,7 +1953,18 @@ pub(crate) fn gc_safepoint_moving_minor() {
     // permits evacuation; alloc-triggered cycles (deep stack) never set this and
     // stay non-moving. Restore the prior value (safepoint minors don't nest, but
     // keep it robust).
-    let prev_safepoint = super::oldgen::gc_promote_set_evac_at_safepoint(true);
+    //
+    // CRUCIAL: only evacuate once startup has SETTLED. The microtask-drain
+    // safepoint is reached DURING module init too (every top-level await), and
+    // there the "no native local references a nursery object" assumption is FALSE
+    // — init's Rust locals/Vecs still hold un-rooted JS pointers, so evacuating
+    // moves a live closure without rewriting that reference → "value is not a
+    // function" when a later init microtask calls it (lldb-confirmed: run_microtasks
+    // → generated fn → js_closure_unbox_callee_checked → throw_not_callable). Before
+    // settle this stays a NON-MOVING minor (safe); the scattered survivors are
+    // compacted at the first post-settle safepoint.
+    let prev_safepoint =
+        super::oldgen::gc_promote_set_evac_at_safepoint(gc_startup_settled());
     let outcome = super::gc_collect_minor_with_trigger(GcTriggerSnapshot::capture(kind));
     super::oldgen::gc_promote_set_evac_at_safepoint(prev_safepoint);
     match kind {
@@ -1690,7 +2079,9 @@ fn gc_start_budgeted_minor_fallback_cycle_with_snapshot(
     // tenured-nursery evacuation. Old-page defrag stays separately gated (#6206).
     let low_pause_non_moving =
         progress_kind.is_budgeted() && !super::oldgen::gc_promote_evac_this_cycle();
-    let evacuation_policy_allowed = !low_pause_non_moving && gen_gc_evacuate_enabled();
+    let evacuation_policy_allowed = !low_pause_non_moving
+        && gen_gc_evacuate_enabled()
+        && (!gc_promote_enabled() || gc_startup_settled());
     let force_evacuation = !low_pause_non_moving && gc_force_evacuate_enabled();
     let evacuation_policy_disabled_reason = if low_pause_non_moving {
         EVACUATION_POLICY_LOW_PAUSE_NON_MOVING_REASON

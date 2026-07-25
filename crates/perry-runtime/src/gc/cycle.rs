@@ -1774,8 +1774,14 @@ impl GcCycleState {
                     // sweep restricts it to objects in blocks allocated BEFORE
                     // this cycle's frontier (genuine survivors), so allocate-black
                     // births are never aged — soundness is preserved by position.
-                    let age_bump =
-                        !self.progress_kind.is_budgeted() || super::gc_promote_enabled();
+                    // Gate the PROMOTE age-bump on startup_settled too: during
+                    // module init the age-bump tenures survivors whose blocks are
+                    // then subject to promote reclaim, racing the imprecise native
+                    // init roots. Non-promote/non-budgeted cycles keep default
+                    // behavior. (The evac itself is separately settled-gated in
+                    // gc_safepoint_moving_minor.)
+                    let age_bump = !self.progress_kind.is_budgeted()
+                        || (super::gc_promote_enabled() && super::gc_startup_settled());
                     (age_bump, false, targeted_old_blocks, minor.malloc_sweep_due)
                 } else {
                     (false, true, None, true)

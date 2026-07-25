@@ -27,9 +27,9 @@ pub(crate) use allocators::{
     inactive_survivor_index, with_survivor_arena, with_survivor_arena_mut,
 };
 pub(crate) use block::{
-    old_gen_in_use_bytes_sub, Arena, ArenaBlock, ACTIVE_SURVIVOR, ARENA, ARENA_TOTAL_BYTES,
-    BLOCK_SIZE, FRESH_GENERAL_BLOCK_MIN_USED_BYTES, INLINE_STATE, LONGLIVED_ARENA, OLD_ARENA,
-    OLD_GEN_IN_USE_BYTES, SURVIVOR_ARENA_0, SURVIVOR_ARENA_1,
+    free_block_memory, old_gen_in_use_bytes_sub, Arena, ArenaBlock, ACTIVE_SURVIVOR, ARENA,
+    ARENA_TOTAL_BYTES, BLOCK_SIZE, FRESH_GENERAL_BLOCK_MIN_USED_BYTES, INLINE_STATE,
+    LONGLIVED_ARENA, OLD_ARENA, OLD_GEN_IN_USE_BYTES, SURVIVOR_ARENA_0, SURVIVOR_ARENA_1,
 };
 pub(crate) use page_meta::{
     address_span_overlaps_pages, register_block_space, register_old_object_pages,
@@ -44,6 +44,22 @@ pub use inline::{
     arena_start_fresh_general_block, js_inline_arena_slow_alloc, js_inline_arena_state,
     sync_inline_arena_state, InlineArenaState,
 };
+
+/// Return the dedicated arena-block mimalloc heap's emptied segments to the OS
+/// (PERRY_GC_ARENA_DEDICATED_HEAP). No-op when the feature is off.
+pub(crate) fn arena_block_heap_collect() {
+    block::arena_block_heap::collect();
+}
+
+/// Whether the dedicated arena-block heap is enabled (diag).
+pub(crate) fn arena_block_heap_enabled() -> bool {
+    block::arena_block_heap::enabled()
+}
+
+/// Record the main thread's arena in-use bytes for the PERRY_MEM_TRACE bg thread.
+pub(crate) fn note_arena_in_use(v: usize) {
+    block::mem_trace::note_in_use(v);
+}
 
 // allocators.rs (formerly arena.rs `alloc.rs` group)
 pub use allocators::{

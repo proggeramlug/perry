@@ -130,6 +130,23 @@ pub(crate) fn array_store_needs_layout_note(ctx: &FnCtx<'_>, array: &Expr, value
 }
 
 pub(crate) fn array_store_needs_write_barrier(ctx: &FnCtx<'_>, value: &Expr) -> bool {
+    // PERRY_WB_NO_ELIDE=1 (compile-time, diagnostic): emit the write barrier at
+    // EVERY array store site, bypassing the non-pointer-by-construction elision.
+    // A/B lever for the old-young-edge-verifier failures (155 missing old-array→
+    // young-object edges under DEFAULT GC): if compiling the bundle with this set
+    // makes the verifier pass, an elision proof (most likely the LocalGet
+    // dataflow arm) is wrongly classifying a pointer-holding value as primitive
+    // and the store skips the barrier entirely.
+    use std::sync::OnceLock;
+    static NO_ELIDE: OnceLock<bool> = OnceLock::new();
+    if *NO_ELIDE.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_WB_NO_ELIDE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    }) {
+        return true;
+    }
     !expr_produces_non_pointer_bits_by_construction(ctx, value)
 }
 

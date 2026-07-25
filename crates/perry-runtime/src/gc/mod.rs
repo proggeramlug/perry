@@ -38,7 +38,10 @@ pub use types::*;
 mod policy;
 pub(crate) use policy::gc_runtime_safepoint;
 pub(crate) use policy::gc_mark_startup_settled;
+pub(crate) use policy::gc_maybe_mark_startup_settled;
+pub(crate) use policy::gc_startup_settled;
 pub(crate) use policy::gc_idle_mark_compact;
+pub(crate) use policy::gc_idle_reclaim;
 pub use policy::*;
 mod progress;
 pub use progress::*;
@@ -131,7 +134,15 @@ pub(super) fn gc_collect_minor_with_trigger(trigger: GcTriggerSnapshot) -> GcCol
     crate::arena::old_pages_begin_gc_cycle();
     let previous_pause_us = gc_last_pause_us();
     let current_rss_bytes = crate::process::get_rss_bytes();
-    let evacuation_policy_allowed = gen_gc_evacuate_enabled();
+    // Under PERRY_GC_PROMOTE, forbid evacuation until startup has SETTLED: the
+    // tenured-nursery evacuation moves survivors, and during module init the
+    // precise-root assumption is violated (init's native Rust locals hold
+    // un-rooted JS pointers) → a moved live closure whose reference isn't
+    // rewritten → "value is not a function". Non-promote builds are unchanged
+    // (evacuation there needs `considered`, which requires promote's tenured
+    // accounting, so it never fires anyway).
+    let evacuation_policy_allowed = gen_gc_evacuate_enabled()
+        && (!gc_promote_enabled() || gc_startup_settled());
     let force_evacuation = gc_force_evacuate_enabled();
     let old_page_selection = if evacuation_policy_allowed && old_to_young_tracking_complete() {
         select_old_page_defrag_pages(force_evacuation)
@@ -257,12 +268,43 @@ pub(super) fn gc_collect_full_mark_compact_idle() -> GcCollectOutcome {
 /// (MADV_FREE_REUSABLE on macOS ⇒ immediate RSS drop). Called from the idle
 /// arena-shrink after the copying minor's from-space dealloc.
 #[cfg(target_pointer_width = "64")]
+fn phys_footprint_mb() -> u64 {
+    unsafe extern "C" {
+        fn proc_pid_rusage(pid: i32, flavor: i32, buffer: *mut core::ffi::c_void) -> i32;
+    }
+    let mut buf = [0u8; 512];
+    let rc = unsafe {
+        proc_pid_rusage(std::process::id() as i32, 2, buf.as_mut_ptr() as *mut core::ffi::c_void)
+    };
+    if rc != 0 {
+        return 0;
+    }
+    let fp = u64::from_le_bytes(buf[72..80].try_into().unwrap());
+    fp / 1048576
+}
+
+#[cfg(target_pointer_width = "64")]
 pub(super) fn gc_return_freed_to_os() {
     unsafe extern "C" {
         fn mi_collect(force: bool);
     }
+    let trace = std::env::var_os("PERRY_GC_IDLE_TRACE").is_some();
+    let before = if trace { phys_footprint_mb() } else { 0 };
+    // Return the dedicated arena-block heap's emptied segments to the OS FIRST
+    // (PERRY_GC_ARENA_DEDICATED_HEAP) — those segments hold only 1 MB arena blocks,
+    // so once the copying minor's from-space dealloc frees them the whole segment
+    // is purgeable; then mi_collect sweeps the shared heap too.
+    crate::arena::arena_block_heap_collect();
     unsafe {
         mi_collect(true);
+    }
+    if trace {
+        eprintln!(
+            "[return-os] footprint {}MB -> {}MB (dedicated_heap={})",
+            before,
+            phys_footprint_mb(),
+            crate::arena::arena_block_heap_enabled(),
+        );
     }
 }
 #[cfg(not(target_pointer_width = "64"))]

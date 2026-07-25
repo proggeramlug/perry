@@ -950,6 +950,14 @@ pub(super) fn gc_collect_minor_copying_fast_path_with_eligibility(
     if !eligibility.eligible {
         return None;
     }
+    // Under PERRY_GC_PROMOTE, the copying minor MOVES survivors (to survivor/old
+    // space); during module init that races imprecise native roots (a moved live
+    // closure whose reference isn't rewritten → "value is not a function"). Fall
+    // back to the non-moving minor until startup has settled. Non-promote copying
+    // is unaffected.
+    if crate::gc::gc_promote_enabled() && !crate::gc::gc_startup_settled() {
+        return None;
+    }
     let malloc_sweep_due = eligibility.malloc_sweep_due;
     let ptrs = eligibility
         .ptrs
