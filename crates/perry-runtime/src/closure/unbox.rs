@@ -25,9 +25,50 @@ use super::dispatch::throw_not_callable;
 pub extern "C" fn js_closure_unbox_callee_checked(callee: f64) -> i64 {
     let bits = callee.to_bits();
     if bits & crate::value::TAG_MASK != crate::value::POINTER_TAG {
+        stale_callee_diag(bits);
         throw_not_callable();
     }
     (bits & crate::value::POINTER_MASK) as i64
+}
+
+/// PERRY_GC_STALE_DIAG: when a non-callable callee's raw bits look like a bare
+/// heap ADDRESS (top-16 zero, plausible range), it is almost certainly
+/// forwarding-pointer bytes read through a STALE object reference — the reader
+/// holds a from-space pointer to a moved object whose first field was
+/// overwritten by the forwarding pointer. Print the pointed-to (to-space)
+/// object's identity so the un-enumerated root holding the stale reference can
+/// be identified by what it targets. Zero cost unless the env is set.
+#[cold]
+#[inline(never)]
+fn stale_callee_diag(bits: u64) {
+    if std::env::var_os("PERRY_GC_STALE_DIAG").is_none() {
+        return;
+    }
+    // Bare address: not NaN-boxed (top bits zero), inside the plausible heap VA.
+    if bits >> 48 != 0 || bits < 0x0010_0000 {
+        eprintln!("[stale-diag] non-callable callee bits=0x{bits:x} (not a bare address)");
+        return;
+    }
+    let addr = bits as usize;
+    let generation = crate::arena::classify_heap_generation(addr);
+    let space = crate::arena::classify_heap_space(addr);
+    let mut obj_type = -1i32;
+    let mut class_id = -1i64;
+    // Only dereference when the page classifier knows the region (registered
+    // arena page ⇒ mapped).
+    if !matches!(generation, crate::arena::HeapGeneration::Unknown) {
+        unsafe {
+            let header =
+                (addr as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
+            obj_type = (*header).obj_type as i32;
+            // First payload word often carries identity info; print raw for
+            // offline decoding.
+            class_id = *(addr as *const i64);
+        }
+    }
+    eprintln!(
+        "[stale-diag] non-callable callee is a BARE ADDRESS 0x{addr:x} gen={generation:?} space={space:?} target_obj_type={obj_type} first_word=0x{class_id:x} — forwarding bytes read through a stale (unrooted) reference"
+    );
 }
 
 /// #6475: receiver-aware variant of [`js_closure_unbox_callee_checked`] for
