@@ -930,16 +930,13 @@ fn run_microtasks(mode: MicrotaskDrainMode) -> i32 {
         // general blocks as garbage accumulates. No-op unless PERRY_GC_GENERAL_EVAC.
         crate::gc::gc_idle_mark_compact();
     }
-    if top_level_boundary {
-        // Idle reclaim at the every-turn precise safepoint (post-settle). For a
-        // GENERAL_EVAC build this runs the SOUND copying minor (which is stable
-        // even during init — unlike promote) — it consolidates the scattered live
-        // survivors to survivor to-space and frees the from-space (the dead), then
-        // returns the emptied blocks to the OS. No-op unless PERRY_GC_IDLE_RECLAIM
-        // is set and committed exceeds its floor; self-limiting (committed drops
-        // below the floor after a reclaim). This is the promote-free reclaim path.
-        crate::gc::gc_idle_reclaim();
-    }
+    // NOTE: gc_idle_reclaim moved to js_wait_for_event entry — the copying minor
+    // moves with PRECISE roots only, and run_microtasks' own frame holds JS
+    // values in native Rust locals (the in-flight job) that the precise root set
+    // does NOT cover; moving here left those references stale (read back as
+    // `undefined` after the block was reclaimed → "value is not a function").
+    // js_wait_for_event runs AFTER run_microtasks returns, so that frame's locals
+    // are gone.
 
     MICROTASK_RUN_DEPTH.with(|depth| {
         depth.set(depth.get().saturating_sub(1));

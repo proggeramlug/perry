@@ -612,7 +612,12 @@ pub extern "C" fn js_wait_for_event() {
     // needs PERRY_GC_IDLE_FORCE (no-op otherwise), so default behavior is unchanged.
     WAIT_CALLS.fetch_add(1, Ordering::Relaxed);
     crate::gc::gc_idle_mark_compact();
-    // NOTE: the idle reclaim is NOT called here. Stack sampling showed this entry
+    // Idle reclaim at the loop-turn entry, AFTER run_microtasks has returned —
+    // its frame's native JS-holding locals are gone, so the copying minor's
+    // precise roots are complete here (unlike the microtask-drain safepoint).
+    // Post-settle + committed-floor gated; no-op otherwise.
+    crate::gc::gc_idle_reclaim();
+    // NOTE: the (old) reclaim placement note follows. Stack sampling showed this entry
     // is reached mid-startup with live native roots (forcing a collection here
     // exits the bundle with code 1); the ONLY safe every-turn safepoint is the
     // top-level EventLoop microtask drain (promise/microtasks.rs), where the
