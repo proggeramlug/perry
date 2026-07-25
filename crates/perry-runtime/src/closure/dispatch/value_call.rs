@@ -83,6 +83,7 @@ pub unsafe extern "C" fn js_native_call_value(
         let bits = func_value.to_bits();
         let top = (bits >> 48) & 0x7FFF;
         if (top != 0 && (top & 0x7FF8) != 0x7FF8) || top == 0x7FFF || top == 0x7FFC {
+            crate::closure::unbox::stale_callee_diag(bits);
             throw_not_callable();
         }
         // Try treating the value directly as a pointer (for i64 representation)
@@ -652,6 +653,7 @@ pub unsafe extern "C" fn js_closure_call_array(
             }
             let func_ptr = get_valid_func_ptr(closure);
             if func_ptr.is_null() {
+                crate::closure::unbox::stale_callee_diag(closure as u64);
                 throw_not_callable();
             }
             if let Some(result) = dispatch_registered_call(closure, func_ptr, &full) {

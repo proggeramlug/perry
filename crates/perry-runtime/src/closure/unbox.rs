@@ -40,7 +40,7 @@ pub extern "C" fn js_closure_unbox_callee_checked(callee: f64) -> i64 {
 /// be identified by what it targets. Zero cost unless the env is set.
 #[cold]
 #[inline(never)]
-fn stale_callee_diag(bits: u64) {
+pub(crate) fn stale_callee_diag(bits: u64) {
     if std::env::var_os("PERRY_GC_STALE_DIAG").is_none() {
         return;
     }
@@ -92,6 +92,7 @@ fn stale_callee_diag(bits: u64) {
 pub extern "C" fn js_closure_unbox_callee_checked_rebind(callee: f64, receiver: f64) -> i64 {
     let bits = callee.to_bits();
     if bits & crate::value::TAG_MASK != crate::value::POINTER_TAG {
+        stale_callee_diag(bits);
         throw_not_callable();
     }
     let rebound = crate::closure::clone_closure_rebind_this(bits, receiver);

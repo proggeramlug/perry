@@ -156,5 +156,6 @@ pub fn dispatch_proxy_callee_or_throw(closure: *const ClosureHeader, args: &[f64
         let this_arg = f64::from_bits(crate::value::TAG_UNDEFINED);
         return crate::proxy::call_proxy_value_with_this(boxed, this_arg, args);
     }
+    crate::closure::unbox::stale_callee_diag(closure as u64);
     throw_not_callable()
 }
