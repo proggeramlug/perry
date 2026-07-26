@@ -1595,17 +1595,46 @@ pub(crate) fn gc_maybe_mark_startup_settled() {
         LAST_GROW_MS.with(|c| c.set(now_ms));
     }
     let flat_ms = now_ms.saturating_sub(LAST_GROW_MS.with(|c| c.get()));
-    if total > 100 * 1024 * 1024 && now_ms > 12_000 && flat_ms > 6_000 {
+    let sized = total > 100 * 1024 * 1024;
+    let settle_by_flat = sized && now_ms > 12_000 && flat_ms > 6_000;
+    // PERRY_GC_SETTLE_DEADLINE_MS: reliability fallback for the idle reclaim.
+    // The flat-arena heuristic never trips on a TUI whose idle render churn keeps
+    // the committed arena creeping (>8MB per <6s window), so settlement — and the
+    // reclaim it gates — is INTERMITTENT (measured: some runs settle and drop to
+    // ~200MB, others never settle and hold ~497MB). When this env is set, ALSO
+    // settle once uptime passes the deadline and the arena is non-trivially sized,
+    // regardless of flatness. UNTESTED as of staging; default unset = the exact
+    // prior behavior. Firing the reclaim at the deadline on a still-initializing
+    // app only wastes a collection (arena regrows) — it is not unsafe now that the
+    // moving reclaim's roots are complete (readline scanner) — but for the TUI the
+    // deadline is chosen well past init.
+    let settle_by_deadline = sized && gc_settle_deadline_ms().is_some_and(|d| now_ms > d);
+    if settle_by_flat || settle_by_deadline {
         GC_STARTUP_SETTLED.store(true, std::sync::atomic::Ordering::Relaxed);
         if std::env::var_os("PERRY_GC_IDLE_TRACE").is_some() {
             eprintln!(
-                "[settled] at {}ms total_mb={} flat_ms={}",
+                "[settled] at {}ms total_mb={} flat_ms={} via={}",
                 now_ms,
                 total / 1048576,
-                flat_ms
+                flat_ms,
+                if settle_by_flat { "flat" } else { "deadline" }
             );
         }
     }
+}
+
+/// PERRY_GC_SETTLE_DEADLINE_MS (default unset): a hard uptime deadline after which
+/// `gc_maybe_mark_startup_settled` settles regardless of arena flatness. Makes the
+/// idle reclaim fire deterministically on apps whose idle churn prevents the
+/// 6s-flat heuristic from ever tripping. Returns None when unset (prior behavior).
+fn gc_settle_deadline_ms() -> Option<u64> {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<Option<u64>> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        std::env::var("PERRY_GC_SETTLE_DEADLINE_MS")
+            .ok()
+            .and_then(|s| s.trim().parse::<u64>().ok())
+    })
 }
 
 pub(crate) fn gc_startup_settled() -> bool {
@@ -1834,6 +1863,23 @@ fn gc_idle_reclaim_floor_bytes() -> usize {
     })
 }
 
+/// PERRY_GC_RECLAIM_AGGRESSIVE (default off): in the moving idle reclaim, free the
+/// copying minor's from-space immediately (aggressive-dealloc) instead of
+/// retaining it for the self-heal read barrier. Returns the emptied blocks to the
+/// OS the same cycle, so idle footprint tracks the live set — sound only when the
+/// mutable root scanners cover every from-space pointer holder (see the reclaim
+/// call site). Default unset = the historical selfheal-retention behavior.
+fn gc_reclaim_aggressive_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_GC_RECLAIM_AGGRESSIVE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
 /// SAFE idle memory reclaim (PERRY_GC_IDLE_RECLAIM, default off). Unlike
 /// `gc_idle_mark_compact` this runs the ordinary NON-MOVING minor
 /// (`gc_collect_minor`) — it marks live objects and, with aggressive-dealloc set,
@@ -1886,14 +1932,38 @@ pub(crate) fn gc_idle_reclaim() {
         if last != usize::MAX && total < last.saturating_add(32 * 1024 * 1024) {
             return;
         }
-        if !super::gc_promote_selfheal_enabled() {
-            return;
+        if gc_reclaim_aggressive_enabled() {
+            // PERRY_GC_RECLAIM_AGGRESSIVE: free the from-space IMMEDIATELY rather
+            // than retaining it for the self-heal read barrier. Sound ONLY when
+            // every root that can hold a from-space pointer is covered by a
+            // mutable root scanner — the readline/stdin listener-closure gap (the
+            // last known miss for the claude-code TUI, see stdlib:readline) is now
+            // fixed, so this tests whether selfheal retention is still needed.
+            // Mirrors gc_idle_mark_compact's proven body: aggressive-dealloc +
+            // evac-at-safepoint so the copying minor consolidates live→to-space
+            // and copying_reset frees the emptied from-spaces (keep_blocks=1),
+            // then mi_collect purges those segments to the OS. Use with
+            // PERRY_GC_PROMOTE=1 (NOT PROMOTE_SELFHEAL, whose copying_reset
+            // early-return would retain the from-space and defeat this).
+            let prev_aggr = crate::arena::arena_set_aggressive_dealloc(true);
+            let prev_sp = super::oldgen::gc_promote_set_evac_at_safepoint(true);
+            let _ = super::gc_collect_minor_with_trigger(GcTriggerSnapshot::capture(
+                GcTriggerKind::ArenaBytes,
+            ));
+            super::oldgen::gc_promote_set_evac_at_safepoint(prev_sp);
+            crate::arena::arena_set_aggressive_dealloc(prev_aggr);
+            super::gc_return_freed_to_os();
+        } else {
+            if !super::gc_promote_selfheal_enabled() {
+                return;
+            }
+            let _ = super::gc_collect_minor();
+            let _ = super::gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(
+                GcTriggerKind::ArenaBytes,
+            ));
+            super::gc_return_freed_to_os();
         }
-        let _ = super::gc_collect_minor();
-        let _ = super::gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(
-            GcTriggerKind::ArenaBytes,
-        ));
-        super::gc_return_freed_to_os();
+        RECLAIM_HAPPENED.store(true, std::sync::atomic::Ordering::Relaxed);
         LAST_RECLAIM_TOTAL.with(|c| c.set(crate::arena::arena_total_bytes()));
     } else {
         // DEFAULT: full mark-sweep only — NON-moving, conservative stack scan +
