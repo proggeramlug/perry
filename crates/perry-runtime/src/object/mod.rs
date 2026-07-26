@@ -262,6 +262,24 @@ thread_local! {
         RefCell::new(crate::fast_hash::new_ptr_hash_map());
 }
 
+/// PERRY_GC_NONARENA_DIAG helper: (overflow_owners, overflow_total_fields,
+/// keys_index_owners, keys_index_total_entries) — approximate live sizing of the
+/// two per-object object-side tables.
+pub(crate) fn object_side_tables_diag() -> (usize, usize, usize, usize) {
+    let (oo, of) = OVERFLOW_FIELDS.with(|m| {
+        let m = m.borrow();
+        (m.len(), m.values().map(|v| v.len()).sum::<usize>())
+    });
+    let (ko, ke) = KEYS_INDEX.with(|m| {
+        let m = m.borrow();
+        (
+            m.len(),
+            m.values().map(|(_, idx)| idx.values().map(|v| v.len()).sum::<usize>()).sum::<usize>(),
+        )
+    });
+    (oo, of, ko, ke)
+}
+
 /// When keys_array length exceeds this, build the sidecar hash index
 /// on the next lookup. Below this threshold, the linear scan is
 /// faster than the hash overhead (memory access, cache footprint).

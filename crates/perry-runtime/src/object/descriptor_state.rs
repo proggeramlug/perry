@@ -55,6 +55,20 @@ thread_local! {
     pub(crate) static PROPERTY_DESCRIPTORS: RefCell<HashMap<(usize, String), PropertyAttrs>> = RefCell::new(HashMap::new());
 }
 
+/// PERRY_GC_NONARENA_DIAG helper: (prop_entries, prop_key_strbytes,
+/// accessor_entries, accessor_key_strbytes) for the two descriptor tables.
+pub(crate) fn descriptor_tables_diag() -> (usize, usize, usize, usize) {
+    let (pe, ps) = PROPERTY_DESCRIPTORS.with(|m| {
+        let m = m.borrow();
+        (m.len(), m.keys().map(|(_, s)| s.len()).sum::<usize>())
+    });
+    let (ae, asb) = ACCESSOR_DESCRIPTORS.with(|m| {
+        let m = m.borrow();
+        (m.len(), m.keys().map(|(_, s)| s.len()).sum::<usize>())
+    });
+    (pe, ps, ae, asb)
+}
+
 /// Accessor descriptor storage: maps (obj_ptr, key) -> (get_closure_bits, set_closure_bits).
 /// A zero bits value means "no getter" or "no setter". Entries here represent properties
 /// installed via `Object.defineProperty(obj, key, { get, set })` — those must route reads

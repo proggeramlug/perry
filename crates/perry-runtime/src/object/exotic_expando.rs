@@ -114,6 +114,14 @@ pub(crate) fn expando_in_use() -> bool {
     EXPANDO_IN_USE.with(|c| c.get())
 }
 
+/// PERRY_GC_NONARENA_DIAG helper: (expando_owners, total_expando_entries).
+pub(crate) fn exotic_expando_diag() -> (usize, usize) {
+    EXOTIC_EXPANDO.with(|m| {
+        let m = m.borrow();
+        (m.len(), m.values().map(|v| v.len()).sum::<usize>())
+    })
+}
+
 fn expando_store(addr: usize, key: &str, bits: u64) {
     EXPANDO_IN_USE.with(|c| c.set(true));
     EXOTIC_EXPANDO.with(|m| {

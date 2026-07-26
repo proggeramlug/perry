@@ -57,7 +57,7 @@ pub use unbox::js_closure_unbox_callee_checked;
 #[cfg(test)]
 pub(crate) use dynamic_props::test_clear_closure_side_tables;
 pub(crate) use dynamic_props::{
-    clear_closure_side_tables_for_dead_ptr, clone_closure_rebind_this,
+    clear_closure_side_tables_for_dead_ptr, clone_closure_rebind_this, closure_props_diag,
     closure_dynamic_props_owner_moved, closure_dynamic_side_tables_nonempty,
     closure_set_via_function_prototype_descriptor, prune_dead_closure_side_table_owners,
     visit_closure_dynamic_prop_value_slots_mut, visit_closure_static_prototype_slot_mut,

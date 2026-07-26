@@ -11,6 +11,14 @@ fn get_closure_props() -> &'static Mutex<HashMap<usize, HashMap<String, f64>>> {
     CLOSURE_PROPS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// PERRY_GC_NONARENA_DIAG helper: (closure_owners, total_prop_entries).
+pub(crate) fn closure_props_diag() -> (usize, usize) {
+    get_closure_props()
+        .lock()
+        .map(|m| (m.len(), m.values().map(|p| p.len()).sum::<usize>()))
+        .unwrap_or((0, 0))
+}
+
 /// #3655: keys deleted off a closure via `delete fn.name` etc.
 ///
 /// Functions carry built-in own data properties (`name`, `length`, and —

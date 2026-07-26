@@ -107,6 +107,18 @@ static ASYNC_RESOURCE_HANDLES: LazyLock<Mutex<HashSet<i64>>> =
     LazyLock::new(|| Mutex::new(HashSet::new()));
 static ASYNC_RESOURCE_HANDLE_COUNT: AtomicUsize = AtomicUsize::new(0);
 
+/// PERRY_GC_NONARENA_DIAG helper: (resources, hooks, handles, ctx_snapshots,
+/// destroy_queue) — these async-hooks tables are largely monotonic/never-freed
+/// (see ASYNC_RESOURCE_HANDLES comment), so they are lingering candidates.
+pub(crate) fn async_hooks_diag() -> (usize, usize, usize, usize, usize) {
+    let r = RESOURCES.lock().map(|m| m.len()).unwrap_or(0);
+    let h = HOOKS.lock().map(|m| m.len()).unwrap_or(0);
+    let hd = ASYNC_RESOURCE_HANDLES.lock().map(|m| m.len()).unwrap_or(0);
+    let cs = CONTEXT_SNAPSHOTS.lock().map(|m| m.len()).unwrap_or(0);
+    let dq = GC_DESTROY_QUEUE.lock().map(|m| m.len()).unwrap_or(0);
+    (r, h, hd, cs, dq)
+}
+
 thread_local! {
     static EXECUTION_STACK: RefCell<Vec<(u64, u64)>> = const { RefCell::new(Vec::new()) };
     static CURRENT_EXECUTION_ID: Cell<u64> = const { Cell::new(0) };

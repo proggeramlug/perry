@@ -295,6 +295,18 @@ static SYMBOL_PROPERTIES: Mutex<Option<HashMap<usize, Vec<(usize, u64)>>>> = Mut
 static SYMBOL_PROPERTY_ATTRS: Mutex<Option<HashMap<(usize, usize), crate::object::PropertyAttrs>>> =
     Mutex::new(None);
 
+/// PERRY_GC_NONARENA_DIAG helper: (symbol_prop_owners, total_symbol_prop_entries).
+pub(crate) fn symbol_properties_diag() -> (usize, usize) {
+    SYMBOL_PROPERTIES
+        .lock()
+        .ok()
+        .and_then(|g| {
+            g.as_ref()
+                .map(|m| (m.len(), m.values().map(|v| v.len()).sum::<usize>()))
+        })
+        .unwrap_or((0, 0))
+}
+
 /// Death pruning for the symbol-keyed property side tables (2026-07-09 GC
 /// audit wave 2). Both tables are PROCESS-global and owner-keyed; the values
 /// are strongly rooted by `symbol/gc_roots.rs`, so entries of a dead owner

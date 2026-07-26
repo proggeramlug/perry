@@ -46,6 +46,11 @@ fn get_object_prototypes() -> &'static Mutex<HashMap<usize, u64>> {
     OBJECT_PROTOTYPES.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// PERRY_GC_NONARENA_DIAG helper: live entry count of OBJECT_PROTOTYPES.
+pub(crate) fn object_prototypes_entry_count() -> usize {
+    get_object_prototypes().lock().map(|m| m.len()).unwrap_or(0)
+}
+
 /// Record `Object.setPrototypeOf(obj_ptr, proto)`. `proto_bits` is the NaN-box
 /// bits of the prototype object (POINTER-tagged) or `TAG_NULL`. Idempotent
 /// overwrite.

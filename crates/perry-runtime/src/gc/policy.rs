@@ -1620,7 +1620,207 @@ pub(crate) fn gc_maybe_mark_startup_settled() {
                 if settle_by_flat { "flat" } else { "deadline" }
             );
         }
+        dump_nonarena_diag(now_ms);
     }
+}
+
+/// PERRY_GC_NONARENA_DIAG: at startup-settle, force a full collect then dump
+/// mimalloc's own accounting (committed vs rss) plus its per-size-class stats to
+/// stderr. This categorizes the non-arena idle footprint — if `current_commit`
+/// stays high after `mi_collect(true)` and the stats show large "current" live
+/// bytes, it is LIVE native bookkeeping; if committed >> current, it is mimalloc
+/// segment retention (fragmentation) reducible by heap tuning. Stderr-only so the
+/// TUI's stdout render is not corrupted. No-op unless the env is set.
+#[cold]
+fn dump_nonarena_diag(now_ms: u64) {
+    if std::env::var_os("PERRY_GC_NONARENA_DIAG").is_none() {
+        return;
+    }
+    unsafe extern "C" {
+        fn mi_collect(force: bool);
+        fn mi_process_info(
+            elapsed: *mut usize,
+            user: *mut usize,
+            system: *mut usize,
+            current_rss: *mut usize,
+            peak_rss: *mut usize,
+            current_commit: *mut usize,
+            peak_commit: *mut usize,
+            page_faults: *mut usize,
+        );
+        fn mi_stats_print_out(
+            out: Option<
+                unsafe extern "C" fn(*const std::os::raw::c_char, *mut std::os::raw::c_void),
+            >,
+            arg: *mut std::os::raw::c_void,
+        );
+    }
+    unsafe extern "C" fn out_cb(
+        msg: *const std::os::raw::c_char,
+        _arg: *mut std::os::raw::c_void,
+    ) {
+        if msg.is_null() {
+            return;
+        }
+        let s = unsafe { std::ffi::CStr::from_ptr(msg) }.to_string_lossy();
+        eprint!("[mimalloc] {s}");
+    }
+    let (mut el, mut us, mut sy) = (0usize, 0usize, 0usize);
+    let (mut crss, mut prss, mut ccom, mut pcom, mut pf) = (0usize, 0usize, 0usize, 0usize, 0usize);
+    unsafe {
+        mi_collect(true);
+        mi_process_info(
+            &mut el, &mut us, &mut sy, &mut crss, &mut prss, &mut ccom, &mut pcom, &mut pf,
+        );
+    }
+    eprintln!(
+        "[nonarena] @{}ms arena_committed={}MB | mi_current_rss={}MB mi_peak_rss={}MB mi_current_commit={}MB mi_peak_commit={}MB",
+        now_ms,
+        crate::arena::arena_total_bytes() / 1048576,
+        crss / 1048576,
+        prss / 1048576,
+        ccom / 1048576,
+        pcom / 1048576,
+    );
+
+    // Per-side-table entry counts — pure Rust, no FFI, so this always runs even
+    // if the mimalloc heap-walk below faults. Attributes the non-arena footprint
+    // to specific address-keyed runtime tables (the "lingering" candidates).
+    let (pd_e, pd_s, ad_e, ad_s) = crate::object::descriptor_state::descriptor_tables_diag();
+    let (of_o, of_f, ki_o, ki_e) = crate::object::object_side_tables_diag();
+    let (cp_o, cp_e) = crate::closure::closure_props_diag();
+    let (ex_o, ex_e) = crate::object::exotic_expando::exotic_expando_diag();
+    let (sp_o, sp_e) = crate::symbol::symbol_properties_diag();
+    let proto = crate::object::prototype_chain::object_prototypes_entry_count();
+    eprintln!(
+        "[sidetables] PROPERTY_DESCRIPTORS={pd_e}(keystr={pd_s}B) ACCESSOR_DESCRIPTORS={ad_e}(keystr={ad_s}B) \
+OVERFLOW_FIELDS={of_o}owners/{of_f}fields KEYS_INDEX={ki_o}owners/{ki_e}entries \
+CLOSURE_PROPS={cp_o}owners/{cp_e}props EXOTIC_EXPANDO={ex_o}owners/{ex_e}entries \
+SYMBOL_PROPERTIES={sp_o}owners/{sp_e}entries OBJECT_PROTOTYPES={proto}"
+    );
+    let (ah_r, ah_h, ah_hd, ah_cs, ah_dq) = crate::async_hooks::async_hooks_diag();
+    eprintln!(
+        "[asynctables] RESOURCES={ah_r} HOOKS={ah_h} ASYNC_RESOURCE_HANDLES={ah_hd} \
+CONTEXT_SNAPSHOTS={ah_cs} GC_DESTROY_QUEUE={ah_dq}"
+    );
+
+    unsafe {
+        mi_stats_print_out(Some(out_cb), std::ptr::null_mut());
+    }
+
+    // PERRY_GC_HEAPHIST: the mimalloc v3 block-walk faulted in an earlier run
+    // (binding/ABI mismatch), so gate it separately — the safe data above always
+    // reaches stderr; enable this only when deliberately debugging the walk.
+    if std::env::var_os("PERRY_GC_HEAPHIST").is_none() {
+        return;
+    }
+    // LIVE-bytes histogram of the DEFAULT heap (all non-arena Rust allocations;
+    // the GC arena uses its own dedicated heap). `mi_heap_visit_blocks` with
+    // visit_all_blocks=false calls the visitor once per area with area.used
+    // (live bytes) and area.block_size — so we get live bytes bucketed by
+    // allocation size class, which categorizes the ~300MB non-arena footprint
+    // (many small = HashMap entries / interned strings; few large = buffers).
+    #[repr(C)]
+    struct MiHeapArea {
+        blocks: *mut std::os::raw::c_void,
+        reserved: usize,
+        committed: usize,
+        used: usize,
+        block_size: usize,
+        full_block_size: usize,
+        heap_tag: std::os::raw::c_int,
+    }
+    unsafe extern "C" {
+        // v3 exports the per-thread default heap accessor as `mi_theap_get_default`.
+        fn mi_theap_get_default() -> *mut std::os::raw::c_void;
+        fn mi_heap_visit_blocks(
+            heap: *mut std::os::raw::c_void,
+            visit_all_blocks: bool,
+            visitor: Option<
+                unsafe extern "C" fn(
+                    *const std::os::raw::c_void,
+                    *const MiHeapArea,
+                    *mut std::os::raw::c_void,
+                    usize,
+                    *mut std::os::raw::c_void,
+                ) -> bool,
+            >,
+            arg: *mut std::os::raw::c_void,
+        ) -> bool;
+    }
+    // 12 buckets by block size: <=16,32,64,128,256,512,1K,4K,16K,64K,256K,>256K.
+    // Each bucket accumulates [live_used_bytes, area_count]. Passed via arg.
+    struct Hist {
+        used: [u64; 12],
+        areas: [u64; 12],
+        total_used: u64,
+    }
+    fn bucket_of(sz: usize) -> usize {
+        match sz {
+            0..=16 => 0,
+            17..=32 => 1,
+            33..=64 => 2,
+            65..=128 => 3,
+            129..=256 => 4,
+            257..=512 => 5,
+            513..=1024 => 6,
+            1025..=4096 => 7,
+            4097..=16384 => 8,
+            16385..=65536 => 9,
+            65537..=262144 => 10,
+            _ => 11,
+        }
+    }
+    unsafe extern "C" fn visit(
+        _heap: *const std::os::raw::c_void,
+        area: *const MiHeapArea,
+        _block: *mut std::os::raw::c_void,
+        _bsz: usize,
+        arg: *mut std::os::raw::c_void,
+    ) -> bool {
+        if area.is_null() || arg.is_null() {
+            return true;
+        }
+        let a = unsafe { &*area };
+        let h = unsafe { &mut *(arg as *mut Hist) };
+        let b = bucket_of(a.block_size);
+        h.used[b] = h.used[b].saturating_add(a.used as u64);
+        h.areas[b] = h.areas[b].saturating_add(1);
+        h.total_used = h.total_used.saturating_add(a.used as u64);
+        true
+    }
+    let mut hist = Hist {
+        used: [0; 12],
+        areas: [0; 12],
+        total_used: 0,
+    };
+    unsafe {
+        let dh = mi_theap_get_default();
+        mi_heap_visit_blocks(
+            dh,
+            false,
+            Some(visit),
+            &mut hist as *mut Hist as *mut std::os::raw::c_void,
+        );
+    }
+    let labels = [
+        "<=16", "32", "64", "128", "256", "512", "1K", "4K", "16K", "64K", "256K", ">256K",
+    ];
+    eprintln!(
+        "[heaphist] default-heap live_used_total={}MB (bucketed by block size):",
+        hist.total_used / 1048576
+    );
+    for i in 0..12 {
+        if hist.used[i] > 0 {
+            eprintln!(
+                "[heaphist]   size<={:>6}: live={:>6}MB areas={}",
+                labels[i],
+                hist.used[i] / 1048576,
+                hist.areas[i]
+            );
+        }
+    }
+
 }
 
 /// PERRY_GC_SETTLE_DEADLINE_MS (default unset): a hard uptime deadline after which
