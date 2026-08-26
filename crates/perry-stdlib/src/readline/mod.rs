@@ -368,6 +368,26 @@ extern "C" fn stdin_on_op(name_ptr: *const u8, name_len: usize, cb: i64, _once: 
                 v.push(cb);
             }
         }
+        // `end`/`close` MUST be handled here, not only in the syntactic
+        // `js_readline_stdin_on` extern.
+        //
+        // This provider is what the stdin OBJECT's native `on`/`once`/
+        // `addListener` methods delegate to, i.e. every registration that does
+        // not match codegen's literal `process.stdin.x(…)` pattern: an alias
+        // (`const s = process.stdin; s.once("end", …)`) or stdin passed as a
+        // parameter (`helper(process.stdin)`), which is exactly what Claude
+        // Code's print-mode reader does — `X71(process.stdin, 3000)` then
+        // `stream.once("end", …)` inside.
+        //
+        // Falling into the `_ => return` below silently discarded those
+        // listeners: node fires the direct, aliased and parameter forms alike,
+        // perry fired only the direct one, so the `end` half of the reader's
+        // `race(once("end"), timeout(3000))` could never win.
+        "end" | "close" => {
+            if let Ok(mut v) = STDIN_END_CALLBACKS.lock() {
+                v.push(cb);
+            }
+        }
         _ => return,
     }
     try_register_pump();
@@ -395,6 +415,11 @@ extern "C" fn stdin_off_op(name_ptr: *const u8, name_len: usize, cb: i64) {
                 if v.is_empty() {
                     STDIN_PULL_MODE.store(false, Ordering::Release);
                 }
+            }
+        }
+        "end" | "close" => {
+            if let Ok(mut v) = STDIN_END_CALLBACKS.lock() {
+                v.retain(|r| *r != cb);
             }
         }
         "keypress" => {
@@ -1673,11 +1698,6 @@ pub extern "C" fn js_readline_stdin_remove_listener(
                 }
             }
         }
-        "end" | "close" => {
-            if let Ok(mut v) = STDIN_END_CALLBACKS.lock() {
-                v.retain(|registered| *registered != callback);
-            }
-        }
         "data" => {
             if let Ok(mut v) = DATA_CALLBACKS.lock() {
                 v.retain(|registered| *registered != callback);
@@ -1691,12 +1711,19 @@ pub extern "C" fn js_readline_stdin_remove_listener(
                 v.retain(|registered| *registered != callback);
             }
         }
-        "end" | "close" => CLOSE_CALLBACK.with(|cb| {
-            let mut cb = cb.borrow_mut();
-            if *cb == Some(callback) {
-                *cb = None;
+        "end" | "close" => {
+            // Both stores: the legacy single-slot readline close callback and
+            // the `process.stdin` end-listener list.
+            CLOSE_CALLBACK.with(|cb| {
+                let mut cb = cb.borrow_mut();
+                if *cb == Some(callback) {
+                    *cb = None;
+                }
+            });
+            if let Ok(mut v) = STDIN_END_CALLBACKS.lock() {
+                v.retain(|registered| *registered != callback);
             }
-        }),
+        }
         _ => {}
     }
     js_nanbox_pointer(STDIN_READLINE_HANDLE)
@@ -1857,6 +1884,51 @@ mod tests {
             DATA_COUNT.with(|n| *n.borrow()),
             3,
             "each registered end listener must be invoked exactly once"
+        );
+    }
+
+    /// The stdin OBJECT's native `on`/`once`/`addListener` delegate here, so
+    /// `end`/`close` must be accepted on this path too — not only in the
+    /// syntactic `js_readline_stdin_on` extern.
+    ///
+    /// codegen lowers only a LITERAL `process.stdin.on(…)`; every aliased or
+    /// parameter-passed use (`const s = process.stdin; s.once("end", …)`, or
+    /// `helper(process.stdin)`) arrives through this provider. It previously
+    /// matched only data/readable/keypress and dropped `end` on the floor, so
+    /// node fired the direct, aliased and parameter forms while perry fired
+    /// only the direct one.
+    #[test]
+    fn provider_path_registers_end_listeners() {
+        let _g = reset();
+        let a = data_counter_callback();
+        let b = data_counter_callback();
+        stdin_on_op(b"end".as_ptr(), 3, a, 0);
+        stdin_on_op(b"close".as_ptr(), 5, b, 1);
+        assert_eq!(
+            STDIN_END_CALLBACKS.lock().map(|v| v.len()).unwrap_or(0),
+            2,
+            "aliased end/close registrations must reach the end-listener list"
+        );
+        EOF_REACHED.store(true, Ordering::Release);
+        js_readline_process_pending();
+        assert_eq!(
+            DATA_COUNT.with(|n| *n.borrow()),
+            2,
+            "listeners registered through the provider must fire at EOF"
+        );
+    }
+
+    /// `removeListener` on the aliased path must detach an end listener too.
+    #[test]
+    fn provider_path_removes_end_listeners() {
+        let _g = reset();
+        let cb = data_counter_callback();
+        stdin_on_op(b"end".as_ptr(), 3, cb, 0);
+        stdin_off_op(b"end".as_ptr(), 3, cb);
+        assert_eq!(
+            STDIN_END_CALLBACKS.lock().map(|v| v.len()).unwrap_or(0),
+            0,
+            "removing an aliased end listener must clear it"
         );
     }
 
