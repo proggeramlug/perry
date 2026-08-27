@@ -2014,6 +2014,10 @@ fn strict_dense_number_store_fast_lane_matches_the_general_path() {
         assert!(lane(arr, 2, -7.0), "raw receiver");
         assert_eq!(js_array_get_f64(arr, 2), -7.0);
 
+        // An INT32 box stores its canonical double on this raw-f64 layout.
+        let boxed_int = f64::from_bits(crate::value::INT32_TAG | 12);
+        assert!(lane(boxed, 1, boxed_int), "INT32 box is a number");
+        assert_eq!(js_array_get_f64(arr, 1).to_bits(), 12.0f64.to_bits());
         assert!(!lane(arr, 3, 1.0), "index == length is an extension");
         assert!(
             !lane(arr, 0, f64::from_bits(crate::value::TAG_UNDEFINED)),

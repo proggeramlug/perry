@@ -1280,10 +1280,15 @@ fn array_strict_index_write_guard_resolved(clean: *mut ArrayHeader, index: u32, 
 /// pointer-mask update), and keeps a pointer-free or tag-scanned layout valid.
 #[inline]
 unsafe fn try_strict_dense_number_store(arr: *mut ArrayHeader, index: u32, value: f64) -> bool {
-    const QNAN_PREFIX: u64 = 0x7FF8_0000_0000_0000;
     const PAYLOAD_MASK: u64 = 0x0000_FFFF_FFFF_FFFF;
     let value_bits = value.to_bits();
-    if value_bits & QNAN_PREFIX == QNAN_PREFIX {
+    // A plain double or an INT32 box (`value_bits_to_number` already refuses
+    // the class-reference values that share that tag). NaN keeps the general
+    // path so its canonical encoding stays in one place.
+    let Some(number) = super::header::value_bits_to_number(value_bits) else {
+        return false;
+    };
+    if number.is_nan() {
         return false;
     }
     let bits = arr as u64;
@@ -1315,12 +1320,13 @@ unsafe fn try_strict_dense_number_store(arr: *mut ArrayHeader, index: u32, value
         return false;
     }
     let flags = (*header)._reserved;
+    // Array header bits only: for `GC_TYPE_ARRAY` the 0x1000 bit is
+    // `GC_ARRAY_RAW_F64_HOLES`, not the object typed-layout flag.
     const REJECT: u16 = crate::gc::OBJ_FLAG_FROZEN
         | crate::gc::OBJ_FLAG_SEALED
         | crate::gc::OBJ_FLAG_NO_EXTEND
         | crate::gc::OBJ_FLAG_ARRAY_DESCRIPTORS
         | crate::gc::GC_ARRAY_ELEMENT_SHAPE
-        | crate::gc::GC_OBJ_TYPED_LAYOUT_INTACT
         | crate::gc::GC_LAYOUT_ALL_POINTERS;
     if flags & REJECT != 0 {
         return false;
@@ -1339,11 +1345,20 @@ unsafe fn try_strict_dense_number_store(arr: *mut ArrayHeader, index: u32, value
     {
         return false;
     }
-    // GC_STORE_AUDIT(POINTER_FREE): a plain double never holds a heap pointer,
-    // and the receiver's layout was proved pointer-free or tag-scanned above.
+    // The raw-f64 layouts store the canonical double (what the general path's
+    // canonicalization and `note_array_numeric_index_write` produce); every
+    // other layout keeps the value's own encoding.
+    let store_bits =
+        if flags & (crate::gc::GC_ARRAY_RAW_F64_LAYOUT | crate::gc::GC_ARRAY_RAW_F64_HOLES) != 0 {
+            number.to_bits()
+        } else {
+            value_bits
+        };
+    // GC_STORE_AUDIT(POINTER_FREE): a number never holds a heap pointer, and
+    // the receiver's layout was proved pointer-free or tag-scanned above.
     ptr::write(
         super::header::array_elements_ptr(arr).add(index as usize),
-        value_bits,
+        store_bits,
     );
     true
 }
