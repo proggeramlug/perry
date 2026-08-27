@@ -657,10 +657,7 @@ fn dynamic_truthiness_decides_numbers_and_tag_singletons_inline() {
                     object: Box::new(Expr::LocalGet(X)),
                     index: Box::new(Expr::Integer(0)),
                 },
-                then_branch: vec![Stmt::Expr(Expr::LocalSet(
-                    R,
-                    Box::new(Expr::Integer(1)),
-                ))],
+                then_branch: vec![Stmt::Expr(Expr::LocalSet(R, Box::new(Expr::Integer(1))))],
                 else_branch: None,
             },
         ],

@@ -358,6 +358,9 @@ impl NumericIndex {
             if integer >= dense.base {
                 let offset = integer as usize - dense.base as usize;
                 if offset < dense.slots.len() {
+                    // Authoritative for its span: a key inside the range was
+                    // either copied here when the table was (re)built or
+                    // inserted directly, so a miss is a definitive miss.
                     let entry = dense.slots[offset];
                     return (entry != DENSE_NUMERIC_EMPTY).then_some(entry);
                 }
@@ -373,6 +376,23 @@ impl NumericIndex {
 
     fn insert(&mut self, key: NumericKey, entry_index: u32) {
         let integer = dense_integer_key(key);
+        // An integer inside the range table's span lives only there: the hash
+        // insert would be pure overhead on the sequential-id workloads the
+        // table exists for (`entityCommands.set(entityId, …)` per command).
+        // `rebuild_dense` carries these dense-only keys into a widened span
+        // and `remove` clears them here, so the hash index never needs them.
+        if let (Some(integer), Some(dense)) = (integer, self.dense.as_mut()) {
+            if integer >= dense.base {
+                let offset = integer as usize - dense.base as usize;
+                if offset < dense.slots.len() {
+                    if dense.slots[offset] == DENSE_NUMERIC_EMPTY {
+                        self.dense_key_count += 1;
+                    }
+                    dense.slots[offset] = entry_index;
+                    return;
+                }
+            }
+        }
         let is_new = self.hashed.insert(key, entry_index).is_none();
         if is_new && integer.is_some() {
             self.dense_key_count += 1;
@@ -381,14 +401,7 @@ impl NumericIndex {
         let Some(integer) = integer else {
             return;
         };
-        if let Some(dense) = self.dense.as_mut() {
-            if integer >= dense.base {
-                let offset = integer as usize - dense.base as usize;
-                if offset < dense.slots.len() {
-                    dense.slots[offset] = entry_index;
-                    return;
-                }
-            }
+        if self.dense.is_some() {
             self.maybe_expand_dense(integer);
         } else {
             self.maybe_initialize_dense();
@@ -396,26 +409,37 @@ impl NumericIndex {
     }
 
     fn remove(&mut self, key: &NumericKey) -> Option<u32> {
-        let removed = self.hashed.remove(key);
-        if removed.is_some() {
-            if let Some(integer) = dense_integer_key(*key) {
-                self.dense_key_count = self.dense_key_count.saturating_sub(1);
-                if let Some(dense) = self.dense.as_mut() {
-                    if integer >= dense.base {
-                        let offset = integer as usize - dense.base as usize;
-                        if offset < dense.slots.len() {
-                            dense.slots[offset] = DENSE_NUMERIC_EMPTY;
-                        }
+        let integer = dense_integer_key(*key);
+        let mut removed = self.hashed.remove(key);
+        if let (Some(integer), Some(dense)) = (integer, self.dense.as_mut()) {
+            if integer >= dense.base {
+                let offset = integer as usize - dense.base as usize;
+                if offset < dense.slots.len() {
+                    let entry = dense.slots[offset];
+                    if entry != DENSE_NUMERIC_EMPTY {
+                        dense.slots[offset] = DENSE_NUMERIC_EMPTY;
+                        // A key copied into the span at rebuild time is still
+                        // in the hash index too; count it once either way.
+                        removed = removed.or(Some(entry));
                     }
                 }
             }
+        }
+        if removed.is_some() && integer.is_some() {
+            self.dense_key_count = self.dense_key_count.saturating_sub(1);
         }
         removed
     }
 
     fn clear(&mut self) {
         self.hashed.clear();
-        self.dense = None;
+        // Keep the allocated span: `Map.clear()` followed by the same id
+        // population (a per-frame grouping map) would otherwise rebuild the
+        // table from scratch every cycle. The slots are reset, and the span
+        // still only widens through `maybe_expand_dense`'s density budget.
+        if let Some(dense) = self.dense.as_mut() {
+            dense.slots.fill(DENSE_NUMERIC_EMPTY);
+        }
         self.dense_key_count = 0;
     }
 
@@ -504,8 +528,40 @@ impl NumericIndex {
                 }
             }
         }
+        // Keys inserted straight into the previous span are not in the hash
+        // index; the new span always covers the old one, and the range table
+        // is authoritative, so its entries win over any stale hash copy.
+        if let Some(old) = self.dense.take() {
+            for (offset, &entry_index) in old.slots.iter().enumerate() {
+                if entry_index == DENSE_NUMERIC_EMPTY {
+                    continue;
+                }
+                let integer = old.base as u64 + offset as u64;
+                if integer >= base as u64 {
+                    let new_offset = (integer - base as u64) as usize;
+                    if new_offset < slots.len() {
+                        slots[new_offset] = entry_index;
+                        continue;
+                    }
+                }
+                // Outside the new span (cannot happen by construction, but a
+                // key must never be silently dropped): keep it in the hash.
+                self.hashed
+                    .insert(NumericKey((integer as f64).to_bits()), entry_index);
+            }
+        }
         self.dense = Some(DenseNumericIndex { base, slots });
     }
+}
+
+/// `true` for an ordinary IEEE double that is neither NaN nor `±0`. Every
+/// NaN-box tag shares the quiet-NaN prefix, so one mask separates a plain
+/// number from every tagged value; the zero test removes the one pair of
+/// distinct bit patterns (`+0`/`-0`) that SameValueZero identifies.
+#[inline]
+fn is_plain_nonzero_number_bits(bits: u64) -> bool {
+    const QNAN_PREFIX: u64 = 0x7FF8_0000_0000_0000;
+    (bits & QNAN_PREFIX) != QNAN_PREFIX && (bits & !(1u64 << 63)) != 0
 }
 
 /// `true` if `bits` is a non-pointer JSValue (number, bool, undefined,
@@ -1342,6 +1398,19 @@ pub(crate) unsafe fn find_key_index(map: *const MapHeader, key: f64) -> i32 {
     // Small maps: linear scan beats side-table dispatch.
     if size <= SIDE_TABLE_THRESHOLD {
         let entries = entries_ptr(map);
+        // A plain (untagged, non-NaN), non-zero number is SameValueZero-equal
+        // to an entry key exactly when the bits match: no tagged value can
+        // equal a number, and only `±0` / NaN break bit identity, so those
+        // (and every non-number) keep the general comparison below.
+        if is_plain_nonzero_number_bits(key_bits) {
+            for i in 0..size {
+                let entry_bits = ptr::read(entries.add((i as usize) * 2)).to_bits();
+                if entry_bits == key_bits {
+                    return i as i32;
+                }
+            }
+            return -1;
+        }
         for i in 0..size {
             let entry_key = ptr::read(entries.add((i as usize) * 2));
             if jsvalue_eq(entry_key, key) {
@@ -2973,8 +3042,18 @@ mod tests {
         );
 
         js_map_clear(map);
-        assert_eq!(test_map_dense_numeric_index_range(map), None);
+        // The span survives `clear()` (a per-frame grouping map repopulates
+        // the same ids), but every slot is reset: nothing is found and the
+        // next population starts from zero density.
+        assert_eq!(test_map_dense_numeric_index_range(map), Some((base, len)));
         assert_eq!(js_map_size(map), 0);
+        for key in 1_024..1_040 {
+            assert_eq!(js_map_has(map, key as f64), 0);
+        }
+        js_map_set(map, 1_030.0, 5.0);
+        assert_eq!(js_map_get(map, 1_030.0), 5.0);
+        assert_eq!(js_map_has(map, 1_031.0), 0);
+        assert_eq!(js_map_size(map), 1);
     }
 
     #[test]
