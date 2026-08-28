@@ -388,6 +388,27 @@ pub fn is_well_known_symbol(ptr: usize) -> bool {
 /// *process-global* `Mutex` to answer — the most expensive miss in the type-probe
 /// family, and 0.71% of an async-pipeline program that never mentions `Symbol`.
 /// See `crate::registry_latch` for the ordering rule.
+/// Address range covering every pointer ever passed to
+/// [`register_symbol_pointer`], as a lock-free pre-filter for
+/// [`is_registered_symbol`].
+///
+/// The latch above only rules out programs that have never made a symbol —
+/// and the well-known symbols register during startup, so in practice every
+/// real program is past it. After that, `is_registered_symbol` took a
+/// PROCESS-GLOBAL MUTEX and probed a SipHash `HashSet` to answer "no", and
+/// `js_dyn_index_get` asks it about the RECEIVER of every dynamic property
+/// read.
+///
+/// Symbols are `Box::leak`ed from Rust's allocator while ordinary receivers
+/// live in perry's arenas, so a plain min/max bound rejects almost all of them
+/// with two relaxed loads and two compares — no lock, no hashing. The bound
+/// only ever widens, so a registered pointer is always inside it: this can
+/// produce a false "maybe" (which then takes the real probe), never a false
+/// "no".
+static SYMBOL_ADDR_MIN: std::sync::atomic::AtomicUsize =
+    std::sync::atomic::AtomicUsize::new(usize::MAX);
+static SYMBOL_ADDR_MAX: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 static SYMBOL_EVER_REGISTERED: crate::registry_latch::RegistryLatch =
     crate::registry_latch::RegistryLatch::new();
 
@@ -446,6 +467,10 @@ pub(crate) fn test_disable_symbol_magic_screen(disabled: bool) -> bool {
 }
 
 pub(crate) fn register_symbol_pointer(ptr: usize) {
+    // Widen the address bound before publishing the entry, so the pre-filter in
+    // `is_registered_symbol` never excludes a pointer the set already holds.
+    SYMBOL_ADDR_MIN.fetch_min(ptr, std::sync::atomic::Ordering::Relaxed);
+    SYMBOL_ADDR_MAX.fetch_max(ptr, std::sync::atomic::Ordering::Relaxed);
     // Arm before taking the lock, so the entry is never reachable while the
     // latch still reads idle.
     SYMBOL_EVER_REGISTERED.arm();
@@ -517,6 +542,14 @@ pub fn is_registered_symbol(ptr: usize) -> bool {
     // No symbol has ever been allocated ⟹ nothing to find, and in particular no
     // reason to take the process-global registry mutex.
     if SYMBOL_EVER_REGISTERED.is_idle() {
+        return false;
+    }
+    // Lock-free bound check: two relaxed loads reject every pointer outside the
+    // registered-symbol address range, which is essentially every receiver a
+    // dynamic property read asks about.
+    if ptr < SYMBOL_ADDR_MIN.load(std::sync::atomic::Ordering::Relaxed)
+        || ptr > SYMBOL_ADDR_MAX.load(std::sync::atomic::Ordering::Relaxed)
+    {
         return false;
     }
     #[cfg(test)]
