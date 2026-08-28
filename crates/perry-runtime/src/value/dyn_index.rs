@@ -258,6 +258,28 @@ pub extern "C" fn js_dyn_index_get(value: f64, index: f64) -> f64 {
         // which triages small handles (HANDLE_PROPERTY_DISPATCH, recorded
         // prototypes) without ever dereferencing the id.
         let idx_top16 = index.to_bits() >> 48;
+        // Megamorphic read stub, probed on the key's CONTENT before the key is
+        // turned into a pointer at all. An SSO key (`0x7FF9`) is inline bits,
+        // and the by-name entry below wants a `*const StringHeader`, so every
+        // read of `o["k" + i]` otherwise pays `js_get_string_pointer_unified` →
+        // `js_string_materialize_to_heap` → an intern hash and table probe just
+        // to hand the callee a pointer to content it already had. That was ~7%
+        // of an isolated property-read loop, and it is pure protocol overhead.
+        //
+        // Validation is the same as every other hit on this cache (see
+        // `object::read_stub`): the receiver's live header, flags, class id and
+        // CURRENT shape token, which pins the key set and order, so the cached
+        // slot still names this key or the entry misses.
+        if idx_top16 == 0x7FF9 {
+            if let Some(v) = unsafe {
+                crate::object::read_stub::try_read_by_content_bits(
+                    raw_ptr as *const crate::object::ObjectHeader,
+                    index.to_bits(),
+                )
+            } {
+                return v;
+            }
+        }
         let key_ptr = if idx_top16 == 0x7FFF || idx_top16 == 0x7FF9 {
             js_get_string_pointer_unified(index) as *const crate::StringHeader
         } else {
