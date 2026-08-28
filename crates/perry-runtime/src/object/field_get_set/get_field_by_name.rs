@@ -142,15 +142,25 @@ pub extern "C" fn js_object_get_field_by_name(
                             if let Some(slot) =
                                 super::super::read_stub::read_stub_probe(token, key_bits)
                             {
+                                // A hashed key identifies its property only
+                                // probabilistically, so confirm the slot really
+                                // holds THIS key before believing it. A failed
+                                // check falls through to the normal resolution.
+                                let verified =
+                                    !super::super::read_stub::read_stub_key_is_hashed(key_bits)
+                                        || super::super::read_stub::verify_slot_key(o, slot, key);
                                 let live = crate::object::object_live_slot_count(o);
                                 let limit =
                                     std::cmp::max(live, crate::object::INLINE_SLOT_FLOOR as u32);
-                                if slot < limit {
+                                if verified && slot < limit {
                                     return super::accessors::js_object_get_field(o, slot);
                                 }
-                                if let Some(bits) = super::super::overflow_get(addr, slot as usize)
-                                {
-                                    return JSValue::from_bits(bits);
+                                if verified {
+                                    if let Some(bits) =
+                                        super::super::overflow_get(addr, slot as usize)
+                                    {
+                                        return JSValue::from_bits(bits);
+                                    }
                                 }
                             }
                         }

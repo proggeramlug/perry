@@ -45,13 +45,59 @@ crate::perry_thread_local! {
         std::array::from_fn(|_| std::array::from_fn(|_| std::cell::Cell::new((0, 0, 0))));
 }
 
-/// Content bits for a key, or `None` when it must not be cached.
+/// Marks a cache key as a CONTENT HASH rather than an inline encoding.
 ///
-/// Only keys representable inline are admitted, so an entry names a STRING
-/// VALUE and never an address. See the module note on staleness.
+/// `0xFFFF` is not a NaN-box tag, so a hashed key can never collide with the
+/// SSO bits of a short key: the two live in disjoint halves of the key space.
+const READ_STUB_HASHED_TAG: u64 = 0xFFFF << 48;
+
+/// Longest key admitted to the cache, matching the intern table's own ceiling.
+const READ_STUB_MAX_KEY_BYTES: u32 = 64;
+
+/// Cache key for a property name, or `None` when it must not be cached.
+///
+/// Short keys (≤ `SHORT_STRING_MAX_LEN` ASCII bytes) use their inline SSO
+/// encoding, which IS their content, so a hit needs no further check.
+///
+/// Anything longer is keyed on a content hash and tagged as such. Real
+/// property names — `userName`, `createdAt` — are longer than five bytes, so
+/// the inline-only rule left this cache doing nothing for the workloads that
+/// matter most: with realistic names perry ran 27 ms against node's 9 ms on a
+/// loop the cache never touched.
+///
+/// A hash is not an identity, so a hashed hit is VERIFIED against the key
+/// actually stored in the receiver's keys array before it is believed (see
+/// `try_read_slot`). That keeps the original guarantee — an entry never names
+/// an address, and a wrong entry cannot resolve to the wrong property — while
+/// covering keys that do not fit in 64 bits.
 #[inline(always)]
 pub(crate) fn read_stub_key_bits(key: *const crate::StringHeader) -> Option<u64> {
-    unsafe { crate::string::short_ascii_sso_bits(key) }
+    unsafe {
+        if let Some(bits) = crate::string::short_ascii_sso_bits(key) {
+            return Some(bits);
+        }
+        if !crate::string::is_valid_string_ptr(key) {
+            return None;
+        }
+        let blen = (*key).byte_len;
+        if blen == 0 || blen > READ_STUB_MAX_KEY_BYTES {
+            return None;
+        }
+        let data = crate::string::string_data(key);
+        let mut h = 0xcbf2_9ce4_8422_2325u64;
+        for i in 0..blen as usize {
+            h ^= *data.add(i) as u64;
+            h = h.wrapping_mul(0x0100_0000_01b3);
+        }
+        // Keep the tag intact and never produce the empty-entry sentinel.
+        Some(READ_STUB_HASHED_TAG | (h & 0x0000_FFFF_FFFF_FFFF) | 1)
+    }
+}
+
+/// Whether a cache key is a hash (and therefore needs verification on hit).
+#[inline(always)]
+pub(crate) fn read_stub_key_is_hashed(key_bits: u64) -> bool {
+    (key_bits >> 48) == 0xFFFF
 }
 
 #[inline(always)]
@@ -115,4 +161,30 @@ pub(crate) unsafe fn receiver_shape_token(obj: *const ObjectHeader) -> Option<u6
         return None;
     }
     Some(crate::object::shapes::PIC_ID_TOKEN_BIT | stamp as u64)
+}
+
+/// Verify a hashed hit: the key stored at `slot` in the receiver's keys array
+/// must actually be this key.
+///
+/// A content hash identifies a key only probabilistically, so without this a
+/// collision would resolve to the WRONG property — silently, which is the
+/// worst failure shape available. One `js_string_key_matches` against the slot
+/// the cache proposed is far cheaper than the shape-index lookup it replaces,
+/// and it restores the same guarantee the inline-encoded keys have by
+/// construction.
+#[inline]
+pub(crate) unsafe fn verify_slot_key(
+    obj: *const ObjectHeader,
+    slot: u32,
+    key: *const crate::StringHeader,
+) -> bool {
+    let keys = crate::object::object_keys_array(obj);
+    if keys.is_null() || (keys as u64) >> 48 != 0 {
+        return false;
+    }
+    if slot >= crate::array::keys_array_len_capped_to_capacity(keys) as u32 {
+        return false;
+    }
+    let stored = crate::array::keys_array_slot(keys, slot);
+    crate::string::js_string_key_matches(stored, key)
 }
