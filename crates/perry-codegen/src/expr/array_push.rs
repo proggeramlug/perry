@@ -163,6 +163,26 @@ const ARRAY_PUSH_NUMERIC_CLEAN_I16: &str = "15367";
 const ARRAY_PUSH_POINTER_LAYOUT_MASK_I16: &str = "63616";
 const ARRAY_PUSH_POINTER_LAYOUT_EXPECT_I16: &str = "40960";
 
+/// The `_reserved` states in which `js_gc_note_slot_layout` does real work for
+/// a value that is a **plain double**: `GC_ARRAY_ELEMENT_SHAPE` (0x0800),
+/// `GC_ARRAY_RAW_F64_HOLES` / `GC_OBJ_TYPED_LAYOUT_INTACT` (0x1000) and
+/// `GC_LAYOUT_ALL_POINTERS` (0x2000) — the same three
+/// [`ARRAY_PUSH_NUMERIC_CLEAN_I16`] folds into the `nofwd` admission test for a
+/// statically numeric value. Here the value's kind is only known live, so the
+/// three are tested live too, in the store block, and failing the test costs
+/// the push its bookkeeping shortcut rather than its inline store. The
+/// integrity bits `0x0407` are not repeated: the enclosing `apush.nofwd` guard
+/// already proved them clear.
+const ARRAY_PUSH_PLAIN_DOUBLE_WATCHED_I16: &str = "14336";
+
+/// Every NaN-box tag lives in the top-16 window `0x7FF8..=0x7FFF`, so a value
+/// whose `bits & 0x7FF8_0000_0000_0000` differs from that mask is a genuine
+/// IEEE double — a number, not a pointer, string, bigint, boolean, `undefined`
+/// or hole. (Negative doubles pass: `-1.0` is `0xBFF0…`, and `-Inf` is
+/// `0xFFF0…`. Only NaN payloads inside the tag window are refused, which is the
+/// conservative direction.)
+const NANBOX_TAG_WINDOW_I64: &str = "9221120237041090560";
+
 /// Store a dynamically typed append value and bypass redundant bookkeeping
 /// when the value and receiver's live header jointly prove the pointer-only
 /// case. The write barrier is intentionally not handled here: an all-pointer
@@ -177,7 +197,8 @@ fn emit_dynamic_pointer_push_store(
     object_flags: &str,
     string_addref_needed: bool,
     layout_note_needed: bool,
-) -> (String, String, String) {
+    write_barrier_needed: bool,
+) -> (String, String, Option<String>) {
     let (length, element_addr, value_bits) = {
         let blk = ctx.block();
         let length = blk.safe_load_i32_from_ptr(arr_handle);
@@ -196,10 +217,34 @@ fn emit_dynamic_pointer_push_store(
         (length, element_addr, value_bits)
     };
 
+    let probe_idx = ctx.new_block("apush.pointer_layout.probe");
     let bookkeeping_idx = ctx.new_block("apush.pointer_layout.bookkeeping");
+    let barrier_idx = ctx.new_block("apush.pointer_layout.barrier");
     let done_idx = ctx.new_block("apush.pointer_layout.done");
+    let probe_label = ctx.block_label(probe_idx);
     let bookkeeping_label = ctx.block_label(bookkeeping_idx);
+    let barrier_label = ctx.block_label(barrier_idx);
     let done_label = ctx.block_label(done_idx);
+    // The number arm. A plain double appended to an array in none of the three
+    // watched layout states owes nothing at all: no heap string to addref, no
+    // layout state for the note to change, nothing for the numeric-write note
+    // to revoke (it only ever clears the raw-f64 layout for a NON-number, and
+    // its in-bounds rewrite arm needs `index < length`, which an append is
+    // not), and no child for the barrier to record. This is the arm the ECS
+    // sparse-set append takes: `packed.push(entity)` reads its value from an
+    // untyped parameter, so no static proof is available, and every stored
+    // value is a number.
+    {
+        let blk = ctx.block();
+        let tag_window = blk.and(I64, &value_bits, NANBOX_TAG_WINDOW_I64);
+        let plain_double = blk.icmp_ne(I64, &tag_window, NANBOX_TAG_WINDOW_I64);
+        let watched = blk.and(I16, object_flags, ARRAY_PUSH_PLAIN_DOUBLE_WATCHED_I16);
+        let layout_quiet = blk.icmp_eq(I16, &watched, "0");
+        let plain_append = blk.and(I1, &plain_double, &layout_quiet);
+        blk.cond_br(&plain_append, &done_label, &probe_label);
+    }
+
+    ctx.current_block = probe_idx;
     {
         let blk = ctx.block();
         let top16 = blk.lshr(I64, &value_bits, "48");
@@ -207,7 +252,7 @@ fn emit_dynamic_pointer_push_store(
         let proof_bits = blk.and(I16, object_flags, ARRAY_PUSH_POINTER_LAYOUT_MASK_I16);
         let pointer_layout = blk.icmp_eq(I16, &proof_bits, ARRAY_PUSH_POINTER_LAYOUT_EXPECT_I16);
         let fast = blk.and(I1, &is_object_pointer, &pointer_layout);
-        blk.cond_br(&fast, &done_label, &bookkeeping_label);
+        blk.cond_br(&fast, &barrier_label, &bookkeeping_label);
     }
 
     ctx.current_block = bookkeeping_idx;
@@ -223,10 +268,26 @@ fn emit_dynamic_pointer_push_store(
         // cannot prove numeric. The generic path therefore carried this note
         // before, and still does whenever the joint live proof fails.
         emit_array_numeric_write_note_on_block(blk, arr_handle, &value_bits);
-        blk.br(&done_label);
+        blk.br(&barrier_label);
     }
+
+    // The barrier keeps its old position — after the layout note, before the
+    // length bump — for both arms that can still carry a child. Only the plain
+    // double arm skips it, and it has already proved there is no child.
+    ctx.current_block = barrier_idx;
+    if write_barrier_needed {
+        emit_write_barrier_slot_generation_tested(
+            ctx,
+            arr_handle,
+            arr_handle,
+            &element_addr,
+            &value_bits,
+            "apush",
+        );
+    }
+    ctx.block().br(&done_label);
     ctx.current_block = done_idx;
-    (length, element_addr, value_bits)
+    (length, element_addr, None)
 }
 
 /// #7839 — the inline array append's GC bookkeeping behind ONE live test.
@@ -1306,7 +1367,7 @@ fn lower_inner(ctx: &mut FnCtx<'_>, expr: &Expr, value_discarded: bool) -> Resul
                         write_barrier_needed,
                     )
                 } else if dynamic_pointer_bookkeeping {
-                    let (length, element_addr, value_bits) = emit_dynamic_pointer_push_store(
+                    emit_dynamic_pointer_push_store(
                         ctx,
                         &payload,
                         &v,
@@ -1314,11 +1375,7 @@ fn lower_inner(ctx: &mut FnCtx<'_>, expr: &Expr, value_discarded: bool) -> Resul
                         &live_object_flags,
                         string_addref_needed,
                         layout_note_needed,
-                    );
-                    (
-                        length,
-                        element_addr,
-                        write_barrier_needed.then_some(value_bits),
+                        write_barrier_needed,
                     )
                 } else {
                     let blk = ctx.block();
