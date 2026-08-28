@@ -708,7 +708,11 @@ fn write_stub_probe(token: u64, key_bits: u64) -> Option<u32> {
         } else if tok != token {
             D_WAY_TOK.fetch_add(1, o);
         } else if kb != key_bits {
-            D_WAY_KEY.fetch_add(1, o);
+            if D_WAY_KEY.fetch_add(1, o) < 3 {
+                eprintln!(
+                    "[wr-sample] stored_kb={kb:#018x} probe_kb={key_bits:#018x} tok={tok:#018x}"
+                );
+            }
         }
         (tok == token && kb == key_bits && tok != 0).then_some(slot as u32)
     })
