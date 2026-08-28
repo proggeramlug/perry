@@ -2,7 +2,7 @@
 //!
 //! Moved verbatim from the pre-split monolithic `string.rs`.
 
-use super::intern::{with_intern_table, INTERN_TABLE_MASK};
+use super::intern::with_intern_table;
 use super::*;
 
 fn malloc_object_count_for_test() -> usize {
@@ -200,7 +200,8 @@ fn large_heap_strings_use_old_gc_pages_without_malloc_tracking() {
 fn interned_strings_remain_scannable_and_content_equal() {
     let key = b"gc-managed-intern-key";
     let hash = fnv1a_for_test(key);
-    let slot = (hash as usize) & INTERN_TABLE_MASK;
+    // The table is 2-way; the test only needs a stable index into the bucket.
+    let slot = super::intern::intern_bucket_base(hash);
     let old_entry = with_intern_table(|t| unsafe { (*t)[slot] });
 
     let first = js_string_from_bytes(key.as_ptr(), key.len() as u32);

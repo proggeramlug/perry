@@ -11,8 +11,30 @@ pub(crate) struct InternEntry {
     pub(crate) string_ptr: usize, // pointer to StringHeader (0 = empty slot)
 }
 
+/// Total entries. The table is re-shaped below, not grown, so the GC root
+/// scan walks exactly the same number of slots.
 pub(crate) const INTERN_TABLE_SIZE: usize = 8192;
-pub(crate) const INTERN_TABLE_MASK: usize = INTERN_TABLE_SIZE - 1;
+
+/// Ways per bucket.
+///
+/// This table was direct-mapped with evict-on-collision, and that is worse
+/// here than a plain cache miss: an evicted key is no longer interned, so the
+/// NEXT materialisation of that key ALLOCATES a fresh `StringHeader` instead
+/// of returning the canonical one. Two keys sharing a slot therefore evict
+/// each other on every rotation through the key set and allocate forever —
+/// permanent, not probabilistic, and it shows up as collector work rather than
+/// as time inside the intern table.
+///
+/// The same reshape on the dynamic-write stub was worth 50% (#8977).
+pub(crate) const INTERN_TABLE_ASSOC: usize = 2;
+pub(crate) const INTERN_TABLE_BUCKETS: usize = INTERN_TABLE_SIZE / INTERN_TABLE_ASSOC;
+pub(crate) const INTERN_TABLE_MASK: usize = INTERN_TABLE_BUCKETS - 1;
+
+/// Base index of the bucket a hash lands in; the ways inside are searched.
+#[inline(always)]
+pub(crate) fn intern_bucket_base(hash: u64) -> usize {
+    ((hash as usize) & INTERN_TABLE_MASK) * INTERN_TABLE_ASSOC
+}
 
 /// Maximum byte length for strings eligible for interning.
 pub(crate) const INTERN_MAX_BYTE_LEN: u32 = 64;
@@ -65,16 +87,18 @@ pub extern "C" fn js_string_intern(key: *const StringHeader, hash: u64) -> *cons
             return key;
         }
 
-        let slot = (hash as usize) & INTERN_TABLE_MASK;
+        let base = intern_bucket_base(hash);
         let hit = with_intern_table(|table| {
-            let entry = &(*table)[slot];
-            if entry.string_ptr != 0 && entry.hash == hash {
-                let existing = entry.string_ptr as *const StringHeader;
-                if is_valid_string_ptr(existing)
-                    && (*existing).byte_len == byte_len
-                    && intern_content_equals(key, existing, byte_len)
-                {
-                    return Some(existing);
+            for way in 0..INTERN_TABLE_ASSOC {
+                let entry = &(*table)[base + way];
+                if entry.string_ptr != 0 && entry.hash == hash {
+                    let existing = entry.string_ptr as *const StringHeader;
+                    if is_valid_string_ptr(existing)
+                        && (*existing).byte_len == byte_len
+                        && intern_content_equals(key, existing, byte_len)
+                    {
+                        return Some(existing);
+                    }
                 }
             }
             None
@@ -83,12 +107,24 @@ pub extern "C" fn js_string_intern(key: *const StringHeader, hash: u64) -> *cons
             return existing;
         }
 
-        // Miss or collision — insert (evict on collision)
+        // Miss: take a free way before evicting one, so a colliding pair can
+        // both stay interned instead of allocating a fresh header apiece on
+        // every rotation.
         with_intern_table(|table| {
-            (*table)[slot] = InternEntry {
+            let entry = InternEntry {
                 hash,
                 string_ptr: key as usize,
             };
+            for way in 0..INTERN_TABLE_ASSOC {
+                if (*table)[base + way].string_ptr == 0 {
+                    (*table)[base + way] = entry;
+                    return;
+                }
+            }
+            for way in (1..INTERN_TABLE_ASSOC).rev() {
+                (*table)[base + way] = (*table)[base + way - 1];
+            }
+            (*table)[base] = entry;
         });
 
         // Mark as interned in GcHeader
@@ -132,23 +168,25 @@ pub(crate) fn intern_dispatch_bytes(
         }
         hash
     };
-    let slot = (hash as usize) & INTERN_TABLE_MASK;
+    let base = intern_bucket_base(hash);
 
     let hit = with_intern_table(|table| unsafe {
-        let entry = &mut (*table)[slot];
-        if entry.string_ptr == 0 {
-            return None;
-        }
-        let existing = entry.string_ptr as *const StringHeader;
-        if entry.hash == hash
-            && is_valid_string_ptr(existing)
-            && (*existing).byte_len as usize == byte_len
-            && std::slice::from_raw_parts(
-                (existing as *const u8).add(std::mem::size_of::<StringHeader>()),
-                byte_len,
-            ) == input
-        {
-            return Some(existing);
+        for way in 0..INTERN_TABLE_ASSOC {
+            let entry = &mut (*table)[base + way];
+            if entry.string_ptr == 0 {
+                continue;
+            }
+            let existing = entry.string_ptr as *const StringHeader;
+            if entry.hash == hash
+                && is_valid_string_ptr(existing)
+                && (*existing).byte_len as usize == byte_len
+                && std::slice::from_raw_parts(
+                    (existing as *const u8).add(std::mem::size_of::<StringHeader>()),
+                    byte_len,
+                ) == input
+            {
+                return Some(existing);
+            }
         }
         None
     });
@@ -168,10 +206,20 @@ pub(crate) fn intern_dispatch_bytes(
         (*key).refcount = 0;
     }
     with_intern_table(|table| unsafe {
-        (*table)[slot] = InternEntry {
+        let entry = InternEntry {
             hash,
             string_ptr: key as usize,
         };
+        for way in 0..INTERN_TABLE_ASSOC {
+            if (*table)[base + way].string_ptr == 0 {
+                (*table)[base + way] = entry;
+                return;
+            }
+        }
+        for way in (1..INTERN_TABLE_ASSOC).rev() {
+            (*table)[base + way] = (*table)[base + way - 1];
+        }
+        (*table)[base] = entry;
     });
     key
 }

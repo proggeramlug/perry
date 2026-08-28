@@ -1,8 +1,6 @@
 //! String concatenation: pairwise, fused with NaN-boxed value, and n-way chain.
 
-use super::intern::{
-    concat_content_matches, fnv1a_concat, with_intern_table, INTERN_MAX_BYTE_LEN, INTERN_TABLE_MASK,
-};
+use super::intern::{concat_content_matches, fnv1a_concat, with_intern_table, INTERN_MAX_BYTE_LEN};
 use super::*;
 
 /// SSO-aware string concatenation: takes both operands as NaN-boxed f64
@@ -268,16 +266,18 @@ pub extern "C" fn js_string_concat(
     if total_blen > 0 && total_blen <= INTERN_MAX_BYTE_LEN {
         unsafe {
             let hash = fnv1a_concat(a, blen_a, b, blen_b);
-            let slot = (hash as usize) & INTERN_TABLE_MASK;
+            let base = crate::string::intern::intern_bucket_base(hash);
             let hit = with_intern_table(|table| {
-                let entry = &(*table)[slot];
-                if entry.string_ptr != 0 && entry.hash == hash {
-                    let existing = entry.string_ptr as *const StringHeader;
-                    if is_valid_string_ptr(existing)
-                        && (*existing).byte_len == total_blen
-                        && concat_content_matches(a, blen_a, b, blen_b, existing)
-                    {
-                        return Some(existing);
+                for way in 0..crate::string::intern::INTERN_TABLE_ASSOC {
+                    let entry = &(*table)[base + way];
+                    if entry.string_ptr != 0 && entry.hash == hash {
+                        let existing = entry.string_ptr as *const StringHeader;
+                        if is_valid_string_ptr(existing)
+                            && (*existing).byte_len == total_blen
+                            && concat_content_matches(a, blen_a, b, blen_b, existing)
+                        {
+                            return Some(existing);
+                        }
                     }
                 }
                 None
