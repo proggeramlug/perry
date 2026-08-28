@@ -601,6 +601,40 @@ pub extern "C" fn js_put_value_set_dyn_ic(
 /// identical bits by construction. Heap-string keys recur once canonicalised:
 /// the first write interns the key (write tail) and later concat evaluations
 /// return the canonical pointer (intern hit), so the second prime converges.
+// DIAGNOSTIC (not for merge)
+macro_rules! dcnt {
+    ($n:ident) => {
+        static $n: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    };
+}
+dcnt!(D_MISS_CALLS);
+dcnt!(D_STUB_HIT);
+dcnt!(D_STUB_STORED);
+dcnt!(D_TRANS_OK);
+dcnt!(D_FULL_SET);
+dcnt!(D_WAY_EMPTY);
+dcnt!(D_WAY_TOK);
+dcnt!(D_WAY_KEY);
+dcnt!(D_KEY_REJECT);
+dcnt!(D_TRY_TOKEN_NEQ);
+dcnt!(D_TRY_BOUND);
+dcnt!(D_TRY_GUARD);
+pub extern "C" fn d_dump() {
+    let o = std::sync::atomic::Ordering::Relaxed;
+    eprintln!("[wr] miss_calls={} key_reject={} stub_hit={} stub_stored={} trans_ok={} full_set={} | way_empty={} way_tok={} way_key={} | try_tok_neq={} try_bound={} try_guard={}",
+        D_MISS_CALLS.load(o), D_KEY_REJECT.load(o), D_STUB_HIT.load(o), D_STUB_STORED.load(o),
+        D_TRANS_OK.load(o), D_FULL_SET.load(o), D_WAY_EMPTY.load(o), D_WAY_TOK.load(o), D_WAY_KEY.load(o),
+        D_TRY_TOKEN_NEQ.load(o), D_TRY_BOUND.load(o), D_TRY_GUARD.load(o));
+}
+fn d_arm() {
+    static A: std::sync::Once = std::sync::Once::new();
+    A.call_once(|| {
+        if std::env::var_os("PERRY_WR_STATS").is_some() {
+            unsafe { libc::atexit(d_dump) };
+        }
+    });
+}
+
 const WRITE_STUB_WAYS: usize = 4096;
 
 crate::perry_thread_local! {
@@ -668,6 +702,14 @@ fn write_stub_way(token: u64, key_bits: u64) -> usize {
 fn write_stub_probe(token: u64, key_bits: u64) -> Option<u32> {
     WRITE_STUB.with(|t| {
         let (tok, kb, slot) = t[write_stub_way(token, key_bits)].get();
+        let o = std::sync::atomic::Ordering::Relaxed;
+        if tok == 0 {
+            D_WAY_EMPTY.fetch_add(1, o);
+        } else if tok != token {
+            D_WAY_TOK.fetch_add(1, o);
+        } else if kb != key_bits {
+            D_WAY_KEY.fetch_add(1, o);
+        }
         (tok == token && kb == key_bits && tok != 0).then_some(slot as u32)
     })
 }
@@ -715,6 +757,7 @@ unsafe fn dyn_ic_try_store(target: f64, token: u64, slot: u32, value: f64) -> Op
     let current_token = crate::object::shapes::PIC_ID_TOKEN_BIT
         | crate::object::shapes::object_shape_id(obj) as u64;
     if current_token != token {
+        D_TRY_TOKEN_NEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         return None;
     }
     let shape = crate::object::shapes::object_shape_descriptor(obj)?;
@@ -764,14 +807,26 @@ pub extern "C" fn js_put_value_set_dyn_ic_miss(
     // live state, so a stale site token or stub entry misses into the full
     // walk below instead of storing wrongly. No allocation precedes the
     // probe — the handle scope opens only after this fails.
+    d_arm();
+    D_MISS_CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     if !cache.is_null() {
         let c = unsafe { &*cache };
         let token = c[0] as u64;
         let key_bits = key.to_bits();
         if token != 0 && key_bits != 0 {
-            if let Some(slot) = stub_key_bits(key).and_then(|kb| write_stub_probe(token, kb)) {
-                if let Some(ret) = unsafe { dyn_ic_try_store(target, token, slot, value) } {
-                    return ret;
+            let o = std::sync::atomic::Ordering::Relaxed;
+            match stub_key_bits(key) {
+                None => {
+                    D_KEY_REJECT.fetch_add(1, o);
+                }
+                Some(kb) => {
+                    if let Some(slot) = write_stub_probe(token, kb) {
+                        D_STUB_HIT.fetch_add(1, o);
+                        if let Some(ret) = unsafe { dyn_ic_try_store(target, token, slot, value) } {
+                            D_STUB_STORED.fetch_add(1, o);
+                            return ret;
+                        }
+                    }
                 }
             }
         }
@@ -804,10 +859,12 @@ pub extern "C" fn js_put_value_set_dyn_ic_miss(
             value_handle.get_nanbox_f64(),
         ) != 0
         {
+            D_TRANS_OK.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             return value_handle.get_nanbox_f64();
         }
     }
 
+    D_FULL_SET.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let result = js_put_value_set(
         target_handle.get_nanbox_f64(),
         key_handle.get_nanbox_f64(),
