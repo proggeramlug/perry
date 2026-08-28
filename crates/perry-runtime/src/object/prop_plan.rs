@@ -218,8 +218,19 @@ struct ReadPlanEntry {
     field_idx: u32,
 }
 
+/// Total entries, unchanged — the table is re-shaped, not grown.
 const READ_PLAN_SIZE: usize = 8192;
-const READ_PLAN_MASK: usize = READ_PLAN_SIZE - 1;
+
+/// Ways per bucket. A DIRECT-MAPPED plan cache cannot hold a colliding pair at
+/// all: the two `(keys, key)` pairs evict each other every time the loop comes
+/// back around, so both miss FOREVER and fall through to the shape-index
+/// lookup. That is not a rounding error — the identical structure on the
+/// dynamic-write stub was worth 50% when it went 2-way (#8977), and the cause
+/// was invisible in a profile because the misses look exactly like a cold
+/// cache.
+const READ_PLAN_ASSOC: usize = 2;
+const READ_PLAN_BUCKETS: usize = READ_PLAN_SIZE / READ_PLAN_ASSOC;
+const READ_PLAN_MASK: usize = READ_PLAN_BUCKETS - 1;
 
 crate::perry_thread_local! {
     // Heap-allocated for the same arm64_32 TLS-size reason as the store table.
@@ -238,11 +249,12 @@ crate::perry_thread_local! {
         );
 }
 
+/// Index of the BUCKET for this pair; the ways inside it are searched.
 #[inline(always)]
 fn read_plan_slot(keys_id: usize, key_ptr: usize) -> usize {
     let h = ((keys_id >> 4) as u64 ^ ((key_ptr >> 3) as u64).rotate_left(21))
         .wrapping_mul(0x9E37_79B9_7F4A_7C15);
-    (h >> 40) as usize & READ_PLAN_MASK
+    ((h >> 40) as usize & READ_PLAN_MASK) * READ_PLAN_ASSOC
 }
 
 /// Look up the cached own-field index for (keys_array, interned key).
@@ -251,17 +263,17 @@ pub(crate) fn read_plan_lookup(keys_id: usize, key_ptr: usize) -> Option<u32> {
     if keys_id == 0 || key_ptr == 0 {
         return None;
     }
-    let slot = read_plan_slot(keys_id, key_ptr);
+    let base = read_plan_slot(keys_id, key_ptr);
+    let epoch = PROP_PLAN_EPOCH.load(Ordering::Relaxed);
     READ_PLAN_CACHE.with(|c| unsafe {
-        let e = (*c.get())[slot];
-        if e.keys_id == keys_id
-            && e.key_ptr == key_ptr
-            && e.epoch == PROP_PLAN_EPOCH.load(Ordering::Relaxed)
-        {
-            Some(e.field_idx)
-        } else {
-            None
+        let table = &*c.get();
+        for way in 0..READ_PLAN_ASSOC {
+            let e = table[base + way];
+            if e.keys_id == keys_id && e.key_ptr == key_ptr && e.epoch == epoch {
+                return Some(e.field_idx);
+            }
         }
+        None
     })
 }
 
@@ -271,14 +283,37 @@ pub(crate) fn read_plan_record(keys_id: usize, key_ptr: usize, field_idx: u32) {
     if keys_id == 0 || key_ptr == 0 {
         return;
     }
-    let slot = read_plan_slot(keys_id, key_ptr);
+    let base = read_plan_slot(keys_id, key_ptr);
+    let epoch = PROP_PLAN_EPOCH.load(Ordering::Relaxed);
+    let entry = ReadPlanEntry {
+        keys_id,
+        key_ptr,
+        epoch,
+        field_idx,
+    };
     READ_PLAN_CACHE.with(|c| unsafe {
-        (*c.get())[slot] = ReadPlanEntry {
-            keys_id,
-            key_ptr,
-            epoch: PROP_PLAN_EPOCH.load(Ordering::Relaxed),
-            field_idx,
-        };
+        let table = &mut *c.get();
+        // Refresh this pair's own way if resident, then take a free or
+        // stale-epoch way, and only otherwise evict — shifting way 0 down so
+        // the most recently recorded pair survives.
+        for way in 0..READ_PLAN_ASSOC {
+            let e = table[base + way];
+            if e.keys_id == keys_id && e.key_ptr == key_ptr {
+                table[base + way] = entry;
+                return;
+            }
+        }
+        for way in 0..READ_PLAN_ASSOC {
+            let e = table[base + way];
+            if e.keys_id == 0 || e.epoch != epoch {
+                table[base + way] = entry;
+                return;
+            }
+        }
+        for way in (1..READ_PLAN_ASSOC).rev() {
+            table[base + way] = table[base + way - 1];
+        }
+        table[base] = entry;
     });
 }
 
