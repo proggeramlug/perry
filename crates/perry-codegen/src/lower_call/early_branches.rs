@@ -585,6 +585,76 @@ pub fn try_lower_closure_typed_local_call(
                     };
                     let expected_arity = declared_count.to_string();
                     let call_arity = lowered_args.len().to_string();
+                    let fast_idx = ctx.new_block("closure_direct.fast");
+                    let fallback_idx = ctx.new_block("closure_direct.fallback");
+                    let merge_idx = ctx.new_block("closure_direct.merge");
+                    let fast_label = ctx.block_label(fast_idx);
+                    let fallback_label = ctx.block_label(fallback_idx);
+                    let merge_label = ctx.block_label(merge_idx);
+                    // Normal builds do not collect feedback (the same
+                    // dispensation `expr/index_get/guarded_array.rs` documents
+                    // for the array-read guard): decide the monomorphic case
+                    // with an inline identity probe and keep the out-of-line
+                    // guard — which records the observation — for the miss.
+                    // Everything else the guard validates is already a
+                    // compile-time fact at THIS site: `declared_count` and
+                    // `has_rest` were checked against the known func_id above,
+                    // and `expected_arity == call_arity` by the enclosing
+                    // `declared_count == lowered_args.len()` gate. The only
+                    // dynamic question is "is the value still the closure
+                    // whose body is `@closure_fn`", and two compare-only loads
+                    // answer it: `type_tag == CLOSURE_MAGIC` at the header's
+                    // tag slot and `func_ptr == @closure_fn` at word 0. A
+                    // forwarded (moved) closure fails the func-ptr compare —
+                    // its word 0 holds the forwarding target — and takes the
+                    // guard, which resolves forwarding as it always did. A
+                    // non-closure heap object would need BOTH its tag word to
+                    // spell "CLOS" AND its first word to equal this exact code
+                    // address to slip through; the runtime's volatile-ordering
+                    // ceremony guards a transmute-and-call of an ARBITRARY
+                    // func_ptr, which this compare-only probe never does.
+                    if !crate::expr::typed_feedback_emission_enabled() {
+                        let guard_call_idx = ctx.new_block("closure_direct.guard_call");
+                        let probe_idx = ctx.new_block("closure_direct.inline_probe");
+                        let guard_call_label = ctx.block_label(guard_call_idx);
+                        let probe_label = ctx.block_label(probe_idx);
+                        {
+                            let blk = ctx.block();
+                            let bits = blk.bitcast_double_to_i64(&recv_box);
+                            let top16 = blk.lshr(I64, &bits, "48");
+                            let is_pointer =
+                                blk.icmp_eq(I64, &top16, crate::nanbox::POINTER_TAG_TOP16_I64);
+                            let handle = blk.and(I64, &bits, crate::nanbox::POINTER_MASK_I64);
+                            // Above the small-handle id band: a real closure is
+                            // a GC allocation, and the band's ids are unmapped
+                            // low addresses the probe must never dereference.
+                            let above_band = blk.icmp_ugt(I64, &handle, "1048575");
+                            let plausible = blk.and(I1, &is_pointer, &above_band);
+                            blk.cond_br(&plausible, &probe_label, &guard_call_label);
+                        }
+                        ctx.current_block = probe_idx;
+                        {
+                            let tag_offset = crate::target_layout::closure_type_tag_offset_bytes(
+                                ctx.target_triple,
+                            )
+                            .to_string();
+                            let blk = ctx.block();
+                            let bits = blk.bitcast_double_to_i64(&recv_box);
+                            let handle = blk.and(I64, &bits, crate::nanbox::POINTER_MASK_I64);
+                            let tag_addr = blk.add(I64, &handle, &tag_offset);
+                            let tag_ptr = blk.inttoptr(I64, &tag_addr);
+                            let tag = blk.load(I32, &tag_ptr);
+                            // CLOSURE_MAGIC — "CLOS".
+                            let magic_ok = blk.icmp_eq(I32, &tag, "1129270099");
+                            let fp_ptr = blk.inttoptr(I64, &handle);
+                            let fp = blk.load(I64, &fp_ptr);
+                            let expected_fp = blk.ptrtoint(&format!("@{}", closure_fn), I64);
+                            let fp_ok = blk.icmp_eq(I64, &fp, &expected_fp);
+                            let hit = blk.and(I1, &magic_ok, &fp_ok);
+                            blk.cond_br(&hit, &fast_label, &guard_call_label);
+                        }
+                        ctx.current_block = guard_call_idx;
+                    }
                     let guard_ok = ctx.block().call(
                         I32,
                         "js_typed_feedback_closure_direct_call_guard",
@@ -597,12 +667,6 @@ pub fn try_lower_closure_typed_local_call(
                         ],
                     );
                     let guard_pass = ctx.block().icmp_ne(I32, &guard_ok, "0");
-                    let fast_idx = ctx.new_block("closure_direct.fast");
-                    let fallback_idx = ctx.new_block("closure_direct.fallback");
-                    let merge_idx = ctx.new_block("closure_direct.merge");
-                    let fast_label = ctx.block_label(fast_idx);
-                    let fallback_label = ctx.block_label(fallback_idx);
-                    let merge_label = ctx.block_label(merge_idx);
                     ctx.block()
                         .cond_br(&guard_pass, &fast_label, &fallback_label);
 

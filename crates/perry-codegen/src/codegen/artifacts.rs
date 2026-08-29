@@ -96,6 +96,11 @@ pub(super) fn emit_module_artifacts(c: ModuleArtifactsCtx<'_>) -> Result<()> {
     };
 
     let module_reassigned_locals = crate::collectors::reassigned_locals_in_module(hir);
+    // #9071 follow-up: module-wide immutable closure bindings, for statically
+    // devirtualizing calls through captured/global bindings in closure bodies.
+    let mut immutable_closure_bindings =
+        super::closure_collect::collect_immutable_closure_bindings(hir);
+    immutable_closure_bindings.retain(|id, _| !module_reassigned_locals.contains(id));
     progress.checkpoint("reassigned-local analysis");
 
     let closure_started = Instant::now();
@@ -160,6 +165,7 @@ pub(super) fn emit_module_artifacts(c: ModuleArtifactsCtx<'_>) -> Result<()> {
             module_boxed_vars,
             module_receiver_types,
             &module_reassigned_locals,
+            &immutable_closure_bindings,
             closure_rest_params,
             cross_module,
             false,
@@ -186,6 +192,7 @@ pub(super) fn emit_module_artifacts(c: ModuleArtifactsCtx<'_>) -> Result<()> {
                 module_boxed_vars,
                 module_receiver_types,
                 &module_reassigned_locals,
+                &immutable_closure_bindings,
                 closure_rest_params,
                 cross_module,
                 true,
@@ -213,6 +220,7 @@ pub(super) fn emit_module_artifacts(c: ModuleArtifactsCtx<'_>) -> Result<()> {
                 module_boxed_vars,
                 module_receiver_types,
                 &module_reassigned_locals,
+                &immutable_closure_bindings,
                 closure_rest_params,
                 cross_module,
                 true,
