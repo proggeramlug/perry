@@ -644,8 +644,12 @@ pub fn try_lower_closure_typed_local_call(
                             let tag_addr = blk.add(I64, &handle, &tag_offset);
                             let tag_ptr = blk.inttoptr(I64, &tag_addr);
                             let tag = blk.load(I32, &tag_ptr);
-                            // CLOSURE_MAGIC — "CLOS".
-                            let magic_ok = blk.icmp_eq(I32, &tag, "1129270099");
+                            // CLOSURE_MAGIC — "CLOS" (0x434C4F53). Derived,
+                            // not hand-typed: a transposed hand conversion of
+                            // this constant made the probe miss on every call
+                            // and cost three rounds of wrong conclusions.
+                            const CLOSURE_MAGIC_I32: u32 = 0x434C_4F53;
+                            let magic_ok = blk.icmp_eq(I32, &tag, &CLOSURE_MAGIC_I32.to_string());
                             let fp_ptr = blk.inttoptr(I64, &handle);
                             let fp = blk.load(I64, &fp_ptr);
                             let expected_fp = blk.ptrtoint(&format!("@{}", closure_fn), I64);
