@@ -1757,8 +1757,20 @@ mod null_key_guard_5972 {
 /// the stub never learns an entry for a receiver whose reads have other
 /// semantics. Keys that cannot be represented as content bits are skipped by
 /// `read_stub_key_bits`.
-#[inline]
+#[inline(always)]
 fn prime_read_stub(obj: *const ObjectHeader, key: *const crate::StringHeader, slot: u32) {
+    // Reject an uncacheable key on its LENGTH before anything else. The stub
+    // only holds keys whose content fits inline, and real property names
+    // (`userName`, `createdAt`) do not — so on a realistic workload every one
+    // of these calls is thrown away, and it showed up as 2.28% of self time in
+    // a read profile purely as call overhead.
+    unsafe {
+        if !crate::string::is_valid_string_ptr(key)
+            || (*key).byte_len as usize > crate::value::SHORT_STRING_MAX_LEN
+        {
+            return;
+        }
+    }
     if let Some(key_bits) = super::super::read_stub::read_stub_key_bits(key) {
         if let Some(token) = unsafe { super::super::read_stub::receiver_shape_token(obj) } {
             super::super::read_stub::read_stub_insert(token, key_bits, slot);
