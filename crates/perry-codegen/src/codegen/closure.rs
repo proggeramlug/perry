@@ -1129,6 +1129,7 @@ pub(super) fn compile_closure(
             .compiler_private_async_i1_control_locals,
         closure_rest_params,
         local_closure_func_ids: HashMap::new(),
+        guard_free_closure_bindings: std::collections::HashSet::new(),
         local_closure_param_counts: HashMap::new(),
         resolved_arrow_callback_targets: HashMap::new(),
         resolved_versioned_loop_callback_targets: HashMap::new(),
@@ -1332,6 +1333,19 @@ pub(super) fn compile_closure(
             ctx.local_closure_param_counts
                 .entry(id)
                 .or_insert(*param_count);
+            // The single-binding fact holds module-wide, so the identity
+            // guard is unnecessary at these call sites — for CAPTURED
+            // bindings. A capture of a single-binding closure is boxed by
+            // construction when it can be read before its `Let` runs, and the
+            // boxed read throws the TDZ error before the dispatch arm is
+            // reached. A MODULE GLOBAL has no such protection: code running
+            // during module init can call through the binding while the cell
+            // still holds the TDZ sentinel, so globals keep the inline
+            // identity probe (whose magic check fails on the sentinel and
+            // falls back to the full dispatcher's correct error path).
+            if ctx.closure_captures.contains_key(&id) {
+                ctx.guard_free_closure_bindings.insert(id);
+            }
         }
     }
     if !is_async {

@@ -613,7 +613,15 @@ pub fn try_lower_closure_typed_local_call(
                     // address to slip through; the runtime's volatile-ordering
                     // ceremony guards a transmute-and-call of an ARBITRARY
                     // func_ptr, which this compare-only probe never does.
-                    if !crate::expr::typed_feedback_emission_enabled() {
+                    // #7170 R1 single-binding fact: identity holds with
+                    // FuncRef strength, so the runtime guard AND the probe
+                    // are both unnecessary — the value cannot be anything but
+                    // this closure. Branch straight into the fast arm; the
+                    // fallback stays only as the shared merge structure.
+                    let guard_free = ctx.guard_free_closure_bindings.contains(id);
+                    if guard_free {
+                        ctx.block().br(&fast_label);
+                    } else if !crate::expr::typed_feedback_emission_enabled() {
                         let guard_call_idx = ctx.new_block("closure_direct.guard_call");
                         let probe_idx = ctx.new_block("closure_direct.inline_probe");
                         let guard_call_label = ctx.block_label(guard_call_idx);
@@ -655,20 +663,22 @@ pub fn try_lower_closure_typed_local_call(
                         }
                         ctx.current_block = guard_call_idx;
                     }
-                    let guard_ok = ctx.block().call(
-                        I32,
-                        "js_typed_feedback_closure_direct_call_guard",
-                        &[
-                            (I64, &site_id),
-                            (DOUBLE, &recv_box),
-                            (crate::types::PTR, &format!("@{}", closure_fn)),
-                            (I32, &expected_arity),
-                            (I32, &call_arity),
-                        ],
-                    );
-                    let guard_pass = ctx.block().icmp_ne(I32, &guard_ok, "0");
-                    ctx.block()
-                        .cond_br(&guard_pass, &fast_label, &fallback_label);
+                    if !guard_free {
+                        let guard_ok = ctx.block().call(
+                            I32,
+                            "js_typed_feedback_closure_direct_call_guard",
+                            &[
+                                (I64, &site_id),
+                                (DOUBLE, &recv_box),
+                                (crate::types::PTR, &format!("@{}", closure_fn)),
+                                (I32, &expected_arity),
+                                (I32, &call_arity),
+                            ],
+                        );
+                        let guard_pass = ctx.block().icmp_ne(I32, &guard_ok, "0");
+                        ctx.block()
+                            .cond_br(&guard_pass, &fast_label, &fallback_label);
+                    }
 
                     ctx.current_block = fast_idx;
                     let typed_f64_param_reps = if ctx.typed_f64_closures.contains(&func_id) {
