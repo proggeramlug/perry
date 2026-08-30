@@ -464,15 +464,40 @@ mod descriptor_tests_8067 {
 
     #[test]
     fn exhaustion_parks_without_reuse_or_alias() {
-        let next = std::sync::atomic::AtomicU32::new(SHAPE_ID_END - 1);
-        assert_eq!(alloc_shape_id_from(&next), Ok(SHAPE_ID_END - 1));
+        // #9064 stage A: CLEAN ids mint only in the lower half of the band
+        // (`SHAPE_ID_CLEAN_END`); the upper half is reserved for holed
+        // twins (`clean | SHAPE_ID_HOLED_BIT`), so parking at the clean
+        // ceiling is what keeps a holed id from ever aliasing a clean mint.
+        let next = std::sync::atomic::AtomicU32::new(SHAPE_ID_CLEAN_END - 1);
+        assert_eq!(alloc_shape_id_from(&next), Ok(SHAPE_ID_CLEAN_END - 1));
         assert_eq!(alloc_shape_id_from(&next), Err(ShapeIdExhausted));
         assert_eq!(alloc_shape_id_from(&next), Err(ShapeIdExhausted));
         assert_eq!(
             next.load(std::sync::atomic::Ordering::Relaxed),
-            SHAPE_ID_END,
+            SHAPE_ID_CLEAN_END,
             "exhaustion must park instead of wrapping into an alias"
         );
+        // Every holed twin of a clean id stays inside the ShapeId band and
+        // is recognizably holed from its value alone.
+        let clean = SHAPE_ID_CLEAN_END - 1;
+        let holed = clean | SHAPE_ID_HOLED_BIT;
+        assert!(is_shape_id(holed));
+        assert!(shape_id_is_holed(holed));
+        assert!(!shape_id_is_holed(clean));
+        assert!(holed < SHAPE_ID_END);
+    }
+
+    #[test]
+    fn holed_publish_mints_a_holed_id() {
+        let _lock = crate::gc::global_side_table_test_lock();
+        let keys = 0x9064_0000_0000_2000usize as *const ArrayHeader;
+        let clean = shape_descriptor_ensure_with_holes(keys, 4, 4, 77, ShapeObjectKind::Ordinary, 0)
+            .expect("clean mint");
+        let holed = shape_descriptor_ensure_with_holes(keys, 4, 4, 78, ShapeObjectKind::Ordinary, 1)
+            .expect("holed mint");
+        assert!(!shape_id_is_holed(clean));
+        assert!(shape_id_is_holed(holed));
+        assert!(is_shape_id(holed));
     }
 
     #[test]

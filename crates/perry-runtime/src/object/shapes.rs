@@ -431,6 +431,23 @@ pub(crate) const SHAPE_ID_BASE: u32 = 0x8000_0000;
 /// Exclusive end of the ShapeId range (2^30 ids ≈ one per shape BIRTH,
 /// unreachable in practice).
 pub(crate) const SHAPE_ID_END: u32 = 0xC000_0000;
+/// #9064 stage A: bit 29 marks a HOLED shape id — a shape whose keys array
+/// carries tombstones. CLEAN ids mint from the lower half of the band
+/// (`SHAPE_ID_BASE..SHAPE_ID_CLEAN_END`); a holed id is its clean mint OR
+/// this bit, landing in the upper half — deterministic, collision-free, and
+/// still inside `is_shape_id`. Generated IC hit paths can therefore learn a
+/// shape's holedness from the token VALUE alone (one bit test), which is
+/// what lets later stages keep the token STABLE across tombstone deletes and
+/// validate cached slots by key-cell content instead of retiring every way
+/// per delete.
+pub(crate) const SHAPE_ID_HOLED_BIT: u32 = 0x2000_0000;
+/// Exclusive mint ceiling for CLEAN ids (2^29 ids — still unreachable).
+pub(crate) const SHAPE_ID_CLEAN_END: u32 = 0xA000_0000;
+
+#[inline]
+pub(crate) fn shape_id_is_holed(id: u32) -> bool {
+    is_shape_id(id) && (id & SHAPE_ID_HOLED_BIT) != 0
+}
 
 /// #6759 C3c: PROCESS-GLOBAL allocator (supersedes the per-thread counter
 /// C3a landed with). Global uniqueness matters because the worker
@@ -476,10 +493,10 @@ fn alloc_shape_id_from(next: &std::sync::atomic::AtomicU32) -> Result<u32, Shape
     use std::sync::atomic::Ordering;
     loop {
         let id = next.load(Ordering::Relaxed);
-        if id >= SHAPE_ID_END {
+        if id >= SHAPE_ID_CLEAN_END {
             // Park at the exclusive end. In particular, never fetch_add at
             // END: wrapping to zero could eventually alias a live ShapeId.
-            next.store(SHAPE_ID_END, Ordering::Relaxed);
+            next.store(SHAPE_ID_CLEAN_END, Ordering::Relaxed);
             return Err(ShapeIdExhausted);
         }
         if next
@@ -549,7 +566,15 @@ pub(crate) fn shape_descriptor_ensure_with_holes(
     {
         return Ok(id);
     }
+    // #9064 stage A: a holed shape's id carries the HOLED bit so generated
+    // IC tokens self-describe tombstone presence. The clean mint below never
+    // reaches the upper half of the band, so the OR cannot alias a clean id.
     let id = alloc_shape_id().map_err(|_| ShapeDescriptorError::IdExhausted)?;
+    let id = if hole_count > 0 {
+        id | SHAPE_ID_HOLED_BIT
+    } else {
+        id
+    };
     let descriptor = ShapeDescriptor {
         keys: keys_id as u64,
         indexed_keys: keys_id as u64,
