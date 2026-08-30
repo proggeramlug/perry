@@ -28,9 +28,19 @@ unknown or a step overflows. When the whole interval fits inside a *constant*
 buffer length, the access is in bounds on every iteration. A non-constant length
 still declines — there is nothing to compare the interval against.
 
+**A fixed-size allocation expression no longer forfeits the buffer-view tier.**
+`is_fresh_uint8array_length_expr` accepted a literal or a known-length local, but
+nothing built from them — so `new Uint8Array(SIZE * SIZE)` was not recognised as
+a freshly allocated owned buffer at all. Without that classification the receiver
+gets no view, and with no view every element read falls back to a runtime call,
+whatever the index looks like. The predicate asks only whether the allocation's
+size is FIXED, never what it is (`length_source_from_expr` resolves the value
+later, with a `FnCtx` in hand, and records no constant length when it cannot), so
+a sum, difference or product of the same leaves qualifies on the same argument.
+
 Measured on an idle Mac mini, min of three, self-timed: `bench_int_arithmetic`
-475 → 395 ms (Node 64); a `pixels[y * SIZE + x]` variant 636 → 356 ms; a probe
-whose reads all qualify drops from 54 per-element helper calls to none.
+475 → 149 ms (Node 71) — 6.7× Node down to 2.1×; a `pixels[y * SIZE + x]` variant
+636 → 56 ms; 54 per-element helper calls per pixel become none.
 
 Verified byte-identical to Node on two differentials that are part of neither
 suite: eight cases around the byte read itself (in-bounds accumulate, an
@@ -42,9 +52,11 @@ the loop body, a deliberately out-of-range interval, a one-past-the-end read, a
 negative composite index, and a buffer whose length is not a compile-time
 constant).
 
-Left for a follow-up: `bench_int_arithmetic`'s own `(y + ky) * SIZE + (x + kx)`
-still declines the interval proof, so its 54 reads per pixel remain calls.
-Also worth knowing — `f64_kind_from_class` maps `"Uint8Array"` and
+The three changes compound, and only together: the fixpoint fix makes the
+accumulation native, the allocation fix gives the receiver a view, and the
+interval proof is what lets a compound index use it.
+
+Worth knowing — `f64_kind_from_class` maps `"Uint8Array"` and
 `"Uint8ClampedArray"` to a typed-array kind, but the checked load it feeds reads
 the length at `handle + 0` and elements at `handle + 16`. Perry's
 `new Uint8Array(n)` is buffer-backed (length at `data - 8`), so handing that path
