@@ -1696,6 +1696,17 @@ mod native_roots_target_tests {
 /// `PERRY_CALLEE_BINDING_RESOLUTION` gate (default on): resolve loop-called
 /// immutable callee bindings once at body entry. `=0`/`off`/`false` restores
 /// per-call `js_closure_callN` dispatch for A/B bisection.
+pub(super) fn entry_closure_probe_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        !matches!(
+            std::env::var("PERRY_ENTRY_CLOSURE_PROBE").as_deref(),
+            Ok("0") | Ok("off") | Ok("false")
+        )
+    })
+}
+
 pub(super) fn callee_binding_resolution_enabled() -> bool {
     use std::sync::OnceLock;
     static CACHED: OnceLock<bool> = OnceLock::new();
@@ -1763,8 +1774,74 @@ pub(super) fn emit_callee_binding_resolutions(
         }
         // A statically-known callee takes the known-func_id guarded direct
         // path — a static, inlinable call — which beats the entry-resolved
-        // indirect call this map would install.
-        if ctx.local_closure_func_ids.contains_key(&id) {
+        // indirect call this map would install. For a single-binding MODULE
+        // GLOBAL among them, verify the identity ONCE here instead: the
+        // callsite probe re-derives a loop-invariant fact ("this binding is
+        // `func_id`'s closure") on every call, ~20 instructions that dominate
+        // a tight `s = f(s)` loop. Identity cannot change for a
+        // never-reassigned binding — a moving GC changes the closure's
+        // ADDRESS (the callsite keeps its fresh per-call load), never WHICH
+        // closure it is — so one entry probe covers every later call. A miss
+        // (pre-init sentinel, annotation lie) leaves the flag false and the
+        // callsite keeps today's per-call probe path, which is semantically
+        // complete on its own.
+        if let Some(&func_id) = ctx.local_closure_func_ids.get(&id) {
+            if entry_closure_probe_enabled()
+                && !ctx.entry_verified_closure_probes.contains_key(&id)
+            {
+                if let Some(global_name) = ctx.module_globals.get(&id).cloned() {
+                    use crate::types::I1;
+                    let closure_fn =
+                        format!("perry_closure_{}__{}", ctx.strings.module_prefix(), func_id);
+                    let probe_idx = ctx.new_block("entry_probe.deref");
+                    let merge_idx = ctx.new_block("entry_probe.merge");
+                    let probe_label = ctx.block_label(probe_idx);
+                    let merge_label = ctx.block_label(merge_idx);
+                    let entry_pred = ctx.block_label(ctx.current_block);
+                    let value_box = ctx.block().load(DOUBLE, &format!("@{global_name}"));
+                    {
+                        let blk = ctx.block();
+                        let bits = blk.bitcast_double_to_i64(&value_box);
+                        let top16 = blk.lshr(I64, &bits, "48");
+                        let is_pointer =
+                            blk.icmp_eq(I64, &top16, crate::nanbox::POINTER_TAG_TOP16_I64);
+                        let handle = blk.and(I64, &bits, crate::nanbox::POINTER_MASK_I64);
+                        let above_band = blk.icmp_ugt(I64, &handle, "1048575");
+                        let plausible = blk.and(I1, &is_pointer, &above_band);
+                        blk.cond_br(&plausible, &probe_label, &merge_label);
+                    }
+                    ctx.current_block = probe_idx;
+                    let hit = {
+                        let tag_offset = crate::target_layout::closure_type_tag_offset_bytes(
+                            ctx.target_triple,
+                        )
+                        .to_string();
+                        let blk = ctx.block();
+                        let bits = blk.bitcast_double_to_i64(&value_box);
+                        let handle = blk.and(I64, &bits, crate::nanbox::POINTER_MASK_I64);
+                        let tag_addr = blk.add(I64, &handle, &tag_offset);
+                        let tag_ptr = blk.inttoptr(I64, &tag_addr);
+                        let tag = blk.load(I32, &tag_ptr);
+                        // CLOSURE_MAGIC — "CLOS", derived (see the callsite
+                        // probe for the transposition incident this avoids).
+                        const CLOSURE_MAGIC_I32: u32 = 0x434C_4F53;
+                        let magic_ok = blk.icmp_eq(I32, &tag, &CLOSURE_MAGIC_I32.to_string());
+                        let fp_ptr = blk.inttoptr(I64, &handle);
+                        let fp = blk.load(I64, &fp_ptr);
+                        let expected_fp = blk.ptrtoint(&format!("@{}", closure_fn), I64);
+                        let fp_ok = blk.icmp_eq(I64, &fp, &expected_fp);
+                        let hit = blk.and(I1, &magic_ok, &fp_ok);
+                        blk.br(&merge_label);
+                        hit
+                    };
+                    let probe_pred = ctx.block_label(probe_idx);
+                    ctx.current_block = merge_idx;
+                    let flag = ctx
+                        .block()
+                        .phi(I1, &[("false", &entry_pred), (&hit, &probe_pred)]);
+                    ctx.entry_verified_closure_probes.insert(id, flag);
+                }
+            }
             continue;
         }
         // A `Function`-hinted binding is consumed by the guarded

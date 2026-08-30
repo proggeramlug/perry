@@ -636,6 +636,21 @@ pub fn try_lower_closure_typed_local_call(
                         let probe_idx = ctx.new_block("closure_direct.inline_probe");
                         let guard_call_label = ctx.block_label(guard_call_idx);
                         let probe_label = ctx.block_label(probe_idx);
+                        // Entry-verified single-binding module global: the
+                        // identity was proven once at function entry (see
+                        // emit_callee_binding_resolutions) and cannot change —
+                        // branch straight to the fast arm on the flag. The
+                        // probe below stays as the else edge (flag false =
+                        // pre-init at entry, or the annotation lied), so
+                        // nothing is lost, and the flag is loop-invariant SSA:
+                        // LLVM unswitches the enclosing loop on it and the
+                        // per-call probe leaves the loop body entirely.
+                        if let Some(flag) = ctx.entry_verified_closure_probes.get(id).cloned() {
+                            let plausible_idx = ctx.new_block("closure_direct.plausible");
+                            let plausible_label = ctx.block_label(plausible_idx);
+                            ctx.block().cond_br(&flag, &fast_label, &plausible_label);
+                            ctx.current_block = plausible_idx;
+                        }
                         {
                             let blk = ctx.block();
                             let bits = blk.bitcast_double_to_i64(&recv_box);

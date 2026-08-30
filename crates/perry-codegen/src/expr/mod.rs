@@ -619,6 +619,15 @@ pub(crate) struct FnCtx<'a> {
     /// R1's single-binding fact: one `Let`, never written anywhere, never
     /// rebound). A call through one of these needs NO runtime identity guard.
     pub guard_free_closure_bindings: std::collections::HashSet<u32>,
+    /// #9105 follow-up: per-binding i1 SSA names proving "this single-binding
+    /// module-global closure was verified as `func_id`'s closure at function
+    /// entry". Identity is invariant for a never-reassigned binding (a moving
+    /// GC changes the ADDRESS, never which closure it is), so a callsite that
+    /// sees the flag can skip the per-call inline identity probe — in a loop,
+    /// LLVM unswitches on the invariant flag and the probe leaves the loop
+    /// entirely. A pre-init global fails the entry probe and keeps the
+    /// per-call probe path, which is semantically complete on its own.
+    pub entry_verified_closure_probes: std::collections::HashMap<u32, String>,
     /// LocalId → closure declared parameter count. Paired with
     /// `local_closure_func_ids` for guarded direct closure calls: direct
     /// calls only fire when the static arity exactly matches the call site.
