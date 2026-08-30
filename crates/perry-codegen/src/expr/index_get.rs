@@ -44,7 +44,8 @@ mod guarded_array;
 mod inline_dyn_typed_array;
 
 use guarded_array::{
-    lower_guarded_array_index_get, lower_packed_f64_loop_index_get, packed_f64_loop_fact,
+    foreign_packed_loop_read, load_packed_loop_index_i32, lower_guarded_array_index_get,
+    lower_packed_f64_loop_index_get, packed_f64_loop_fact, packed_f64_loop_fact_for_index,
 };
 use inline_dyn_typed_array::lower_inline_dyn_typed_array_get;
 
@@ -234,30 +235,6 @@ pub(crate) fn packed_f64_loop_index_parts(index: &Expr) -> Option<(u32, i32)> {
 /// indices match any fact; non-zero offsets only match hole-tolerant facts
 /// (established by the range guard, which validated the whole offset window —
 /// the length-bound guard of the classic matcher only proves `i` itself).
-fn packed_f64_loop_fact_for_index(
-    ctx: &FnCtx<'_>,
-    arr_id: u32,
-    index: &Expr,
-) -> Option<(PackedF64LoopFact, u32, i32)> {
-    let (idx_id, offset) = packed_f64_loop_index_parts(index)?;
-    let fact = packed_f64_loop_fact(ctx, arr_id, idx_id)?;
-    if offset != 0 && !fact.allow_holes && !fact.window_validated {
-        return None;
-    }
-    Some((fact, idx_id, offset))
-}
-
-/// Load the packed-loop counter's i32 shadow slot and apply the constant
-/// index offset.
-fn load_packed_loop_index_i32(ctx: &mut FnCtx<'_>, i32_slot: &str, offset: i32) -> String {
-    let idx_i32 = ctx.block().load(I32, i32_slot);
-    match offset.cmp(&0) {
-        std::cmp::Ordering::Equal => idx_i32,
-        std::cmp::Ordering::Greater => ctx.block().add(I32, &idx_i32, &offset.to_string()),
-        std::cmp::Ordering::Less => ctx.block().sub(I32, &idx_i32, &(-offset).to_string()),
-    }
-}
-
 fn numeric_index_has_loop_array_index_proof(ctx: &FnCtx<'_>, object: &Expr, index: &Expr) -> bool {
     let Expr::LocalGet(arr_id) = object else {
         return false;
@@ -802,7 +779,21 @@ pub(crate) fn lower_numeric_index_get_for_number_context(
                 let arr_box = lower_expr(ctx, object)?;
                 let idx_i32 = load_packed_loop_index_i32(ctx, &i32_slot, offset);
                 return Ok(Some(lower_packed_f64_loop_index_get(
-                    ctx, *arr_id, &arr_box, &idx_i32, &fact,
+                    ctx, *arr_id, &arr_box, &idx_i32, &fact, false,
+                )));
+            }
+        }
+        // The same clone, read at an index that is NOT its counter: an
+        // enclosing loop's i32 counter, admitted by
+        // `is_packed_f64_loop_foreign_read_index` for read-only bodies. The
+        // guard already proved this receiver's packed layout, so the element
+        // load is the clone's raw slot load behind one inline bounds check.
+        if let Some((fact, idx_id)) = foreign_packed_loop_read(ctx, *arr_id, index.as_ref()) {
+            if let Some(i32_slot) = ctx.i32_counter_slots.get(&idx_id).cloned() {
+                let arr_box = lower_expr(ctx, object)?;
+                let idx_i32 = ctx.block().load(I32, &i32_slot);
+                return Ok(Some(lower_packed_f64_loop_index_get(
+                    ctx, *arr_id, &arr_box, &idx_i32, &fact, true,
                 )));
             }
         }
@@ -1667,7 +1658,18 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
                             let arr_box = lower_expr(ctx, object)?;
                             let idx_i32 = load_packed_loop_index_i32(ctx, &i32_slot, offset);
                             return Ok(lower_packed_f64_loop_index_get(
-                                ctx, *arr_id, &arr_box, &idx_i32, &fact,
+                                ctx, *arr_id, &arr_box, &idx_i32, &fact, false,
+                            ));
+                        }
+                    }
+                    if let Some((fact, idx_id)) =
+                        foreign_packed_loop_read(ctx, *arr_id, index.as_ref())
+                    {
+                        if let Some(i32_slot) = ctx.i32_counter_slots.get(&idx_id).cloned() {
+                            let arr_box = lower_expr(ctx, object)?;
+                            let idx_i32 = ctx.block().load(I32, &i32_slot);
+                            return Ok(lower_packed_f64_loop_index_get(
+                                ctx, *arr_id, &arr_box, &idx_i32, &fact, true,
                             ));
                         }
                     }

@@ -18,6 +18,8 @@
 
 use anyhow::Result;
 
+use perry_hir::Expr;
+
 use crate::nanbox::POINTER_MASK_I64;
 use crate::native_value::{
     BoundsState, BufferAccessMode, LoweredValue, MaterializationReason, NativeRep, SemanticKind,
@@ -523,15 +525,93 @@ pub(super) fn packed_f64_loop_fact(
         .cloned()
 }
 
+/// An active packed-loop fact for `arr_id` plus a foreign i32 index local:
+/// `arr[i]` where `i` is not the clone's counter. Declines a fact that already
+/// carries its own per-element exit condition (holes, a validated window), so
+/// the bounds-checked load never stacks two side exits on one read.
+pub(super) fn foreign_packed_loop_read(
+    ctx: &FnCtx<'_>,
+    arr_id: u32,
+    index: &Expr,
+) -> Option<(PackedF64LoopFact, u32)> {
+    let Expr::LocalGet(idx_id) = index else {
+        return None;
+    };
+    if !ctx.i32_counter_slots.contains_key(idx_id) || !ctx.integer_locals.contains(idx_id) {
+        return None;
+    }
+    let fact = ctx
+        .packed_f64_loop_facts
+        .iter()
+        .rev()
+        .find(|fact| {
+            fact.array_local_id == arr_id
+                && fact.index_local_id != *idx_id
+                && !fact.allow_holes
+                && !fact.window_validated
+        })?
+        .clone();
+    Some((fact, *idx_id))
+}
+
+pub(super) fn packed_f64_loop_fact_for_index(
+    ctx: &FnCtx<'_>,
+    arr_id: u32,
+    index: &Expr,
+) -> Option<(PackedF64LoopFact, u32, i32)> {
+    let (idx_id, offset) = super::packed_f64_loop_index_parts(index)?;
+    let fact = packed_f64_loop_fact(ctx, arr_id, idx_id)?;
+    if offset != 0 && !fact.allow_holes && !fact.window_validated {
+        return None;
+    }
+    Some((fact, idx_id, offset))
+}
+
+/// Load the packed-loop counter's i32 shadow slot and apply the constant
+/// index offset.
+pub(super) fn load_packed_loop_index_i32(
+    ctx: &mut FnCtx<'_>,
+    i32_slot: &str,
+    offset: i32,
+) -> String {
+    let idx_i32 = ctx.block().load(I32, i32_slot);
+    match offset.cmp(&0) {
+        std::cmp::Ordering::Equal => idx_i32,
+        std::cmp::Ordering::Greater => ctx.block().add(I32, &idx_i32, &offset.to_string()),
+        std::cmp::Ordering::Less => ctx.block().sub(I32, &idx_i32, &(-offset).to_string()),
+    }
+}
+
 pub(super) fn lower_packed_f64_loop_index_get(
     ctx: &mut FnCtx<'_>,
     arr_id: u32,
     arr_box: &str,
     idx_i32: &str,
     fact: &PackedF64LoopFact,
+    bounds_check: bool,
 ) -> String {
     let guard_id = fact.guard_id.as_str();
     let array_kind = fact.array_kind;
+    // A foreign index carries no in-range proof from the loop bound, so test it
+    // against the live length (`ArrayHeader.length`, i32 at offset 0 — the same
+    // word `expr/index.rs`'s store guard reads) and take the fact's side exit
+    // when it fails. One compare and a never-taken branch, against the
+    // typed-feedback guard CALL plus boxed fallback this replaces.
+    if bounds_check {
+        let in_bounds = {
+            let blk = ctx.block();
+            let arr_bits = blk.bitcast_double_to_i64(arr_box);
+            let arr_handle = blk.and(I64, &arr_bits, POINTER_MASK_I64);
+            let arr_ptr = blk.inttoptr(I64, &arr_handle);
+            let length = blk.load(I32, &arr_ptr);
+            blk.icmp_ult(I32, idx_i32, &length)
+        };
+        let cont_idx = ctx.new_block("packed_f64_loop.foreign.inbounds");
+        let cont_label = ctx.block_label(cont_idx);
+        ctx.block()
+            .cond_br(&in_bounds, &cont_label, &fact.store_side_exit_label);
+        ctx.current_block = cont_idx;
+    }
     let value = {
         let blk = ctx.block();
         let arr_bits = blk.bitcast_double_to_i64(arr_box);
