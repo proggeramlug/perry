@@ -482,22 +482,52 @@ mod descriptor_tests_8067 {
         let clean = SHAPE_ID_CLEAN_END - 1;
         let holed = clean | SHAPE_ID_HOLED_BIT;
         assert!(is_shape_id(holed));
-        assert!(shape_id_is_holed(holed));
-        assert!(!shape_id_is_holed(clean));
+        assert!(shape_id_is_dictionary(holed));
+        assert!(!shape_id_is_dictionary(clean));
         assert!(holed < SHAPE_ID_END);
     }
 
     #[test]
-    fn holed_publish_mints_a_holed_id() {
+    fn dictionary_publish_mints_a_banded_id() {
         let _lock = crate::gc::global_side_table_test_lock();
         let keys = 0x9064_0000_0000_2000usize as *const ArrayHeader;
         let clean = shape_descriptor_ensure_with_holes(keys, 4, 4, 77, ShapeObjectKind::Ordinary, 0)
             .expect("clean mint");
+        // Holes alone never leave the clean band — only the Dictionary kind does.
         let holed = shape_descriptor_ensure_with_holes(keys, 4, 4, 78, ShapeObjectKind::Ordinary, 1)
             .expect("holed mint");
-        assert!(!shape_id_is_holed(clean));
-        assert!(shape_id_is_holed(holed));
-        assert!(is_shape_id(holed));
+        let dict = shape_descriptor_ensure_with_holes(keys, 4, 4, 79, ShapeObjectKind::Dictionary, 1)
+            .expect("dictionary mint");
+        assert!(!shape_id_is_dictionary(clean));
+        assert!(!shape_id_is_dictionary(holed));
+        assert!(shape_id_is_dictionary(dict));
+        assert!(is_shape_id(dict));
+        assert_eq!(shape_object_kind_by_id(dict), Some(ShapeObjectKind::Dictionary));
+        assert_eq!(shape_object_kind_by_id(holed), Some(ShapeObjectKind::Ordinary));
+    }
+
+    #[test]
+    fn dictionary_descriptor_updates_in_place() {
+        let _lock = crate::gc::global_side_table_test_lock();
+        let keys = 0x9064_0000_0000_3000usize as *const ArrayHeader;
+        let dict = shape_descriptor_ensure_with_holes(keys, 4, 4, 80, ShapeObjectKind::Dictionary, 0)
+            .expect("dictionary mint");
+        let ordinary = shape_descriptor_ensure_with_holes(keys, 4, 4, 81, ShapeObjectKind::Ordinary, 0)
+            .expect("ordinary mint");
+        // Only Dictionary ids may change facts under a stable id.
+        assert!(!update_dictionary_descriptor_in_place(ordinary, None, Some(9), None));
+        assert!(update_dictionary_descriptor_in_place(dict, None, Some(6), Some(2)));
+        let d = shape_descriptor_by_id(dict).expect("still resolvable");
+        assert_eq!(d.logical_key_count, 6);
+        assert_eq!(d.hole_count, 2);
+        assert_eq!(d.object_kind, ShapeObjectKind::Dictionary);
+        // A keys realloc re-keys the keys index under the same id.
+        let grown = 0x9064_0000_0000_4000u64;
+        assert!(update_dictionary_descriptor_in_place(dict, Some(grown), Some(7), None));
+        let d = shape_descriptor_by_id(dict).expect("still resolvable after grow");
+        assert_eq!(d.keys, grown);
+        assert_eq!(d.logical_key_count, 7);
+        assert_eq!(shape_descriptor_by_id(ordinary).map(|d| d.logical_key_count), Some(4));
     }
 
     #[test]

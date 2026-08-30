@@ -37,7 +37,8 @@ mod shapes_slot_list;
 pub(crate) use shapes_slot_list::shape_descriptor_keys_slot;
 pub(crate) use shapes_slot_list::shape_id_owns_keys_slot;
 pub(crate) use shapes_slot_list::{
-    object_shape_hole_count, publish_object_shape_holes, record_shape_scan_outcome,
+    bump_object_shape_holes_in_place, object_shape_hole_count, publish_object_shape_dictionary,
+    publish_object_shape_holes, record_shape_scan_outcome,
     shape_index_migrate_after_delete, shape_index_shift_in_place, SlotList,
 };
 
@@ -151,6 +152,14 @@ impl Eq for ShapeDescriptor {}
 pub(crate) enum ShapeObjectKind {
     Ordinary,
     Class,
+    /// #9064: a churned object (first tombstone squeeze) whose id is a
+    /// per-object SENTINEL that never changes again: deletes bump the hole
+    /// count in place, appends update the descriptor in place, and every
+    /// slot-based fast path / IC primer refuses the kind (fail-closed by the
+    /// existing `== Ordinary` gates), so nothing ever needs retiring. Keeps
+    /// the ordinary keys/slots layout — only the per-op publish/mint/retire
+    /// and IC priming disappear.
+    Dictionary,
 }
 
 /// Per-agent direct cache for the immutable `object_kind` half of a ShapeId.
@@ -161,6 +170,7 @@ pub(crate) const SHAPE_KIND_CACHE_SIZE: usize = 16_384;
 const SHAPE_KIND_CACHE_MASK: usize = SHAPE_KIND_CACHE_SIZE - 1;
 const SHAPE_KIND_ORDINARY: u64 = 1;
 const SHAPE_KIND_CLASS: u64 = 2;
+const SHAPE_KIND_DICTIONARY: u64 = 3;
 
 #[inline(always)]
 fn shape_kind_cache_slot(shape_id: u32) -> usize {
@@ -178,6 +188,7 @@ fn cached_shape_object_kind(shape_id: u32) -> Option<ShapeObjectKind> {
     match packed & 0xFFFF_FFFF {
         SHAPE_KIND_ORDINARY => Some(ShapeObjectKind::Ordinary),
         SHAPE_KIND_CLASS => Some(ShapeObjectKind::Class),
+        SHAPE_KIND_DICTIONARY => Some(ShapeObjectKind::Dictionary),
         _ => None,
     }
 }
@@ -188,6 +199,7 @@ fn publish_shape_object_kind(shape_id: u32, kind: ShapeObjectKind) {
     let tag = match kind {
         ShapeObjectKind::Ordinary => SHAPE_KIND_ORDINARY,
         ShapeObjectKind::Class => SHAPE_KIND_CLASS,
+        ShapeObjectKind::Dictionary => SHAPE_KIND_DICTIONARY,
     };
     cache[shape_kind_cache_slot(shape_id)] = (u64::from(shape_id) << 32) | tag;
 }
@@ -409,6 +421,49 @@ fn sync_descriptor_reverse_indices(inner: &mut ShapeTableInner, id: u32) {
     }
 }
 
+/// #9064: mutate a Dictionary-kind descriptor in place (keys pointer after a
+/// grow-realloc, logical key count after an append, hole count after a
+/// delete) and re-key both reverse indices. Only Dictionary ids may change
+/// facts under a stable id — every other kind mints a successor.
+pub(crate) fn update_dictionary_descriptor_in_place(
+    id: u32,
+    keys: Option<u64>,
+    logical_key_count: Option<u32>,
+    hole_count: Option<u32>,
+) -> bool {
+    if !shape_id_is_dictionary(id) {
+        return false;
+    }
+    let mut inner = crate::state::state().shapes.inner.borrow_mut();
+    let Some(old) = inner.descriptors.get(&id).map(|record| **record) else {
+        return false;
+    };
+    let old_facts = descriptor_facts(old);
+    let old_keys = old.keys;
+    let mut new = old;
+    if let Some(k) = keys {
+        new.keys = k;
+        new.indexed_keys = k;
+    }
+    if let Some(c) = logical_key_count {
+        new.logical_key_count = c;
+    }
+    if let Some(h) = hole_count {
+        new.hole_count = h;
+    }
+    let new_facts = descriptor_facts(new);
+    remove_descriptor_id_from_facts_index(&mut inner, old_facts, id);
+    insert_descriptor_id_sorted(inner.ids_by_facts.entry(new_facts).or_default(), id);
+    if old_keys != new.keys {
+        remove_descriptor_id_from_keys_index(&mut inner, old_keys, id);
+        insert_descriptor_id_sorted(inner.ids_by_keys.entry(new.keys).or_default(), id);
+    }
+    if let Some(record) = inner.descriptors.get_mut(&id) {
+        **record = new;
+    }
+    true
+}
+
 fn remove_descriptor_and_reverse_indices(inner: &mut ShapeTableInner, id: u32) {
     // The record's box is about to be dropped; any cached way naming it must
     // stop matching.
@@ -441,13 +496,16 @@ pub(crate) const SHAPE_ID_END: u32 = 0xC000_0000;
 /// validate cached slots by key-cell content instead of retiring every way
 /// per delete.
 pub(crate) const SHAPE_ID_HOLED_BIT: u32 = 0x2000_0000;
+/// Same bit, final semantics: a DICTIONARY-kind id. See `ShapeObjectKind::Dictionary`.
+pub(crate) const SHAPE_ID_DICTIONARY_BIT: u32 = SHAPE_ID_HOLED_BIT;
+
+#[inline]
+pub(crate) fn shape_id_is_dictionary(id: u32) -> bool {
+    is_shape_id(id) && (id & SHAPE_ID_DICTIONARY_BIT) != 0
+}
 /// Exclusive mint ceiling for CLEAN ids (2^29 ids — still unreachable).
 pub(crate) const SHAPE_ID_CLEAN_END: u32 = 0xA000_0000;
 
-#[inline]
-pub(crate) fn shape_id_is_holed(id: u32) -> bool {
-    is_shape_id(id) && (id & SHAPE_ID_HOLED_BIT) != 0
-}
 
 /// #6759 C3c: PROCESS-GLOBAL allocator (supersedes the per-thread counter
 /// C3a landed with). Global uniqueness matters because the worker
@@ -570,8 +628,10 @@ pub(crate) fn shape_descriptor_ensure_with_holes(
     // IC tokens self-describe tombstone presence. The clean mint below never
     // reaches the upper half of the band, so the OR cannot alias a clean id.
     let id = alloc_shape_id().map_err(|_| ShapeDescriptorError::IdExhausted)?;
-    let id = if hole_count > 0 {
-        id | SHAPE_ID_HOLED_BIT
+    // Dictionary-kind ids carry the band bit so every token compare and
+    // `shape_object_kind_by_id` can classify them from the VALUE alone.
+    let id = if object_kind == ShapeObjectKind::Dictionary {
+        id | SHAPE_ID_DICTIONARY_BIT
     } else {
         id
     };
@@ -731,6 +791,12 @@ fn invalidate_shape_lookup_cache() {
 /// subsequent observations avoid the hot ShapeId HashMap borrow.
 #[inline]
 pub(crate) fn shape_object_kind_by_id(shape_id: u32) -> Option<ShapeObjectKind> {
+    // A Dictionary-kind id is self-describing (bit 29): every `== Ordinary`
+    // gate refuses it without a table lookup — the fail-closed lever that
+    // keeps ICs, transition caches, and slot fast paths off churned objects.
+    if shape_id_is_dictionary(shape_id) {
+        return Some(ShapeObjectKind::Dictionary);
+    }
     if let Some(kind) = cached_shape_object_kind(shape_id) {
         return Some(kind);
     }

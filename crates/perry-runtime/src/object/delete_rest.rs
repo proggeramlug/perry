@@ -366,7 +366,15 @@ pub extern "C" fn js_object_delete_field(
             let holes = super::shapes::object_shape_hole_count(obj);
             let threshold_hit = key_count >= 16 && (holes + 1) * 2 > key_count as u32;
             if !threshold_hit {
-                let successor = super::shapes::publish_object_shape_holes(obj, holes + 1);
+                // #9064: a Dictionary-kind receiver keeps its id — bump the
+                // hole count in place. Nothing is primed on the id, so there
+                // is nothing to retire.
+                let successor = if super::shapes::bump_object_shape_holes_in_place(obj, holes + 1)
+                {
+                    (*obj).parent_class_id
+                } else {
+                    super::shapes::publish_object_shape_holes(obj, holes + 1)
+                };
                 if successor != 0 {
                     let elements = (keys as *mut u8).add(std::mem::size_of::<crate::ArrayHeader>())
                         as *mut f64;
@@ -1151,6 +1159,18 @@ mod sso_tests_1781 {
 /// Gate for O(1) tombstone deletes (`PERRY_OBJECT_TOMBSTONES=1`). Default OFF
 /// while the walker audit and differentials bake; the sibling Map tombstones
 /// (#9020) shipped default-on after the same sequence.
+/// #9064: churned objects flip to `ShapeObjectKind::Dictionary` at their
+/// first tombstone squeeze. Default OFF while the mode is A/B'd; `=1` opts in.
+pub(crate) fn object_dictionary_mode_enabled() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_OBJECT_DICTIONARY_MODE").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
 fn object_tombstone_deletes_enabled() -> bool {
     // Test override first: the OnceLock latches at the FIRST delete anywhere
     // in the test process, which is long before a tombstone test's own
@@ -1266,6 +1286,13 @@ unsafe fn squeeze_holes_and_delete(
     // zero for an ordinary receiver, the structural reserved floor (#9019)
     // for an iterator-family one.
     crate::object::shapes::shape_drop(keys);
-    super::shapes::publish_object_shape_holes(obj, floor as u32);
+    // #9064: the first squeeze is the churn signal — under dictionary mode
+    // the receiver flips kind here (its last mint); later deletes/appends
+    // update that descriptor in place.
+    if object_dictionary_mode_enabled() {
+        super::shapes::publish_object_shape_dictionary(obj, floor as u32);
+    } else {
+        super::shapes::publish_object_shape_holes(obj, floor as u32);
+    }
     set_object_live_slot_count(obj, std::cmp::min(out, alloc_limit) as u32);
 }

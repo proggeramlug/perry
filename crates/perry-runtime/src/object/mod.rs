@@ -833,6 +833,9 @@ fn transition_cache_lookup(
     prev_shape_id: u32,
     interned_key: *const crate::StringHeader,
 ) -> Option<(usize, u32, u32)> {
+    if shapes::shape_id_is_dictionary(prev_shape_id) {
+        return None;
+    }
     let kp = interned_key as usize;
     let slot = transition_cache_slot(prev_shape_id, kp);
     let entry = with_transition_cache(|t| unsafe { (*t)[slot] });
@@ -892,7 +895,7 @@ fn transition_cache_insert(
     slot_idx: u32,
     target_shape_id: u32,
 ) {
-    if next_keys == 0 {
+    if next_keys == 0 || shapes::shape_id_is_dictionary(prev_shape_id) {
         return;
     }
     let kp = interned_key as usize;
@@ -1796,6 +1799,28 @@ unsafe fn set_object_keys_array_with_live(
         // lookup publish an Ordinary descriptor for a class object; the
         // structural synchronization below then inherited the wrong kind.
         mark_object_dynamic_shape_unknown(obj);
+    }
+    // #9064: a Dictionary-kind receiver's append (possibly a grow-realloc)
+    // updates its stable descriptor in place instead of minting a successor.
+    if let Some(pred) = predecessor {
+        if pred.object_kind == shapes::ShapeObjectKind::Dictionary {
+            let count = if keys_array.is_null() {
+                0
+            } else {
+                crate::array::keys_array_len_capped_to_capacity(keys_array) as u32
+            };
+            if shapes::update_dictionary_descriptor_in_place(
+                (*obj).parent_class_id,
+                Some(keys_array as u64),
+                Some(count),
+                None,
+            ) {
+                if keys_changed {
+                    shapes::shape_keys_grown(pred.keys as usize, keys_array);
+                }
+                return;
+            }
+        }
     }
     // #8067/#8113: every visible ShapeId resolves to the exact rooted
     // ordered-keys/live-slot descriptor. Same-pointer appends are versioned

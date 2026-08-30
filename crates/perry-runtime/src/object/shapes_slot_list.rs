@@ -276,6 +276,63 @@ pub(crate) unsafe fn publish_object_shape_holes(
     id
 }
 
+/// #9064: flip a churned receiver to `ShapeObjectKind::Dictionary` — one
+/// last mint (bit-29 id, kind Dictionary) after which the object's id never
+/// changes: deletes and appends update this descriptor IN PLACE.
+pub(crate) unsafe fn publish_object_shape_dictionary(
+    obj: *mut crate::object::ObjectHeader,
+    hole_count: u32,
+) -> u32 {
+    if obj.is_null() || !super::shape_word_is_writable(obj) {
+        return 0;
+    }
+    let Some(current) = super::object_shape_descriptor(obj) else {
+        return 0;
+    };
+    let generation = super::SHAPE_SEMANTIC_NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    if generation == 0 {
+        super::shape_id_exhausted_abort();
+    }
+    let keys_ptr = current.keys as usize as *mut super::ArrayHeader;
+    let logical_key_count = crate::array::keys_array_len_capped_to_capacity(keys_ptr) as u32;
+    let id = super::publish_shape_result(super::shape_descriptor_ensure_with_holes(
+        keys_ptr,
+        logical_key_count,
+        current.live_inline_slot_count,
+        generation,
+        super::ShapeObjectKind::Dictionary,
+        hole_count,
+    ));
+    (*obj).parent_class_id = id;
+    {
+        let mut inner = crate::state::state().shapes.inner.borrow_mut();
+        let stale: Vec<u32> = inner
+            .ids_by_keys
+            .get(&(current.keys))
+            .map(|ids| ids.iter().copied().filter(|&other| other != id).collect())
+            .unwrap_or_default();
+        for other in stale {
+            super::remove_descriptor_and_reverse_indices(&mut inner, other);
+        }
+    }
+    super::debug_assert_object_shape_parity(obj);
+    id
+}
+
+/// #9064: a Dictionary-kind receiver's delete bumps its descriptor's hole
+/// count IN PLACE — same id, no mint, no retirement (nothing primed on it).
+/// Re-keys the facts index so a later structural ensure cannot alias it.
+pub(crate) unsafe fn bump_object_shape_holes_in_place(
+    obj: *mut crate::object::ObjectHeader,
+    hole_count: u32,
+) -> bool {
+    let id = (*obj).parent_class_id;
+    if !super::shape_id_is_dictionary(id) {
+        return false;
+    }
+    super::update_dictionary_descriptor_in_place(id, None, None, Some(hole_count))
+}
+
 /// Install a process-global id into this agent's local descriptor table.
 /// Module globals are initialized once per process, while workers own distinct
 /// runtime state and moving keys pointers. Global id uniqueness makes a local
