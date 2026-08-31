@@ -556,7 +556,7 @@ pub(crate) fn shape_id_for_keys_ensure(keys: *const ArrayHeader, key_count: u32)
 /// field through the record pointer instead. Same lookup, same validation,
 /// four bytes instead of forty-eight.
 #[inline]
-fn shape_descriptor_field_by_id<T>(
+pub(crate) fn shape_descriptor_field_by_id<T>(
     shape_id: u32,
     read: impl Fn(&ShapeDescriptor) -> T,
 ) -> Option<T> {
@@ -1424,6 +1424,27 @@ pub(crate) unsafe fn object_shape_descriptor(
     obj: *const crate::object::ObjectHeader,
 ) -> Option<ShapeDescriptor> {
     shape_descriptor_by_id(object_shape_stamp(obj))
+}
+
+/// One or a few FIELDS of a genuine shaped object's descriptor, without
+/// lifting the whole record — the per-object spelling of
+/// [`shape_descriptor_field_by_id`]. `read` must be a plain field projection
+/// (a field or a small tuple of fields): on the way-cache hit arm it runs
+/// against the table's boxed record, so it must not re-enter the shape table
+/// or allocate.
+///
+/// An exact-count uprobe attribution of `cc --help` measured 3.10M
+/// `shape_descriptor_by_id` calls per run, the majority from callers that
+/// consumed one or two fields of the ~56-byte copy (`object_keys_array`
+/// alone: every own-key probe, the by-name get/set tails, the URLSearchParams
+/// shape screen). This accessor is how those callers read just the bytes
+/// they use.
+#[inline]
+pub(crate) unsafe fn object_shape_field<T>(
+    obj: *const crate::object::ObjectHeader,
+    read: impl Fn(&ShapeDescriptor) -> T,
+) -> Option<T> {
+    shape_descriptor_field_by_id(object_shape_stamp(obj), read)
 }
 
 #[inline]

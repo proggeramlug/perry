@@ -1521,8 +1521,11 @@ pub struct ObjectHeader {
 /// complete descriptor.
 #[inline]
 pub(crate) unsafe fn object_keys_array(obj: *const ObjectHeader) -> *mut ArrayHeader {
-    shapes::object_shape_descriptor(obj)
-        .map(|descriptor| descriptor.keys as usize as *mut ArrayHeader)
+    // One FIELD, not the whole record: this is the single hottest consumer of
+    // the shape table (see `shapes::object_shape_field`), and it throws away
+    // everything but the 8-byte keys edge.
+    shapes::object_shape_field(obj, |descriptor| descriptor.keys)
+        .map(|keys| keys as usize as *mut ArrayHeader)
         .unwrap_or(std::ptr::null_mut())
 }
 

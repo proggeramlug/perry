@@ -73,13 +73,21 @@ pub(crate) unsafe fn try_existing_own_data_overwrite(
     // ordinary-object discriminator and the live-slot bound used below.
     // `object_is_regular` followed by `object_live_slot_count` repeated both
     // the allocator classification and this ShapeId table lookup.
-    let Some(shape) = crate::object::shapes::object_shape_descriptor(obj) else {
+    // ONE probe, three fields — this read both the full descriptor (kind +
+    // live bound) and, a few lines later, `object_keys_array` (a second full
+    // lift for the keys edge). Nothing between the two reads can change the
+    // shape (pure header/key inspections), so a single field probe serves
+    // both.
+    let Some((shape_kind, live_slots, keys_bits)) =
+        crate::object::shapes::object_shape_field(obj, |d| {
+            (d.object_kind, d.live_inline_slot_count, d.keys)
+        })
+    else {
         return false;
     };
-    if shape.object_kind != crate::object::shapes::ShapeObjectKind::Ordinary {
+    if shape_kind != crate::object::shapes::ShapeObjectKind::Ordinary {
         return false;
     }
-    let live_slots = shape.live_inline_slot_count;
 
     let Some(key_gc) = crate::value::addr_class::try_read_gc_header(key_addr) else {
         return false;
@@ -91,7 +99,7 @@ pub(crate) unsafe fn try_existing_own_data_overwrite(
         return false;
     }
 
-    let keys = crate::object::object_keys_array(obj);
+    let keys = keys_bits as usize as *mut ArrayHeader;
     let keys_addr = keys as usize;
     if keys.is_null() || (keys_addr as u64) >> 48 != 0 {
         return false;

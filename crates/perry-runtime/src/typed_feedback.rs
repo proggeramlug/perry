@@ -1797,13 +1797,19 @@ fn object_key_matches_field(
     }
     unsafe {
         let obj = object_addr as *mut ObjectHeader;
-        let Some(descriptor) = crate::object::shapes::object_shape_descriptor(obj) else {
+        // Two fields, not the ~56-byte record: this runs inside every
+        // typed-feedback class-field guard validation.
+        let Some((keys_bits, live_inline_slot_count)) =
+            crate::object::shapes::object_shape_field(obj, |d| {
+                (d.keys, d.live_inline_slot_count)
+            })
+        else {
             return false;
         };
-        if field_index >= descriptor.live_inline_slot_count {
+        if field_index >= live_inline_slot_count {
             return false;
         }
-        let keys = descriptor.keys as usize as *const ArrayHeader;
+        let keys = keys_bits as usize as *const ArrayHeader;
         if keys.is_null() {
             return false;
         }

@@ -484,9 +484,12 @@ pub fn is_class_object_ptr(ptr: *const u8) -> bool {
         };
         header.obj_type == crate::gc::GC_TYPE_OBJECT
             && header.gc_flags & crate::gc::GC_FLAG_FORWARDED == 0
-            && crate::object::shapes::object_shape_descriptor(ptr.cast()).is_some_and(|shape| {
-                shape.object_kind == crate::object::shapes::ShapeObjectKind::Class
-            })
+            // One field (`object_kind`), not the ~56-byte record: `typeof` /
+            // `new` / `instanceof` route every candidate through here — it was
+            // the single largest caller of the copying descriptor lookup on
+            // `cc --help` (366k of 3.10M calls).
+            && crate::object::shapes::object_shape_field(ptr.cast(), |shape| shape.object_kind)
+                .is_some_and(|kind| kind == crate::object::shapes::ShapeObjectKind::Class)
     }
 }
 
