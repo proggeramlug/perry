@@ -702,19 +702,28 @@ pub extern "C" fn js_object_get_field_ic_miss(
         // take the kind, the keys edge, the key count and the live bound from
         // it — this path used to probe three times (regularity, the
         // descriptor, then `object_shape_id` for the PIC token).
+        // Four fields, not the ~56-byte record (the probe count is unchanged —
+        // still the ONE probe #8122 established).
         let shape = if is_object {
             let gc_header =
                 (obj as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
             if (*gc_header).gc_flags & crate::gc::GC_FLAG_FORWARDED == 0 {
-                crate::object::shapes::object_shape_descriptor(obj)
+                crate::object::shapes::object_shape_field(obj, |d| {
+                    (
+                        d.object_kind,
+                        d.keys,
+                        d.logical_key_count,
+                        d.live_inline_slot_count,
+                    )
+                })
             } else {
                 None
             }
         } else {
             None
         };
-        let is_regular = shape.is_some_and(|shape| {
-            shape.object_kind == crate::object::shapes::ShapeObjectKind::Ordinary
+        let is_regular = shape.is_some_and(|(object_kind, _, _, _)| {
+            object_kind == crate::object::shapes::ShapeObjectKind::Ordinary
         });
         // Descriptor-bearing receivers ordinarily must not prime a raw-load
         // PIC. One narrow exception is an object-backed Array subclass whose
@@ -724,18 +733,20 @@ pub extern "C" fn js_object_get_field_ic_miss(
         // owner-authorized, and every descriptor/structural transition clears
         // the owner's token before publication.
         if is_regular {
-            let Some(shape) = shape else {
+            let Some((_, shape_keys, shape_logical_key_count, shape_live_inline_slot_count)) =
+                shape
+            else {
                 let value = js_object_get_field_by_name(obj, key);
                 return f64::from_bits(value.bits());
             };
-            let keys = shape.keys as usize as *mut crate::array::ArrayHeader;
+            let keys = shape_keys as usize as *mut crate::array::ArrayHeader;
             if keys.is_null() || (keys as usize) <= 0x10000 {
                 let value = js_object_get_field_by_name(obj, key);
                 return f64::from_bits(value.bits());
             }
-            let key_count = shape.logical_key_count as usize;
+            let key_count = shape_logical_key_count as usize;
             let keys_data = (keys as *const u8).add(8) as *const f64;
-            let alloc_limit = shape.live_inline_slot_count as usize;
+            let alloc_limit = shape_live_inline_slot_count as usize;
             for i in 0..key_count {
                 let k_bits = (*keys_data.add(i)).to_bits();
                 let k_ptr = (k_bits & 0x0000_FFFF_FFFF_FFFF) as *const crate::StringHeader;

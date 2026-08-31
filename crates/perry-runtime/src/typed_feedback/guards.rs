@@ -293,20 +293,31 @@ fn class_field_get_contract(
 
         let obj = object_addr as *mut ObjectHeader;
         let class_id = (*obj).class_id;
-        let shape_id = crate::object::shapes::object_shape_id(obj);
-        let shape_addr = shape_id as usize;
-        let Some(descriptor) = crate::object::shapes::shape_descriptor_by_id(shape_id) else {
-            return (shape_addr, class_id, gc_type, false);
+        // ONE table probe, two fields. This was `object_shape_id` (a full
+        // descriptor lift discarded for an existence bit) followed by
+        // `shape_descriptor_by_id` (a second full lift for two fields).
+        // `object_shape_id` returns 0 exactly when the stamp's descriptor is
+        // absent, and the second lookup of that 0 then failed — so a single
+        // failed field probe reproduces the (0, class_id, gc_type, false)
+        // result bit-for-bit.
+        let shape_id = crate::object::shapes::object_shape_stamp(obj);
+        let Some((keys_bits, live_inline_slot_count)) =
+            crate::object::shapes::object_shape_field(obj, |d| {
+                (d.keys, d.live_inline_slot_count)
+            })
+        else {
+            return (0, class_id, gc_type, false);
         };
+        let shape_addr = shape_id as usize;
         let key_name = match key_as_str(key) {
             Some(name) => name,
             None => return (shape_addr, class_id, gc_type, false),
         };
-        let keys = descriptor.keys as usize as *const ArrayHeader;
+        let keys = keys_bits as usize as *const ArrayHeader;
         let valid = crate::object::object_is_regular(obj)
             && class_id == expected_class_id
             && shape_id == expected_shape_id
-            && expected_field_index < descriptor.live_inline_slot_count
+            && expected_field_index < live_inline_slot_count
             && plain_array_index_guard(keys, expected_field_index, true)
             && object_key_matches_field(obj, key, expected_field_index)
             && class_field_raw_f64_layout_contract(
@@ -573,20 +584,27 @@ fn class_field_set_contract(
 
         let obj = object_addr as *mut ObjectHeader;
         let class_id = (*obj).class_id;
-        let shape_id = crate::object::shapes::object_shape_id(obj);
-        let shape_addr = shape_id as usize;
-        let Some(descriptor) = crate::object::shapes::shape_descriptor_by_id(shape_id) else {
-            return (shape_addr, class_id, gc_type, false);
+        // ONE table probe, two fields — same merge as `class_field_get_contract`
+        // above (the failed-probe result is bit-for-bit the old
+        // `object_shape_id == 0` path).
+        let shape_id = crate::object::shapes::object_shape_stamp(obj);
+        let Some((keys_bits, live_inline_slot_count)) =
+            crate::object::shapes::object_shape_field(obj, |d| {
+                (d.keys, d.live_inline_slot_count)
+            })
+        else {
+            return (0, class_id, gc_type, false);
         };
+        let shape_addr = shape_id as usize;
         let key_name = match key_as_str(key) {
             Some(name) => name,
             None => return (shape_addr, class_id, gc_type, false),
         };
-        let keys = descriptor.keys as usize as *const ArrayHeader;
+        let keys = keys_bits as usize as *const ArrayHeader;
         let valid = class_id == expected_class_id
             && crate::object::object_is_regular(obj)
             && shape_id == expected_shape_id
-            && expected_field_index < descriptor.live_inline_slot_count
+            && expected_field_index < live_inline_slot_count
             && plain_array_index_guard(keys, expected_field_index, true)
             && object_key_matches_field(obj, key, expected_field_index)
             && (!require_raw_f64

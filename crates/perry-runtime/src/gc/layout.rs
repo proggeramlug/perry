@@ -760,10 +760,9 @@ pub(crate) fn layout_note_slot(parent_user: usize, slot_index: usize, value_bits
             {
                 let object = parent_user as *const crate::object::ObjectHeader;
                 // #8113: 0, not a second (eager) descriptor probe. This is
-                // `layout_note_slot`, i.e. every object field store.
-                let live_slots = crate::object::shapes::object_shape_descriptor(object)
-                    .map(|descriptor| descriptor.live_inline_slot_count as usize)
-                    .unwrap_or(0);
+                // `layout_note_slot`, i.e. every object field store — read the
+                // one field it needs, not the ~56-byte record.
+                let live_slots = crate::object::object_live_slot_count(object) as usize;
                 if slot_index < live_slots {
                     return;
                 }
