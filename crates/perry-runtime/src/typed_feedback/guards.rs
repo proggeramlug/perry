@@ -302,9 +302,7 @@ fn class_field_get_contract(
         // result bit-for-bit.
         let shape_id = crate::object::shapes::object_shape_stamp(obj);
         let Some((keys_bits, live_inline_slot_count)) =
-            crate::object::shapes::object_shape_field(obj, |d| {
-                (d.keys, d.live_inline_slot_count)
-            })
+            crate::object::shapes::object_shape_field(obj, |d| (d.keys, d.live_inline_slot_count))
         else {
             return (0, class_id, gc_type, false);
         };
@@ -589,9 +587,7 @@ fn class_field_set_contract(
         // `object_shape_id == 0` path).
         let shape_id = crate::object::shapes::object_shape_stamp(obj);
         let Some((keys_bits, live_inline_slot_count)) =
-            crate::object::shapes::object_shape_field(obj, |d| {
-                (d.keys, d.live_inline_slot_count)
-            })
+            crate::object::shapes::object_shape_field(obj, |d| (d.keys, d.live_inline_slot_count))
         else {
             return (0, class_id, gc_type, false);
         };

@@ -1800,9 +1800,7 @@ fn object_key_matches_field(
         // Two fields, not the ~56-byte record: this runs inside every
         // typed-feedback class-field guard validation.
         let Some((keys_bits, live_inline_slot_count)) =
-            crate::object::shapes::object_shape_field(obj, |d| {
-                (d.keys, d.live_inline_slot_count)
-            })
+            crate::object::shapes::object_shape_field(obj, |d| (d.keys, d.live_inline_slot_count))
         else {
             return false;
         };
