@@ -1068,6 +1068,90 @@ fn create_interface_from_options(opts: f64) -> i64 {
 
 /// Spawn the background byte-mode reader if it isn't already running.
 /// Idempotent across threads via `READER_STARTED.compare_exchange`.
+/// Which queue a byte belongs to. Decided per byte from the mode atomics, so a
+/// mode flip from the main thread lands on exactly the byte it used to.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum ByteSink {
+    /// Raw mode: one single-byte chunk, reassembled by the keypress path.
+    Raw,
+    /// Cooked flowing / pull mode: accumulates into one `'data'` chunk per read.
+    Data,
+    /// Readline's own line queue: accumulates until `\n`.
+    Line,
+}
+
+/// What one read produced, split by destination.
+#[derive(Default, Debug, PartialEq, Eq)]
+pub(crate) struct RoutedInput {
+    pub raw_chunks: Vec<Vec<u8>>,
+    pub data_chunks: Vec<Vec<u8>>,
+    pub lines: Vec<String>,
+}
+
+/// Byte routing for the stdin reader thread, extracted so the mode-transition
+/// behaviour is testable without a real fd and a racing main thread.
+///
+/// #9518: `'data'` bytes and partial-`'line'` bytes get SEPARATE buffers. They
+/// used to share one, whose destination was re-decided from the mode atomics at
+/// flush time — so a `setRawMode(true)` landing mid-block stranded the cooked
+/// bytes already read in that block (the flush skipped them, and EOF, which
+/// re-tested the same way, discarded them). With one buffer per destination a
+/// byte's owner is fixed when it is read, and no later mode change can strand
+/// or re-label it. The 64 KiB blocks of #9489 widened that window from one byte
+/// to a whole block, which is what made it worth closing.
+#[derive(Default)]
+pub(crate) struct StdinRouter {
+    data_buf: Vec<u8>,
+    line_buf: Vec<u8>,
+}
+
+impl StdinRouter {
+    pub(crate) fn push(&mut self, b: u8, sink: ByteSink, out: &mut RoutedInput) {
+        match sink {
+            ByteSink::Raw => out.raw_chunks.push(vec![b]),
+            ByteSink::Data => self.data_buf.push(b),
+            ByteSink::Line => {
+                if b == b'\n' {
+                    // Strip trailing CR for Windows CRLF input.
+                    if self.line_buf.last() == Some(&b'\r') {
+                        self.line_buf.pop();
+                    }
+                    out.lines
+                        .push(String::from_utf8_lossy(&self.line_buf).into_owned());
+                    self.line_buf.clear();
+                } else {
+                    self.line_buf.push(b);
+                }
+            }
+        }
+    }
+
+    /// One `'data'` chunk per `read(2)` — Node's contract. Line splitting is
+    /// the CONSUMER's job; imposing it on the shared `'data'` path is what
+    /// #9489 fixed. No mode re-test: these bytes were classified as `'data'`
+    /// when they were read.
+    pub(crate) fn end_of_read(&mut self, out: &mut RoutedInput) {
+        if !self.data_buf.is_empty() {
+            out.data_chunks.push(std::mem::take(&mut self.data_buf));
+        }
+    }
+
+    /// EOF: trailing bytes not terminated by a newline still belong to the
+    /// queue they were read into — a last `'data'` chunk for `printf "abc"`,
+    /// and a final `'line'` for an unterminated line.
+    pub(crate) fn at_eof(&mut self, out: &mut RoutedInput) {
+        self.end_of_read(out);
+        if !self.line_buf.is_empty() {
+            if self.line_buf.last() == Some(&b'\r') {
+                self.line_buf.pop();
+            }
+            out.lines
+                .push(String::from_utf8_lossy(&self.line_buf).into_owned());
+            self.line_buf.clear();
+        }
+    }
+}
+
 fn ensure_reader_started() {
     if READER_STARTED
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
@@ -1095,16 +1179,44 @@ fn ensure_reader_started() {
         // buffer — so a lone keystroke is still delivered immediately and
         // three spaced writes are still three chunks.
         let mut buf = [0u8; 65536];
-        // Bytes accumulated for the CURRENT read: in cooked flowing / pull
-        // mode this becomes one `'data'` chunk per read; in line mode it is
-        // the partial line carried to the next `\n`.
-        let mut line_buf: Vec<u8> = Vec::with_capacity(65536);
-        // Raw-mode chunks staged for one lock acquisition per read instead of
-        // one per byte. The per-BYTE chunking itself is preserved on purpose:
-        // the keypress path reassembles escape sequences from single-byte
-        // chunks (`pump::coalesce_escape_sequences`), and a paste must still
-        // fire one `'keypress'` per character.
-        let mut raw_chunks: Vec<Vec<u8>> = Vec::new();
+        // Per-byte raw chunking is preserved on purpose: the keypress path
+        // reassembles escape sequences from single-byte chunks
+        // (`pump::coalesce_escape_sequences`), and a paste must still fire one
+        // `'keypress'` per character.
+        let mut router = StdinRouter::default();
+        // Decide a byte's destination from the mode atomics. Consulted PER
+        // BYTE, exactly as before: a mode flip from the main thread mid-block
+        // must land on the same byte it used to.
+        let sink_now = || {
+            if RAW_MODE.load(Ordering::Acquire) {
+                ByteSink::Raw
+            } else if STDIN_DATA_FLOWING.load(Ordering::Acquire)
+                || STDIN_PULL_MODE.load(Ordering::Acquire)
+            {
+                // Cooked flowing mode (#5227): a `process.stdin.on('data')`
+                // listener is attached but raw mode is off. Deliver input as
+                // 'data' chunks (newline INCLUDED, matching Node's piped-stream
+                // chunks) rather than routing it to the readline 'line' queue.
+                ByteSink::Data
+            } else {
+                ByteSink::Line
+            }
+        };
+        // Drain one read's routed output into the shared queues: one lock
+        // acquisition per queue per read, not per byte.
+        let publish = |out: &mut RoutedInput| {
+            if !out.raw_chunks.is_empty() || !out.data_chunks.is_empty() {
+                if let Ok(mut q) = PENDING_DATA.lock() {
+                    q.append(&mut out.raw_chunks);
+                    q.append(&mut out.data_chunks);
+                }
+            }
+            if !out.lines.is_empty() {
+                if let Ok(mut q) = PENDING_LINES.lock() {
+                    q.append(&mut out.lines);
+                }
+            }
+        };
         loop {
             let n = match reader.read(&mut buf) {
                 Ok(0) => break, // EOF
@@ -1114,77 +1226,20 @@ fn ensure_reader_started() {
             if STDIN_DESTROYED.load(Ordering::Acquire) {
                 break;
             }
-            // The mode atomics are still consulted PER BYTE, exactly as
-            // before: a mode flip from the main thread mid-block must land on
-            // the same byte it used to. Only the syscall and the chunk
-            // boundary changed.
+            let mut out = RoutedInput::default();
             for &b in &buf[..n] {
-                if RAW_MODE.load(Ordering::Acquire) {
-                    raw_chunks.push(vec![b]);
-                } else if STDIN_DATA_FLOWING.load(Ordering::Acquire)
-                    || STDIN_PULL_MODE.load(Ordering::Acquire)
-                {
-                    // Cooked flowing mode (#5227): a `process.stdin.on('data')`
-                    // listener is attached but raw mode is off. Deliver input
-                    // as 'data' chunks (newline INCLUDED, matching Node's
-                    // piped-stream chunks) rather than routing it to the
-                    // readline 'line' queue. #9489: the chunk is cut at the
-                    // end of this read, NOT at each newline.
-                    line_buf.push(b);
-                } else if b == b'\n' {
-                    // Strip trailing CR for Windows CRLF input.
-                    if line_buf.last() == Some(&b'\r') {
-                        line_buf.pop();
-                    }
-                    let line = String::from_utf8_lossy(&line_buf).into_owned();
-                    line_buf.clear();
-                    if let Ok(mut q) = PENDING_LINES.lock() {
-                        q.push(line);
-                    }
-                } else {
-                    line_buf.push(b);
-                }
+                router.push(b, sink_now(), &mut out);
             }
-            if !raw_chunks.is_empty() {
-                if let Ok(mut q) = PENDING_DATA.lock() {
-                    q.append(&mut raw_chunks);
-                }
-                raw_chunks.clear();
-            }
-            // One `'data'` chunk per read(2) — Node's contract. Line splitting
-            // is the CONSUMER's job (readline does its own, above); imposing
-            // it on the shared `'data'` path is what #9489 fixed.
-            if !line_buf.is_empty()
-                && !RAW_MODE.load(Ordering::Acquire)
-                && (STDIN_DATA_FLOWING.load(Ordering::Acquire)
-                    || STDIN_PULL_MODE.load(Ordering::Acquire))
-            {
-                if let Ok(mut q) = PENDING_DATA.lock() {
-                    q.push(std::mem::take(&mut line_buf));
-                }
-                line_buf = Vec::with_capacity(65536);
-            }
+            router.end_of_read(&mut out);
+            publish(&mut out);
         }
         // Flush any trailing bytes not terminated by a newline. In cooked
         // flowing mode this is the last 'data' chunk for input like
         // `printf "abc"` (no final newline); otherwise it's a final 'line'.
-        if !line_buf.is_empty() && !STDIN_DESTROYED.load(Ordering::Acquire) {
-            if (STDIN_DATA_FLOWING.load(Ordering::Acquire)
-                || STDIN_PULL_MODE.load(Ordering::Acquire))
-                && !RAW_MODE.load(Ordering::Acquire)
-            {
-                if let Ok(mut q) = PENDING_DATA.lock() {
-                    q.push(std::mem::take(&mut line_buf));
-                }
-            } else if !RAW_MODE.load(Ordering::Acquire) {
-                if line_buf.last() == Some(&b'\r') {
-                    line_buf.pop();
-                }
-                let line = String::from_utf8_lossy(&line_buf).into_owned();
-                if let Ok(mut q) = PENDING_LINES.lock() {
-                    q.push(line);
-                }
-            }
+        if !STDIN_DESTROYED.load(Ordering::Acquire) {
+            let mut out = RoutedInput::default();
+            router.at_eof(&mut out);
+            publish(&mut out);
         }
         EOF_REACHED.store(true, Ordering::Release);
     });
@@ -1856,3 +1911,73 @@ mod test_support;
 
 #[cfg(test)]
 mod mod_tests;
+
+#[cfg(test)]
+mod router_tests {
+    use super::{ByteSink, RoutedInput, StdinRouter};
+
+    /// #9518: a `setRawMode(true)` landing mid-block must not strand the
+    /// cooked `'data'` bytes already read in that same block. They used to be
+    /// held in a shared buffer whose destination was re-decided from the mode
+    /// atomics at flush time, so the flush skipped them and EOF discarded them.
+    #[test]
+    fn mode_flip_mid_block_does_not_strand_data_bytes() {
+        let mut r = StdinRouter::default();
+        let mut out = RoutedInput::default();
+        r.push(b'a', ByteSink::Data, &mut out);
+        r.push(b'b', ByteSink::Data, &mut out);
+        // Main thread flips to raw mode partway through this read.
+        r.push(0x1b, ByteSink::Raw, &mut out);
+        r.end_of_read(&mut out);
+        r.at_eof(&mut out);
+        assert_eq!(
+            out.data_chunks,
+            vec![b"ab".to_vec()],
+            "cooked 'data' bytes read before the mode flip must still be delivered"
+        );
+        assert_eq!(out.raw_chunks, vec![vec![0x1b]]);
+        assert!(out.lines.is_empty());
+    }
+
+    /// The mirror: a flowing->line transition must not re-label bytes that
+    /// were already classified as `'data'` into a `'line'`.
+    #[test]
+    fn flowing_to_line_flip_does_not_reclassify_data_bytes() {
+        let mut r = StdinRouter::default();
+        let mut out = RoutedInput::default();
+        r.push(b'x', ByteSink::Data, &mut out);
+        r.push(b'y', ByteSink::Data, &mut out);
+        r.push(b'L', ByteSink::Line, &mut out);
+        r.push(b'\n', ByteSink::Line, &mut out);
+        r.end_of_read(&mut out);
+        r.at_eof(&mut out);
+        assert_eq!(out.data_chunks, vec![b"xy".to_vec()]);
+        assert_eq!(out.lines, vec!["L".to_string()]);
+    }
+
+    /// Ordinary line mode is unchanged, CRLF included.
+    #[test]
+    fn line_mode_splits_on_newline_and_strips_cr() {
+        let mut r = StdinRouter::default();
+        let mut out = RoutedInput::default();
+        for &b in b"one\r\ntwo\ntail" {
+            r.push(b, ByteSink::Line, &mut out);
+        }
+        r.end_of_read(&mut out);
+        r.at_eof(&mut out);
+        assert_eq!(out.lines, vec!["one".to_string(), "two".to_string(), "tail".to_string()]);
+        assert!(out.data_chunks.is_empty());
+    }
+
+    /// One `'data'` chunk per read, not one per line (#9489).
+    #[test]
+    fn data_mode_cuts_one_chunk_per_read() {
+        let mut r = StdinRouter::default();
+        let mut out = RoutedInput::default();
+        for &b in b"line1\nline2\n" {
+            r.push(b, ByteSink::Data, &mut out);
+        }
+        r.end_of_read(&mut out);
+        assert_eq!(out.data_chunks, vec![b"line1\nline2\n".to_vec()]);
+    }
+}

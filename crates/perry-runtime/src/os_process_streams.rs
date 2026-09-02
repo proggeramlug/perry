@@ -799,7 +799,16 @@ extern "C" fn process_stdin_read(_closure: *const crate::closure::ClosureHeader,
     // code point split across two reads is reassembled instead of becoming
     // two replacement characters.
     let s = if stdin_has_encoding() {
-        stdin_decode_encoded(&bytes).unwrap_or_default()
+        match stdin_decode_encoded(&bytes) {
+            Some(s) => s,
+            // #9518: the whole chunk was absorbed into the decoder's held
+            // partial — a read boundary landing mid-code-point, which the
+            // 64 KiB blocks of #9489 make ordinary. Node's `read()` answers
+            // `null` here, never `""`: an empty decode never enters the
+            // readable buffer, so there is nothing to hand back. The bytes are
+            // not lost, they are held for the next read.
+            None => return f64::from_bits(crate::value::TAG_NULL),
+        }
     } else {
         String::from_utf8_lossy(&bytes).into_owned()
     };

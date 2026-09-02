@@ -153,58 +153,113 @@ fn utf8_check_incomplete(state: &mut Utf8StreamDecoder, buf: &[u8]) -> usize {
     0
 }
 
+/// Emit the held (now abandoned) partial sequence the way Node does.
+///
+/// NOT a single blanket U+FFFD: Node 26's decoder is native, and it renders the
+/// held bytes with the ordinary lossy UTF-8 conversion, so WHATWG's
+/// maximal-subpart rule applies. `[E2]` and `[F0,9F,98]` each yield one
+/// replacement, but `[F7,BC]` yields TWO — 0xF7 is not a legal lead at all, so
+/// the trailing 0xBC is a second, separate invalid subpart. Collapsing that to
+/// one character is what made the differential fuzz disagree with Node.
+fn flush_held(state: &Utf8StreamDecoder, held: usize) -> String {
+    String::from_utf8_lossy(&state.last_char[..held]).into_owned()
+}
+
+/// Validate that the bytes arriving to complete a held sequence really are
+/// continuation bytes.
+///
+/// On failure it does NOT consume the offending byte. It sets `last_need` to
+/// the number of leading bytes that WERE valid continuations — which
+/// `write_utf8` reads back as the resume offset — and returns the abandoned
+/// sequence's replacement text.
+fn utf8_check_extra_bytes(state: &mut Utf8StreamDecoder, buf: &[u8]) -> Option<String> {
+    // Bytes of the code point already held; equals Node's `lastTotal - lastNeed`.
+    let p = (state.last_total - state.last_need) as usize;
+    if (buf[0] & 0xC0) != 0x80 {
+        let out = flush_held(state, p);
+        state.last_need = 0;
+        return Some(out);
+    }
+    if state.last_need > 1 && buf.len() > 1 {
+        if (buf[1] & 0xC0) != 0x80 {
+            // buf[0] was a valid continuation, so it joins the held sequence.
+            state.last_char[p] = buf[0];
+            let out = flush_held(state, p + 1);
+            state.last_need = 1;
+            return Some(out);
+        }
+        if state.last_need > 2 && buf.len() > 2 && (buf[2] & 0xC0) != 0x80 {
+            state.last_char[p] = buf[0];
+            state.last_char[p + 1] = buf[1];
+            let out = flush_held(state, p + 2);
+            state.last_need = 2;
+            return Some(out);
+        }
+    }
+    None
+}
+
+/// Complete the held sequence from the head of `buf`.
+///
+/// Returns `None` when `buf` was absorbed whole and the sequence is still
+/// incomplete. Otherwise returns the decoded text, leaving `last_need` set to
+/// the number of bytes of `buf` that were consumed.
+fn utf8_fill_last(state: &mut Utf8StreamDecoder, buf: &[u8]) -> Option<String> {
+    let p = (state.last_total - state.last_need) as usize;
+    if let Some(replacement) = utf8_check_extra_bytes(state, buf) {
+        return Some(replacement);
+    }
+    let need = state.last_need as usize;
+    if buf.len() >= need {
+        state.last_char[p..p + need].copy_from_slice(&buf[..need]);
+        let total = state.last_total as usize;
+        // Lossy, not all-or-nothing: every byte is a continuation, but the
+        // sequence can still be an invalid lead (0xF5..0xFF), an overlong form
+        // or a surrogate, and Node renders those per maximal subpart too.
+        return Some(String::from_utf8_lossy(&state.last_char[..total]).into_owned());
+    }
+    // Still short. Every byte of `buf` is a validated continuation byte, so
+    // buffering them cannot strand a non-continuation byte.
+    state.last_char[p..p + buf.len()].copy_from_slice(buf);
+    state.last_char_len = (p + buf.len()) as u8;
+    state.last_need -= buf.len() as u8;
+    None
+}
+
 /// Decode `bytes` against the existing partial-codepoint state, mutating
 /// `state` to reflect any new trailing partial. Returns the decoded
 /// string. UTF-8 invalid sequences are replaced with U+FFFD, matching
 /// Node's `lossy` UTF-8 decoder behavior.
 fn write_utf8(state: &mut Utf8StreamDecoder, bytes: &[u8]) -> String {
+    if bytes.is_empty() {
+        return String::new();
+    }
     let mut out = String::new();
+    // Offset into `bytes` at which ordinary decoding resumes.
+    let mut resume = 0usize;
 
-    // Stitch the buffered partial together with the new input first.
     if state.last_need > 0 {
-        let need = state.last_need as usize;
-        if bytes.len() < need {
-            // Still incomplete — append what we can and exit empty.
-            let new_len = state.last_char_len as usize + bytes.len();
-            if new_len <= 4 {
-                state.last_char[state.last_char_len as usize..new_len].copy_from_slice(bytes);
-                state.last_char_len = new_len as u8;
-                state.last_need -= bytes.len() as u8;
-            } else {
-                // Defensive: should never happen given UTF-8 is at most 4
-                // bytes, but if upstream feeds garbage we reset rather
-                // than overrun.
+        match utf8_fill_last(state, bytes) {
+            // Absorbed whole; the sequence is still incomplete.
+            None => return out,
+            Some(text) => {
+                out.push_str(&text);
+                // Node reads `lastNeed` back AFTER fillLast, where it means
+                // "bytes of the new chunk consumed" — the completed-sequence
+                // path leaves it at the count it took, and the invalid path
+                // rewinds it to the valid-continuation count. Either way the
+                // remaining bytes must still be decoded, not dropped.
+                resume = state.last_need as usize;
                 state.last_need = 0;
                 state.last_total = 0;
                 state.last_char_len = 0;
             }
-            return out;
         }
-
-        // We have enough new bytes to complete the buffered point.
-        let total = state.last_total as usize;
-        let buffered = state.last_char_len as usize;
-        let take_new = total - buffered;
-        let mut cp = Vec::with_capacity(total);
-        cp.extend_from_slice(&state.last_char[..buffered]);
-        cp.extend_from_slice(&bytes[..take_new]);
-
-        match std::str::from_utf8(&cp) {
-            Ok(s) => out.push_str(s),
-            Err(_) => out.push('\u{FFFD}'),
-        }
-        state.last_need = 0;
-        state.last_total = 0;
-        state.last_char_len = 0;
-
-        // The "rest" continues below — chop off the consumed prefix.
-        let rest = &bytes[take_new..];
-        // Recurse on the tail so trailing partials get caught.
-        out.push_str(&write_utf8_tail(state, rest));
-        return out;
     }
 
-    out.push_str(&write_utf8_tail(state, bytes));
+    if resume < bytes.len() {
+        out.push_str(&write_utf8_tail(state, &bytes[resume..]));
+    }
     out
 }
 
@@ -227,7 +282,10 @@ fn end_utf8(state: &mut Utf8StreamDecoder, bytes: Option<&[u8]>) -> String {
         None => String::new(),
     };
     if state.last_need > 0 {
-        out.push('\u{FFFD}');
+        // Same maximal-subpart rule as a failed stitch: Node renders the held
+        // bytes lossily, so a held `[F7,BC]` ends as TWO replacements, not one.
+        let held = (state.last_total - state.last_need) as usize;
+        out.push_str(&flush_held(state, held));
         state.last_need = 0;
         state.last_total = 0;
         state.last_char_len = 0;
@@ -310,5 +368,50 @@ mod tests {
         let mut d = Utf8StreamDecoder::new();
         assert_eq!(d.write(b"hello"), "hello");
         assert_eq!(d.last_need, 0);
+    }
+
+    /// A held partial followed by a NON-continuation byte. Node emits one
+    /// U+FFFD for the abandoned sequence and then decodes the offending byte
+    /// as fresh input — it does not swallow it. Every expectation below was
+    /// read off node 26.5.1's own `string_decoder`.
+    #[test]
+    fn held_partial_then_non_continuation_matches_node() {
+        // (chunks, expected concatenation of writes, expected end())
+        let cases: &[(&[&[u8]], &str, &str)] = &[
+            (&[&[0xE2], b"AB"], "\u{FFFD}AB", ""),
+            (&[&[0xF0], &[0x41]], "\u{FFFD}A", ""),
+            (&[&[0xF0], &[0x41], &[0x80, 0x80]], "\u{FFFD}A\u{FFFD}\u{FFFD}", ""),
+            // First continuation is valid, second is not: node consumes the
+            // good one, emits ONE replacement, resumes at the bad byte.
+            (&[&[0xE2], &[0x82, 0x41]], "\u{FFFD}A", ""),
+            (&[&[0xF0], &[0x9F, 0x41]], "\u{FFFD}A", ""),
+            (&[&[0xF0], &[0x9F, 0x98, 0x41]], "\u{FFFD}A", ""),
+            (&[&[0xF0, 0x9F, 0x98], &[0x41]], "\u{FFFD}A", ""),
+            // Single non-continuation byte, shorter than `last_need`: the
+            // short-chunk branch must not buffer it and lose it.
+            (&[&[0xE2], &[0x41]], "\u{FFFD}A", ""),
+            // Control: a genuine split still reassembles.
+            (&[&[0xF0, 0x9F], &[0x98, 0x80]], "\u{1F600}", ""),
+            // Control: a still-incomplete tail is held, then flushed by end().
+            (&[&[0xE2], &[0x82]], "", "\u{FFFD}"),
+            // Maximal subpart: 0xF7 is not a legal lead at all, so a held
+            // [F7,BC] is TWO invalid subparts, not one abandoned sequence.
+            (&[&[0xF7, 0xBC], &[0xE7, 0x41]], "\u{FFFD}\u{FFFD}\u{FFFD}A", ""),
+            (&[&[0xF7, 0xBC]], "", "\u{FFFD}\u{FFFD}"),
+            (&[&[0xF5], &[0x41]], "\u{FFFD}A", ""),
+            (&[&[0xF0, 0x9F, 0x98]], "", "\u{FFFD}"),
+            // Surrogate completed across a boundary is still rejected.
+            (&[&[0xED, 0xA0], &[0x80]], "\u{FFFD}\u{FFFD}\u{FFFD}", ""),
+        ];
+        for (chunks, want_writes, want_end) in cases {
+            let mut d = Utf8StreamDecoder::new();
+            let got: String = chunks.iter().map(|c| d.write(c)).collect();
+            let got_end = d.end(None);
+            assert_eq!(
+                got, *want_writes,
+                "writes for {chunks:02X?}: got {got:?} want {want_writes:?}"
+            );
+            assert_eq!(got_end, *want_end, "end() for {chunks:02X?}");
+        }
     }
 }

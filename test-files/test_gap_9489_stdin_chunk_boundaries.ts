@@ -102,7 +102,15 @@ if (role !== "") {
         env: { ...process.env, [ROLE_ENV]: name, [READY_ENV]: readyPath },
         stdio: ["pipe", "inherit", "inherit"],
       });
+      // #9518: the readiness poll below must stop when the child goes away,
+      // or a child that dies before writing its ready file leaves a timer
+      // chain rescheduling forever and the parent hangs instead of failing.
+      let childGone = false;
+      child.on("error", () => {
+        childGone = true;
+      });
       child.on("exit", (code) => {
+        childGone = true;
         try {
           rmSync(readyPath, { force: true });
         } catch {}
@@ -117,11 +125,13 @@ if (role !== "") {
             child.stdin!.end();
             return;
           }
+          if (childGone) return;
           child.stdin!.write(TRICKLE_PARTS[i]);
           i += 1;
           setTimeout(step, TRICKLE_DELAY_MS);
         };
         const waitReady = () => {
+          if (childGone) return; // child died before readiness; stop polling.
           if (existsSync(readyPath)) {
             step();
             return;

@@ -85,6 +85,7 @@ if (role !== "") {
   stdin.setEncoding("utf8");
   const events: string[] = [];
   let acc = "";
+  let emptyReads = 0;
 
   const finish = () => {
     console.log(role + " length:", acc.length);
@@ -96,21 +97,29 @@ if (role !== "") {
     } else {
       console.log(role + " units:", units(acc));
     }
-    if (role === "truncend" || role === "splits") {
+    if (role === "pull" || role === "pull_split") {
+      console.log(role + " empty reads:", emptyReads);
+    }
+    if (role === "truncend" || role === "splits" || role === "pull_split") {
       // Per-event breakdown: proves the incomplete tail is HELD (no empty
       // event, no premature replacement) and flushed as its own last event.
       console.log(role + " events:", JSON.stringify(events));
     }
   };
 
-  if (role === "pull") {
+  if (role === "pull" || role === "pull_split") {
     // Paused / pull mode: `on("readable")` plus `read()`, the other half of
     // the readable-side contract.
     stdin.on("readable", () => {
       let chunk = stdin.read();
       while (chunk !== null) {
         const text = String(chunk);
-        if (text.length > 0) {
+        // A read that returns a non-null EMPTY string is itself the bug: when
+        // a read boundary lands mid-code-point the whole chunk is absorbed
+        // into the decoder's held partial, and Node's `read()` answers null,
+        // never "". Counted rather than skipped so it cannot hide.
+        if (text.length === 0) emptyReads += 1;
+        else {
           events.push(units(text));
           acc += text;
         }
@@ -143,14 +152,22 @@ if (role !== "") {
         env: { ...process.env, [ROLE_ENV]: name, [READY_ENV]: readyPath },
         stdio: ["pipe", "inherit", "inherit"],
       });
+      // #9518: the readiness poll below must stop when the child goes away,
+      // or a child that dies before writing its ready file leaves a timer
+      // chain rescheduling forever and the parent hangs instead of failing.
+      let childGone = false;
+      child.on("error", () => {
+        childGone = true;
+      });
       child.on("exit", (code) => {
+        childGone = true;
         try {
           rmSync(readyPath, { force: true });
         } catch {}
         console.log(name + " exit:", code);
         resolve();
       });
-      if (name === "splits") {
+      if (name === "splits" || name === "pull_split") {
         // Each piece must reach the child as its OWN read, or the split
         // never happens and the arm proves nothing. Wait for the child to
         // have its listener up, then space the writes.
@@ -160,11 +177,13 @@ if (role !== "") {
             child.stdin!.end();
             return;
           }
+          if (childGone) return;
           child.stdin!.write(Buffer.from(SPLIT_WRITES[i]));
           i += 1;
           setTimeout(step, SPLIT_DELAY_MS);
         };
         const waitReady = () => {
+          if (childGone) return; // child died before readiness; stop polling.
           if (existsSync(readyPath)) {
             step();
             return;
@@ -219,6 +238,7 @@ if (role !== "") {
     await runRole("truncend");
     await runRole("splits");
     await runRole("pull");
+    await runRole("pull_split");
     console.log("done");
   })();
 }
