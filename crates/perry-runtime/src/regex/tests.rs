@@ -1544,3 +1544,35 @@ fn global_replace_substitutes_at_every_empty_match() {
     let out = js_string_replace_regex_named(make_string("a"), named, make_string("[$<n>]"));
     assert_eq!(string_as_str(out), "[a][]");
 }
+
+#[test]
+fn match_all_past_the_end_is_empty_not_a_search_clamped_to_the_end() {
+    // The matchAll twin of `exec_past_the_end_…`: RegExpBuiltinExec step 12.a
+    // through the iterator's materializer. Without the UTF-16 bound,
+    // `utf16_index_to_byte` saturates and `/a*/g` at lastIndex 5 fabricates
+    // an empty match at the end where node's matchAll yields nothing.
+    let re = js_regexp_new(make_string("a*"), make_string("g"));
+    let past = unsafe {
+        match_all::materialize_match_all_results(make_string("a"), re, 5)
+    };
+    assert_eq!(
+        unsafe { (*past).length },
+        0,
+        "lastIndex past the subject must yield NO matches, not a clamped one"
+    );
+    // Exactly at the end is still in range: one empty match, as in node.
+    let at_end = unsafe {
+        match_all::materialize_match_all_results(make_string("a"), re, 1)
+    };
+    assert_eq!(unsafe { (*at_end).length }, 1, "lastIndex == length is in range");
+    // Astral: "𝌆" is one scalar, two code units — 2 is the end, 3 is past it.
+    let astral = js_regexp_new(make_string("x*"), make_string("g"));
+    let astral_end = unsafe {
+        match_all::materialize_match_all_results(make_string("𝌆"), astral, 2)
+    };
+    assert_eq!(unsafe { (*astral_end).length }, 1);
+    let astral_past = unsafe {
+        match_all::materialize_match_all_results(make_string("𝌆"), astral, 3)
+    };
+    assert_eq!(unsafe { (*astral_past).length }, 0);
+}

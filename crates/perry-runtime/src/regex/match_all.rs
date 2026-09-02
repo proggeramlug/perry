@@ -73,12 +73,21 @@ fn set_match_all_groups(arr: *mut ArrayHeader, groups_value: f64) {
     );
 }
 
-unsafe fn materialize_match_all_results(
+pub(super) unsafe fn materialize_match_all_results(
     s: *const StringHeader,
     re: *const RegExpHeader,
     start_char_index: usize,
 ) -> *mut ArrayHeader {
     if !is_valid_ptr(s) || !is_valid_regex_ptr(re) {
+        return crate::array::js_array_alloc(0);
+    }
+    // RegExpBuiltinExec step 12.a, mirrored from `exec.rs`: a `lastIndex`
+    // beyond the subject is "no match", not a search clamped to the end —
+    // `utf16_index_to_byte` saturates at `str_data.len()`, which would let
+    // `/a*/g` with `lastIndex = 5` on `"a"` fabricate an empty match at the
+    // end where node's matchAll yields nothing. UTF-16 units, not bytes, so
+    // an astral subject is compared in the same currency as `lastIndex`.
+    if start_char_index > (*s).utf16_len as usize {
         return crate::array::js_array_alloc(0);
     }
 
