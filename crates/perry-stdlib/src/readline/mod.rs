@@ -1081,9 +1081,14 @@ pub(crate) enum ByteSink {
 }
 
 /// What one read produced, split by destination.
+///
+/// Raw single-byte chunks and cooked `'data'` chunks share ONE queue in
+/// arrival order. They used to be accumulated separately and appended
+/// raw-first, which inverted them whenever the mode flipped from cooked to raw
+/// inside a block: `"ab"` then ESC was published as ESC, `"ab"`.
 #[derive(Default, Debug, PartialEq, Eq)]
 pub(crate) struct RoutedInput {
-    pub raw_chunks: Vec<Vec<u8>>,
+    /// Chunks for `PENDING_DATA`, in the order the bytes arrived.
     pub data_chunks: Vec<Vec<u8>>,
     pub lines: Vec<String>,
 }
@@ -1108,7 +1113,13 @@ pub(crate) struct StdinRouter {
 impl StdinRouter {
     pub(crate) fn push(&mut self, b: u8, sink: ByteSink, out: &mut RoutedInput) {
         match sink {
-            ByteSink::Raw => out.raw_chunks.push(vec![b]),
+            ByteSink::Raw => {
+                // Close any open cooked chunk FIRST: it was read before this
+                // byte and shares the same queue, so it must be published
+                // before it.
+                self.close_data_chunk(out);
+                out.data_chunks.push(vec![b]);
+            }
             ByteSink::Data => self.data_buf.push(b),
             ByteSink::Line => {
                 if b == b'\n' {
@@ -1126,14 +1137,18 @@ impl StdinRouter {
         }
     }
 
+    fn close_data_chunk(&mut self, out: &mut RoutedInput) {
+        if !self.data_buf.is_empty() {
+            out.data_chunks.push(std::mem::take(&mut self.data_buf));
+        }
+    }
+
     /// One `'data'` chunk per `read(2)` — Node's contract. Line splitting is
     /// the CONSUMER's job; imposing it on the shared `'data'` path is what
     /// #9489 fixed. No mode re-test: these bytes were classified as `'data'`
     /// when they were read.
     pub(crate) fn end_of_read(&mut self, out: &mut RoutedInput) {
-        if !self.data_buf.is_empty() {
-            out.data_chunks.push(std::mem::take(&mut self.data_buf));
-        }
+        self.close_data_chunk(out);
     }
 
     /// EOF: trailing bytes not terminated by a newline still belong to the
@@ -1205,9 +1220,8 @@ fn ensure_reader_started() {
         // Drain one read's routed output into the shared queues: one lock
         // acquisition per queue per read, not per byte.
         let publish = |out: &mut RoutedInput| {
-            if !out.raw_chunks.is_empty() || !out.data_chunks.is_empty() {
+            if !out.data_chunks.is_empty() {
                 if let Ok(mut q) = PENDING_DATA.lock() {
-                    q.append(&mut out.raw_chunks);
                     q.append(&mut out.data_chunks);
                 }
             }
@@ -1931,12 +1945,30 @@ mod router_tests {
         r.end_of_read(&mut out);
         r.at_eof(&mut out);
         assert_eq!(
-            out.data_chunks,
-            vec![b"ab".to_vec()],
+            out.data_chunks.first().map(|c| c.as_slice()),
+            Some(b"ab".as_slice()),
             "cooked 'data' bytes read before the mode flip must still be delivered"
         );
-        assert_eq!(out.raw_chunks, vec![vec![0x1b]]);
+        // ...and the raw byte follows it in the SAME queue, in arrival order.
+        assert_eq!(out.data_chunks, vec![b"ab".to_vec(), vec![0x1b]]);
         assert!(out.lines.is_empty());
+    }
+
+    /// Cooked and raw chunks share one queue, so a cooked->raw flip inside a
+    /// block must publish them in ARRIVAL order, not raw-first.
+    #[test]
+    fn cooked_then_raw_chunks_keep_arrival_order() {
+        let mut r = StdinRouter::default();
+        let mut out = RoutedInput::default();
+        r.push(b'a', ByteSink::Data, &mut out);
+        r.push(0x1b, ByteSink::Raw, &mut out);
+        r.push(b'b', ByteSink::Data, &mut out);
+        r.push(0x5b, ByteSink::Raw, &mut out);
+        r.end_of_read(&mut out);
+        assert_eq!(
+            out.data_chunks,
+            vec![b"a".to_vec(), vec![0x1b], b"b".to_vec(), vec![0x5b]]
+        );
     }
 
     /// The mirror: a flowing->line transition must not re-label bytes that
