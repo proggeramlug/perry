@@ -13,7 +13,10 @@
   const o = { x: 1 };
   for (o.x of [7]) {}      // SIGSEGV, sloppy or strict
   const p = { x: 1 };
-  p.y++;                   // TypeError "Cannot assign to read only property 'y'"
+  p.y++;                   // Perry: TypeError "Cannot assign to read only
+                           //   property 'y'". Node is silent here and leaves
+                           //   NaN -- the object is extensible, so this is a
+                           //   plain new-property write, not a rejection.
   ```
 
   Three lines of ordinary code, in both modes. The fault is `str d0, [x8]` with
@@ -71,10 +74,13 @@
     a rooting hole (#9417/#9444/#9445) is involved: `PERRY_GC_PROTECT_FROMSPACE`
     changes nothing, because the address was never a heap object.
 
-  - `test-files/test_gap_9460_unread_scalar_field_store.cts` — every write
-    spelling (`=`, `+=`, `o[k] =`, `o.x++`, `o.y++`, `for (o.x of …)`,
-    `[o.x] = arr`, a brand-new field) against an unread scalar-replaced field in
-    both modes, each printing a sentinel INSTEAD of reading the field, because
-    reading it is what hides the bug. Controls: the RHS side effects must still
-    happen, the read-after-store versions must still read back what was stored,
-    and an escaping receiver must keep its real heap object.
+  - `test-files/test_gap_9460_unread_scalar_field_store.cts` — one write per
+    lane against an unread scalar-replaced field: `o.x = v` and `o[k] = v`
+    (`Expr::PutValueSet`), `o.x += 1`, `for (o.x of …)` and `[o.x] = arr`
+    (`Expr::PropertySet`), `o.x++` and `o.y++` (`Expr::PropertyUpdate`), plus a
+    brand-new field — a representative set, not an exhaustive enumeration of
+    every assignment spelling. Sloppy and strict. Each case prints a sentinel
+    INSTEAD of reading the field, because reading it is what hides the bug.
+    Controls: the RHS side effects must still happen, the read-after-store
+    versions must still read back what was stored, and a receiver escaped by
+    `seen.push(o)` must keep its real heap object.

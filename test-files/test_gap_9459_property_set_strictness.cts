@@ -113,6 +113,12 @@ function frozenCell(): any {
   return c;
 }
 
+/// A class constructor is a function object, so `Function.prototype`'s
+/// poison-pill accessor governs `caller` / `arguments` on it in both modes.
+class PoisonTarget {
+  static marker = 1;
+}
+
 function sloppyArm(): void {
   let threw = false;
 
@@ -522,6 +528,87 @@ function sloppyArm(): void {
     threw = true;
   }
   report("sloppy plain new key ??=:", threw, plainNew.y);
+
+  // ---- the `caller` / `arguments` NAMES, on each receiver path ----
+  //
+  // `PutValueSet` routes these two names into the `PropertySet` lowering
+  // specially, and the sloppy tail used to exclude them on the theory that the
+  // exclusion is what reaches the ECMAScript poison pill. It is not: the poison
+  // pill is keyed on the RECEIVER inside the runtime -- a closure receiver
+  // (`field_set_by_name/write_helpers.rs`) and a class-constructor receiver
+  // (`field_set_by_name.rs`) -- and `js_put_value_set` reaches both. The name
+  // check only kept an ordinary object whose property happens to be CALLED
+  // `caller` on the throwing path, which is the very bug this file is about.
+  //
+  // Both receiver paths are asserted: an ordinary object (poison pill must NOT
+  // apply) and a class constructor (it must).
+  const namedCaller: any = { caller: 1 };
+  Object.freeze(namedCaller);
+  threw = false;
+  try {
+    namedCaller.caller += 1;
+  } catch {
+    threw = true;
+  }
+  report("sloppy frozen ordinary .caller +=:", threw, namedCaller.caller);
+
+  const namedArguments: any = { arguments: 1 };
+  Object.freeze(namedArguments);
+  threw = false;
+  try {
+    namedArguments.arguments += 1;
+  } catch {
+    threw = true;
+  }
+  report("sloppy frozen ordinary .arguments +=:", threw, namedArguments.arguments);
+
+  // Not frozen: the store must still LAND. A tail that stopped storing would
+  // pass every rejection case above and fail here.
+  const liveCaller: any = { caller: 1 };
+  threw = false;
+  try {
+    liveCaller.caller += 41;
+  } catch {
+    threw = true;
+  }
+  report("sloppy live ordinary .caller +=:", threw, liveCaller.caller);
+
+  // A frozen CLASS INSTANCE with a field named `caller` is deliberately absent.
+  // It belongs here -- it is the class-field lane of the same receiver rule --
+  // but adding it makes this module SEGFAULT on an unrelated earlier statement
+  // (`computedPlus[computedKey] += 1`, the strict `Expr::IndexSet`
+  // runtime-string-key arm) with a garbage key inside
+  // `set_field_by_name_object_tail`. Bisected with an A/B build: that crash is
+  // pre-existing on `main`, is module-shape dependent (it does not reproduce
+  // from a reduced file with the same three statements), and is not on either
+  // lane this file changes. Filed as #9542 with a repro; this case goes back in
+  // once that is fixed.
+
+  // A CLASS CONSTRUCTOR receiver: `Function.prototype.caller` is the poison-pill
+  // accessor, so this throws in BOTH modes -- it is the setter throwing, not the
+  // assignment's `Throw` flag. This is the case the exclusion was meant to
+  // protect, asserted directly so a future change to the sloppy tail cannot
+  // silently lose it.
+  threw = false;
+  try {
+    (PoisonTarget as any).caller = 2;
+  } catch {
+    threw = true;
+  }
+  report(
+    "sloppy class-ctor .caller =:",
+    threw,
+    Object.prototype.hasOwnProperty.call(PoisonTarget, "caller"),
+  );
+
+  // A plain FUNCTION receiver is deliberately absent. Node is silent in sloppy
+  // code there (`OrdinarySet` returns false on the getter-only inherited
+  // accessor) and throws in strict; Perry throws in both, because the runtime's
+  // closure poison pill is unconditional -- "Perry compiles everything strict"
+  // (`field_set_by_name/write_helpers.rs`). That is a RUNTIME strictness gap on
+  // the closure store path, identical on the computed-key route that never
+  // touches this lowering, so it is neither caused nor fixed here. Filed as
+  // #9525.
 
   // ---- `++` (Expr::PropertyUpdate) alongside `+=`, so the two spellings of
   //      one operation are asserted in the same file and mode ----
@@ -936,6 +1023,87 @@ function strictArm(): void {
     threw = true;
   }
   report("strict plain new key ??=:", threw, plainNew.y);
+
+  // ---- the `caller` / `arguments` NAMES, on each receiver path ----
+  //
+  // `PutValueSet` routes these two names into the `PropertySet` lowering
+  // specially, and the sloppy tail used to exclude them on the theory that the
+  // exclusion is what reaches the ECMAScript poison pill. It is not: the poison
+  // pill is keyed on the RECEIVER inside the runtime -- a closure receiver
+  // (`field_set_by_name/write_helpers.rs`) and a class-constructor receiver
+  // (`field_set_by_name.rs`) -- and `js_put_value_set` reaches both. The name
+  // check only kept an ordinary object whose property happens to be CALLED
+  // `caller` on the throwing path, which is the very bug this file is about.
+  //
+  // Both receiver paths are asserted: an ordinary object (poison pill must NOT
+  // apply) and a class constructor (it must).
+  const namedCaller: any = { caller: 1 };
+  Object.freeze(namedCaller);
+  threw = false;
+  try {
+    namedCaller.caller += 1;
+  } catch {
+    threw = true;
+  }
+  report("strict frozen ordinary .caller +=:", threw, namedCaller.caller);
+
+  const namedArguments: any = { arguments: 1 };
+  Object.freeze(namedArguments);
+  threw = false;
+  try {
+    namedArguments.arguments += 1;
+  } catch {
+    threw = true;
+  }
+  report("strict frozen ordinary .arguments +=:", threw, namedArguments.arguments);
+
+  // Not frozen: the store must still LAND. A tail that stopped storing would
+  // pass every rejection case above and fail here.
+  const liveCaller: any = { caller: 1 };
+  threw = false;
+  try {
+    liveCaller.caller += 41;
+  } catch {
+    threw = true;
+  }
+  report("strict live ordinary .caller +=:", threw, liveCaller.caller);
+
+  // A frozen CLASS INSTANCE with a field named `caller` is deliberately absent.
+  // It belongs here -- it is the class-field lane of the same receiver rule --
+  // but adding it makes this module SEGFAULT on an unrelated earlier statement
+  // (`computedPlus[computedKey] += 1`, the strict `Expr::IndexSet`
+  // runtime-string-key arm) with a garbage key inside
+  // `set_field_by_name_object_tail`. Bisected with an A/B build: that crash is
+  // pre-existing on `main`, is module-shape dependent (it does not reproduce
+  // from a reduced file with the same three statements), and is not on either
+  // lane this file changes. Filed as #9542 with a repro; this case goes back in
+  // once that is fixed.
+
+  // A CLASS CONSTRUCTOR receiver: `Function.prototype.caller` is the poison-pill
+  // accessor, so this throws in BOTH modes -- it is the setter throwing, not the
+  // assignment's `Throw` flag. This is the case the exclusion was meant to
+  // protect, asserted directly so a future change to the sloppy tail cannot
+  // silently lose it.
+  threw = false;
+  try {
+    (PoisonTarget as any).caller = 2;
+  } catch {
+    threw = true;
+  }
+  report(
+    "strict class-ctor .caller =:",
+    threw,
+    Object.prototype.hasOwnProperty.call(PoisonTarget, "caller"),
+  );
+
+  // A plain FUNCTION receiver is deliberately absent. Node is silent in sloppy
+  // code there (`OrdinarySet` returns false on the getter-only inherited
+  // accessor) and throws in strict; Perry throws in both, because the runtime's
+  // closure poison pill is unconditional -- "Perry compiles everything strict"
+  // (`field_set_by_name/write_helpers.rs`). That is a RUNTIME strictness gap on
+  // the closure store path, identical on the computed-key route that never
+  // touches this lowering, so it is neither caused nor fixed here. Filed as
+  // #9525.
 
   // ---- `++` (Expr::PropertyUpdate) alongside `+=`, so the two spellings of
   //      one operation are asserted in the same file and mode ----

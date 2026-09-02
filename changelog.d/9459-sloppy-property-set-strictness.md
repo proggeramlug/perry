@@ -76,12 +76,23 @@
     storing would fail.
 
   Two things this deliberately does not change, both pre-existing on `main` and
-  both visible in the fixture's own comments:
+  both visible in the fixture's own comments — plus one thing it does:
 
-  - `caller` / `arguments` keep their `js_object_set_field_by_name` route in
-    both modes. `PutValueSet` sends those two names here specifically to reach
-    that entry's poisoned-accessor handling, which is not a `Throw`-flag
-    decision.
+  - `caller` / `arguments` get NO name-based exclusion from the sloppy tail. An
+    earlier revision excluded them, on the theory that `PutValueSet` routes those
+    two names into this file specifically to reach
+    `js_object_set_field_by_name`'s poison-pill handling. That theory is wrong
+    about where the poison pill lives: it is keyed on the RECEIVER, not the name
+    — `field_set_by_name/write_helpers.rs` throws for a closure receiver and
+    `field_set_by_name.rs` for a class-constructor receiver — and
+    `js_put_value_set` reaches both. Verified directly with a computed-key write
+    (`f[k] = v`, `k = "caller"`), which never takes the name-keyed route and
+    still throws on a function and on a class constructor while staying silent on
+    an ordinary object. The exclusion bought nothing and cost parity: a frozen
+    ORDINARY object with a property literally called `caller` threw on
+    `o.caller += 1` where node is silent. Both receiver paths are now asserted in
+    the fixture. (Raised by CodeRabbit on PR #9519, which was right that the
+    three sloppy branches disagreed and wrong about which way to reconcile them.)
   - `+=` against a receiver whose rejection lives on the **prototype** (an
     inherited non-writable data property, an inherited getter-only accessor, an
     inherited setter) is still wrong in **strict** code: the strict tail does an
@@ -93,3 +104,14 @@
     Filed as #9495. The sloppy half becomes correct here as a side effect of
     routing to `js_put_value_set`, and the fixture pins the strict `=` twins so
     that change has a baseline.
+
+  One residual on the same names, also untouched here: a sloppy `f.caller = v` on
+  a plain FUNCTION is a silent no-op in node (`OrdinarySet` returns false on the
+  inherited getter-only accessor) and throws in Perry, because the runtime's
+  closure poison pill is unconditional — its comment's premise, "Perry compiles
+  everything strict", is what #9423/#9458 established is untrue of a `.cts`
+  script. It reproduces identically through the computed-key route that never
+  touches this lowering, so it is a runtime store path rather than a codegen
+  routing question. Filed as #9525; the fixture asserts the ordinary-object and
+  class-constructor receiver paths and names the gap where the function case
+  belongs.

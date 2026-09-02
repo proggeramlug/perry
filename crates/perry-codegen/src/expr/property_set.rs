@@ -1857,12 +1857,26 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr, assignment_strict: bool) -
             // `js_object_set_field_by_name` has no `strict` parameter and rejects
             // by throwing; sloppy `PutValue` must discard the rejection instead.
             //
-            // `caller`/`arguments` are excluded in BOTH modes: those two names are
-            // routed here from `PutValueSet` specifically to reach
-            // `js_object_set_field_by_name`'s poisoned-accessor handling, which is
-            // not a `Throw`-flag decision, and diverting them would change
-            // behaviour this issue is not about.
-            if !assignment_strict && !matches!(property.as_str(), "caller" | "arguments") {
+            // `caller`/`arguments` are NOT excluded here, and this arm agrees with
+            // the two sloppy branches above rather than special-casing the names.
+            // An earlier revision did exclude them, on the theory that
+            // `PutValueSet` routes those two names into this file specifically to
+            // reach `js_object_set_field_by_name`'s poison-pill handling. That
+            // theory is wrong about where the poison pill lives: it is keyed on the
+            // RECEIVER, not the name --
+            // `field_set_by_name/write_helpers.rs` throws for a closure receiver
+            // and `field_set_by_name.rs` for a class-constructor receiver -- and
+            // `js_put_value_set` reaches both. Verified directly: a computed-key
+            // write (`f[k] = v` with `k = "caller"`), which never takes the
+            // name-keyed route, still throws on a function and on a class
+            // constructor while staying silent on an ordinary object.
+            //
+            // Excluding the names cost real parity instead of buying anything: a
+            // frozen ORDINARY object (and a frozen class instance) with a property
+            // literally called `caller` threw on `o.caller += 1` where node is
+            // silent -- the exact defect this issue is about, kept alive by a
+            // name check on a receiver-keyed rule.
+            if !assignment_strict {
                 return lower_sloppy_property_set_by_name(ctx, object, property, value);
             }
             // #7154: the value expression can collect, and an evacuating minor

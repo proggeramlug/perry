@@ -30,8 +30,8 @@
 // throw -- `"use strict"; const o: any = {x:1}; o.x = 7;` segfaults too. This
 // file is `.cts` so both modes live in one program.
 //
-// Every case here prints a sentinel INSTEAD of reading the field: reading it
-// is what hides the bug.
+// Each CRASH case prints a sentinel INSTEAD of reading the field: reading it is
+// what hides the bug. The controls at the end deliberately do read, and say so.
 
 function sloppyForOfHead(): void {
   const o: any = { x: 1 };
@@ -141,7 +141,11 @@ function strictReadAfterForOfHead(): void {
 }
 
 // CONTROL: an ESCAPING receiver keeps its heap object, so the store is a real
-// one. `Object.freeze` is a call, which is what makes it escape.
+// one. `seen.push(o)` is what makes it escape -- the local is read in a
+// non-property position, which `collectors/escape_check.rs` treats as an escape
+// (its `Expr::LocalGet` arm), so `collect_non_escaping_news` drops the
+// candidate and no scalar replacement happens. There is no `Object.freeze`
+// here and none is needed.
 function strictEscapingReceiver(): void {
   "use strict";
   const o: any = { x: 1 };
