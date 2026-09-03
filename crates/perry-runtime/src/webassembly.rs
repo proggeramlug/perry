@@ -821,9 +821,26 @@ fn call_captured_wasm_export(closure: *const crate::closure::ClosureHeader, args
     unsafe {
         perry_wasm_host_instance_set_import_context(inst, imports.get_nanbox_f64().to_bits())
     };
+    let sync_census = wasm_census_enabled();
+    let sync_start = if sync_census {
+        Some(std::time::Instant::now())
+    } else {
+        None
+    };
     sync_memory_to_wasm(inst, memory.get_nanbox_f64());
+    let sync_to = sync_start.map(|s| s.elapsed().as_nanos() as u64);
     let result = call_export_n(nanbox_pointer_raw(inst), name.get_nanbox_f64(), args);
+    let sync_back_start = if sync_census {
+        Some(std::time::Instant::now())
+    } else {
+        None
+    };
     sync_memory_from_wasm(inst, memory.get_nanbox_f64());
+    if let (Some(to), Some(back)) = (sync_to, sync_back_start) {
+        let total = to + back.elapsed().as_nanos() as u64;
+        WASM_CENSUS_SYNC_NANOS.fetch_add(total, std::sync::atomic::Ordering::Relaxed);
+        WASM_CENSUS_SYNC_CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
     let mut exit_code = 0;
     if unsafe { perry_wasm_host_instance_take_exit_code(inst, &mut exit_code) } != 0 {
         let instance = unbox_pointer(instance.get_nanbox_f64()) as *mut crate::object::ObjectHeader;
@@ -1370,6 +1387,107 @@ pub extern "C" fn js_webassembly_call_export_4(
     call_export_n(inst_jsval, name_jsval, &[a, b, c, d])
 }
 
+// ---------------------------------------------------------------------------
+// #9600: env-gated host->wasm call census (`PERRY_WASM_CALL_CENSUS=1`).
+//
+// Every JS-initiated wasm call funnels through `call_export_n` below — the
+// `instance.exports.foo(...)` closure path (`js_wasm_export_call_0..4`), the
+// legacy `WebAssembly.callExport` intrinsic (`js_webassembly_call_export_0..4`)
+// and WASI `_start` all reach it, and it is the sole caller of the
+// `perry_wasm_host_call_export` FFI. One counter site therefore covers the
+// whole surface.
+//
+// OFF BY DEFAULT and zero-cost when off: the hot path pays one relaxed
+// `OnceLock` load plus a not-taken branch, the same shape
+// `promise::mt_profile_enabled` uses. Nothing is allocated, no clock is read
+// and no atexit hook is installed unless the variable is set.
+// ---------------------------------------------------------------------------
+
+/// Per-export tally: (call count, cumulative nanoseconds inside the FFI call).
+type WasmCensusMap = std::collections::HashMap<String, (u64, u128)>;
+
+fn wasm_census_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| {
+        let on = matches!(
+            std::env::var("PERRY_WASM_CALL_CENSUS").as_deref(),
+            Ok("1") | Ok("true") | Ok("yes")
+        );
+        if on {
+            extern "C" fn at_exit() {
+                wasm_census_report();
+            }
+            unsafe {
+                extern "C" {
+                    fn atexit(cb: extern "C" fn()) -> i32;
+                }
+                atexit(at_exit);
+            }
+        }
+        on
+    })
+}
+
+fn wasm_census_table() -> &'static std::sync::Mutex<WasmCensusMap> {
+    static TABLE: std::sync::OnceLock<std::sync::Mutex<WasmCensusMap>> = std::sync::OnceLock::new();
+    TABLE.get_or_init(|| std::sync::Mutex::new(WasmCensusMap::new()))
+}
+
+fn wasm_census_record(name: &str, nanos: u128) {
+    if let Ok(mut t) = wasm_census_table().lock() {
+        let e = t.entry(name.to_string()).or_insert((0, 0));
+        e.0 += 1;
+        e.1 += nanos;
+    }
+}
+
+/// atexit dump. Sorted by call count descending so the hot exports lead.
+fn wasm_census_report() {
+    let Ok(t) = wasm_census_table().lock() else {
+        return;
+    };
+    let mut rows: Vec<(&String, &(u64, u128))> = t.iter().collect();
+    rows.sort_by(|a, b| b.1 .0.cmp(&a.1 .0).then_with(|| a.0.cmp(b.0)));
+    let total_calls: u64 = rows.iter().map(|r| r.1 .0).sum();
+    let total_nanos: u128 = rows.iter().map(|r| r.1 .1).sum();
+    eprintln!(
+        "[wasm-call-census] distinct_exports={} total_calls={total_calls} total_ms={:.3}",
+        rows.len(),
+        total_nanos as f64 / 1.0e6
+    );
+    for (name, (count, nanos)) in rows {
+        eprintln!(
+            "[wasm-call-census]   {name:<36} calls={count:<10} total_ms={:<12.3} mean_ns={:.0}",
+            *nanos as f64 / 1.0e6,
+            if *count > 0 {
+                *nanos as f64 / *count as f64
+            } else {
+                0.0
+            }
+        );
+    }
+    let sync_calls = WASM_CENSUS_SYNC_CALLS.load(std::sync::atomic::Ordering::Relaxed);
+    let sync_nanos = WASM_CENSUS_SYNC_NANOS.load(std::sync::atomic::Ordering::Relaxed);
+    if sync_calls > 0 {
+        eprintln!(
+            "[wasm-call-census] whole-linear-memory sync: calls={sync_calls} total_ms={:.3} mean_us={:.2}",
+            sync_nanos as f64 / 1.0e6,
+            sync_nanos as f64 / sync_calls as f64 / 1.0e3
+        );
+    }
+    if total_calls == 0 {
+        eprintln!("[wasm-call-census]   (no host->wasm calls were made)");
+    }
+}
+
+/// Cumulative nanoseconds and bytes spent in the per-call
+/// `sync_memory_to_wasm` / `sync_memory_from_wasm` pair. These copy the WHOLE
+/// linear memory in both directions on EVERY exported-function call, so the
+/// per-call cost is linear in `memory.buffer.byteLength`; the census reports
+/// them separately from the wasmi call itself so the two are never conflated.
+static WASM_CENSUS_SYNC_NANOS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static WASM_CENSUS_SYNC_CALLS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 fn call_export_n(inst_jsval: f64, name_jsval: f64, args: &[f64]) -> f64 {
     let inst = unbox_pointer(inst_jsval);
     if inst.is_null() {
@@ -1409,6 +1527,13 @@ fn call_export_n(inst_jsval: f64, name_jsval: f64, args: &[f64]) -> f64 {
     let mut out_bits = [0u64; MAX_RESULTS];
     let mut out_count = 0usize;
     let mut err: *mut c_char = std::ptr::null_mut();
+    // #9600 census: only reads the clock when PERRY_WASM_CALL_CENSUS is set.
+    let census = wasm_census_enabled();
+    let census_start = if census {
+        Some(std::time::Instant::now())
+    } else {
+        None
+    };
     let ok = unsafe {
         perry_wasm_host_call_export(
             inst,
@@ -1424,6 +1549,11 @@ fn call_export_n(inst_jsval: f64, name_jsval: f64, args: &[f64]) -> f64 {
             &mut err,
         )
     };
+    if let Some(started) = census_start {
+        let nanos = started.elapsed().as_nanos();
+        let name = unsafe { std::slice::from_raw_parts(name_ptr, name_len) };
+        wasm_census_record(&String::from_utf8_lossy(name), nanos);
+    }
     if ok == 0 {
         emit_error_to_stderr("WebAssembly.RuntimeError", err);
         return nanbox_undefined();
