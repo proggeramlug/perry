@@ -39,3 +39,18 @@
 
   The census exists so that this is measurable per workload rather than
   re-derived each time. It does not change the sync behaviour.
+
+  Validated against a fixture whose call counts are fixed in advance, so the
+  output is checked against ground truth rather than eyeballed — 1,000
+  `llhttp_get_error_pos`, 500 `mul`, 250 `llhttp_get_errno`, 7 `get_high`,
+  1 `llhttp_alloc`, 1 `llhttp_free`, across one module that has a linear
+  memory and one that does not. The census reports all six exactly and
+  `total_calls=1759`. With the variable unset the process writes **zero
+  bytes** to stderr and its stdout is byte-identical to the instrumented run.
+
+  That run also re-derives the headline independently, from the census's own
+  two counters rather than from wall-clock ratios: 11.238 ms in the
+  whole-memory sync against 1.055 ms inside the wasmi calls themselves, i.e.
+  **91% of all time spent calling wasm is the memory copy**, over exactly
+  1,759 syncs — one per call, which is the every-call behaviour stated
+  above rather than an inference about it.
