@@ -262,34 +262,37 @@ impl RegexDiag {
         );
         // Merge by content (prefix, len, flags): distinct literal sites with
         // the same pattern are one row.
-        let mut merged: HashMap<(String, u32, String), (u64, u64, u64, u64, u64, u64)> =
-            HashMap::new();
+        let mut merged: HashMap<(String, u32, String), PatStat> = HashMap::new();
         for p in self.per_pattern.values() {
             let e = merged
                 .entry((p.prefix.clone(), p.byte_len, p.flags.clone()))
                 .or_default();
-            e.0 += p.news;
-            e.1 += p.builds;
-            e.2 += p.execs;
-            e.3 += p.tests;
-            e.4 += p.replaces;
-            e.5 += p.matches;
+            e.news += p.news;
+            e.builds += p.builds;
+            e.execs += p.execs;
+            e.tests += p.tests;
+            e.replaces += p.replaces;
+            e.matches += p.matches;
         }
         let mut rows: Vec<_> = merged.into_iter().collect();
-        rows.sort_by(|a, b| {
-            let wa = a.1 .0 * (1 + a.1 .1) + a.1 .2 + a.1 .3 + a.1 .4 + a.1 .5;
-            let wb = b.1 .0 * (1 + b.1 .1) + b.1 .2 + b.1 .3 + b.1 .4 + b.1 .5;
-            wb.cmp(&wa)
+        rows.sort_by_key(|(_, s)| {
+            std::cmp::Reverse(s.news * (1 + s.builds) + s.execs + s.tests + s.replaces + s.matches)
         });
         let _ = writeln!(
             out,
             "  news builds execs tests replaces matches  len flags pattern-prefix ({} distinct)",
             rows.len()
         );
-        for ((prefix, len, flags), (n, b, e, t, r, m)) in rows.iter().take(40) {
+        for ((prefix, len, flags), s) in rows.iter().take(40) {
             let _ = writeln!(
                 out,
-                "  {n:5} {b:6} {e:5} {t:5} {r:8} {m:7}  {len:5} /{flags}/ {}",
+                "  {:5} {:6} {:5} {:5} {:8} {:7}  {len:5} /{flags}/ {}",
+                s.news,
+                s.builds,
+                s.execs,
+                s.tests,
+                s.replaces,
+                s.matches,
                 prefix.replace('\n', "\\n")
             );
         }
@@ -468,7 +471,7 @@ impl IcDiag {
         }
         out.push('\n');
         let mut rows: Vec<&SiteStat> = self.sites.values().collect();
-        rows.sort_by(|a, b| b.misses.cmp(&a.misses));
+        rows.sort_by_key(|s| std::cmp::Reverse(s.misses));
         let _ = writeln!(out, "  misses  key  reasons");
         for s in rows.iter().take(40) {
             let mut reasons = String::new();
