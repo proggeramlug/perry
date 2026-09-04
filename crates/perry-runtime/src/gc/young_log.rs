@@ -76,21 +76,42 @@ use crate::value::{BIGINT_TAG, POINTER_MASK, POINTER_TAG, STRING_TAG, TAG_MASK};
 /// Keys of side-table entries that may hold a pointer a minor can act on.
 pub(crate) struct YoungLog<K> {
     keys: Vec<K>,
+    /// Length at which the next `note` sorts and dedups in place, so a hot
+    /// writer re-noting a few keys between two minors keeps the log bounded
+    /// by DISTINCT keys rather than by notes. Doubles after each compaction
+    /// that found little to remove.
+    compact_at: usize,
 }
+
+const YOUNG_LOG_FIRST_COMPACTION: usize = 4096;
 
 impl<K: Copy + Ord> YoungLog<K> {
     pub(crate) const fn new() -> Self {
-        Self { keys: Vec::new() }
+        Self {
+            keys: Vec::new(),
+            compact_at: YOUNG_LOG_FIRST_COMPACTION,
+        }
     }
 
     /// Record `key` as possibly minor-relevant. MUST run before the entry it
     /// describes becomes findable (rule 1). Adjacent duplicates — a hot
-    /// `fn.x = …` loop — are collapsed; other duplicates are harmless.
+    /// `fn.x = …` loop — are collapsed; other duplicates are harmless and
+    /// are squeezed out when the log reaches `compact_at`.
     #[inline]
     pub(crate) fn note(&mut self, key: K) {
         if self.keys.last() != Some(&key) {
             self.keys.push(key);
+            if self.keys.len() >= self.compact_at {
+                self.compact();
+            }
         }
+    }
+
+    #[cold]
+    fn compact(&mut self) {
+        self.keys.sort_unstable();
+        self.keys.dedup();
+        self.compact_at = (self.keys.len() * 2).max(YOUNG_LOG_FIRST_COMPACTION);
     }
 
     /// Take the logged keys, sorted and deduplicated, leaving the log empty.
@@ -101,6 +122,7 @@ impl<K: Copy + Ord> YoungLog<K> {
         let mut keys = std::mem::take(&mut self.keys);
         keys.sort_unstable();
         keys.dedup();
+        self.compact_at = YOUNG_LOG_FIRST_COMPACTION;
         keys
     }
 
@@ -111,6 +133,7 @@ impl<K: Copy + Ord> YoungLog<K> {
         } else {
             self.keys.extend(kept);
         }
+        self.compact_at = (self.keys.len() * 2).max(YOUNG_LOG_FIRST_COMPACTION);
     }
 
     /// Test-only: the table resets (`test_clear_*`) clear their log with them.
