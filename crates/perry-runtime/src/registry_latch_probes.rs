@@ -532,3 +532,29 @@ mod latch_semantics {
         }
     }
 }
+
+/// The negative cache in front of `is_registered_buffer_slow` must retire a
+/// cached "no" the moment the address becomes a buffer. A raw buffer
+/// allocation is probed (negative, cached), then registered at the SAME
+/// address; the next probe must answer yes — a stale negative here would be a
+/// type confusion, not a slowdown. Fails on a cache without the registration
+/// epoch.
+#[test]
+fn buffer_negative_cache_is_invalidated_by_registration() {
+    let _lock = crate::gc::global_side_table_test_lock();
+    // Open the window with a real registration so the probe reaches the cache.
+    let opener = crate::buffer::buffer_alloc(32) as usize;
+    assert!(crate::buffer::is_registered_buffer(opener));
+    // An in-window address that is NOT registered yet.
+    let raw = crate::buffer::buffer_alloc_unregistered_for_tests(32) as usize;
+    assert!(
+        !crate::buffer::is_registered_buffer(raw),
+        "not registered yet"
+    );
+    assert!(!crate::buffer::is_registered_buffer(raw), "cached negative");
+    crate::buffer::register_buffer(raw as *const crate::buffer::BufferHeader);
+    assert!(
+        crate::buffer::is_registered_buffer(raw),
+        "registration must retire the cached negative"
+    );
+}

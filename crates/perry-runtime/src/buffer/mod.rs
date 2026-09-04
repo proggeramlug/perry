@@ -52,6 +52,9 @@ pub(crate) use header::u8_inline_cache_try_prime;
 // `shared_sab` publishes process-global backings that `is_registered_buffer`
 // reports as buffers without them entering `BUFFER_REGISTRY`, so it arms the
 // same monotone latch — before the backing becomes reachable.
+#[cfg(test)]
+pub(crate) use header::buffer_alloc_unregistered_for_tests;
+pub(crate) use header::note_buffer_like_published;
 pub(crate) use header::note_buffer_like_registered;
 pub use header::{
     asymmetric_key_meta, buffer_ab_alias, buffer_alloc, buffer_backing_array_buffer,

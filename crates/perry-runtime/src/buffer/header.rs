@@ -411,6 +411,8 @@ pub fn register_buffer(ptr: *const BufferHeader) {
         r.set((lo.min(addr), hi.max(addr)));
     });
     BUFFER_REGISTRY.with(|r| r.borrow_mut().insert(addr));
+    // Findable now: retire every cached negative (see BUFFER_NEG_CACHE_SLOTS).
+    note_buffer_like_published();
 }
 
 /// Historical tier boundary, retained for callers that size test fixtures
@@ -425,6 +427,80 @@ pub const SMALL_BUF_THRESHOLD: u32 = 256;
 /// ranges can exist, so it is constant `false`.
 pub(crate) fn is_small_buf_slab_addr(_addr: usize) -> bool {
     false
+}
+
+/// Direct-mapped NEGATIVE cache in front of [`is_registered_buffer_slow`].
+///
+/// The address window above stops discriminating in any long-running process:
+/// the claude-code TUI has buffers spread across the old arena, so the window
+/// spans the heap and every "is this pointer a buffer?" question — asked by
+/// `js_array_get_f64` per element read, by the descriptor probes, by the
+/// vtable guards, by `js_dyn_index_set_strict` — reaches the slow path, and
+/// every one of them answers "no": 2.2 % of the keystroke profile in
+/// `is_registered_buffer_slow` itself. A slot remembers one address that was
+/// NOT a buffer as of a registration epoch; a hit is one load and two
+/// compares.
+///
+/// Soundness: every route that can make an address a buffer bumps
+/// [`BUFFER_REGISTRATION_EPOCH`] AFTER the address is findable —
+/// `register_buffer` (the thread-local registry and, through it, the external
+/// registry) and `note_buffer_like_published` (the process-global SAB
+/// registry). That is the same route set the window's debug audit proves
+/// complete. A probe loads the epoch (Acquire) BEFORE it runs the slow path
+/// and stores its negative under that epoch, so a registration that races
+/// the probe either is already visible to the slow path or invalidates the
+/// stored negative with its bump. Removal (the dead-buffer sweep) only
+/// creates negatives, which are cached lazily and correctly.
+const BUFFER_NEG_CACHE_SLOTS: usize = 4096;
+
+/// Bumped after every publication of a buffer-like address; see
+/// [`BUFFER_NEG_CACHE_SLOTS`].
+static BUFFER_REGISTRATION_EPOCH: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(1);
+
+crate::perry_thread_local! {
+    /// `(addr, epoch)` per slot; heap-allocated on first use so the TLS block
+    /// stays small (same rule as the intern table).
+    static BUFFER_NEG_CACHE: std::cell::UnsafeCell<Box<[(usize, u64)]>> =
+        std::cell::UnsafeCell::new(Box::new([]));
+}
+
+#[inline]
+fn buffer_neg_cache_slot(addr: usize) -> usize {
+    ((addr >> 4) ^ (addr >> 16)) & (BUFFER_NEG_CACHE_SLOTS - 1)
+}
+
+#[inline]
+fn buffer_neg_cache_hit(addr: usize, epoch: u64) -> bool {
+    BUFFER_NEG_CACHE.with(|c| {
+        // SAFETY: thread-local; the borrow ends inside this closure and nothing
+        // in it can re-enter the cache.
+        let cache = unsafe { &*c.get() };
+        if cache.is_empty() {
+            return false;
+        }
+        let (a, e) = cache[buffer_neg_cache_slot(addr)];
+        a == addr && e == epoch
+    })
+}
+
+#[inline(never)]
+fn buffer_neg_cache_store(addr: usize, epoch: u64) {
+    BUFFER_NEG_CACHE.with(|c| {
+        // SAFETY: as above.
+        let cache = unsafe { &mut *c.get() };
+        if cache.is_empty() {
+            *cache = vec![(0usize, 0u64); BUFFER_NEG_CACHE_SLOTS].into_boxed_slice();
+        }
+        cache[buffer_neg_cache_slot(addr)] = (addr, epoch);
+    });
+}
+
+/// A buffer-like address became findable in a registry `is_registered_buffer`
+/// consults: invalidate every cached negative, on every thread. Must run AFTER
+/// the insert (see [`BUFFER_NEG_CACHE_SLOTS`]).
+pub(crate) fn note_buffer_like_published() {
+    BUFFER_REGISTRATION_EPOCH.fetch_add(1, std::sync::atomic::Ordering::Release);
 }
 
 /// Check if a pointer is a registered buffer (for instanceof Uint8Array)
@@ -468,7 +544,15 @@ pub fn is_registered_buffer(addr: usize) -> bool {
     }
     #[cfg(test)]
     TEST_BUFFER_REGISTRY_PROBES.with(|c| c.set(c.get().wrapping_add(1)));
-    is_registered_buffer_slow(addr)
+    let epoch = BUFFER_REGISTRATION_EPOCH.load(std::sync::atomic::Ordering::Acquire);
+    if buffer_neg_cache_hit(addr, epoch) {
+        return false;
+    }
+    let found = is_registered_buffer_slow(addr);
+    if !found {
+        buffer_neg_cache_store(addr, epoch);
+    }
+    found
 }
 
 /// `PERRY_BUFFER_RANGE_FILTER=0` restores the unconditional hash lookup.
@@ -927,6 +1011,24 @@ pub fn buffer_alloc(capacity: u32) -> *mut BufferHeader {
         (*ptr).capacity = capacity;
     }
     register_buffer(ptr);
+    ptr
+}
+
+/// Test-only: `buffer_alloc` without the registration, so a test can probe
+/// an in-window address that is not (yet) a buffer and then register it.
+#[cfg(test)]
+pub(crate) fn buffer_alloc_unregistered_for_tests(capacity: u32) -> *mut BufferHeader {
+    let ptr = crate::arena::arena_alloc_gc_old(
+        buffer_payload_size(capacity as usize),
+        8,
+        crate::gc::GC_TYPE_BUFFER,
+    ) as *mut BufferHeader;
+    unsafe {
+        let header = (ptr as *mut u8).sub(crate::gc::GC_HEADER_SIZE) as *mut crate::gc::GcHeader;
+        (*header).gc_flags |= crate::gc::GC_FLAG_TENURED;
+        (*ptr).length = 0;
+        (*ptr).capacity = capacity;
+    }
     ptr
 }
 
