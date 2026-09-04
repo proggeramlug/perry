@@ -84,6 +84,8 @@ pub fn alloc_shared_sab(size: u32) -> *mut BufferHeader {
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .insert(buf as usize);
+    // Findable now: retire `is_registered_buffer`'s cached negatives.
+    crate::buffer::note_buffer_like_published();
     buf
 }
 
@@ -140,6 +142,7 @@ pub(crate) fn test_seed_shared_sab(addr: usize) {
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .insert(addr);
+    crate::buffer::note_buffer_like_published();
 }
 
 #[cfg(test)]
