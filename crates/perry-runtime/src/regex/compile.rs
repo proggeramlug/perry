@@ -210,7 +210,10 @@ pub extern "C" fn js_regexp_compile_value(
         super::REGEX_SOURCE_TABLE.with(|t| {
             t.borrow_mut().insert(
                 re as usize,
-                (pattern_str.to_string(), flags_str.to_string()),
+                (
+                    std::sync::Arc::from(pattern_str),
+                    std::sync::Arc::from(flags_str),
+                ),
             );
         });
     }

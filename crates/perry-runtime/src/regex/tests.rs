@@ -1648,3 +1648,200 @@ fn global_replace_substitutes_at_every_empty_match() {
     let out = js_string_replace_regex_named(make_string("a"), named, make_string("[$<n>]"));
     assert_eq!(string_as_str(out), "[a][]");
 }
+
+/// A header built while `FANCY_CACHE` is empty but `REGEX_CACHE` still holds
+/// the pattern's never-match placeholder must still get its fancy fallback.
+///
+/// The three compiled-program caches are capped independently and each
+/// `clear()`s wholesale on overflow, so this state is reachable in any program
+/// that compiles more than `REGEX_CACHE_MAX_ENTRIES` lookaround patterns:
+/// `get_or_compile_regex` answers from the surviving placeholder without
+/// re-running the fancy build, and the header used to be published as
+/// "compiled" carrying a program that matches nothing and no fallback — a
+/// lookbehind regex that silently stops matching.
+///
+/// It is also the invariant that lets `lookup_fancy_regex` trust a built
+/// header instead of re-probing the caches (a full copy + SipHash of the
+/// pattern text) on every `exec`.
+#[test]
+fn built_header_keeps_its_fancy_fallback_after_a_fancy_cache_clear() {
+    let _lock = crate::gc::global_side_table_test_lock();
+    let source = "(?<=foo)bar";
+    let scope = crate::gc::RuntimeHandleScope::new();
+
+    // First construction compiles both programs into the caches.
+    let pattern = scope.root_string_ptr(make_string(source));
+    let flags = scope.root_string_ptr(make_string(""));
+    let warm = pattern.with_mut_ptr::<StringHeader, _>(|pattern| {
+        flags.with_mut_ptr::<StringHeader, _>(|flags| js_regexp_new(pattern, flags))
+    });
+    let subject = scope.root_string_ptr(make_string("foobar"));
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(warm, s)),
+        1,
+        "a lookbehind pattern must match through the fancy fallback"
+    );
+
+    // Now drop ONLY the fancy programs, exactly as an overflow clear does,
+    // leaving the never-match placeholder in REGEX_CACHE.
+    FANCY_CACHE.with(|fc| fc.borrow_mut().clear());
+    assert!(
+        REGEX_CACHE.with(|c| c.borrow().contains_key(&(source.to_string(), String::new()))),
+        "the placeholder must survive for this test to exercise anything"
+    );
+
+    let pattern = scope.root_string_ptr(make_string(source));
+    let flags = scope.root_string_ptr(make_string(""));
+    let cold = pattern.with_mut_ptr::<StringHeader, _>(|pattern| {
+        flags.with_mut_ptr::<StringHeader, _>(|flags| js_regexp_new(pattern, flags))
+    });
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(cold, s)),
+        1,
+        "a header built from the surviving placeholder must rebuild its fancy fallback"
+    );
+    unsafe {
+        assert!(
+            !(*cold).fancy_ptr.is_null(),
+            "the fallback must be installed ON the header, so lookups need no cache probe"
+        );
+    }
+}
+
+/// `test` on a global/sticky receiver must move `lastIndex` exactly as `exec`
+/// does — it is the same observable state machine — on every engine.
+///
+/// This is the pin for replacing `test`'s `exec` call (which built a whole
+/// match array to answer a boolean) with the find-only twin: any divergence in
+/// the advance, the reset-on-miss, the sticky anchor or the `lastIndex >
+/// length` early-out shows up here as a wrong number.
+#[test]
+fn global_and_sticky_test_track_last_index_like_exec() {
+    let _lock = crate::gc::global_side_table_test_lock();
+    let scope = crate::gc::RuntimeHandleScope::new();
+
+    let mk = |src: &str, flags: &str| {
+        let pattern = scope.root_string_ptr(make_string(src));
+        let f = scope.root_string_ptr(make_string(flags));
+        pattern.with_mut_ptr::<StringHeader, _>(|pattern| {
+            f.with_mut_ptr::<StringHeader, _>(|f| js_regexp_new(pattern, f))
+        })
+    };
+    let last_index = |re: *const RegExpHeader| f64::from_bits(unsafe { (*re).last_index });
+
+    // Standard engine, global: advances to the end of each match, then resets.
+    let subject = scope.root_string_ptr(make_string("ab ab"));
+    let re = mk("ab", "g");
+    for (call, expected_hit, expected_last) in [(0, 1, 2.0), (1, 1, 5.0), (2, 0, 0.0)] {
+        let hit = subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s));
+        assert_eq!(hit, expected_hit, "global /ab/g call {call}");
+        assert_eq!(last_index(re), expected_last, "global /ab/g lastIndex {call}");
+    }
+
+    // Sticky: only matches AT lastIndex.
+    let re = mk("ab", "y");
+    let subject = scope.root_string_ptr(make_string("xab"));
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        0,
+        "sticky must not scan forward"
+    );
+    assert_eq!(last_index(re), 0.0, "a sticky miss resets lastIndex");
+    store_last_index_number(re, 1);
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        1,
+        "sticky matches when anchored at lastIndex"
+    );
+    assert_eq!(last_index(re), 3.0);
+
+    // lastIndex past the end is "no match" outright, and resets.
+    store_last_index_number(re, 99);
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        0
+    );
+    assert_eq!(last_index(re), 0.0);
+
+    // Fancy engine (lookbehind), global.
+    let re = mk("(?<=x)ab", "g");
+    let subject = scope.root_string_ptr(make_string("xab xab"));
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        1,
+        "lookbehind must match through the fancy engine"
+    );
+    assert_eq!(last_index(re), 3.0);
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        1
+    );
+    assert_eq!(last_index(re), 7.0);
+
+    // Repeat-matcher engine (capture under a quantifier), global.
+    let re = mk("(a+)+b", "g");
+    let subject = scope.root_string_ptr(make_string("aab aab"));
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        1,
+        "a quantified capture must match through the repeat matcher"
+    );
+    assert_eq!(last_index(re), 3.0);
+
+    // Non-global `test` is stateless: lastIndex never moves.
+    let re = mk("ab", "");
+    let subject = scope.root_string_ptr(make_string("xxab"));
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        1
+    );
+    assert_eq!(last_index(re), 0.0, "non-global test must not touch lastIndex");
+}
+
+/// The backtracking cliff: a capture group under a quantifier takes a pattern
+/// off the linear engine, and the ECMAScript backtracker has no step budget.
+/// `/^(a+)+$/.test("a"*28 + "!")` measured 8.1 s against 2.6 s for node and
+/// 0 ms for the identical-language `/^(?:a+)+$/`.
+///
+/// The linear program proves the answer in O(n) — the two engines accept the
+/// same language and disagree only about capture ASSIGNMENT — so the
+/// backtracker must not be entered for a subject the linear engine has already
+/// ruled out. This test would take minutes without that gate.
+#[test]
+fn quantified_capture_pattern_does_not_backtrack_on_a_non_matching_subject() {
+    let _lock = crate::gc::global_side_table_test_lock();
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let pattern = scope.root_string_ptr(make_string("^(a+)+$"));
+    let flags = scope.root_string_ptr(make_string(""));
+    let re = pattern.with_mut_ptr::<StringHeader, _>(|pattern| {
+        flags.with_mut_ptr::<StringHeader, _>(|flags| js_regexp_new(pattern, flags))
+    });
+    // The pattern really is on the backtracker — that is the premise.
+    assert!(
+        lookup_repeat_matcher(re).is_some(),
+        "a capture under a quantifier must route to the ECMAScript matcher"
+    );
+
+    let hay = format!("{}!", "a".repeat(40));
+    let subject = scope.root_string_ptr(make_string(&hay));
+    let started = std::time::Instant::now();
+    assert_eq!(
+        subject.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        0,
+        "no match: the subject ends in '!'"
+    );
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(2),
+        "a non-matching subject must not be handed to the backtracker \
+         (took {:?} for 40 characters)",
+        started.elapsed()
+    );
+
+    // A subject that DOES match still goes through the backtracker and still
+    // reports the spec's captures.
+    let good = scope.root_string_ptr(make_string("aaaa"));
+    assert_eq!(
+        good.with_const_ptr::<StringHeader, _>(|s| js_regexp_test(re, s)),
+        1
+    );
+}

@@ -74,7 +74,7 @@ pub extern "C" fn js_regexp_exec(
         // `fancy_regex::Regex::captures_from_pos` and
         // `regress::Regex::find_from`. Their reported offsets are absolute, so
         // nothing downstream re-bases them.
-        let owned = if let Some(repeat_matcher) = lookup_repeat_matcher(re) {
+        let owned = if let Some(repeat_matcher) = lookup_repeat_matcher_for(re, str_data, search_start_byte) {
             repeat_matcher
                 .regex
                 .find_from(str_data, search_start_byte)
@@ -159,4 +159,102 @@ pub extern "C" fn js_regexp_exec(
     LAST_EXEC_INDEX.with(|idx| *idx.borrow_mut() = owned.match_index);
     LAST_EXEC_GROUPS.with(|g| *g.borrow_mut() = groups);
     result
+}
+
+
+/// The engine phase of [`js_regexp_exec`] with the match OBJECT removed:
+/// "did it match, and where does `lastIndex` go next?".
+///
+/// `test` on a global or sticky receiver is stateful — it consults and advances
+/// `lastIndex` and anchors for `y` — so it used to be implemented by CALLING
+/// `js_regexp_exec` and throwing the result away. That built the whole
+/// observable match: an `ArrayHeader`, one `StringHeader` per capture group
+/// (`OwnedExecMatch::from_standard` copies every capture out of the subject),
+/// the `groups` object for named groups, and the `indices` array under `/d` —
+/// all immediately garbage. On the claude-code TUI, where a layout pass runs
+/// `emoji-regex`/`ansi-regex` `/…/g` literals over every text segment, that is
+/// pure allocation on the keystroke path.
+///
+/// This is the same code with `captures_at` replaced by `find_at`: same engine
+/// order (repeat matcher, then fancy, then standard), the same sticky
+/// anchoring, the same `lastIndex` advance-on-match / reset-on-miss, and the
+/// same throwing `Set(R, "lastIndex")`. Skipping captures is not only an
+/// allocation saved — the `regex` crate's meta engine can answer a
+/// "does it match" question with a DFA where a capture query forces the
+/// slower capture-tracking path.
+#[cfg(feature = "regex-engine")]
+fn regexp_find_advancing(re: *mut RegExpHeader, s: *const StringHeader) -> bool {
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let re_handle = scope.root_raw_mut_ptr(re);
+    let s_handle = scope.root_string_ptr(s);
+    let ((last_index_read, re), s) = s_handle.across_const::<StringHeader, _>(|| {
+        re_handle
+            .across_mut::<RegExpHeader, _>(|| re_handle.with_const_ptr(regex_last_index_offset))
+    });
+
+    unsafe {
+        let str_data = string_as_str(s);
+        let global = (*re).global;
+        let sticky = (*re).sticky;
+        let use_last_index = global || sticky;
+        let last_index = if use_last_index { last_index_read } else { 0 };
+
+        // RegExpBuiltinExec step 12.a, in UTF-16 units (see `js_regexp_exec`).
+        if use_last_index && last_index > (*s).utf16_len as usize {
+            set_last_index_throwing(re, 0);
+            return false;
+        }
+
+        let start = if use_last_index && last_index > 0 {
+            super::exec_array::utf16_index_to_byte(str_data, last_index)
+        } else {
+            0
+        };
+
+        // #9429: search FROM `start` in the whole subject, never in a slice —
+        // every zero-width assertion is defined against the real subject.
+        let end: Option<usize> = if let Some(repeat_matcher) = lookup_repeat_matcher_for(re, str_data, start) {
+            repeat_matcher
+                .regex
+                .find_from(str_data, start)
+                .next()
+                .filter(|m| !sticky || m.start() == start)
+                .map(|m| m.end())
+        } else if let Some(fre) = lookup_fancy_regex(re) {
+            match fre.find_from_pos(str_data, start) {
+                Ok(Some(m)) if !sticky || m.start() == start => Some(m.end()),
+                Ok(Some(_)) | Ok(None) | Err(_) => None,
+            }
+        } else {
+            super::lazy::header_std_regex(re)
+                .find_at(str_data, start)
+                .filter(|m| !sticky || m.start() == start)
+                .map(|m| m.end())
+        };
+
+        match end {
+            Some(end) => {
+                if use_last_index {
+                    set_last_index_throwing(
+                        re,
+                        super::exec_array::byte_index_to_utf16_index(str_data, end),
+                    );
+                }
+                true
+            }
+            None => {
+                if use_last_index {
+                    set_last_index_throwing(re, 0);
+                }
+                false
+            }
+        }
+    }
+}
+
+/// `regexp_find_advancing` is `js_regexp_test`'s stateful path; exported to the
+/// parent module so `js_regexp_test` can call it.
+#[cfg(feature = "regex-engine")]
+pub(super) fn regexp_test_advancing(re: *mut RegExpHeader, s: *const StringHeader) -> bool {
+    regexp_find_advancing(re, s)
 }

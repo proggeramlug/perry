@@ -53,8 +53,8 @@ use regex::Regex;
 use super::grammar::{collapse_redos_guard_quantifiers, js_regex_to_rust_with_flags};
 use super::{
     evict_regex_cache_if_full, get_or_compile_regex, is_valid_ptr, is_valid_regex_ptr,
-    string_as_str, RegExpHeader, FANCY_CACHE, REGEX_SOURCE_TABLE, REPEAT_MATCHER_CACHE,
-    VALIDATED_PATTERNS,
+    string_as_str, RegExpHeader, FANCY_CACHE, NEVER_MATCH_PATTERN, REGEX_SOURCE_TABLE,
+    REPEAT_MATCHER_CACHE, VALIDATED_PATTERNS,
 };
 
 /// The exact string `build_std_regex` is handed for `(pattern, flags)`: the
@@ -163,22 +163,24 @@ pub(super) fn mark_pattern_validated(pattern: &str, flags: &str) {
 /// Prefers the GC-survivable side table (issue #637) and falls back to the
 /// header's own string payloads, which — unlike the thread-local table — are
 /// readable from a second statically-linked copy of the runtime (Wall 18).
-pub(super) fn source_and_flags(re: *const RegExpHeader) -> (String, String) {
+pub(super) fn source_and_flags(re: *const RegExpHeader) -> (Arc<str>, Arc<str>) {
     if let Some(source) =
         REGEX_SOURCE_TABLE.with(|table| table.borrow().get(&(re as usize)).cloned())
     {
+        // Two `Arc` clones — the side table shares one allocation of the text
+        // with every other header built from the same literal.
         return source;
     }
     unsafe {
-        let pattern = if is_valid_ptr((*re).pattern_ptr) {
-            string_as_str((*re).pattern_ptr).to_string()
+        let pattern: Arc<str> = if is_valid_ptr((*re).pattern_ptr) {
+            Arc::from(string_as_str((*re).pattern_ptr))
         } else {
-            String::new()
+            Arc::from("")
         };
-        let flags = if is_valid_ptr((*re).flags_ptr) {
-            string_as_str((*re).flags_ptr).to_string()
+        let flags: Arc<str> = if is_valid_ptr((*re).flags_ptr) {
+            Arc::from(string_as_str((*re).flags_ptr))
         } else {
-            String::new()
+            Arc::from("")
         };
         (pattern, flags)
     }
@@ -230,19 +232,50 @@ fn build_and_install_programs(re: *const RegExpHeader) {
     }
     let (pattern, flags) = source_and_flags(re);
     let arc = get_or_compile_regex(&pattern, &flags);
+    // Does the standard program actually match anything, or is it the
+    // never-match placeholder `compile_and_cache_regex_checked` installs for a
+    // pattern only `fancy-regex` accepts?
+    let std_is_placeholder = arc.as_str() == NEVER_MATCH_PATTERN;
     let regex_ptr = Arc::into_raw(arc) as *mut Regex;
-    let fancy_ptr: *const () =
+    let repeat_matcher_ptr: *const () = REPEAT_MATCHER_CACHE.with(|cache| {
+        match cache
+            .borrow()
+            .get(&(pattern.to_string(), flags.to_string()))
+        {
+            Some(arc) => Arc::into_raw(arc.clone()) as *const (),
+            None => std::ptr::null(),
+        }
+    });
+    let mut fancy_ptr: *const () =
         FANCY_CACHE.with(
-            |fc| match fc.borrow().get(&(pattern.clone(), flags.clone())) {
+            |fc| match fc.borrow().get(&(pattern.to_string(), flags.to_string())) {
                 Some(arc) => Arc::into_raw(arc.clone()) as *const (),
                 None => std::ptr::null(),
             },
         );
-    let repeat_matcher_ptr: *const () =
-        REPEAT_MATCHER_CACHE.with(|cache| match cache.borrow().get(&(pattern, flags)) {
-            Some(arc) => Arc::into_raw(arc.clone()) as *const (),
-            None => std::ptr::null(),
-        });
+    // Coherence: the three caches are capped independently and each CLEARS
+    // wholesale on overflow, so `FANCY_CACHE` can be empty for a pattern whose
+    // `REGEX_CACHE` entry — the never-match placeholder — survives.
+    // `get_or_compile_regex` then answers from that placeholder without
+    // re-running the fancy build, and the header would be published as
+    // "compiled" with a program that matches nothing and no fallback: the
+    // regex silently stops matching. Rebuild the fallback here, from the
+    // placeholder itself, so a built header ALWAYS carries every program its
+    // pattern needs — which is what lets `lookup_fancy_regex` treat the header
+    // as authoritative instead of re-probing the caches on every exec.
+    if std_is_placeholder && fancy_ptr.is_null() && repeat_matcher_ptr.is_null() {
+        let flag_prefixed = flag_prefixed_pattern(&pattern, &flags);
+        if let Ok(fre) = super::build_fancy_regex(&flag_prefixed) {
+            let arc = Arc::new(fre);
+            FANCY_CACHE.with(|fc| {
+                let mut fc = fc.borrow_mut();
+                evict_regex_cache_if_full(&mut fc);
+                fc.insert((pattern.to_string(), flags.to_string()), arc.clone());
+            });
+            fancy_ptr = Arc::into_raw(arc) as *const ();
+        }
+    }
+
     unsafe {
         let re = re as *mut RegExpHeader;
         (*re).fancy_ptr = fancy_ptr;

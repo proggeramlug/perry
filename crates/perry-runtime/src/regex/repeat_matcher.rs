@@ -241,7 +241,35 @@ fn quantifier_follows(bytes: &[u8], index: usize) -> bool {
 /// capture semantics. Besides quantified captures, this includes captures in a
 /// negative lookaround: after a successful negative assertion those captures
 /// are unmatched, so a later backreference must match the empty string.
-fn quantified_capture_layout(pattern: &str) -> Option<Vec<Option<String>>> {
+/// Is `regress` the PRIMARY engine for this process?
+///
+/// `PERRY_REGEX_ENGINE=regress` routes every pattern through the ECMAScript
+/// backtracker instead of only the ones whose RepeatMatcher capture semantics
+/// are observable. It exists to MEASURE the tier-0 architecture end to end —
+/// compile cost, bytes of program, and the match-time cost of giving up the
+/// linear engine — on the real rig rather than on a corpus benchmark. It is
+/// not a supported configuration: the backtracker has no step budget, so a
+/// pathological pattern can run unbounded.
+pub(super) fn regress_first() -> bool {
+    use std::sync::atomic::{AtomicU8, Ordering};
+    static STATE: AtomicU8 = AtomicU8::new(0);
+    match STATE.load(Ordering::Relaxed) {
+        1 => return false,
+        2 => return true,
+        _ => {}
+    }
+    let on = std::env::var("PERRY_REGEX_ENGINE")
+        .map(|v| v.eq_ignore_ascii_case("regress"))
+        .unwrap_or(false);
+    STATE.store(if on { 2 } else { 1 }, Ordering::Relaxed);
+    on
+}
+
+/// The capture-name layout of `pattern`, and whether ECMA-262's RepeatMatcher
+/// capture-reset semantics are OBSERVABLE for it (a capture group directly
+/// under a quantifier, or a capture inside a negative lookaround — the two
+/// shapes where the linear engine's answer differs from the spec's).
+fn capture_layout(pattern: &str) -> (Vec<Option<String>>, bool) {
     let bytes = pattern.as_bytes();
     let mut captures = Vec::new();
     let mut groups = Vec::new();
@@ -288,11 +316,14 @@ fn quantified_capture_layout(pattern: &str) -> Option<Vec<Option<String>>> {
             _ => index += 1,
         }
     }
-    needs_repeat_matcher.then_some(captures)
+    (captures, needs_repeat_matcher)
 }
 
 pub(super) fn compile(pattern: &str, flags: &str) -> Option<RepeatMatcherRegex> {
-    let capture_names = quantified_capture_layout(pattern)?;
+    let (capture_names, needs_repeat_matcher) = capture_layout(pattern);
+    if !needs_repeat_matcher && !regress_first() {
+        return None;
+    }
     let regex = regress::Regex::with_flags(pattern, flags).ok()?;
     Some(RepeatMatcherRegex {
         regex,
@@ -300,7 +331,7 @@ pub(super) fn compile(pattern: &str, flags: &str) -> Option<RepeatMatcherRegex> 
     })
 }
 
-fn source_and_flags(re: *const super::RegExpHeader) -> (String, String) {
+fn source_and_flags(re: *const super::RegExpHeader) -> (std::sync::Arc<str>, std::sync::Arc<str>) {
     // One definition, shared with the lazy first-use builder: both need the
     // `(source, flags)` a header was constructed from, and a second copy of
     // the side-table-then-header fallback would be a place for them to drift.
@@ -437,7 +468,7 @@ pub(super) fn replace_wtf8_subject(
     global: bool,
 ) -> Option<Vec<u8>> {
     let (source, flags) = source_and_flags(re);
-    let regex = regress::Regex::with_flags(&source, flags.as_str()).ok()?;
+    let regex = regress::Regex::with_flags(&source, &*flags).ok()?;
     let units = decode_wtf8_units(subject);
     let matches: Vec<regress::Match> = if flags.contains('u') || flags.contains('v') {
         regex.find_from_utf16(&units, 0).collect()
@@ -460,22 +491,32 @@ pub(super) fn replace_wtf8_subject(
 mod tests {
     use super::*;
 
+    /// Which shapes make ECMA-262's RepeatMatcher capture semantics
+    /// observable — i.e. which patterns perry takes OFF the linear engine and
+    /// onto the backtracker. 7.2 % of the claude-code bundle's 2,803 distinct
+    /// literals match, so this predicate is also the routing cliff:
+    /// `^(a+)+$` runs here, `^(?:a+)+$` does not.
     #[test]
     fn detects_only_quantified_groups_with_captures() {
-        assert!(quantified_capture_layout(r"(a?b??)*").is_some());
-        assert!(quantified_capture_layout(r"(?:(?=(abc))){0,1}a").is_some());
-        assert!(quantified_capture_layout(r"(?!(a)b)\1").is_some());
-        assert!(quantified_capture_layout(r"(?<!(a)b)\1").is_some());
-        assert!(quantified_capture_layout(r"[()]\\(literal\\)").is_none());
-        assert!(quantified_capture_layout(r"(?:ab)*").is_none());
-        assert!(quantified_capture_layout(r"(ab)c").is_none());
+        assert!(capture_layout(r"(a?b??)*").1);
+        assert!(capture_layout(r"(?:(?=(abc))){0,1}a").1);
+        assert!(capture_layout(r"(?!(a)b)\1").1);
+        assert!(capture_layout(r"(?<!(a)b)\1").1);
+        assert!(!capture_layout(r"[()]\\(literal\\)").1);
+        assert!(!capture_layout(r"(?:ab)*").1);
+        assert!(!capture_layout(r"(ab)c").1);
     }
 
     #[test]
     fn records_named_capture_indices() {
         assert_eq!(
-            quantified_capture_layout(r"(?:(?<first>a)(b))*"),
-            Some(vec![Some("first".to_string()), None])
+            capture_layout(r"(?:(?<first>a)(b))*"),
+            (vec![Some("first".to_string()), None], true)
+        );
+        // The layout is computed for every pattern; only the flag differs.
+        assert_eq!(
+            capture_layout(r"(?<first>a)(b)"),
+            (vec![Some("first".to_string()), None], false)
         );
     }
 }
