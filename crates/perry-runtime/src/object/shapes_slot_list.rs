@@ -159,7 +159,11 @@ impl SlotIndex {
         let tag = Self::tag_of(hash);
         SlotCandidates {
             index: self,
-            pos: if capacity == 0 { 0 } else { Self::home(tag, capacity - 1) },
+            pos: if capacity == 0 {
+                0
+            } else {
+                Self::home(tag, capacity - 1)
+            },
             remaining: capacity,
             tag,
         }
@@ -904,8 +908,14 @@ mod slot_index_tests {
             assert!(found.contains(&(slot as u32)), "{name} missing: {found:?}");
         }
         let absent: Vec<u32> = index.candidates(fnv(b"never_inserted")).collect();
-        assert!(absent.len() <= 2, "a narrow tag should almost never alias: {absent:?}");
-        assert!(index.heap_bytes() <= 4096 * 4, "3000 keys must fit 4096 narrow cells");
+        assert!(
+            absent.len() <= 2,
+            "a narrow tag should almost never alias: {absent:?}"
+        );
+        assert!(
+            index.heap_bytes() <= 4096 * 4,
+            "3000 keys must fit 4096 narrow cells"
+        );
     }
 
     #[test]
@@ -945,7 +955,10 @@ mod slot_index_tests {
         index.push(fnv(b"a"), 3);
         index.push(fnv(b"b"), 70_000);
         assert_eq!(index.candidates(fnv(b"a")).collect::<Vec<_>>(), vec![3]);
-        assert_eq!(index.candidates(fnv(b"b")).collect::<Vec<_>>(), vec![70_000]);
+        assert_eq!(
+            index.candidates(fnv(b"b")).collect::<Vec<_>>(),
+            vec![70_000]
+        );
         assert!(index.heap_bytes() >= 8 * 8, "wide cells are 8 bytes");
     }
 }

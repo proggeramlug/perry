@@ -2098,7 +2098,8 @@ fn scan_shape_table_young(
                 continue;
             }
             visited += 1;
-            let (post, relevant) = scan_shape_keys_address(visitor, table, inner, rewrite_phase, keys);
+            let (post, relevant) =
+                scan_shape_keys_address(visitor, table, inner, rewrite_phase, keys);
             if relevant {
                 kept.push(post);
             }
@@ -2200,7 +2201,10 @@ fn scan_shape_keys_address(
             inner.indices.remove(&addr);
         }
     }
-    (post, crate::gc::young_log::addr_is_minor_relevant(post as usize))
+    (
+        post,
+        crate::gc::young_log::addr_is_minor_relevant(post as usize),
+    )
 }
 
 // #8112 sabotage switch. Suppressing the descriptor edge proves the fixture's
@@ -2277,11 +2281,7 @@ pub(crate) fn shape_table_census() -> Vec<crate::gc::census::SideTableRow> {
     let slab = table.slab();
     let mut rows = Vec::new();
     rows.push(("shapes.descriptors", slab.len(), slab.estimated_bytes()));
-    let index_inner: usize = inner
-        .indices
-        .values()
-        .map(|ix| ix.slots.heap_bytes())
-        .sum();
+    let index_inner: usize = inner.indices.values().map(|ix| ix.slots.heap_bytes()).sum();
     rows.push((
         "shapes.indices",
         inner.indices.len(),
