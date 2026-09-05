@@ -473,40 +473,82 @@ pub(crate) fn classify_diag_enabled() -> bool {
 /// compulsory (never seen) or post-wipe, which they would not.
 const CLASSIFY_VICTIM_RING: usize = 64;
 
-pub(crate) struct ClassifyDiag {
+/// Open-addressed table of distinct keys ever classified. A power of two, and
+/// deliberately far larger than any plausible block count so the load factor
+/// stays low enough that the linear probe is short and `distinct` is EXACT
+/// rather than an estimate — up to `CLASSIFY_KEYS_CAP`, past which the
+/// instrument reports saturation instead of lying.
+const CLASSIFY_KEY_SLOTS: usize = 1 << 15;
+const CLASSIFY_KEYS_CAP: usize = CLASSIFY_KEY_SLOTS / 2;
+
+/// Counters for the page-class cache.
+///
+/// **Allocation-free and `const`-initialized, and that is a correctness
+/// requirement, not a style choice.** The first version of this instrument held
+/// a `HashSet` behind a `crate::perry_thread_local!`, and armed it died with a
+/// stack overflow inside `mi_bbitmap_try_find_and_clear_generic` before
+/// `--version` could print: the first read of the declaration, and the set's
+/// first insert, both ALLOCATE, and an allocation runs arena code that
+/// classifies, which re-enters this recorder while its own storage is still
+/// being initialized — below the level any `RefCell` guard can see. An
+/// instrument on the allocation path may not allocate. (Same rule the alloc
+/// census had to learn: it reads its env var with `getenv(3)` because an
+/// allocator that allocates to decide whether to record recurses.)
+///
+/// So: a raw `thread_local!` — never `perry_thread_local!`, whose first read
+/// claims a slot under a mutex and allocates a key — with `const {}` init,
+/// fixed-size arrays, and a re-entrancy flag for anything that slips through.
+struct ClassifyDiag {
+    /// Set while inside the recorder. Anything that classifies underneath is
+    /// dropped rather than recursing.
+    busy: bool,
     /// Cache hits and misses, split by entry point. The generation entry runs
     /// on every write barrier; the space entry is the copying minor's inner
     /// loop.
-    pub(crate) gen_hits: u64,
-    pub(crate) gen_misses: u64,
-    pub(crate) space_hits: u64,
-    pub(crate) space_misses: u64,
+    gen_hits: u64,
+    gen_misses: u64,
+    space_hits: u64,
+    space_misses: u64,
     /// `invalidate_generation_cache()` calls — every block register, unregister
     /// and retag wipes all four ways.
-    pub(crate) invalidations: u64,
+    invalidations: u64,
     /// Classifications since the last wipe, bucketed by power of two. A
-    /// distribution piled up at the low buckets means the wipes, not the
+    /// distribution piled up in the low buckets means the wipes, not the
     /// capacity, are what empty the cache.
-    pub(crate) since_invalidate_buckets: [u64; 24],
+    since_invalidate_buckets: [u64; 24],
     since_invalidate: u64,
-    /// Every distinct `addr >> 20` ever classified. Its size IS the working set
-    /// the 4 ways are being asked to hold.
-    pub(crate) distinct_keys: std::collections::HashSet<usize>,
-    /// Distinct keys resident in the four ways, sampled at each miss; the high
-    /// water mark says whether the ways are even being used.
-    pub(crate) max_ways_distinct: usize,
+    /// Every distinct `addr >> 20` ever classified; its population IS the
+    /// working set the four ways are asked to hold. Slot 0 unused so a zero
+    /// entry means "empty" without a separate occupancy bitmap (key 0 cannot
+    /// occur: `classify_*` reject `addr == 0` before computing a key).
+    keys: [usize; CLASSIFY_KEY_SLOTS],
+    distinct: usize,
+    keys_saturated: bool,
+    /// Distinct keys resident in the four ways, sampled at each insert; the
+    /// high-water mark says whether the ways are even being used.
+    max_ways_distinct: usize,
     victims: [usize; CLASSIFY_VICTIM_RING],
     victims_len: usize,
     victims_next: usize,
     /// Misses whose key was in the victim ring — capacity thrash.
-    pub(crate) miss_thrash: u64,
-    /// Misses whose key was never in the cache within the ring's memory.
-    pub(crate) miss_cold: u64,
+    miss_thrash: u64,
+    /// Misses whose key was not seen within the ring's memory.
+    miss_cold: u64,
+    /// Misses where the authoritative map DID have a range: the cache could
+    /// have held the answer and did not.
+    miss_mapped: u64,
+    /// Misses where the map had nothing either — the address is in no
+    /// registered block. These are the ones the cache structurally CANNOT
+    /// help with: `classify_*_uncached` inserts only on a hit, so a negative
+    /// answer is never memoized and the same address pays the full hash
+    /// lookup every single time it is classified.
+    miss_unmapped: u64,
 }
 
-impl Default for ClassifyDiag {
-    fn default() -> Self {
+impl ClassifyDiag {
+    const fn new() -> Self {
         Self {
+            busy: false,
             gen_hits: 0,
             gen_misses: 0,
             space_hits: 0,
@@ -514,18 +556,41 @@ impl Default for ClassifyDiag {
             invalidations: 0,
             since_invalidate_buckets: [0; 24],
             since_invalidate: 0,
-            distinct_keys: std::collections::HashSet::new(),
+            keys: [0; CLASSIFY_KEY_SLOTS],
+            distinct: 0,
+            keys_saturated: false,
             max_ways_distinct: 0,
             victims: [0; CLASSIFY_VICTIM_RING],
             victims_len: 0,
             victims_next: 0,
             miss_thrash: 0,
             miss_cold: 0,
+            miss_mapped: 0,
+            miss_unmapped: 0,
         }
     }
-}
 
-impl ClassifyDiag {
+    fn note_key(&mut self, key: usize) {
+        if self.distinct >= CLASSIFY_KEYS_CAP {
+            self.keys_saturated = true;
+            return;
+        }
+        // Keys are `addr >> 20`; consecutive blocks give consecutive keys, so
+        // mix before masking or every probe collides.
+        let mut i = (key.wrapping_mul(0x9E37_79B9_7F4A_7C15) >> 17) & (CLASSIFY_KEY_SLOTS - 1);
+        loop {
+            if self.keys[i] == 0 {
+                self.keys[i] = key;
+                self.distinct += 1;
+                return;
+            }
+            if self.keys[i] == key {
+                return;
+            }
+            i = (i + 1) & (CLASSIFY_KEY_SLOTS - 1);
+        }
+    }
+
     fn note_evicted(&mut self, key: usize) {
         if self.victims_len < CLASSIFY_VICTIM_RING {
             self.victims_len += 1;
@@ -538,34 +603,47 @@ impl ClassifyDiag {
         self.victims[..self.victims_len].contains(&key)
     }
 
-    fn note_classification(&mut self, key: usize) {
-        self.distinct_keys.insert(key);
-        self.since_invalidate += 1;
-    }
-
     fn note_invalidate(&mut self) {
         self.invalidations += 1;
-        let b = (usize::BITS - self.since_invalidate.leading_zeros() as u32) as usize;
+        let b = (usize::BITS - self.since_invalidate.leading_zeros()) as usize;
         self.since_invalidate_buckets[b.min(23)] += 1;
         self.since_invalidate = 0;
     }
 }
 
-crate::perry_thread_local! {
-    pub(crate) static CLASSIFY_DIAG: RefCell<ClassifyDiag> =
-        RefCell::new(ClassifyDiag::default());
+thread_local! {
+    /// Raw and `const`, for the reason written on `ClassifyDiag` above: this is
+    /// read from inside the allocator's own call graph, so it may not claim a
+    /// hot slot and may not allocate on first touch.
+    static CLASSIFY_DIAG: std::cell::UnsafeCell<ClassifyDiag> =
+        const { std::cell::UnsafeCell::new(ClassifyDiag::new()) };
+}
+
+/// Run `f` against this thread's counters unless we are already inside them.
+///
+/// SAFETY: the cell is thread-local and single-threaded, and `busy` makes the
+/// borrow non-reentrant, so no two `&mut` overlap.
+#[inline(never)]
+#[cold]
+fn with_classify_diag(f: impl FnOnce(&mut ClassifyDiag)) {
+    CLASSIFY_DIAG.with(|cell| {
+        let d = unsafe { &mut *cell.get() };
+        if d.busy {
+            return;
+        }
+        d.busy = true;
+        f(d);
+        d.busy = false;
+    });
 }
 
 /// Record one classification. `hit` says whether the 4-way cache answered it.
 #[inline(never)]
 #[cold]
 fn classify_diag_record(key: usize, hit: bool, generation_entry: bool) {
-    CLASSIFY_DIAG.with(|d| {
-        let Ok(mut d) = d.try_borrow_mut() else {
-            // A classification from inside the report itself; ignore.
-            return;
-        };
-        d.note_classification(key);
+    with_classify_diag(|d| {
+        d.note_key(key);
+        d.since_invalidate += 1;
         match (hit, generation_entry) {
             (true, true) => d.gen_hits += 1,
             (false, true) => d.gen_misses += 1,
@@ -586,8 +664,7 @@ fn classify_diag_record(key: usize, hit: bool, generation_entry: bool) {
 #[inline(never)]
 #[cold]
 fn classify_diag_evict(evicted: Option<usize>, ways_distinct: usize) {
-    CLASSIFY_DIAG.with(|d| {
-        let Ok(mut d) = d.try_borrow_mut() else { return };
+    with_classify_diag(|d| {
         if let Some(k) = evicted {
             d.note_evicted(k);
         }
@@ -597,13 +674,23 @@ fn classify_diag_evict(evicted: Option<usize>, ways_distinct: usize) {
     });
 }
 
+/// Split a miss by whether the authoritative map had an answer at all.
+#[inline(never)]
+#[cold]
+fn classify_diag_miss_outcome(mapped: bool) {
+    with_classify_diag(|d| {
+        if mapped {
+            d.miss_mapped += 1;
+        } else {
+            d.miss_unmapped += 1;
+        }
+    });
+}
+
 #[inline(never)]
 #[cold]
 fn classify_diag_invalidate() {
-    CLASSIFY_DIAG.with(|d| {
-        let Ok(mut d) = d.try_borrow_mut() else { return };
-        d.note_invalidate();
-    });
+    with_classify_diag(|d| d.note_invalidate());
 }
 
 /// One line on stderr, in the shape the other GC diagnostics use.
@@ -614,8 +701,9 @@ pub(crate) fn classify_diag_report(tag: &str) {
     if !classify_diag_enabled() {
         return;
     }
-    CLASSIFY_DIAG.with(|d| {
-        let Ok(d) = d.try_borrow() else { return };
+    CLASSIFY_DIAG.with(|cell| {
+        // SAFETY: thread-local, single-threaded, shared borrow ends here.
+        let d = unsafe { &*cell.get() };
         let hits = d.gen_hits + d.space_hits;
         let misses = d.gen_misses + d.space_misses;
         let total = hits + misses;
@@ -623,30 +711,36 @@ pub(crate) fn classify_diag_report(tag: &str) {
             return;
         }
         let pct = |n: u64| 100.0 * n as f64 / total as f64;
-        let buckets: Vec<String> = d
-            .since_invalidate_buckets
-            .iter()
-            .enumerate()
-            .filter(|(_, n)| **n > 0)
-            .map(|(b, n)| format!("2^{b}:{n}"))
-            .collect();
+        let mut buckets = String::new();
+        for (b, n) in d.since_invalidate_buckets.iter().enumerate() {
+            if *n > 0 {
+                if !buckets.is_empty() {
+                    buckets.push(' ');
+                }
+                buckets.push_str(&format!("2^{b}:{n}"));
+            }
+        }
         eprintln!(
             "[classify-diag] {tag} calls={total} hit={hits} ({:.1}%) miss={misses} ({:.1}%) \
              gen_hit={} gen_miss={} space_hit={} space_miss={} \
-             distinct_keys={} ways_distinct_max={} \
-             miss_thrash={} miss_cold={} invalidations={} between_invalidations=[{}]",
+             distinct_keys={}{} ways_distinct_max={} \
+             miss_thrash={} miss_cold={} miss_mapped={} miss_unmapped={} \
+             invalidations={} between_invalidations=[{}]",
             pct(hits),
             pct(misses),
             d.gen_hits,
             d.gen_misses,
             d.space_hits,
             d.space_misses,
-            d.distinct_keys.len(),
+            d.distinct,
+            if d.keys_saturated { "+ (SATURATED)" } else { "" },
             d.max_ways_distinct,
             d.miss_thrash,
             d.miss_cold,
+            d.miss_mapped,
+            d.miss_unmapped,
             d.invalidations,
-            buckets.join(" "),
+            buckets,
         );
     });
 }
@@ -1190,6 +1284,9 @@ fn classify_heap_generation_uncached(addr: usize, key: usize) -> HeapGeneration 
         let pages = hot_page_generations().borrow();
         pages.get(&key).and_then(|slot| slot.find(addr))
     };
+    if classify_diag_enabled() {
+        classify_diag_miss_outcome(found.is_some());
+    }
     if let Some(range) = found {
         // SAFETY: as above.
         unsafe { (*hot_page_generation_cache()).insert(key, range) };
@@ -1248,6 +1345,9 @@ fn classify_heap_space_in_range_uncached(
         let pages = hot_page_generations().borrow();
         pages.get(&key).and_then(|slot| slot.find(addr))
     };
+    if classify_diag_enabled() {
+        classify_diag_miss_outcome(found.is_some());
+    }
     let range = found?;
     // SAFETY: thread-local, single-threaded, and the borrow ends here.
     unsafe { (*hot_page_generation_cache()).insert(key, range) };
