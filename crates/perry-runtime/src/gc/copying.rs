@@ -1668,6 +1668,19 @@ pub(super) fn run_copied_minor_attempt(
         from_space_bytes.saturating_sub(collector.live_from_bytes) as u64
     };
     let freed_bytes = nursery_freed_bytes.saturating_add(malloc_freed_bytes);
+    // The two components separately: `freed_bytes` is their SUM, and which one
+    // dominates decides whether the `MallocCount` trigger arm is relieving the
+    // pressure it measures (native heap, via `sweep_malloc_objects`) or merely
+    // reclaiming nursery it was not asked about. Inferring the split from
+    // object counts and average sizes is guesswork; this is the measurement.
+    if crate::gc::gc_diag_enabled() {
+        eprintln!(
+            "[gc-freed-split] trigger={_trigger_kind:?} nursery_freed={nursery_freed_bytes} \
+             malloc_freed={malloc_freed_bytes} promoting_in_place={promoting_in_place} \
+             from_space={from_space_bytes} live_from={}",
+            collector.live_from_bytes,
+        );
+    }
     collector.stats.malloc_validation_lookups = collector.ptrs.malloc_validation_lookups();
     collector.stats.malloc_registry_rebuilds = collector.ptrs.malloc_registry_rebuilds();
     if let Some(trace) = trace.as_mut() {

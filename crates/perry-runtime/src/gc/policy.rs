@@ -2260,6 +2260,25 @@ fn gc_finish_malloc_trigger_collection(pre_count: usize, outcome: GcCollectOutco
     if outcome.malloc_swept {
         GC_NEXT_MALLOC_TRIGGER.with(|c| c.set(survivors + mstep));
     }
+    // What the count-based effectiveness rule above actually decided, per
+    // firing. The rule scores a collection by the PERCENTAGE OF OBJECTS it
+    // freed and rewards >90% by halving the step — so a run of cheap, highly
+    // transient registrations drives the step to `GC_MALLOC_COUNT_STEP_MIN`
+    // and the arm to maximum frequency. Whether that is what happens is a
+    // question about `pct_freed` and `mstep`, neither of which any existing
+    // diagnostic prints. `freed_bytes` is here so the count metric and the
+    // byte outcome can be compared directly.
+    if crate::gc::gc_diag_enabled() {
+        let freed = pre_count.saturating_sub(survivors);
+        eprintln!(
+            "[gc-malloc-trigger] pre_count={pre_count} survivors={survivors} freed={freed} \
+             pct_freed={} step={mstep} next_trigger={} freed_bytes={} eden_live={}",
+            if pre_count > 0 { (freed * 100) / pre_count } else { 0 },
+            survivors + mstep,
+            outcome.freed_bytes,
+            crate::arena::arena_in_use_bytes(),
+        );
+    }
     outcome.emit_after_current()
 }
 
