@@ -91,6 +91,76 @@ pub(super) fn next_arena_trigger_base() -> usize {
     }
 }
 
+/// Can the collection the `ArenaBytes` arm would schedule act on the thing that
+/// made the arm due?
+///
+/// The arm is due on **total arena bytes**, and under gen-gc the collection it
+/// schedules is a copying **minor** — which cannot lower that total: promotion
+/// hands Eden's blocks to old gen, and a committed block keeps its bump offset,
+/// so only a whole-block release moves `arena_total_bytes()`. The arm was
+/// therefore ordering young collections in response to old-generation growth,
+/// and measured on the compiled claude-code TUI (3300-char reply,
+/// `PERRY_GC_DIAG=1`, `[gc-copy-minor]` per firing) that is exactly what they
+/// look like: `ArenaBytes` firings landed on a nursery that was **79 % LIVE**
+/// (median `survival_permille` 791) and freed a median of **110 KB**, while
+/// `MallocCount` firings in the same run landed on one that was 95 % dead
+/// (survival 48) and freed **2.89 MB** — 26x more, per collection, for the same
+/// fixed cost of a root scan, `restore_surviving_dirty_coverage`, the
+/// side-table prunes and ~440 M address classifications per turn.
+///
+/// This is the mistake `young_scavenge_cap_due` above was moved off, and its
+/// doc comment predicted this data: comparing a young-gen budget against the
+/// total "put every old-gen byte on the young budget … every fresh 1 MB Eden
+/// block re-crossed the trigger, degenerating the scavenge cadence to
+/// once-per-block on any program with a large tenured set". The cap arm was
+/// fixed; this one was not, and it is checked FIRST, so it claims the
+/// collection before the cap arm is ever consulted.
+///
+/// **This is not a cadence knob, and the bound is what makes that true.** Eden
+/// occupancy only grows between collections, so an arm skipped here is retried
+/// after at most one `BLOCK_SIZE` of further allocation: the deferral is
+/// bounded by one block, by construction. The same bytes are collected, in
+/// fewer and better-timed collections — which is why the change is judged on
+/// total bytes RECLAIMED holding steady while the collection count falls, and
+/// is refuted if reclaim falls with it.
+///
+/// A cycle that would escalate to a **full** passes through unconditionally: a
+/// full cycle releases blocks and therefore *can* lower the total the arm is
+/// measuring, so for that collection the basis is the right one. Old-generation
+/// growth keeps its own watchers either way — `OldReclaim` is tested before
+/// this arm, and `arena_growth_full_escalation_due` still escalates on the
+/// pacing reading.
+fn arena_trigger_collection_can_act() -> bool {
+    if !arena_young_basis_enabled() {
+        return true;
+    }
+    // A non-generational build sweeps the whole arena, which CAN lower the
+    // total; and an escalating cycle is a full. Both act on the basis.
+    //
+    // `_inner` deliberately: `arena_growth_full_escalation_due` calls
+    // `note_full_cycle_started()`, and a *predicate* that records a cycle start
+    // would corrupt the pacing baseline every time it is merely consulted.
+    if !crate::gc::gen_gc_enabled() || arena_growth_full_escalation_due_inner() {
+        return true;
+    }
+    // What a copying minor can act on: young-generation occupancy. One block is
+    // the floor at which a minor can repay its fixed cost at all — below that
+    // it cannot free more than a block minus survivors, and measured, it froze
+    // 110 KB.
+    crate::arena::copying_from_space_in_use_bytes() >= crate::arena::BLOCK_SIZE
+}
+
+/// `PERRY_GC_ARENA_YOUNG_BASIS=0` restores the pre-fix basis (the arm fires on
+/// total arena bytes alone).
+///
+/// A kill switch, and also the positive control: it makes the before/after
+/// comparison run on ONE binary, so no build difference can be confounded with
+/// the change.
+fn arena_young_basis_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| crate::gc::env_default_on_enabled("PERRY_GC_ARENA_YOUNG_BASIS"))
+}
+
 /// True when the young generation (Eden + active survivor space) has
 /// reached the effective scavenge nursery cap.
 ///
@@ -2755,7 +2825,7 @@ fn gc_budgeted_due_trigger() -> Option<BudgetedGcTrigger> {
     // whole arena, and the scavenge nursery cap against the young generation
     // only.
     let total = crate::arena::arena_total_bytes();
-    if total >= next_arena_trigger_base() {
+    if total >= next_arena_trigger_base() && arena_trigger_collection_can_act() {
         return Some(BudgetedGcTrigger::ArenaBytes);
     }
     if young_scavenge_cap_due() {
