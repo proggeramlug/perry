@@ -763,6 +763,22 @@ fn classify_diag_emit(d: &ClassifyDiag, tag: &str) {
             d.invalidations,
             buckets,
         );
+        // The number the fix SHAPE turns on. `distinct_keys` counts every
+        // `addr >> 20` ever handed to `classify_*`; `registered_classes` is how
+        // many of those the authoritative map actually knows about, i.e. how
+        // many are real arena blocks. If registered is a few hundred against
+        // thousands of distinct, the rest are candidate addresses that are not
+        // heap at all, and the answer is a cheap registered-range REJECT before
+        // the probe (the shape `buffer/header.rs` already uses) rather than a
+        // bigger table. If the two are close, the working set really is the
+        // block count and a direct-indexed table is the answer.
+        let registered = hot_page_generations().borrow().len();
+        eprintln!(
+            "[classify-diag] {tag} registered_classes={registered} distinct_keys_seen={} \
+             unregistered_keys={}",
+            d.distinct,
+            d.distinct.saturating_sub(registered),
+        );
     }
 }
 
