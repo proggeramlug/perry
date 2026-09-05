@@ -182,14 +182,53 @@ pub(crate) fn addr_is_minor_relevant(addr: usize) -> bool {
     }
     match crate::arena::classify_heap_generation(addr) {
         HeapGeneration::Old => false,
-        HeapGeneration::Nursery | HeapGeneration::Longlived => true,
+        HeapGeneration::Nursery => {
+            note_relevant_generation(RELEVANT_NURSERY);
+            true
+        }
+        HeapGeneration::Longlived => {
+            note_relevant_generation(RELEVANT_LONGLIVED);
+            true
+        }
         HeapGeneration::Unknown => {
-            addr > GC_HEADER_SIZE
+            let tracked = addr > GC_HEADER_SIZE
                 && super::malloc::gc_malloc_header_is_tracked(
                     (addr - GC_HEADER_SIZE) as *const super::GcHeader,
-                )
+                );
+            if tracked {
+                note_relevant_generation(RELEVANT_MALLOC);
+            }
+            tracked
         }
     }
+}
+
+/// Diag-only breakdown of WHY [`addr_is_minor_relevant`] answered `true`.
+///
+/// A saturated log — one that names its whole table on every minor — is
+/// either an honest report of a genuinely young table or a predicate that is
+/// too coarse. The three answers are not equivalent: a nursery address is
+/// something a minor really moves, while `Longlived` is only traced through
+/// and `malloc` is only swept. `[gc-young-gen]` says which, so the next
+/// filter is chosen against a measurement rather than a guess.
+const RELEVANT_NURSERY: usize = 0;
+const RELEVANT_LONGLIVED: usize = 1;
+const RELEVANT_MALLOC: usize = 2;
+
+crate::perry_thread_local! {
+    static RELEVANT_GENS: std::cell::Cell<[u64; 3]> = const { std::cell::Cell::new([0; 3]) };
+}
+
+#[inline]
+fn note_relevant_generation(which: usize) {
+    if !super::gc_diag_enabled() {
+        return;
+    }
+    RELEVANT_GENS.with(|cell| {
+        let mut counts = cell.get();
+        counts[which] += 1;
+        cell.set(counts);
+    });
 }
 
 /// [`addr_is_minor_relevant`] for a NaN-boxed value: only the three
@@ -274,6 +313,13 @@ pub(crate) fn last_walk(table: &'static str) -> Option<YoungLogWalk> {
 pub(super) fn report_and_reset(cycle_label: &str) {
     if !super::gc_diag_enabled() {
         return;
+    }
+    let gens = RELEVANT_GENS.with(|cell| cell.replace([0; 3]));
+    if gens != [0; 3] {
+        eprintln!(
+            "[gc-young-gen] {cycle_label} relevant_nursery={} relevant_longlived={} relevant_malloc={}",
+            gens[RELEVANT_NURSERY], gens[RELEVANT_LONGLIVED], gens[RELEVANT_MALLOC],
+        );
     }
     let rows = WALK_ROWS.with(|rows| std::mem::take(&mut *rows.borrow_mut()));
     for (table, walk, passes) in rows {
