@@ -499,6 +499,8 @@ const CLASSIFY_KEYS_CAP: usize = CLASSIFY_KEY_SLOTS / 2;
 /// claims a slot under a mutex and allocates a key — with `const {}` init,
 /// fixed-size arrays, and a re-entrancy flag for anything that slips through.
 struct ClassifyDiag {
+    /// Classifications recorded, for the periodic emission below.
+    calls: u64,
     /// Set while inside the recorder. Anything that classifies underneath is
     /// dropped rather than recursing.
     busy: bool,
@@ -548,6 +550,7 @@ struct ClassifyDiag {
 impl ClassifyDiag {
     const fn new() -> Self {
         Self {
+            calls: 0,
             busy: false,
             gen_hits: 0,
             gen_misses: 0,
@@ -644,6 +647,14 @@ fn classify_diag_record(key: usize, hit: bool, generation_entry: bool) {
     with_classify_diag(|d| {
         d.note_key(key);
         d.since_invalidate += 1;
+        d.calls += 1;
+        // The rig SIGKILLs the process, so an `atexit` report never prints
+        // (measured: a zero-byte stderr file on the first two runs). Counters
+        // are cumulative, so the last line emitted before the kill is the
+        // answer. One early line so a short run still reports.
+        if d.calls == 1_000_000 || d.calls % 10_000_000 == 0 {
+            classify_diag_emit(d, "periodic");
+        }
         match (hit, generation_entry) {
             (true, true) => d.gen_hits += 1,
             (false, true) => d.gen_misses += 1,
@@ -701,9 +712,19 @@ pub(crate) fn classify_diag_report(tag: &str) {
     if !classify_diag_enabled() {
         return;
     }
-    CLASSIFY_DIAG.with(|cell| {
-        // SAFETY: thread-local, single-threaded, shared borrow ends here.
-        let d = unsafe { &*cell.get() };
+    with_classify_diag(|d| classify_diag_emit(d, tag));
+}
+
+/// The report body, against a borrow the caller already holds.
+///
+/// Taking `&ClassifyDiag` rather than re-entering the cell is what keeps this
+/// callable from inside `with_classify_diag`'s `&mut` without aliasing — and it
+/// must be callable from there, because the harness SIGKILLs the process and
+/// `atexit` never runs. `eprintln!` allocates, and an allocation classifies;
+/// the `busy` flag set by `with_classify_diag` is what makes that safe, by
+/// dropping the nested record instead of recursing into it.
+fn classify_diag_emit(d: &ClassifyDiag, tag: &str) {
+    {
         let hits = d.gen_hits + d.space_hits;
         let misses = d.gen_misses + d.space_misses;
         let total = hits + misses;
@@ -742,7 +763,7 @@ pub(crate) fn classify_diag_report(tag: &str) {
             d.invalidations,
             buckets,
         );
-    });
+    }
 }
 
 /// Arm a process-exit report the first time the instrument is used.
