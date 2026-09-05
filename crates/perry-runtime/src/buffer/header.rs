@@ -544,6 +544,9 @@ pub fn is_registered_buffer(addr: usize) -> bool {
     }
     #[cfg(test)]
     TEST_BUFFER_REGISTRY_PROBES.with(|c| c.set(c.get().wrapping_add(1)));
+    if !buffer_neg_cache_enabled() {
+        return is_registered_buffer_slow(addr);
+    }
     let epoch = BUFFER_REGISTRATION_EPOCH.load(std::sync::atomic::Ordering::Acquire);
     if buffer_neg_cache_hit(addr, epoch) {
         return false;
@@ -553,6 +556,17 @@ pub fn is_registered_buffer(addr: usize) -> bool {
         buffer_neg_cache_store(addr, epoch);
     }
     found
+}
+
+/// `PERRY_BUFFER_NEG_CACHE=0` sends every probe to the slow registry path, so
+/// the cache can be measured against itself in one binary.
+fn buffer_neg_cache_enabled() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| {
+        crate::gc::env_default_on_from_value(
+            std::env::var("PERRY_BUFFER_NEG_CACHE").ok().as_deref(),
+        )
+    })
 }
 
 /// `PERRY_BUFFER_RANGE_FILTER=0` restores the unconditional hash lookup.
