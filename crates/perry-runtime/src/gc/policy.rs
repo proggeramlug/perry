@@ -2089,6 +2089,21 @@ fn gc_rebaseline_malloc_trigger_to_survivors(mstep: usize) {
     GC_NEXT_MALLOC_TRIGGER.with(|c| c.set(survivors + mstep));
 }
 
+/// Headroom the next `ArenaBytes` threshold gets, priced by how productive the
+/// collection that just ran was.
+///
+/// `step` is the adaptive signal maintained by
+/// [`gc_finish_arena_trigger_collection`]: it halves toward a 16 MB floor when a
+/// collection reclaims 25-84 % and doubles toward `GC_THRESHOLD_MAX_BYTES` when
+/// it reclaims outside 10-84 %. A saturated step is the collector saying "these
+/// collections free nothing"; a floored one is it saying "collecting here pays".
+///
+/// Split out as a pure function so the relationship can be asserted directly —
+/// the bug it fixes was invisible in the fused expression.
+pub(super) fn arena_trigger_headroom_bytes(step: usize) -> usize {
+    gc_trigger_headroom_floor_bytes().max(step.min(gc_trigger_absolute_ceiling_bytes()))
+}
+
 fn gc_finish_arena_trigger_collection(pre_in_use: usize, outcome: GcCollectOutcome) -> u64 {
     let sweep_freed_bytes = outcome.freed_bytes;
     let malloc_swept = outcome.malloc_swept;
@@ -2201,7 +2216,35 @@ fn gc_finish_arena_trigger_collection(pre_in_use: usize, outcome: GcCollectOutco
     // allocation.
     let stepped = new_total.saturating_add(step);
     let capped = stepped.min(gc_trigger_absolute_ceiling_bytes());
-    let floor = new_total.saturating_add(gc_trigger_headroom_floor_bytes());
+    // #9831: price the next threshold by what this collection actually FREED,
+    // which above the ceiling the previous arithmetic could not do.
+    //
+    // `gc_trigger_absolute_ceiling_bytes()` is a quarter of the device budget
+    // capped at 128 MB, and `step` starts at 128 MB and doubles on an
+    // unproductive collection, so `stepped = new_total + step` exceeds the
+    // ceiling immediately and `capped` is pinned AT the ceiling for the rest of
+    // the process. Once `new_total` passes `ceiling - 16 MB`, `max(capped,
+    // floor)` therefore always selects `floor` — and the adaptive step, which
+    // by then has doubled to its 1 GiB maximum *precisely because* these
+    // collections free nothing, is computed, stored, and discarded.
+    //
+    // Measured on the compiled claude-code TUI, 3300-char reply
+    // (`PERRY_GC_DIAG=1`, 66 `[gc-step]` lines): median `pct_freed` **0 %**,
+    // median `sweep_freed` 203 KB, median `block_reclaim` 65 KB, and `step`
+    // already saturated at 1,073,741,824 while `pre_in_use` ran to 297 MB. The
+    // backoff was at maximum and had no effect: the arm still re-armed at
+    // `new_total + 16 MB` and fired 51 times in one reply, each freeing a
+    // median of 131 KB.
+    //
+    // This is #9589's rule in the trigger rather than the reducer — there, a
+    // full was scored unproductive because `old_gen_in_use_bytes` is a sum of
+    // bump offsets a sweep cannot lower, and the fix was to price the cycle by
+    // its own freed bytes. Here the productivity signal already exists and is
+    // thrown away by a clamp; honouring it costs one `max`. The headroom stays
+    // bounded by the same ceiling constant, so a productive collection (which
+    // halves the step toward its 16 MB floor) still collects promptly, and an
+    // unproductive one earns room proportional to how little it achieved.
+    let floor = new_total.saturating_add(arena_trigger_headroom_bytes(step));
     // #7742: whole-block promotion hands Eden's blocks to old-gen instead of
     // recycling them, so the free young capacity that would have carried the
     // mutator to the next collection is gone from `new_total`. Give it back as
