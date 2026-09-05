@@ -116,6 +116,10 @@ pub use side_table_roots::{
     scan_shape_cache_roots, scan_shape_cache_roots_mut, scan_transition_cache_roots,
     scan_transition_cache_roots_mut,
 };
+#[cfg(test)]
+pub(crate) use side_table_roots::{
+    test_seed_transition_cache_entry, test_transition_cache_occupancy,
+};
 pub(crate) mod iterator_prototypes;
 pub(crate) mod map_set_subclass;
 mod namespace_create;
