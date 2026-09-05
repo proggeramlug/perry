@@ -314,8 +314,8 @@ fn class_field_get_contract(
                 expected_field_index,
                 require_raw_f64,
             )
-            && !class_getter_in_chain(class_id, &key_name)
-            && !descriptor_blocks_class_field_get(object_addr, class_id, &key_name);
+            && !class_getter_in_chain(class_id, key_name)
+            && !descriptor_blocks_class_field_get(object_addr, class_id, key_name);
         (shape_addr, class_id, gc_type, valid)
     }
 }
@@ -596,8 +596,8 @@ fn class_field_set_contract(
                         expected_field_index,
                         true,
                     )))
-            && !class_setter_in_chain(class_id, &key_name)
-            && !descriptor_blocks_class_field_set(object_addr, class_id, &key_name);
+            && !class_setter_in_chain(class_id, key_name)
+            && !descriptor_blocks_class_field_set(object_addr, class_id, key_name);
         (shape_addr, class_id, gc_type, valid)
     }
 }
