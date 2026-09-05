@@ -179,6 +179,18 @@ impl PageGenerationCacheSet {
     #[inline]
     fn insert(&mut self, key: usize, range: PageGenerationRange) {
         let slot = self.next % PAGE_GENERATION_CACHE_WAYS;
+        if classify_diag_enabled() {
+            let evicted = self.ways[slot].valid.then_some(self.ways[slot].key);
+            let mut seen: [usize; PAGE_GENERATION_CACHE_WAYS] = [0; PAGE_GENERATION_CACHE_WAYS];
+            let mut n = 0usize;
+            for w in self.ways.iter().filter(|w| w.valid) {
+                if !seen[..n].contains(&w.key) {
+                    seen[n] = w.key;
+                    n += 1;
+                }
+            }
+            classify_diag_evict(evicted, n);
+        }
         self.ways[slot] = PageGenerationCache {
             key,
             range,
@@ -416,10 +428,243 @@ pub(crate) fn generation_page_base(page: usize) -> usize {
 
 #[inline]
 fn invalidate_generation_cache() {
+    if classify_diag_enabled() {
+        classify_diag_invalidate();
+    }
     // Every way, not one — a stale way is exactly what this guards against.
     // SAFETY: thread-local, single-threaded.
     PAGE_GENERATION_CACHE.with(|cache| unsafe { *cache.get() = PageGenerationCacheSet::empty() });
 }
+
+// ---------------------------------------------------------------------------
+// `PERRY_CLASSIFY_DIAG=1` — what the page-class cache actually does
+//
+// The cache in front of `PageGenerationMap` is 4 ways with a round-robin
+// victim, and keys are `addr >> GENERATION_CLASS_SHIFT` = `addr >> 20` against
+// a `BLOCK_SIZE` of exactly `1 << 20`. So the key space is the BLOCK COUNT, and
+// whether 4 ways is adequate is a question about how many blocks a turn
+// touches — which nobody has measured. The two `#[inline(never)]` miss arms
+// carry 334 leaf samples (2.29 % of a streaming turn) on their own, so the
+// answer is worth a counter rather than an argument.
+//
+// This measures the cache, not the clock. It is off unless the env var is set,
+// and when armed it is deliberately heavy (a `HashSet` of every key ever seen):
+// it exists to produce RATIOS — hit rate, working-set size, why a miss missed —
+// and those are unaffected by the instrument's own cost. Never quote a timing
+// from a run with this armed.
+// ---------------------------------------------------------------------------
+
+/// Armed by `PERRY_CLASSIFY_DIAG=1`. Value-parsed, not presence-parsed: #7991
+/// records three verifiers that `=0` switched ON.
+pub(crate) fn classify_diag_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| {
+        let on = crate::gc::env_flag_enabled("PERRY_CLASSIFY_DIAG");
+        if on {
+            classify_diag_install_exit_hook();
+        }
+        on
+    })
+}
+
+/// How many evicted keys to remember. A miss whose key is in this ring was in
+/// the cache recently and was thrown out — capacity thrash, which more ways or
+/// a different victim policy would fix. A miss whose key is NOT in it is
+/// compulsory (never seen) or post-wipe, which they would not.
+const CLASSIFY_VICTIM_RING: usize = 64;
+
+pub(crate) struct ClassifyDiag {
+    /// Cache hits and misses, split by entry point. The generation entry runs
+    /// on every write barrier; the space entry is the copying minor's inner
+    /// loop.
+    pub(crate) gen_hits: u64,
+    pub(crate) gen_misses: u64,
+    pub(crate) space_hits: u64,
+    pub(crate) space_misses: u64,
+    /// `invalidate_generation_cache()` calls — every block register, unregister
+    /// and retag wipes all four ways.
+    pub(crate) invalidations: u64,
+    /// Classifications since the last wipe, bucketed by power of two. A
+    /// distribution piled up at the low buckets means the wipes, not the
+    /// capacity, are what empty the cache.
+    pub(crate) since_invalidate_buckets: [u64; 24],
+    since_invalidate: u64,
+    /// Every distinct `addr >> 20` ever classified. Its size IS the working set
+    /// the 4 ways are being asked to hold.
+    pub(crate) distinct_keys: std::collections::HashSet<usize>,
+    /// Distinct keys resident in the four ways, sampled at each miss; the high
+    /// water mark says whether the ways are even being used.
+    pub(crate) max_ways_distinct: usize,
+    victims: [usize; CLASSIFY_VICTIM_RING],
+    victims_len: usize,
+    victims_next: usize,
+    /// Misses whose key was in the victim ring — capacity thrash.
+    pub(crate) miss_thrash: u64,
+    /// Misses whose key was never in the cache within the ring's memory.
+    pub(crate) miss_cold: u64,
+}
+
+impl Default for ClassifyDiag {
+    fn default() -> Self {
+        Self {
+            gen_hits: 0,
+            gen_misses: 0,
+            space_hits: 0,
+            space_misses: 0,
+            invalidations: 0,
+            since_invalidate_buckets: [0; 24],
+            since_invalidate: 0,
+            distinct_keys: std::collections::HashSet::new(),
+            max_ways_distinct: 0,
+            victims: [0; CLASSIFY_VICTIM_RING],
+            victims_len: 0,
+            victims_next: 0,
+            miss_thrash: 0,
+            miss_cold: 0,
+        }
+    }
+}
+
+impl ClassifyDiag {
+    fn note_evicted(&mut self, key: usize) {
+        if self.victims_len < CLASSIFY_VICTIM_RING {
+            self.victims_len += 1;
+        }
+        self.victims[self.victims_next] = key;
+        self.victims_next = (self.victims_next + 1) % CLASSIFY_VICTIM_RING;
+    }
+
+    fn recently_evicted(&self, key: usize) -> bool {
+        self.victims[..self.victims_len].contains(&key)
+    }
+
+    fn note_classification(&mut self, key: usize) {
+        self.distinct_keys.insert(key);
+        self.since_invalidate += 1;
+    }
+
+    fn note_invalidate(&mut self) {
+        self.invalidations += 1;
+        let b = (usize::BITS - self.since_invalidate.leading_zeros() as u32) as usize;
+        self.since_invalidate_buckets[b.min(23)] += 1;
+        self.since_invalidate = 0;
+    }
+}
+
+crate::perry_thread_local! {
+    pub(crate) static CLASSIFY_DIAG: RefCell<ClassifyDiag> =
+        RefCell::new(ClassifyDiag::default());
+}
+
+/// Record one classification. `hit` says whether the 4-way cache answered it.
+#[inline(never)]
+#[cold]
+fn classify_diag_record(key: usize, hit: bool, generation_entry: bool) {
+    CLASSIFY_DIAG.with(|d| {
+        let Ok(mut d) = d.try_borrow_mut() else {
+            // A classification from inside the report itself; ignore.
+            return;
+        };
+        d.note_classification(key);
+        match (hit, generation_entry) {
+            (true, true) => d.gen_hits += 1,
+            (false, true) => d.gen_misses += 1,
+            (true, false) => d.space_hits += 1,
+            (false, false) => d.space_misses += 1,
+        }
+        if !hit {
+            if d.recently_evicted(key) {
+                d.miss_thrash += 1;
+            } else {
+                d.miss_cold += 1;
+            }
+        }
+    });
+}
+
+/// Record the key a round-robin insert is about to overwrite.
+#[inline(never)]
+#[cold]
+fn classify_diag_evict(evicted: Option<usize>, ways_distinct: usize) {
+    CLASSIFY_DIAG.with(|d| {
+        let Ok(mut d) = d.try_borrow_mut() else { return };
+        if let Some(k) = evicted {
+            d.note_evicted(k);
+        }
+        if ways_distinct > d.max_ways_distinct {
+            d.max_ways_distinct = ways_distinct;
+        }
+    });
+}
+
+#[inline(never)]
+#[cold]
+fn classify_diag_invalidate() {
+    CLASSIFY_DIAG.with(|d| {
+        let Ok(mut d) = d.try_borrow_mut() else { return };
+        d.note_invalidate();
+    });
+}
+
+/// One line on stderr, in the shape the other GC diagnostics use.
+///
+/// Per THREAD, because the cache is: `atexit` runs on the main thread, which is
+/// where every `classify*` sample in the profile lives.
+pub(crate) fn classify_diag_report(tag: &str) {
+    if !classify_diag_enabled() {
+        return;
+    }
+    CLASSIFY_DIAG.with(|d| {
+        let Ok(d) = d.try_borrow() else { return };
+        let hits = d.gen_hits + d.space_hits;
+        let misses = d.gen_misses + d.space_misses;
+        let total = hits + misses;
+        if total == 0 {
+            return;
+        }
+        let pct = |n: u64| 100.0 * n as f64 / total as f64;
+        let buckets: Vec<String> = d
+            .since_invalidate_buckets
+            .iter()
+            .enumerate()
+            .filter(|(_, n)| **n > 0)
+            .map(|(b, n)| format!("2^{b}:{n}"))
+            .collect();
+        eprintln!(
+            "[classify-diag] {tag} calls={total} hit={hits} ({:.1}%) miss={misses} ({:.1}%) \
+             gen_hit={} gen_miss={} space_hit={} space_miss={} \
+             distinct_keys={} ways_distinct_max={} \
+             miss_thrash={} miss_cold={} invalidations={} between_invalidations=[{}]",
+            pct(hits),
+            pct(misses),
+            d.gen_hits,
+            d.gen_misses,
+            d.space_hits,
+            d.space_misses,
+            d.distinct_keys.len(),
+            d.max_ways_distinct,
+            d.miss_thrash,
+            d.miss_cold,
+            d.invalidations,
+            buckets.join(" "),
+        );
+    });
+}
+
+/// Arm a process-exit report the first time the instrument is used.
+fn classify_diag_install_exit_hook() {
+    static INSTALLED: std::sync::Once = std::sync::Once::new();
+    INSTALLED.call_once(|| {
+        extern "C" fn report() {
+            classify_diag_report("exit");
+        }
+        // SAFETY: `report` is `extern "C"`, takes nothing and returns nothing.
+        unsafe {
+            libc::atexit(report);
+        }
+    });
+}
+
 
 fn register_old_block_pages(base: usize, size: usize) {
     if base == 0 || size == 0 {
@@ -927,7 +1172,11 @@ pub(crate) fn classify_heap_generation(addr: usize) -> HeapGeneration {
     // attributed samples) precisely because it resolved two distinct
     // thread-locals per call.
     // SAFETY: thread-local, single-threaded, and the borrow ends here.
-    if let Some(range) = unsafe { (*hot_page_generation_cache()).lookup(key, addr) } {
+    let hit = unsafe { (*hot_page_generation_cache()).lookup(key, addr) };
+    if classify_diag_enabled() {
+        classify_diag_record(key, hit.is_some(), true);
+    }
+    if let Some(range) = hit {
         return range.generation;
     }
     classify_heap_generation_uncached(addr, key)
@@ -979,7 +1228,11 @@ pub(crate) fn classify_heap_space_in_range(addr: usize) -> Option<(HeapSpace, us
     }
     let key = generation_class_key_for_addr(addr);
     // SAFETY: thread-local, single-threaded, and the borrow ends here.
-    if let Some(range) = unsafe { (*hot_page_generation_cache()).lookup(key, addr) } {
+    let hit = unsafe { (*hot_page_generation_cache()).lookup(key, addr) };
+    if classify_diag_enabled() {
+        classify_diag_record(key, hit.is_some(), false);
+    }
+    if let Some(range) = hit {
         return Some((range.space, range.base, range.object_starts));
     }
     classify_heap_space_in_range_uncached(addr, key)
