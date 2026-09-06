@@ -2033,7 +2033,7 @@ thread_local! {
             big_removals_this_minor: 0, big_elems_this_minor: 0,
             big_removals_minor_max: 0, tail_hist: [0; 8],
         }) };
-
+}
 
 /// MEASUREMENT ONLY. Charge one family removal: the tail it moved, and whether
 /// it came from the one family that crossed 100 k.
@@ -2082,8 +2082,8 @@ fn dump_keys_array(keys: u64, limit: usize) -> String {
         let len = crate::array::keys_array_len_capped_to_capacity(arr);
         // The element block follows the header; mirrored here rather than
         // widening `array_elements_ptr`'s visibility for a throwaway branch.
-        let elements = (arr as *const u8).add(std::mem::size_of::<crate::array::ArrayHeader>())
-            as *const u64;
+        let elements =
+            (arr as *const u8).add(std::mem::size_of::<crate::array::ArrayHeader>()) as *const u64;
         let mut out = format!("len={len} [");
         for i in 0..len.min(limit) {
             let bits = *elements.add(i);
@@ -2095,8 +2095,7 @@ fn dump_keys_array(keys: u64, limit: usize) -> String {
                     String::from("<bad-str>")
                 } else {
                     let blen = (*ptr).byte_len as usize;
-                    let data =
-                        (ptr as *const u8).add(std::mem::size_of::<crate::StringHeader>());
+                    let data = (ptr as *const u8).add(std::mem::size_of::<crate::StringHeader>());
                     String::from_utf8_lossy(std::slice::from_raw_parts(data, blen)).into_owned()
                 }
             } else {
@@ -2113,7 +2112,6 @@ fn dump_keys_array(keys: u64, limit: usize) -> String {
         out.push(']');
         out
     }
-}
 }
 
 /// MEASUREMENT ONLY. Record an addition to a family: which site, the length
