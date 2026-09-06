@@ -316,8 +316,11 @@ impl ShapeTableInner {
         };
         // UNORDERED: a family's readers are set-valued (see `IdList`'s type
         // doc), and the ordered removal was memmoving the whole tail of a list
-        // measured at up to 512,691 entries, from position ~0.31, 3.7 M times
-        // per 3300-char reply.
+        // measured at up to 514,030 entries, from position ~0.31, 3.7 M times
+        // per 3300-char reply. The dominant caller is the dead-owner prune
+        // (`prune_dead_owner_side_tables_post_trace` ->
+        // `remove_descriptor_indexed_under`); `retire_owned_shape_siblings`
+        // never sees a family longer than 16.
         let removed = ids.remove_unordered(id);
         if ids.is_empty() {
             self.families.remove(&keys);

@@ -556,7 +556,7 @@ pub(super) struct SpillList {
 }
 
 /// Where the index starts paying. Measured shape of the problem: `families`
-/// lists reach 512,691 entries on a claude-code reply while `by_facts` lists
+/// lists reach 514,030 entries on a claude-code reply while `by_facts` lists
 /// are length 1, so anything in the low tens is far below the case that hurts
 /// and far above the case where the map would be pure overhead.
 const SPILL_INDEX_MIN: usize = 32;
@@ -620,9 +620,15 @@ impl SpillList {
 
     /// UNORDERED removal: the last element takes the removed one's slot.
     /// Moves ONE element regardless of position, which is the whole point —
-    /// the measured removals sit at position ~0.31 of a list up to 512,691
+    /// the measured removals sit at position ~0.31 of a list up to 514,030
     /// long, so `Vec::remove` was shifting essentially the entire list every
     /// time.
+    ///
+    /// What this does NOT claim: that the memmove explains the bimodal turn
+    /// CPU. On perrymaster one draw moved 335 GB and was as fast as a draw
+    /// that moved 16 GB, so bytes moved is necessary but not sufficient for
+    /// the slow mode. This removes work that is unambiguously wasted; how much
+    /// TIME it removes is the A/B's to say.
     fn remove_unordered(&mut self, id: u32) -> Option<usize> {
         let pos = self.position(id)?;
         note_removal(if pos + 1 == self.ids.len() { 0 } else { 1 });
@@ -1042,7 +1048,7 @@ mod tests {
     /// allowed to move O(n) because that is what preserving the order costs.
     ///
     /// Front removal is the measured shape of the defect — removals sit at
-    /// position ~0.31 of a list up to 512,691 long — so the test removes from
+    /// position ~0.31 of a list up to 514,030 long — so the test removes from
     /// the front, which is the worst case for `Vec::remove` and the best case
     /// for nothing.
     ///
