@@ -517,6 +517,26 @@ pub(crate) struct IdListRemoveStats {
     pub(crate) pos_sum: u64,
     /// Length-before histogram: 1, 2, 3, 4-7, 8-15, 16-63, 64-255, 256+.
     pub(crate) len_hist: [u64; 8],
+    /// The same three quantities split by WHICH index the list belongs to.
+    /// `[0]` = `families` (keys-array -> ids), `[1]` = `by_facts` (exact-facts
+    /// accelerator), `[2]` = anything else. The two indices have completely
+    /// different fixes, so the split is the whole point of this counter.
+    pub(crate) kind_calls: [u64; 3],
+    pub(crate) kind_elems_moved: [u64; 3],
+    pub(crate) kind_len_max: [u64; 3],
+}
+
+/// Which index an [`IdList`] being mutated belongs to (measurement only).
+#[derive(Clone, Copy)]
+pub(crate) enum IdListKind {
+    Family = 0,
+    Facts = 1,
+    Other = 2,
+}
+
+thread_local! {
+    /// Set around a removal by the caller that knows which index it holds.
+    pub(crate) static ID_LIST_KIND: std::cell::Cell<u8> = const { std::cell::Cell::new(2) };
 }
 
 thread_local! {
@@ -524,6 +544,7 @@ thread_local! {
         const { std::cell::Cell::new(IdListRemoveStats {
             calls: 0, spill_calls: 0, elems_moved: 0, len_sum: 0, len_max: 0,
             pos_sum: 0, len_hist: [0; 8],
+            kind_calls: [0; 3], kind_elems_moved: [0; 3], kind_len_max: [0; 3],
         }) };
 }
 
@@ -554,6 +575,10 @@ fn note_id_list_removal(len_before: usize, pos: usize, spilled: bool) {
         st.len_max = st.len_max.max(len_before as u64);
         st.pos_sum += pos as u64;
         st.len_hist[len_bucket(len_before)] += 1;
+        let k = ID_LIST_KIND.with(std::cell::Cell::get) as usize;
+        st.kind_calls[k] += 1;
+        st.kind_elems_moved[k] += (len_before - 1 - pos) as u64;
+        st.kind_len_max[k] = st.kind_len_max[k].max(len_before as u64);
         c.set(st);
     });
 }

@@ -305,7 +305,10 @@ impl ShapeTableInner {
         let Some(ids) = self.families.get_mut(&keys) else {
             return false;
         };
+        // MEASUREMENT ONLY: tell the IdList counter which index this is.
+        shapes_store::ID_LIST_KIND.with(|k| k.set(shapes_store::IdListKind::Family as u8));
         let removed = ids.remove(id);
+        shapes_store::ID_LIST_KIND.with(|k| k.set(shapes_store::IdListKind::Other as u8));
         if ids.is_empty() {
             self.families.remove(&keys);
         }
@@ -334,7 +337,10 @@ impl ShapeTableInner {
         let Some(ids) = self.by_facts.get_mut(&facts) else {
             return false;
         };
+        // MEASUREMENT ONLY: tell the IdList counter which index this is.
+        shapes_store::ID_LIST_KIND.with(|k| k.set(shapes_store::IdListKind::Facts as u8));
         let removed = ids.remove(id);
+        shapes_store::ID_LIST_KIND.with(|k| k.set(shapes_store::IdListKind::Other as u8));
         if ids.is_empty() {
             self.by_facts.remove(&facts);
         }
@@ -1404,9 +1410,13 @@ fn retire_owned_shape_siblings(keys: u64, keep: u32) {
         let mut st = c.get();
         st.passes += 1;
         st.candidates += stale.len() as u64;
-        // The full prune removes SCATTERED ids, not whole families, so the
-        // owner/family-length columns stay zero for it on purpose: its cost
-        // shows in the `IdList::remove` position histogram instead.
+        // CORRECTION to this block's first draft: it landed in
+        // `retire_owned_shape_siblings`, not in `prune_dead_shape_keys` (both
+        // end with the same `for id in stale` loop and the patch replaced the
+        // first match). Kept there deliberately once the numbers came back —
+        // this IS the dominant `family_remove` caller. So read `passes` as
+        // "same-address publishes that ran a sibling retirement" and
+        // `candidates` as "ids it retired", NOT as dead-owner prune passes.
         c.set(st);
     });
     for id in stale {
@@ -1949,7 +1959,10 @@ pub(crate) fn shape_prune_report() {
         "[gc-shape-prune] passes={} candidates={} owners_dropped={} descriptors_removed={} \
 family_len_sum={} family_len_max={} owners_spilled={} | idlist_removes={} spill_removes={} \
 elems_moved={} bytes_moved={} len_sum={} len_max={} pos_sum={} \
-len_hist_1_2_3_4t7_8t15_16t63_64t255_256p={},{},{},{},{},{},{},{}",
+len_hist_1_2_3_4t7_8t15_16t63_64t255_256p={},{},{},{},{},{},{},{} \
+| family_calls={} family_elems={} family_len_max={} \
+facts_calls={} facts_elems={} facts_len_max={} \
+other_calls={} other_elems={} other_len_max={}",
         st.passes,
         st.candidates,
         st.owners_dropped,
@@ -1966,6 +1979,9 @@ len_hist_1_2_3_4t7_8t15_16t63_64t255_256p={},{},{},{},{},{},{},{}",
         il.pos_sum,
         il.len_hist[0], il.len_hist[1], il.len_hist[2], il.len_hist[3],
         il.len_hist[4], il.len_hist[5], il.len_hist[6], il.len_hist[7],
+        il.kind_calls[0], il.kind_elems_moved[0], il.kind_len_max[0],
+        il.kind_calls[1], il.kind_elems_moved[1], il.kind_len_max[1],
+        il.kind_calls[2], il.kind_elems_moved[2], il.kind_len_max[2],
     );
 }
 
