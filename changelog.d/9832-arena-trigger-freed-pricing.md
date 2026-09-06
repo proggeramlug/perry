@@ -29,7 +29,17 @@ The headroom is now `max(headroom_floor, min(step, ceiling))`, so an
 unproductive collection earns room in proportion to how little it achieved,
 while a productive one — whose step halves toward the floor — still collects
 promptly. It stays bounded by the same ceiling constant the adaptive trigger
-already respects, so backing off cannot run away with the heap.
+already respects.
+
+**MEASURED AND REJECTED — do not land this as written.** Bounded is not free.
+On the rig (3 interleaved rounds, 3300-char reply) this buys **−10.8 % turn
+CPU** and costs **settled footprint 754 → 920 MB and peak RSS 968 → 1223 MB**,
+consistently across min, median and RSS. The claim that bounding the headroom
+by the ceiling meant backing off "cannot run away with the heap" was an argument
+about unboundedness standing in for an argument about cost: the heap grows in
+proportion to the bound, and 16 MB → up to 128 MB of extra headroom is exactly
+what the footprint number reflects. A CPU win with a footprint regression is
+rejected.
 
 `arena_trigger_headroom_bytes` is split out as a pure function because the bug
 was invisible in the fused expression, and `gc::tests::arena_trigger_pricing`
