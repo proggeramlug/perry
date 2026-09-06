@@ -280,7 +280,10 @@ impl ShapeTableInner {
     #[inline]
     fn family_push_back(&mut self, keys: u64, id: u32) {
         self.note_young_keys(keys);
-        self.families.entry(keys).or_default().push_back(id);
+        let list = self.families.entry(keys).or_default();
+        list.push_back(id);
+        // MEASUREMENT ONLY (#9852 follow-up).
+        note_family_add(0, keys, list.len());
     }
 
     /// Append a FRESHLY allocated id (see [`IdList::append_unchecked`]): the
@@ -290,13 +293,19 @@ impl ShapeTableInner {
     #[inline]
     fn family_append_fresh(&mut self, keys: u64, id: u32) {
         self.note_young_keys(keys);
-        self.families.entry(keys).or_default().append_unchecked(id);
+        let list = self.families.entry(keys).or_default();
+        list.append_unchecked(id);
+        // MEASUREMENT ONLY (#9852 follow-up).
+        note_family_add(1, keys, list.len());
     }
 
     #[inline]
     fn family_push_front(&mut self, keys: u64, id: u32) {
         self.note_young_keys(keys);
-        self.families.entry(keys).or_default().push_front(id);
+        let list = self.families.entry(keys).or_default();
+        list.push_front(id);
+        // MEASUREMENT ONLY (#9852 follow-up).
+        note_family_add(2, keys, list.len());
     }
 
     /// Drop `id` from the family under `keys`, removing an emptied family.
@@ -1390,22 +1399,56 @@ pub(crate) unsafe fn publish_object_shape_from(
 fn retire_owned_shape_siblings(keys: u64, keep: u32) {
     let table = &crate::state::state().shapes;
     let mut inner = table.inner.borrow_mut();
-    let stale: Vec<u32> = inner
-        .families
-        .get(&keys)
-        .map(|ids| {
-            ids.as_slice()
-                .iter()
-                .copied()
-                .filter(|&id| {
-                    id != keep
-                        && table.slab().get(id).is_some_and(|record| {
-                            !record.has(RECORD_FLAG_CACHE_CARRIER | RECORD_FLAG_EXTERNAL_CARRIER)
-                        })
-                })
-                .collect()
-        })
-        .unwrap_or_default();
+    // MEASUREMENT ONLY (#9852 follow-up): the same filter, written as a loop so
+    // every id's OUTCOME is attributed. The five outcomes are exhaustive, so
+    // they sum to `examined` — that sum is the check that the attribution is
+    // complete rather than merely plausible.
+    let mut examined = 0u64;
+    let mut n_keep = 0u64;
+    let mut n_cache = 0u64;
+    let mut n_external = 0u64;
+    let mut n_both = 0u64;
+    let mut n_missing = 0u64;
+    let family_len = inner.families.get(&keys).map_or(0, |ids| ids.len());
+    let mut stale: Vec<u32> = Vec::new();
+    if let Some(ids) = inner.families.get(&keys) {
+        for &id in ids.as_slice() {
+            examined += 1;
+            if id == keep {
+                n_keep += 1;
+                continue;
+            }
+            match table.slab().get(id) {
+                None => n_missing += 1,
+                Some(record) => {
+                    let cache = record.has(RECORD_FLAG_CACHE_CARRIER);
+                    let external = record.has(RECORD_FLAG_EXTERNAL_CARRIER);
+                    match (cache, external) {
+                        (false, false) => stale.push(id),
+                        (true, true) => n_both += 1,
+                        (true, false) => n_cache += 1,
+                        (false, true) => n_external += 1,
+                    }
+                }
+            }
+        }
+    }
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        st.retire_calls += 1;
+        st.retire_len_sum += family_len as u64;
+        if family_len as u64 > st.retire_len_max {
+            st.retire_len_max = family_len as u64;
+        }
+        st.retire_examined += examined;
+        st.retire_retired += stale.len() as u64;
+        st.skip_keep += n_keep;
+        st.skip_cache_carrier += n_cache;
+        st.skip_external_carrier += n_external;
+        st.skip_both_carriers += n_both;
+        st.skip_no_record += n_missing;
+        c.set(st);
+    });
     SHAPE_PRUNE_STATS.with(|c| {
         let mut st = c.get();
         st.passes += 1;
@@ -1919,6 +1962,31 @@ pub(crate) struct ShapePruneStats {
     /// Owners whose family had more than 3 ids, i.e. a spilled list — the only
     /// ones whose removal loop memmoves a heap buffer.
     pub(crate) owners_with_spilled_family: u64,
+
+    // ---- step 1 (#9852 follow-up): WHY does one family reach 512 k? --------
+    /// `retire_owned_shape_siblings` calls, and the family length it saw.
+    pub(crate) retire_calls: u64,
+    pub(crate) retire_len_sum: u64,
+    pub(crate) retire_len_max: u64,
+    /// Ids it examined, and what it decided about each. The four skip reasons
+    /// are exhaustive with `retired`, so they sum to `examined` — which is the
+    /// check that the attribution is complete rather than plausible.
+    pub(crate) retire_examined: u64,
+    pub(crate) retire_retired: u64,
+    pub(crate) skip_keep: u64,
+    pub(crate) skip_cache_carrier: u64,
+    pub(crate) skip_external_carrier: u64,
+    pub(crate) skip_both_carriers: u64,
+    pub(crate) skip_no_record: u64,
+    /// Additions to a family, by site, and the family length at the add.
+    pub(crate) add_push_back: u64,
+    pub(crate) add_append_fresh: u64,
+    pub(crate) add_push_front: u64,
+    pub(crate) add_len_sum: u64,
+    pub(crate) add_len_max: u64,
+    /// Families observed crossing 10 k / 100 k on an add.
+    pub(crate) crossed_10k: u64,
+    pub(crate) crossed_100k: u64,
 }
 
 thread_local! {
@@ -1926,7 +1994,49 @@ thread_local! {
         const { std::cell::Cell::new(ShapePruneStats {
             passes: 0, candidates: 0, owners_dropped: 0, descriptors_removed: 0,
             family_len_sum: 0, family_len_max: 0, owners_with_spilled_family: 0,
+            retire_calls: 0, retire_len_sum: 0, retire_len_max: 0,
+            retire_examined: 0, retire_retired: 0,
+            skip_keep: 0, skip_cache_carrier: 0, skip_external_carrier: 0,
+            skip_both_carriers: 0, skip_no_record: 0,
+            add_push_back: 0, add_append_fresh: 0, add_push_front: 0,
+            add_len_sum: 0, add_len_max: 0, crossed_10k: 0, crossed_100k: 0,
         }) };
+}
+
+/// MEASUREMENT ONLY. Record an addition to a family: which site, the length
+/// it reached, and the first crossings of 10 k / 100 k with the keys address
+/// so the growth can be attributed to ONE array rather than to a total.
+#[inline]
+fn note_family_add(site: u8, keys: u64, len_after: usize) {
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        match site {
+            0 => st.add_push_back += 1,
+            1 => st.add_append_fresh += 1,
+            _ => st.add_push_front += 1,
+        }
+        st.add_len_sum += len_after as u64;
+        if len_after as u64 > st.add_len_max {
+            st.add_len_max = len_after as u64;
+        }
+        if len_after == 10_000 {
+            st.crossed_10k += 1;
+            if crate::gc::gc_diag_enabled() {
+                eprintln!(
+                    "[gc-shape-family-cross] len=10000 keys=0x{keys:x} site={site}"
+                );
+            }
+        }
+        if len_after == 100_000 {
+            st.crossed_100k += 1;
+            if crate::gc::gc_diag_enabled() {
+                eprintln!(
+                    "[gc-shape-family-cross] len=100000 keys=0x{keys:x} site={site}"
+                );
+            }
+        }
+        c.set(st);
+    });
 }
 
 #[inline]
@@ -1982,6 +2092,29 @@ other_calls={} other_elems={} other_len_max={}",
         il.kind_calls[0], il.kind_elems_moved[0], il.kind_len_max[0],
         il.kind_calls[1], il.kind_elems_moved[1], il.kind_len_max[1],
         il.kind_calls[2], il.kind_elems_moved[2], il.kind_len_max[2],
+    );
+    eprintln!(
+        "[gc-shape-family] retire_calls={} retire_len_sum={} retire_len_max={} \
+examined={} retired={} skip_keep={} skip_cache={} skip_external={} skip_both={} skip_norecord={} \
+| adds_push_back={} adds_append_fresh={} adds_push_front={} add_len_sum={} add_len_max={} \
+crossed_10k={} crossed_100k={}",
+        st.retire_calls,
+        st.retire_len_sum,
+        st.retire_len_max,
+        st.retire_examined,
+        st.retire_retired,
+        st.skip_keep,
+        st.skip_cache_carrier,
+        st.skip_external_carrier,
+        st.skip_both_carriers,
+        st.skip_no_record,
+        st.add_push_back,
+        st.add_append_fresh,
+        st.add_push_front,
+        st.add_len_sum,
+        st.add_len_max,
+        st.crossed_10k,
+        st.crossed_100k,
     );
 }
 
