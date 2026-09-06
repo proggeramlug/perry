@@ -457,6 +457,17 @@ pub unsafe extern "C-unwind" fn js_for_of_next(iter: f64) -> f64 {
                             dispatch_set_iterator_method_emit(obj, "next", true, true),
                         );
                     }
+                    // The lazy `Intl.Segmenter` grapheme iterator. Same reason
+                    // as the two arms above: without it every step costs a
+                    // by-name `next` lookup plus a generic call, which measured
+                    // +68 % time and +121 % allocated bytes against the eager
+                    // array representation it replaces.
+                    #[cfg(feature = "intl-segmenter")]
+                    if class_id == crate::intl::segmenter::SEGMENTS_ITERATOR_CLASS_ID {
+                        return crate::symbol::js_iterator_result_validate(
+                            crate::intl::segmenter::dispatch_segments_iterator_next(obj),
+                        );
+                    }
                 }
             }
         }

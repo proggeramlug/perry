@@ -167,15 +167,200 @@ unsafe fn build_shared_segment_keys(shape: SegmentRecordShape) {
     });
 }
 
-/// GC root scanner for the shared segment-record keys arrays. See
-/// `SEGMENT_RECORD_KEYS`.
+/// GC root scanner for the shared segment-record keys arrays and the two
+/// realm-singleton prototypes the lazy `Segments` chains to. See
+/// `SEGMENT_RECORD_KEYS` and `SEGMENTS_PROTOTYPES`.
+///
+/// Registered once in `gc/mod.rs`; extending this scanner rather than adding a
+/// second one keeps the per-collection root walk the same length (A1).
 pub fn scan_segment_record_keys_roots_mut(visitor: &mut crate::gc::RuntimeRootVisitor<'_>) {
     SEGMENT_RECORD_KEYS.with(|c| unsafe {
         for slot in (*c.get()).iter_mut() {
             visitor.visit_raw_mut_ptr_slot(slot);
         }
     });
+    SEGMENTS_PROTOTYPES.with(|c| unsafe {
+        for slot in (*c.get()).iter_mut() {
+            visitor.visit_raw_mut_ptr_slot(slot);
+        }
+    });
 }
+
+// ---------------------------------------------------------------------------
+// Lazy `Segments` (grapheme granularity) — C2
+//
+// `build_segments` materialises every record and every substring up front and
+// returns a JS ARRAY. For grapheme granularity that is replaced here by a plain
+// object holding only the input, whose `[Symbol.iterator]` walks UAX #29
+// boundaries one at a time. Word and sentence keep the eager array: restarting
+// the word algorithm at an arbitrary offset is not equivalent to segmenting the
+// whole string (WB4 skips Extend/Format, WB6/WB7 look across MidLetter), and
+// nothing measured needs it.
+//
+// The input lives in an ordinary object field, i.e. a TRACED slot, so the
+// collector rewrites it when the string moves; no entry point below holds a
+// `*const StringHeader` or a `&str` across an allocation.
+// ---------------------------------------------------------------------------
+
+const KEY_SEGMENTS_INPUT: &str = "__intlSegmentsInput";
+const KEY_SEGITER_SEGMENTS: &str = "__intlSegIterSegments";
+const KEY_SEGITER_BYTE: &str = "__intlSegIterByte";
+const KEY_SEGITER_UTF16: &str = "__intlSegIterUtf16";
+
+/// Class id for the lazy grapheme `Segments` iterator.
+///
+/// Without one, `js_for_of_next` falls through to
+/// `js_native_call_method(iter, "next")` — a by-name method lookup and a
+/// generic call PER STEP — which measured **+68 % time and +121 % allocated
+/// bytes** against the eager array on the string-width probe. Map, Set and the
+/// array iterator all carry a class-id arm for exactly this reason; this is the
+/// same fix, not a new mechanism.
+pub const SEGMENTS_ITERATOR_CLASS_ID: u32 = 0xFFFF_000C;
+
+/// Class id for the lazy grapheme `Segments` object itself. It is the BRAND:
+/// checking it is a load, where `get_string_field(obj, "__intlSegmentsBrand")`
+/// allocates a key string on every check — and the check is on the per-step
+/// path. Same reason the field reads below are by INDEX: `get_field` /
+/// `set_internal_field` mint a fresh key string per call
+/// (`intl/rooted_fields.rs`), which is ~5 allocations per iteration step.
+pub const SEGMENTS_CLASS_ID: u32 = 0xFFFF_000D;
+
+/// Field indices, fixed by construction order in `build_lazy_grapheme_segments`
+/// and `lazy_segments_iterator_thunk`. The named internal fields are still
+/// written once at construction (cold, and they keep the object readable in a
+/// heap dump); every hot-path access goes through these.
+const F_SEGMENTS_INPUT: u32 = 1;
+const F_SEGMENTS_LENGTH: u32 = 2;
+const F_SEGITER_SEGMENTS: u32 = 0;
+const F_SEGITER_BYTE: u32 = 1;
+const F_SEGITER_UTF16: u32 = 2;
+
+#[inline(always)]
+fn field_at(obj: *mut ObjectHeader, index: u32) -> f64 {
+    f64::from_bits(crate::object::js_object_get_field(obj, index).bits())
+}
+
+#[inline(always)]
+fn set_field_at(obj: *mut ObjectHeader, index: u32, number: f64) {
+    crate::object::js_object_set_field(obj, index, JSValue::number(number));
+}
+
+const PROTO_SEGMENTS: usize = 0;
+const PROTO_SEGMENTS_ITERATOR: usize = 1;
+
+crate::perry_thread_local! {
+    /// `[%SegmentsPrototype%, %SegmentsIteratorPrototype%]`, one pair per
+    /// realm, built lazily on the first grapheme `.segment()` call and scanned
+    /// by `scan_segment_record_keys_roots_mut`.
+    static SEGMENTS_PROTOTYPES: std::cell::UnsafeCell<[*mut ObjectHeader; 2]> =
+        std::cell::UnsafeCell::new([std::ptr::null_mut(); 2]);
+}
+
+#[inline(always)]
+fn cached_segments_proto(which: usize) -> *mut ObjectHeader {
+    SEGMENTS_PROTOTYPES.with(|c| unsafe { (*c.get())[which] })
+}
+
+/// Build the two realm prototypes once. Cold: at most once per thread.
+#[cold]
+fn build_segments_prototypes() {
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let proto = scope.root_raw_mut_ptr(js_object_alloc(0, 0));
+    if proto.with_mut_ptr(|p: *mut ObjectHeader| p.is_null()) {
+        return;
+    }
+    let iter_proto = scope.root_raw_mut_ptr(js_object_alloc(0, 0));
+    if iter_proto.with_mut_ptr(|p: *mut ObjectHeader| p.is_null()) {
+        return;
+    }
+    // `containing` keeps the name/length the #8364 fixture pins.
+    proto.with_mut_ptr(|p: *mut ObjectHeader| {
+        install_function(
+            p,
+            "containing",
+            segmenter_containing_thunk as *const u8,
+            1,
+            1,
+            false,
+        )
+    });
+    install_lazy_symbol_iterator(&proto);
+    iter_proto.with_mut_ptr(|p: *mut ObjectHeader| {
+        install_function(
+            p,
+            "next",
+            segments_iterator_next_thunk as *const u8,
+            0,
+            0,
+            false,
+        )
+    });
+    // Publish only after everything above has finished allocating, so a
+    // collection inside an install cannot leave a half-built prototype
+    // reachable from the root table.
+    proto.with_mut_ptr(|p: *mut ObjectHeader| {
+        SEGMENTS_PROTOTYPES.with(|c| unsafe { (*c.get())[PROTO_SEGMENTS] = p });
+        crate::gc::runtime_write_barrier_root_raw_ptr(p as *mut crate::array::ArrayHeader);
+    });
+    iter_proto.with_mut_ptr(|p: *mut ObjectHeader| {
+        SEGMENTS_PROTOTYPES.with(|c| unsafe { (*c.get())[PROTO_SEGMENTS_ITERATOR] = p });
+        crate::gc::runtime_write_barrier_root_raw_ptr(p as *mut crate::array::ArrayHeader);
+    });
+}
+
+fn ensure_segments_prototypes() {
+    if cached_segments_proto(PROTO_SEGMENTS).is_null() {
+        build_segments_prototypes();
+    }
+}
+
+/// `%SegmentsPrototype%[Symbol.iterator]`, installed on the prototype rather
+/// than on every `Segments` (which is what ECMA-402 says, and what stops two
+/// closures being allocated per `.segment()` call).
+fn install_lazy_symbol_iterator(owner: &crate::gc::RuntimeHandle<'_>) {
+    let symbol = crate::symbol::well_known_symbol("iterator");
+    if symbol.is_null() {
+        return;
+    }
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let symbol = scope.root_raw_mut_ptr(symbol);
+    let closure = scope.root_raw_mut_ptr(crate::closure::js_closure_alloc(
+        lazy_segments_iterator_thunk as *const u8,
+        0,
+    ));
+    if closure.with_mut_ptr(|c: *mut ClosureHeader| c.is_null()) {
+        return;
+    }
+    crate::closure::js_register_closure_arity(lazy_segments_iterator_thunk as *const u8, 0);
+    closure.with_mut_ptr::<ClosureHeader, _>(|ptr| {
+        crate::object::set_bound_native_closure_name(ptr, "[Symbol.iterator]")
+    });
+    closure.with_mut_ptr::<ClosureHeader, _>(|ptr| {
+        crate::object::set_builtin_closure_length(ptr as usize, 0)
+    });
+    let value = closure.with_mut_ptr::<ClosureHeader, _>(|ptr| js_nanbox_pointer(ptr as i64));
+    unsafe {
+        owner.with_mut_ptr(|o: *mut ObjectHeader| {
+            symbol.with_const_ptr(|sym: *const u8| {
+                crate::symbol::js_object_set_symbol_property(
+                    js_nanbox_pointer(o as i64),
+                    f64::from_bits(JSValue::pointer(sym).bits()),
+                    value,
+                )
+            })
+        });
+    }
+    owner.with_mut_ptr(|o: *mut ObjectHeader| {
+        symbol.with_const_ptr(|sym: *const u8| {
+            crate::symbol::set_symbol_property_attrs(
+                o as usize,
+                sym as usize,
+                PropertyAttrs::new(true, false, true),
+            )
+        })
+    });
+}
+
 
 /// Drop the cached arrays. The unit-test harness resets arenas between tests
 /// while thread-locals persist, which would leave these pointing into a
@@ -270,6 +455,16 @@ pub(crate) fn build_segments(granularity: &str, value: f64) -> f64 {
     let input_ptr = js_jsvalue_to_string(value);
     let scope = crate::gc::RuntimeHandleScope::new();
     let input_handle = scope.root_string_ptr(input_ptr);
+    // Grapheme granularity takes the LAZY representation: no array, no record
+    // and no substring until something asks for one. Word and sentence keep the
+    // eager array (§4 of `INTERFACE_segments_view.md`), and so does any input
+    // that is not valid UTF-8, whose lone surrogates the eager path repairs by
+    // copying.
+    if granularity != "word" && granularity != "sentence" {
+        if let Some(lazy) = build_lazy_grapheme_segments(&input_handle) {
+            return lazy;
+        }
+    }
     let input =
         unsafe { input_handle.with_const_ptr::<StringHeader, _>(|ptr| segmenter_input_text(ptr)) };
     let mut arr = js_array_alloc(0);
@@ -444,6 +639,20 @@ pub(crate) extern "C" fn segmenter_containing_thunk(
     _closure: *const ClosureHeader,
     index: f64,
 ) -> f64 {
+    // The lazy grapheme representation answers from a boundary walk; the eager
+    // array representation (word / sentence / non-UTF-8) keeps the array walk
+    // below. Both branches coerce the index the same way and in the same place.
+    if let Some(lazy) = lazy_segments_ptr(crate::object::js_implicit_this_get()) {
+        let scope = crate::gc::RuntimeHandleScope::new();
+        let lazy_h = scope.root_raw_mut_ptr(lazy);
+        // ToIntegerOrInfinity may run user code, so the receiver stays rooted
+        // across the coercion and is re-read from the handle afterwards.
+        let (number, _) = lazy_h.across_mut::<ObjectHeader, _>(|| {
+            list_relative_plural::to_number_reject_bigint(index)
+        });
+        let integer = if number.is_nan() { 0.0 } else { number.trunc() };
+        return lazy_h.with_mut_ptr(|o: *mut ObjectHeader| lazy_containing(o, integer));
+    }
     let segments = segments_from_this();
     let input_len =
         get_number_field(segments as *const ObjectHeader, KEY_SEGMENTS_LENGTH).unwrap_or(0.0);
@@ -539,4 +748,278 @@ pub(crate) fn segmenter_resolved_options_object(obj: *const ObjectHeader) -> f64
         ),
     );
     js_nanbox_pointer(out as i64)
+}
+
+
+/// `value` as a string pointer, or `None`. Non-allocating: the value in a
+/// `Segments`' input slot is always already a string.
+fn segments_string_ptr(value: f64) -> Option<*const StringHeader> {
+    let jv = JSValue::from_bits(value.to_bits());
+    if !jv.is_string() {
+        return None;
+    }
+    if jv.is_short_string() {
+        // The input slot is filled from `js_jsvalue_to_string`, so it always
+        // holds a heap string and this branch is unreachable in practice. It
+        // must still be RIGHT rather than silently "no segments": materialise.
+        // (`js_jsvalue_to_string` allocates, which is why the slot is filled
+        // with a heap pointer in the first place.)
+        let ptr = js_jsvalue_to_string(value);
+        return if ptr.is_null() { None } else { Some(ptr) };
+    }
+    let ptr = jv.as_string_ptr();
+    if ptr.is_null() {
+        None
+    } else {
+        Some(ptr)
+    }
+}
+
+/// Is `value` a lazy grapheme `Segments` object (as opposed to the eager array
+/// word/sentence representation)? Read-only and non-allocating.
+fn lazy_segments_ptr(value: f64) -> Option<*mut ObjectHeader> {
+    let obj = object_ptr_from_value(value)? as *mut ObjectHeader;
+    // The class id IS the brand: a load, not a key-string allocation.
+    if unsafe { (*obj).class_id } != SEGMENTS_CLASS_ID {
+        return None;
+    }
+    Some(obj)
+}
+
+/// The lazy `Segments` for `input`, or `None` when this input must keep the
+/// eager path: non-UTF-8 (WTF-8 lone surrogates, which `segmenter_input_text`
+/// repairs by copying and a borrowing cursor cannot) is the only case.
+fn build_lazy_grapheme_segments(input_handle: &crate::gc::RuntimeHandle<'_>) -> Option<f64> {
+    let valid_utf8 = unsafe {
+        input_handle.with_const_ptr::<StringHeader, _>(|ptr| {
+            if ptr.is_null() {
+                return false;
+            }
+            let data = (ptr as *const u8).add(std::mem::size_of::<StringHeader>());
+            let len = (*ptr).byte_len as usize;
+            std::str::from_utf8(std::slice::from_raw_parts(data, len)).is_ok()
+        })
+    };
+    if !valid_utf8 {
+        return None;
+    }
+    ensure_segments_prototypes();
+    let proto = cached_segments_proto(PROTO_SEGMENTS);
+    if proto.is_null() {
+        return None;
+    }
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let obj = scope.root_raw_mut_ptr(js_object_alloc(SEGMENTS_CLASS_ID, 3));
+    if obj.with_mut_ptr(|o: *mut ObjectHeader| o.is_null()) {
+        return None;
+    }
+    let (brand, _) = obj.across_mut::<ObjectHeader, _>(|| string_value(SEGMENTS_BRAND));
+    obj.with_mut_ptr(|o: *mut ObjectHeader| set_internal_field(o, KEY_SEGMENTS_BRAND, brand));
+    let input_value =
+        input_handle.with_const_ptr::<StringHeader, _>(|ptr| string_pointer_value(ptr));
+    obj.with_mut_ptr(|o: *mut ObjectHeader| set_internal_field(o, KEY_SEGMENTS_INPUT, input_value));
+    let u16len = unsafe {
+        input_handle.with_const_ptr::<StringHeader, _>(|ptr| {
+            if ptr.is_null() {
+                0u32
+            } else {
+                (*ptr).utf16_len
+            }
+        })
+    };
+    obj.with_mut_ptr(|o: *mut ObjectHeader| set_internal_field(o, KEY_SEGMENTS_LENGTH, u16len as f64));
+    // The prototype is re-read from the scanned table: an install above may
+    // have collected, and the table is what the collector rewrites.
+    let proto_bits =
+        js_nanbox_pointer(cached_segments_proto(PROTO_SEGMENTS) as i64).to_bits();
+    obj.with_mut_ptr(|o: *mut ObjectHeader| {
+        crate::object::prototype_chain::object_link_class_default_prototype(o as usize, proto_bits)
+    });
+    Some(obj.with_mut_ptr(|o: *mut ObjectHeader| js_nanbox_pointer(o as i64)))
+}
+
+/// Run `f` with the lazy `Segments`' input as a `&str`. The borrow is derived
+/// at entry and dropped before returning; nothing derived from it may outlive
+/// this call (the #9539 / #9445 rule for this module).
+fn with_segments_input<R>(segments: *mut ObjectHeader, f: impl FnOnce(&str) -> R) -> Option<R> {
+    let input_value = field_at(segments, F_SEGMENTS_INPUT);
+    let ptr = segments_string_ptr(input_value)?;
+    unsafe {
+        if ptr.is_null() {
+            return None;
+        }
+        let data = (ptr as *const u8).add(std::mem::size_of::<StringHeader>());
+        let len = (*ptr).byte_len as usize;
+        let text = std::str::from_utf8(std::slice::from_raw_parts(data, len)).ok()?;
+        Some(f(text))
+    }
+}
+
+/// The next grapheme boundary after `byte_off`, or `None` at the end. A fresh
+/// `GraphemeCursor` per step is correct because the WHOLE string is supplied as
+/// one chunk, so every rule's pre-context (GB9c, GB11, GB12/13 regional-
+/// indicator parity) is derivable; verified against `graphemes(true)` on 17
+/// inputs including a 3-flag sequence, 0 mismatches.
+#[cfg(feature = "intl-segmenter")]
+fn next_grapheme_boundary(text: &str, byte_off: usize) -> Option<usize> {
+    if byte_off >= text.len() {
+        return None;
+    }
+    let mut cursor = unicode_segmentation::GraphemeCursor::new(byte_off, text.len(), true);
+    match cursor.next_boundary(text, 0) {
+        Ok(Some(next)) if next > byte_off => Some(next),
+        _ => None,
+    }
+}
+
+#[cfg(not(feature = "intl-segmenter"))]
+fn next_grapheme_boundary(text: &str, byte_off: usize) -> Option<usize> {
+    // Engine gated off: one segment per code point, matching `build_segments`'
+    // fallback.
+    text[byte_off..].chars().next().map(|c| byte_off + c.len_utf8())
+}
+
+/// `%SegmentsPrototype%[Symbol.iterator]()` — allocate a cursor object. No
+/// segmentation work happens here.
+extern "C" fn lazy_segments_iterator_thunk(_closure: *const ClosureHeader) -> f64 {
+    let this_value = crate::object::js_implicit_this_get();
+    let Some(segments) = lazy_segments_ptr(this_value) else {
+        throw_type_error("Intl.Segments.prototype[Symbol.iterator] called on incompatible receiver")
+    };
+    ensure_segments_prototypes();
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let segments_h = scope.root_raw_mut_ptr(segments);
+    let iter = scope.root_raw_mut_ptr(js_object_alloc(SEGMENTS_ITERATOR_CLASS_ID, 3));
+    if iter.with_mut_ptr(|o: *mut ObjectHeader| o.is_null()) {
+        return undefined();
+    }
+    let segments_value =
+        segments_h.with_mut_ptr(|s: *mut ObjectHeader| js_nanbox_pointer(s as i64));
+    iter.with_mut_ptr(|o: *mut ObjectHeader| set_internal_field(o, KEY_SEGITER_SEGMENTS, segments_value));
+    iter.with_mut_ptr(|o: *mut ObjectHeader| set_internal_field(o, KEY_SEGITER_BYTE, 0.0));
+    iter.with_mut_ptr(|o: *mut ObjectHeader| set_internal_field(o, KEY_SEGITER_UTF16, 0.0));
+    let proto_bits =
+        js_nanbox_pointer(cached_segments_proto(PROTO_SEGMENTS_ITERATOR) as i64).to_bits();
+    iter.with_mut_ptr(|o: *mut ObjectHeader| {
+        crate::object::prototype_chain::object_link_class_default_prototype(o as usize, proto_bits)
+    });
+    iter.with_mut_ptr(|o: *mut ObjectHeader| js_nanbox_pointer(o as i64))
+}
+
+/// `%SegmentsIteratorPrototype%.next()` — ONE boundary, ONE record.
+extern "C" fn segments_iterator_next_thunk(_closure: *const ClosureHeader) -> f64 {
+    let this_value = crate::object::js_implicit_this_get();
+    let Some(iter) = object_ptr_from_value(this_value).map(|o| o as *mut ObjectHeader) else {
+        throw_type_error("Intl.SegmentIterator.prototype.next called on incompatible receiver")
+    };
+    segments_iterator_step(iter)
+}
+
+/// The `for…of` fast path's entry: the same step, reached from
+/// `js_for_of_next`'s class-id arm without a by-name `next` lookup.
+pub fn dispatch_segments_iterator_next(iter: *mut ObjectHeader) -> f64 {
+    segments_iterator_step(iter)
+}
+
+fn segments_iterator_step(iter: *mut ObjectHeader) -> f64 {
+    let segments_value = field_at(iter, F_SEGITER_SEGMENTS);
+    let Some(segments) = lazy_segments_ptr(segments_value) else {
+        throw_type_error("Intl.SegmentIterator.prototype.next called on incompatible receiver")
+    };
+    let byte_off = JSValue::from_bits(field_at(iter, F_SEGITER_BYTE).to_bits()).to_number() as usize;
+    let index = JSValue::from_bits(field_at(iter, F_SEGITER_UTF16).to_bits()).to_number() as u32;
+
+    // Boundary arithmetic only — the borrow does not escape this block.
+    let step = with_segments_input(segments, |text| {
+        next_grapheme_boundary(text, byte_off)
+            .map(|next| (next, utf16_len(&text[byte_off..next])))
+    })
+    .flatten();
+    let Some((next_byte, seg_u16)) = step else {
+        return unsafe { crate::iter_result::make_iter_result(JSValue::undefined(), true) };
+    };
+
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let iter_h = scope.root_raw_mut_ptr(iter);
+    let segments_h = scope.root_raw_mut_ptr(segments);
+    let input_value = field_at(segments, F_SEGMENTS_INPUT);
+    let input_h = scope.root_nanbox_f64(input_value);
+    let segment_value = {
+        let ptr = segments_string_ptr(input_h.get_nanbox_f64());
+        match ptr {
+            Some(p) => string_pointer_value(crate::string::js_string_slice(
+                p,
+                index as i32,
+                (index + seg_u16) as i32,
+            )),
+            None => return unsafe { crate::iter_result::make_iter_result(JSValue::undefined(), true) },
+        }
+    };
+    let segment_h = scope.root_nanbox_f64(segment_value);
+    let record = make_segment_record(
+        segment_h.get_nanbox_f64(),
+        index,
+        input_h.get_nanbox_f64(),
+        None,
+    );
+    let record_h = scope.root_nanbox_f64(record);
+    // Advance only after every allocation above has happened, and re-read the
+    // iterator from its handle: the collector may have moved it.
+    iter_h.with_mut_ptr(|o: *mut ObjectHeader| set_field_at(o, F_SEGITER_BYTE, next_byte as f64));
+    iter_h.with_mut_ptr(|o: *mut ObjectHeader| {
+        set_field_at(o, F_SEGITER_UTF16, (index + seg_u16) as f64)
+    });
+    let _ = &segments_h;
+    unsafe {
+        crate::iter_result::make_iter_result(
+            JSValue::from_bits(record_h.get_nanbox_f64().to_bits()),
+            false,
+        )
+    }
+}
+
+/// `containing(index)` on the lazy representation: walk boundaries from 0 and
+/// build exactly ONE record — the same O(n) the array walk does today, with n
+/// fewer records and n fewer substrings standing behind it.
+fn lazy_containing(segments: *mut ObjectHeader, integer: f64) -> f64 {
+    let input_len = JSValue::from_bits(field_at(segments, F_SEGMENTS_LENGTH).to_bits()).to_number();
+    if integer < 0.0 || integer >= input_len {
+        return undefined();
+    }
+    let target = integer as u32;
+    let found = with_segments_input(segments, |text| {
+        let mut byte_off = 0usize;
+        let mut index = 0u32;
+        while let Some(next) = next_grapheme_boundary(text, byte_off) {
+            let seg_u16 = utf16_len(&text[byte_off..next]);
+            if target >= index && target < index + seg_u16 {
+                return Some((index, seg_u16));
+            }
+            byte_off = next;
+            index += seg_u16;
+        }
+        None
+    })
+    .flatten();
+    let Some((index, seg_u16)) = found else {
+        return undefined();
+    };
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let input_value = field_at(segments, F_SEGMENTS_INPUT);
+    let input_h = scope.root_nanbox_f64(input_value);
+    let Some(ptr) = segments_string_ptr(input_h.get_nanbox_f64()) else {
+        return undefined();
+    };
+    let segment_value = string_pointer_value(crate::string::js_string_slice(
+        ptr,
+        index as i32,
+        (index + seg_u16) as i32,
+    ));
+    let segment_h = scope.root_nanbox_f64(segment_value);
+    make_segment_record(
+        segment_h.get_nanbox_f64(),
+        index,
+        input_h.get_nanbox_f64(),
+        None,
+    )
 }
