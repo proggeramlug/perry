@@ -2754,8 +2754,34 @@ fn gc_budgeted_due_trigger() -> Option<BudgetedGcTrigger> {
     // they must not share a basis): the adaptive base trigger against the
     // whole arena, and the scavenge nursery cap against the young generation
     // only.
+    // #9834: the arena arm is due on `arena_total_bytes()` and, under gen-gc,
+    // schedules a copying MINOR — which cannot lower that total: promotion
+    // hands Eden's blocks to old gen and a committed block keeps its bump
+    // offset. Measured per FIRING on the compiled claude-code TUI, those
+    // collections land on a nursery that is 79 % LIVE and free a median of
+    // 131 KB, against `MallocCount`'s 95 %-dead nursery and 10.0 MB, for the
+    // same ~11 ms root scan that is essentially their whole cost.
+    //
+    // So the arm asks whether its own minor can act (one `BLOCK_SIZE` of young
+    // occupancy — below that a minor cannot free more than a block minus
+    // survivors). If it cannot, the pressure is HANDED ON rather than dropped:
+    // dropping it is what an earlier variant did, and arena pressure with a
+    // quiet nursery became served by nothing — 26 failures across seven
+    // modules, which demonstrated the hole rather than encoding an old
+    // contract.
+    //
+    // The hand-off goes only to an arm whose collection will actually run.
+    // `YoungScavengeCap` is deliberately NOT one: the budgeted stepper declines
+    // it (`due == YoungScavengeCap && start_progress_kind.is_budgeted()`) and
+    // defers to the precise moving minor (#7909), so handing to it would turn
+    // "a collection is scheduled" into "nothing is scheduled". `OldReclaim` IS
+    // one — it appears in no decline guard, and
+    // `gc_start_budgeted_cycle_for_pressure` starts it unconditionally — and it
+    // is the arm that can actually lower the total the arena arm was due on,
+    // since only a whole-block release moves `arena_total_bytes()`.
     let total = crate::arena::arena_total_bytes();
-    if total >= next_arena_trigger_base() {
+    let arena_due = total >= next_arena_trigger_base();
+    if arena_due && arena_trigger_collection_can_act() {
         return Some(BudgetedGcTrigger::ArenaBytes);
     }
     if young_scavenge_cap_due() {
@@ -2768,7 +2794,46 @@ fn gc_budgeted_due_trigger() -> Option<BudgetedGcTrigger> {
         return Some(BudgetedGcTrigger::MallocCount);
     }
 
+    // The residual: the arena is over budget, and nothing that could act on it
+    // was due. Hand it to the arm that can lower the total rather than dropping
+    // it — the collection still happens, on this evaluation.
+    if arena_due {
+        return Some(BudgetedGcTrigger::OldReclaim);
+    }
+
     None
+}
+
+/// Can the collection the `ArenaBytes` arm would schedule act on the thing that
+/// made the arm due?
+///
+/// A full cycle can — it releases blocks, the only thing that lowers
+/// `arena_total_bytes()`. A copying minor cannot, so it is asked instead whether
+/// the young generation holds enough for the collection to repay its fixed cost.
+///
+/// A false answer never cancels a collection; it re-routes one (see the caller).
+fn arena_trigger_collection_can_act() -> bool {
+    if !arena_route_residual_enabled() {
+        return true;
+    }
+    // `_inner` deliberately: `arena_growth_full_escalation_due` calls
+    // `note_full_cycle_started()`, and a predicate that recorded a cycle start
+    // every time it was consulted would corrupt the pacing baseline.
+    if !crate::gc::gen_gc_enabled() || arena_growth_full_escalation_due_inner() {
+        return true;
+    }
+    crate::arena::copying_from_space_in_use_bytes() >= crate::arena::BLOCK_SIZE
+}
+
+/// `PERRY_GC_ARENA_ROUTE_RESIDUAL=0` restores the previous behaviour.
+///
+/// The kill switch, and the positive control: both arms of the comparison live
+/// in ONE binary, so no build difference can be confounded with the change.
+fn arena_route_residual_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| {
+        crate::gc::env_default_on_enabled("PERRY_GC_ARENA_ROUTE_RESIDUAL")
+    })
 }
 
 /// Phase 1 of the moving-GC project: run a copying (moving) minor at a
