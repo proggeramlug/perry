@@ -519,6 +519,14 @@ impl GcTriggerThresholdTestGuard {
         let just_due = crate::arena::arena_total_bytes().saturating_sub(1);
         GC_NEXT_TRIGGER_BYTES.with(|trigger| trigger.set(just_due));
     }
+
+    /// Twin of [`Self::make_arena_trigger_due`] for the malloc-count arm, so a
+    /// test can present BOTH arms due at once — the situation in which the
+    /// arena arm offers its collection to the one that can act.
+    pub(super) fn make_malloc_trigger_due(&self) {
+        let just_due = crate::gc::telemetry::malloc_object_count();
+        GC_NEXT_MALLOC_TRIGGER.with(|trigger| trigger.set(just_due));
+    }
 }
 
 impl Drop for GcTriggerThresholdTestGuard {

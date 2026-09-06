@@ -2639,7 +2639,7 @@ struct BudgetedGcCycle {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum BudgetedGcTrigger {
+pub(crate) enum BudgetedGcTrigger {
     OldReclaim,
     ArenaBytes,
     /// The young-generation scavenge cap ([`young_scavenge_cap_due`]).
@@ -2740,6 +2740,11 @@ pub(crate) fn trigger_path_hot_slot_indices() -> Vec<(&'static str, u32)> {
     ]
 }
 
+#[cfg(test)]
+pub(crate) fn gc_budgeted_due_trigger_for_tests() -> Option<BudgetedGcTrigger> {
+    gc_budgeted_due_trigger()
+}
+
 fn gc_budgeted_due_trigger() -> Option<BudgetedGcTrigger> {
     let old_pending = GC_OLD_RECLAIM_PENDING.with(Cell::get);
     // #6010: external Map/Set side-buffer bytes escalate to OldReclaim too.
@@ -2754,21 +2759,108 @@ fn gc_budgeted_due_trigger() -> Option<BudgetedGcTrigger> {
     // they must not share a basis): the adaptive base trigger against the
     // whole arena, and the scavenge nursery cap against the young generation
     // only.
+    // #9833: `ArenaBytes` gets FIRST REFUSAL, not first claim.
+    //
+    // The arm is due on `arena_total_bytes()` and, under gen-gc, schedules a
+    // copying MINOR — which cannot lower that total: promotion hands Eden's
+    // blocks to old gen and a committed block keeps its bump offset. So
+    // old-generation growth was ordering young collections, and measured on the
+    // compiled claude-code TUI (3300-char reply, one line per FIRING) they land
+    // on a nursery that is 79 % LIVE and free a median of 131 KB, against
+    // `MallocCount`'s 95 %-dead nursery and 10.0 MB.
+    //
+    // Every collection pays the same fixed cost regardless of which arm claimed
+    // it — the root scan alone is 11,234 us median, essentially the whole cost
+    // of an `ArenaBytes` minor against its 110 KB copy — so when two arms are
+    // due at the same moment, WHICH one claims the collection decides how much
+    // work that fixed cost buys. It is not a neutral label:
+    // `copied_minor_malloc_sweep_due()` gates the malloc sweep on the trigger
+    // kind, so a collection claimed by `ArenaBytes` sweeps no malloc objects at
+    // all, and each arm re-baselines only its own threshold.
+    //
+    // So: when the arena arm is due but its minor cannot act on what made it
+    // due, let the arms that CAN act take the collection first. If none is due,
+    // the arena arm still fires — the contract that arena pressure schedules a
+    // collection is preserved exactly, on the same evaluation, with no
+    // deferral, no waiting on the mutator and no bound to justify.
+    //
+    // Three earlier variants are recorded in
+    // `secret-tests/cc-perf-campaign/HANDOFF_arenabytes_solution_space.md`:
+    // declining outright breaks that contract (26 tests across seven modules),
+    // widening the threshold trades footprint for CPU, and routing the work to
+    // the budgeted old-gen arm costs >= 2.9x what it replaces.
     let total = crate::arena::arena_total_bytes();
-    if total >= next_arena_trigger_base() {
+    let arena_due = total >= next_arena_trigger_base();
+    if arena_due && arena_trigger_collection_can_act() {
         return Some(BudgetedGcTrigger::ArenaBytes);
     }
-    if young_scavenge_cap_due() {
-        return Some(BudgetedGcTrigger::YoungScavengeCap);
+
+    let malloc_due = || {
+        malloc_object_count() >= GC_NEXT_MALLOC_TRIGGER.with(|c| c.get())
+    };
+
+    if !arena_due {
+        // Unchanged ordering when the arena arm is not in play at all.
+        if young_scavenge_cap_due() {
+            return Some(BudgetedGcTrigger::YoungScavengeCap);
+        }
+        if malloc_due() {
+            return Some(BudgetedGcTrigger::MallocCount);
+        }
+        return None;
     }
 
-    let malloc_count = malloc_object_count();
-    let next_malloc_trigger = GC_NEXT_MALLOC_TRIGGER.with(|c| c.get());
-    if malloc_count >= next_malloc_trigger {
+    // The arena arm is due but its minor cannot act on what made it due, so it
+    // offers the collection to an arm that can.
+    //
+    // **Only to an arm whose collection is actually going to run.**
+    // `YoungScavengeCap` is deliberately NOT such an arm: a budgeted cycle is
+    // `low_pause_non_moving` and cannot lower the quantity that trigger tests,
+    // so `gc_runtime_safepoint` declines it and hands the pressure to the
+    // precise moving minor (#7909). Yielding to it would turn "a collection is
+    // scheduled" into "nothing is scheduled" — reintroducing, one layer down,
+    // the hole that the young-occupancy variant was refuted for. This is not
+    // reasoning: `a_nursery_cap_only_trigger_is_deferred_to_the_collector_that_
+    // can_discharge_it` failed in exactly its control phase when this yielded
+    // to the cap, which is what that phase exists to catch.
+    if malloc_due() {
         return Some(BudgetedGcTrigger::MallocCount);
     }
+    Some(BudgetedGcTrigger::ArenaBytes)
+}
 
-    None
+/// Can the collection the `ArenaBytes` arm would schedule act on the thing that
+/// made the arm due?
+///
+/// A full cycle can: it releases blocks, which is the only thing that lowers
+/// `arena_total_bytes()`. A copying minor cannot, so it is asked instead
+/// whether the young generation holds enough for the collection to repay its
+/// fixed cost — one `BLOCK_SIZE`, below which a minor cannot free more than a
+/// block minus survivors and, measured, froze 131 KB.
+///
+/// A false answer never cancels a collection; it only lets a better-placed arm
+/// go first (see the caller).
+fn arena_trigger_collection_can_act() -> bool {
+    if !arena_yield_enabled() {
+        return true;
+    }
+    // `_inner` deliberately: `arena_growth_full_escalation_due` calls
+    // `note_full_cycle_started()`, and a predicate that recorded a cycle start
+    // every time it was merely consulted would corrupt the pacing baseline.
+    if !crate::gc::gen_gc_enabled() || arena_growth_full_escalation_due_inner() {
+        return true;
+    }
+    crate::arena::copying_from_space_in_use_bytes() >= crate::arena::BLOCK_SIZE
+}
+
+/// `PERRY_GC_ARENA_YIELD=0` restores first-claim ordering.
+///
+/// The kill switch, and the positive control: it puts both arms of the
+/// comparison in ONE binary so no build difference can be confounded with the
+/// change.
+fn arena_yield_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| crate::gc::env_default_on_enabled("PERRY_GC_ARENA_YIELD"))
 }
 
 /// Phase 1 of the moving-GC project: run a copying (moving) minor at a
