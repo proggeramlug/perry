@@ -1615,7 +1615,41 @@ pub(super) fn run_copied_minor_attempt(
     remembered_set_clear();
     collector.sticky.restore();
     if !collector.skip_remembering {
+        // #9836: what is knowable BEFORE the walk, so it can be joined against
+        // the `pages_added` the walk reports.
+        //
+        // The question this exists to answer: 17 of 115 restore passes repair
+        // anything and the other 98 walk millions of objects for nothing — what
+        // is true of the 17 that is false of the 98, and is it knowable in
+        // advance? A precondition argued from the code that CREATES the
+        // incompleteness would let 98 walks be skipped by construction; a
+        // property that merely correlates over one run would not, and a missed
+        // repair is a stale remembered-set entry, i.e. a collector that misses a
+        // live object.
+        if crate::gc::gc_diag_enabled() {
+            eprintln!(
+                "[gc-restore-pre] promoted_objects={} promoted_bytes={} copied_objects={} \
+                 copied_bytes={} in_place={} untraced={} survival_permille={} \
+                 dirty_old_pages={} external_dirty={} covered={} from_space={} live_from={}",
+                collector.stats.promoted_objects,
+                collector.stats.promoted_bytes,
+                collector.stats.copied_objects,
+                collector.stats.copied_bytes,
+                collector.stats.in_place_promotion,
+                untraced,
+                collector.stats.young_survival_permille,
+                snapshot.dirty_old_pages.len(),
+                snapshot.external_dirty_entries.len(),
+                dirty_scan_covered.len(),
+                from_space_bytes,
+                collector.live_from_bytes,
+            );
+        }
         restore_surviving_dirty_coverage(&snapshot, &dirty_scan_covered, "copying_minor");
+        // Emitted per minor, not at exit: the rig SIGKILLs cc, so an `atexit`
+        // report never prints (measured -- see BRIEF_COMMON). Counters are
+        // cumulative, so the last line before the kill is the answer.
+        super::barrier::barrier_outcome_counts::report();
     }
     let malloc_freed_bytes = if malloc_sweep_due {
         let phase_start = trace_phase_start(trace);

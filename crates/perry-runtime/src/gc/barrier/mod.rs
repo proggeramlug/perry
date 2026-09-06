@@ -1564,11 +1564,69 @@ pub(super) fn growth_source_can_donate_dirty_pages(old_base: usize) -> bool {
 /// that traces them). Longlived and old children need no remembering:
 /// longlived is never swept individually and old is reclaimed only by
 /// full cycles that trace everything.
+/// `PERRY_GC_DIAG=1`: executions of [`remembered_child_needs_tracking`] by
+/// outcome.
+///
+/// **Executions, not time.** A profile ranked this predicate at 161 leaf
+/// samples and cannot say which branch it spends them in — and a rejection that
+/// is 100x more common at a tenth the cost is both invisible there and the only
+/// branch worth a cheaper pre-test. The four outcomes differ by more than an
+/// order of magnitude in cost: `Old`/`Longlived` is one cached classification,
+/// while `Unknown` pays that classification AND a malloc-registry lookup.
+pub(in crate::gc) mod barrier_outcome_counts {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    pub(super) static ACCEPT_NURSERY: AtomicU64 = AtomicU64::new(0);
+    pub(super) static REJECT_OLD: AtomicU64 = AtomicU64::new(0);
+    /// The expensive rejection: classification said `Unknown`, so the registry
+    /// was consulted, and the answer was still no.
+    pub(super) static REJECT_UNKNOWN_MISS: AtomicU64 = AtomicU64::new(0);
+    pub(super) static ACCEPT_UNKNOWN_HIT: AtomicU64 = AtomicU64::new(0);
+    /// `Unknown` rejected by the `child_addr > GC_HEADER_SIZE` guard, i.e.
+    /// before the registry was touched at all.
+    pub(super) static REJECT_UNKNOWN_LOW_ADDR: AtomicU64 = AtomicU64::new(0);
+
+    #[inline(always)]
+    pub(super) fn note(c: &AtomicU64) {
+        if crate::gc::gc_diag_enabled() {
+            c.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    pub(in crate::gc) fn report() {
+        if !crate::gc::gc_diag_enabled() {
+            return;
+        }
+        let g = |c: &AtomicU64| c.load(Ordering::Relaxed);
+        let (an, ro, rum, auh, rul) = (
+            g(&ACCEPT_NURSERY), g(&REJECT_OLD), g(&REJECT_UNKNOWN_MISS),
+            g(&ACCEPT_UNKNOWN_HIT), g(&REJECT_UNKNOWN_LOW_ADDR),
+        );
+        let tot = an + ro + rum + auh + rul;
+        if tot == 0 {
+            return;
+        }
+        let p = |n: u64| 100.0 * n as f64 / tot as f64;
+        eprintln!(
+            "[gc-barrier-outcomes] total={tot} \
+             accept_nursery={an} ({:.2}%) reject_old={ro} ({:.2}%) \
+             reject_unknown_registry_miss={rum} ({:.2}%) accept_unknown_registry_hit={auh} ({:.2}%) \
+             reject_unknown_low_addr={rul} ({:.2}%)",
+            p(an), p(ro), p(rum), p(auh), p(rul),
+        );
+    }
+}
+
 #[inline]
 pub(super) fn remembered_child_needs_tracking(child_addr: usize) -> bool {
     match crate::arena::classify_heap_generation(child_addr) {
-        crate::arena::HeapGeneration::Nursery => true,
-        crate::arena::HeapGeneration::Old | crate::arena::HeapGeneration::Longlived => false,
+        crate::arena::HeapGeneration::Nursery => {
+            barrier_outcome_counts::note(&barrier_outcome_counts::ACCEPT_NURSERY);
+            true
+        }
+        crate::arena::HeapGeneration::Old | crate::arena::HeapGeneration::Longlived => {
+            barrier_outcome_counts::note(&barrier_outcome_counts::REJECT_OLD);
+            false
+        }
         crate::arena::HeapGeneration::Unknown => {
             // Non-arena child: candidate malloc-GC object (RegExp, Symbol,
             // hook-mode Promise, grown string, large-capture closure).
@@ -1579,10 +1637,19 @@ pub(super) fn remembered_child_needs_tracking(child_addr: usize) -> bool {
             // dirty-scan then treated neighboring garbage slots as movable
             // young pointers. Band ids and foreign pointers are never in
             // the registry, so this also needs no pre-deref band guard.
-            child_addr > GC_HEADER_SIZE
-                && super::malloc::gc_malloc_header_is_tracked(
-                    (child_addr - GC_HEADER_SIZE) as *const GcHeader,
-                )
+            if child_addr <= GC_HEADER_SIZE {
+                barrier_outcome_counts::note(&barrier_outcome_counts::REJECT_UNKNOWN_LOW_ADDR);
+                return false;
+            }
+            let hit = super::malloc::gc_malloc_header_is_tracked(
+                (child_addr - GC_HEADER_SIZE) as *const GcHeader,
+            );
+            barrier_outcome_counts::note(if hit {
+                &barrier_outcome_counts::ACCEPT_UNKNOWN_HIT
+            } else {
+                &barrier_outcome_counts::REJECT_UNKNOWN_MISS
+            });
+            hit
         }
     }
 }
