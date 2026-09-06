@@ -497,6 +497,67 @@ impl Default for IdList {
     }
 }
 
+/// MEASUREMENT ONLY. What [`IdList::remove`] costs, so the shape of the
+/// defect is a number rather than a reading of the code: `Vec::remove` moves
+/// the whole tail past the removed position, and the dead-owner prune calls it
+/// once per descriptor of a dying family.
+#[derive(Default, Clone, Copy)]
+pub(crate) struct IdListRemoveStats {
+    /// Calls that found the id and removed it.
+    pub(crate) calls: u64,
+    /// Of those, calls on a spilled (heap `Vec`) list — the ones that memmove.
+    pub(crate) spill_calls: u64,
+    /// Elements shifted down, summed. Bytes = this x 4.
+    pub(crate) elems_moved: u64,
+    /// List length BEFORE the removal, summed, and its maximum.
+    pub(crate) len_sum: u64,
+    pub(crate) len_max: u64,
+    /// Removal POSITION, summed: position 0 moves the whole tail, the last
+    /// position moves nothing. This is the quantity the bimodality is about.
+    pub(crate) pos_sum: u64,
+    /// Length-before histogram: 1, 2, 3, 4-7, 8-15, 16-63, 64-255, 256+.
+    pub(crate) len_hist: [u64; 8],
+}
+
+thread_local! {
+    pub(crate) static ID_LIST_REMOVE_STATS: std::cell::Cell<IdListRemoveStats> =
+        const { std::cell::Cell::new(IdListRemoveStats {
+            calls: 0, spill_calls: 0, elems_moved: 0, len_sum: 0, len_max: 0,
+            pos_sum: 0, len_hist: [0; 8],
+        }) };
+}
+
+#[inline]
+fn len_bucket(n: usize) -> usize {
+    match n {
+        0..=1 => 0,
+        2 => 1,
+        3 => 2,
+        4..=7 => 3,
+        8..=15 => 4,
+        16..=63 => 5,
+        64..=255 => 6,
+        _ => 7,
+    }
+}
+
+#[inline]
+fn note_id_list_removal(len_before: usize, pos: usize, spilled: bool) {
+    ID_LIST_REMOVE_STATS.with(|c| {
+        let mut st = c.get();
+        st.calls += 1;
+        if spilled {
+            st.spill_calls += 1;
+        }
+        st.elems_moved += (len_before - 1 - pos) as u64;
+        st.len_sum += len_before as u64;
+        st.len_max = st.len_max.max(len_before as u64);
+        st.pos_sum += pos as u64;
+        st.len_hist[len_bucket(len_before)] += 1;
+        c.set(st);
+    });
+}
+
 impl IdList {
     #[inline]
     pub(super) fn as_slice(&self) -> &[u32] {
@@ -590,6 +651,7 @@ impl IdList {
                 let Some(pos) = ids[..n].iter().position(|&x| x == id) else {
                     return false;
                 };
+                note_id_list_removal(n, pos, false);
                 ids.copy_within(pos + 1..n, pos);
                 ids[n - 1] = 0;
                 *len -= 1;
@@ -599,6 +661,7 @@ impl IdList {
                 let Some(pos) = v.iter().position(|&x| x == id) else {
                     return false;
                 };
+                note_id_list_removal(v.len(), pos, true);
                 v.remove(pos);
                 true
             }

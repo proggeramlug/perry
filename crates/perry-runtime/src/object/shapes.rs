@@ -1400,6 +1400,15 @@ fn retire_owned_shape_siblings(keys: u64, keep: u32) {
                 .collect()
         })
         .unwrap_or_default();
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        st.passes += 1;
+        st.candidates += stale.len() as u64;
+        // The full prune removes SCATTERED ids, not whole families, so the
+        // owner/family-length columns stay zero for it on purpose: its cost
+        // shows in the `IdList::remove` position histogram instead.
+        c.set(st);
+    });
     for id in stale {
         remove_descriptor_and_reverse_indices(&mut inner, id);
     }
@@ -1884,6 +1893,82 @@ pub(crate) fn prune_dead_shape_keys(is_dead_owner: &dyn Fn(usize) -> bool) {
     }
 }
 
+/// MEASUREMENT ONLY. What each dead-owner prune of the shape tables does:
+/// how many keys addresses (owners) it drops, how many descriptors that costs,
+/// and how long the family was when the removal loop started — the loop
+/// removes EVERY id of a dying family one at a time, so the family length is
+/// the quadratic factor.
+#[derive(Default, Clone, Copy)]
+pub(crate) struct ShapePruneStats {
+    pub(crate) passes: u64,
+    pub(crate) candidates: u64,
+    pub(crate) owners_dropped: u64,
+    pub(crate) descriptors_removed: u64,
+    pub(crate) family_len_sum: u64,
+    pub(crate) family_len_max: u64,
+    /// Owners whose family had more than 3 ids, i.e. a spilled list — the only
+    /// ones whose removal loop memmoves a heap buffer.
+    pub(crate) owners_with_spilled_family: u64,
+}
+
+thread_local! {
+    pub(crate) static SHAPE_PRUNE_STATS: std::cell::Cell<ShapePruneStats> =
+        const { std::cell::Cell::new(ShapePruneStats {
+            passes: 0, candidates: 0, owners_dropped: 0, descriptors_removed: 0,
+            family_len_sum: 0, family_len_max: 0, owners_with_spilled_family: 0,
+        }) };
+}
+
+#[inline]
+fn note_shape_prune_owner(family_len: usize) {
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        st.owners_dropped += 1;
+        st.descriptors_removed += family_len as u64;
+        st.family_len_sum += family_len as u64;
+        st.family_len_max = st.family_len_max.max(family_len as u64);
+        if family_len > 3 {
+            st.owners_with_spilled_family += 1;
+        }
+        c.set(st);
+    });
+}
+
+/// MEASUREMENT ONLY. One cumulative line per copying minor under
+/// `PERRY_GC_DIAG=1`.
+pub(crate) fn shape_prune_report() {
+    if !crate::gc::gc_diag_enabled() {
+        return;
+    }
+    let st = SHAPE_PRUNE_STATS.with(std::cell::Cell::get);
+    let il = shapes_store::ID_LIST_REMOVE_STATS.with(std::cell::Cell::get);
+    if st.passes == 0 && il.calls == 0 {
+        return;
+    }
+    eprintln!(
+        "[gc-shape-prune] passes={} candidates={} owners_dropped={} descriptors_removed={} \
+family_len_sum={} family_len_max={} owners_spilled={} | idlist_removes={} spill_removes={} \
+elems_moved={} bytes_moved={} len_sum={} len_max={} pos_sum={} \
+len_hist_1_2_3_4t7_8t15_16t63_64t255_256p={},{},{},{},{},{},{},{}",
+        st.passes,
+        st.candidates,
+        st.owners_dropped,
+        st.descriptors_removed,
+        st.family_len_sum,
+        st.family_len_max,
+        st.owners_with_spilled_family,
+        il.calls,
+        il.spill_calls,
+        il.elems_moved,
+        il.elems_moved * 4,
+        il.len_sum,
+        il.len_max,
+        il.pos_sum,
+        il.len_hist[0], il.len_hist[1], il.len_hist[2], il.len_hist[3],
+        il.len_hist[4], il.len_hist[5], il.len_hist[6], il.len_hist[7],
+    );
+}
+
 /// [`prune_dead_shape_keys`] for a MINOR (#9754): only a young keys array can
 /// die, and a young keys address is always in the young log (noted at
 /// insert, re-logged by every minor-scoped walk while it stays young), so the
@@ -1892,6 +1977,12 @@ pub(crate) fn prune_dead_shape_keys_young(is_dead_owner: &dyn Fn(usize) -> bool)
     let table = &crate::state::state().shapes;
     let mut inner = table.inner.borrow_mut();
     let candidates = inner.young_keys.take_sorted();
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        st.passes += 1;
+        st.candidates += candidates.len() as u64;
+        c.set(st);
+    });
     let mut kept = Vec::with_capacity(candidates.len());
     for keys in candidates {
         let addr = keys as usize;
@@ -1905,6 +1996,7 @@ pub(crate) fn prune_dead_shape_keys_young(is_dead_owner: &dyn Fn(usize) -> bool)
             .get(&keys)
             .map(|ids| ids.as_slice().to_vec())
             .unwrap_or_default();
+        note_shape_prune_owner(ids.len());
         for id in ids {
             remove_descriptor_indexed_under(&mut inner, id, keys);
         }

@@ -1803,6 +1803,7 @@ pub(super) fn run_copied_minor_attempt(
             super::policy::GC_AT_DECLARED_SAFEPOINT.with(std::cell::Cell::get)
         );
     }
+    crate::object::shapes::shape_prune_report();
     report_forwarding_refusals("copying_minor");
     super::scanner_profile::report_and_reset("copying_minor");
     CopiedMinorAttempt::Done(Some(CopiedMinorFastPathOutcome {
