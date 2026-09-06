@@ -772,12 +772,31 @@ fn classify_diag_emit(d: &ClassifyDiag, tag: &str) {
         // the probe (the shape `buffer/header.rs` already uses) rather than a
         // bigger table. If the two are close, the working set really is the
         // block count and a direct-indexed table is the answer.
-        let registered = hot_page_generations().borrow().len();
+        // The SPAN is what decides the fix's shape, and it is the one thing the
+        // hit/miss counters could not say. 480 registered classes against 4 ways
+        // is a capacity problem either way; whether the answer is a direct
+        // `key - base_key` table depends on whether those 480 keys are packed
+        // into a short range (table is tiny, and the same bounds check rejects
+        // every unregistered key for free) or scattered across the address space
+        // (table is mostly holes, and the shape has to change).
+        let (registered, lo, hi) = {
+            let pages = hot_page_generations().borrow();
+            let mut lo = usize::MAX;
+            let mut hi = 0usize;
+            for &k in pages.keys() {
+                lo = lo.min(k);
+                hi = hi.max(k);
+            }
+            (pages.len(), lo, hi)
+        };
+        let span = if registered == 0 { 0 } else { hi - lo + 1 };
         eprintln!(
             "[classify-diag] {tag} registered_classes={registered} distinct_keys_seen={} \
-             unregistered_keys={}",
+             unregistered_keys={} key_lo={lo:#x} key_hi={hi:#x} span_classes={span} \
+             density_permille={}",
             d.distinct,
             d.distinct.saturating_sub(registered),
+            if span == 0 { 0 } else { registered * 1000 / span },
         );
     }
 }
