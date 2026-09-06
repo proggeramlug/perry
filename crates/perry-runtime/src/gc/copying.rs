@@ -564,29 +564,21 @@ impl CopyingNurseryCollector {
         // survivor-space residents. Threshold-invariant (live Eden bytes get
         // moved somewhere at any threshold), which is what makes the loop's
         // fixed point stable.
+        // SABOTAGE ARM -- cohort scoping removed on purpose. See the commit
+        // message. The two fields keep their names but are filled with the
+        // WHOLE-SPACE quantities they had before the fix:
+        //   eden_copied_bytes            == copied_bytes    (every copy, any source)
+        //   survivor_first_round_live_bytes == survivor_live_bytes (any age)
+        // so `retune_after_scavenge` receives exactly the pre-fix pair.
+        let _ = prior_age;
+        if !promote {
+            self.stats.eden_copied_bytes += total;
+        }
         match ptr.kind {
-            CopyingPointerKind::Eden => {
-                self.stats.eden_live_bytes += total;
-                // #9851 follow-up: the fresh half of `copied_bytes`. The
-                // survival-rate lock's denominator must be the intake of ONE
-                // cohort; `copied_bytes` also carries survivor residents being
-                // re-copied, which at a threshold above 2 is most of it.
-                if !promote {
-                    self.stats.eden_copied_bytes += total;
-                }
-            }
+            CopyingPointerKind::Eden => self.stats.eden_live_bytes += total,
             _ => {
                 self.stats.survivor_live_bytes += total;
-                // ...and the matching numerator. A from-survivor object whose
-                // stored age is 1 entered from Eden on the previous cycle, so
-                // it is a member of exactly the cohort `eden_copied_bytes`
-                // counted then. Ages above 1 have already survived a round and
-                // are a population selected for longevity; including them is
-                // what made the ratio drift above the lock's bar as the
-                // threshold rose.
-                if prior_age == 1 {
-                    self.stats.survivor_first_round_live_bytes += total;
-                }
+                self.stats.survivor_first_round_live_bytes += total;
             }
         }
         new_user as usize
