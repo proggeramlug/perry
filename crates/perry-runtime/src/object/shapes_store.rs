@@ -537,6 +537,11 @@ pub(crate) enum IdListKind {
 thread_local! {
     /// Set around a removal by the caller that knows which index it holds.
     pub(crate) static ID_LIST_KIND: std::cell::Cell<u8> = const { std::cell::Cell::new(2) };
+    /// Position of the id the last `IdList::remove` found, so the caller can
+    /// compute the tail the memmove actually moved without re-scanning.
+    /// Meaningful only immediately after a removal that returned true.
+    pub(crate) static LAST_REMOVE_POS: std::cell::Cell<usize> =
+        const { std::cell::Cell::new(0) };
 }
 
 thread_local! {
@@ -564,6 +569,7 @@ fn len_bucket(n: usize) -> usize {
 
 #[inline]
 fn note_id_list_removal(len_before: usize, pos: usize, spilled: bool) {
+    LAST_REMOVE_POS.with(|c| c.set(pos));
     ID_LIST_REMOVE_STATS.with(|c| {
         let mut st = c.get();
         st.calls += 1;

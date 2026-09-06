@@ -314,10 +314,20 @@ impl ShapeTableInner {
         let Some(ids) = self.families.get_mut(&keys) else {
             return false;
         };
-        // MEASUREMENT ONLY: tell the IdList counter which index this is.
+        // MEASUREMENT ONLY: tell the IdList counter which index this is, and
+        // under which key, so a removal can be charged to the big family.
+        let len_before = ids.len();
         shapes_store::ID_LIST_KIND.with(|k| k.set(shapes_store::IdListKind::Family as u8));
         let removed = ids.remove(id);
         shapes_store::ID_LIST_KIND.with(|k| k.set(shapes_store::IdListKind::Other as u8));
+        if removed {
+            // The tail actually handed to the memmove: `Vec::remove` shifts
+            // everything past the removed position. `len_before - 1` is the
+            // upper bound and the exact value when the removal is at the
+            // front, which is where the measured ones are (avg position 0.31).
+            let pos = shapes_store::LAST_REMOVE_POS.with(std::cell::Cell::get);
+            note_family_removal(keys, (len_before.saturating_sub(1 + pos)) as u64);
+        }
         if ids.is_empty() {
             self.families.remove(&keys);
         }
@@ -1987,6 +1997,25 @@ pub(crate) struct ShapePruneStats {
     /// Families observed crossing 10 k / 100 k on an add.
     pub(crate) crossed_10k: u64,
     pub(crate) crossed_100k: u64,
+
+    // ---- round 2: WHEN do the removals happen, and are they all one list? --
+    /// Keys address of the first family seen to cross 100 k, and the removals
+    /// charged to it. If this is ~all of `elems_moved`, the whole cost is one
+    /// array and the growth question is the only question.
+    pub(crate) big_family_key: u64,
+    pub(crate) big_removals: u64,
+    pub(crate) big_elems_moved: u64,
+    /// Removals from that family SINCE THE LAST `[gc-shape-prune]` line, i.e.
+    /// within one copying minor. This is the "when" measurement: the same
+    /// total spread evenly across the turn and delivered in a few bursts are
+    /// different costs, and only the per-minor figure can tell them apart.
+    pub(crate) big_removals_this_minor: u64,
+    pub(crate) big_elems_this_minor: u64,
+    /// Largest per-minor burst seen, so one line carries the peak.
+    pub(crate) big_removals_minor_max: u64,
+    /// Per-removal TAIL length (what the memmove actually moves), bucketed:
+    /// 0, 1, 2-15, 16-255, 256-4k, 4k-64k, 64k-1M, 1M+.
+    pub(crate) tail_hist: [u64; 8],
 }
 
 thread_local! {
@@ -2000,7 +2029,91 @@ thread_local! {
             skip_both_carriers: 0, skip_no_record: 0,
             add_push_back: 0, add_append_fresh: 0, add_push_front: 0,
             add_len_sum: 0, add_len_max: 0, crossed_10k: 0, crossed_100k: 0,
+            big_family_key: 0, big_removals: 0, big_elems_moved: 0,
+            big_removals_this_minor: 0, big_elems_this_minor: 0,
+            big_removals_minor_max: 0, tail_hist: [0; 8],
         }) };
+
+
+/// MEASUREMENT ONLY. Charge one family removal: the tail it moved, and whether
+/// it came from the one family that crossed 100 k.
+#[inline]
+pub(crate) fn note_family_removal(keys: u64, tail: u64) {
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        let b = match tail {
+            0 => 0,
+            1 => 1,
+            2..=15 => 2,
+            16..=255 => 3,
+            256..=4_095 => 4,
+            4_096..=65_535 => 5,
+            65_536..=1_048_575 => 6,
+            _ => 7,
+        };
+        st.tail_hist[b] += 1;
+        if keys != 0 && keys == st.big_family_key {
+            st.big_removals += 1;
+            st.big_elems_moved += tail;
+            st.big_removals_this_minor += 1;
+            st.big_elems_this_minor += tail;
+        }
+        c.set(st);
+    });
+}
+
+/// MEASUREMENT ONLY. Dump the KEY NAMES of a keys array, so a family of half a
+/// million descriptors can be identified rather than guessed at.
+///
+/// One keys array carrying ~500 k descriptors that all share its key list is
+/// the signature of #9847's mis-typed native-instance objects — a fresh
+/// descriptor minted per call over the same keys — which is why #9857 removes
+/// the whole thing. If the names say so, the growth is EXPLAINED and belongs in
+/// an issue ("a family of N descriptors with identical keys should not exist"),
+/// not in a fix here.
+fn dump_keys_array(keys: u64, limit: usize) -> String {
+    if keys == 0 {
+        return String::from("<null>");
+    }
+    let arr = keys as *mut crate::array::ArrayHeader;
+    // SAFETY: measurement-only path, single-threaded agent, and every read is
+    // guarded by the same well-formedness cap the indexing fast path uses.
+    unsafe {
+        let len = crate::array::keys_array_len_capped_to_capacity(arr);
+        // The element block follows the header; mirrored here rather than
+        // widening `array_elements_ptr`'s visibility for a throwaway branch.
+        let elements = (arr as *const u8).add(std::mem::size_of::<crate::array::ArrayHeader>())
+            as *const u64;
+        let mut out = format!("len={len} [");
+        for i in 0..len.min(limit) {
+            let bits = *elements.add(i);
+            let value = f64::from_bits(bits);
+            let name = if crate::value::JSValue::from_bits(bits).is_any_string() {
+                let ptr = crate::value::js_get_string_pointer_unified(value)
+                    as *const crate::StringHeader;
+                if ptr.is_null() || (ptr as usize) < 0x1000 {
+                    String::from("<bad-str>")
+                } else {
+                    let blen = (*ptr).byte_len as usize;
+                    let data =
+                        (ptr as *const u8).add(std::mem::size_of::<crate::StringHeader>());
+                    String::from_utf8_lossy(std::slice::from_raw_parts(data, blen)).into_owned()
+                }
+            } else {
+                format!("<non-string 0x{bits:x}>")
+            };
+            if i > 0 {
+                out.push(',');
+            }
+            out.push_str(&name);
+        }
+        if len > limit {
+            out.push_str(",…");
+        }
+        out.push(']');
+        out
+    }
+}
 }
 
 /// MEASUREMENT ONLY. Record an addition to a family: which site, the length
@@ -2022,16 +2135,25 @@ fn note_family_add(site: u8, keys: u64, len_after: usize) {
         if len_after == 10_000 {
             st.crossed_10k += 1;
             if crate::gc::gc_diag_enabled() {
+                // The names are the point: identical keys on every descriptor
+                // says the family is one object's shape minted over and over.
                 eprintln!(
-                    "[gc-shape-family-cross] len=10000 keys=0x{keys:x} site={site}"
+                    "[gc-shape-family-cross] len=10000 keys=0x{keys:x} site={site} names={}",
+                    dump_keys_array(keys, 24)
                 );
             }
         }
         if len_after == 100_000 {
             st.crossed_100k += 1;
+            // Latch the FIRST family to cross 100 k; every later removal from
+            // it is charged separately so "is it all one list?" is a number.
+            if st.big_family_key == 0 {
+                st.big_family_key = keys;
+            }
             if crate::gc::gc_diag_enabled() {
                 eprintln!(
-                    "[gc-shape-family-cross] len=100000 keys=0x{keys:x} site={site}"
+                    "[gc-shape-family-cross] len=100000 keys=0x{keys:x} site={site} names={}",
+                    dump_keys_array(keys, 24)
                 );
             }
         }
@@ -2087,11 +2209,23 @@ other_calls={} other_elems={} other_len_max={}",
         il.len_sum,
         il.len_max,
         il.pos_sum,
-        il.len_hist[0], il.len_hist[1], il.len_hist[2], il.len_hist[3],
-        il.len_hist[4], il.len_hist[5], il.len_hist[6], il.len_hist[7],
-        il.kind_calls[0], il.kind_elems_moved[0], il.kind_len_max[0],
-        il.kind_calls[1], il.kind_elems_moved[1], il.kind_len_max[1],
-        il.kind_calls[2], il.kind_elems_moved[2], il.kind_len_max[2],
+        il.len_hist[0],
+        il.len_hist[1],
+        il.len_hist[2],
+        il.len_hist[3],
+        il.len_hist[4],
+        il.len_hist[5],
+        il.len_hist[6],
+        il.len_hist[7],
+        il.kind_calls[0],
+        il.kind_elems_moved[0],
+        il.kind_len_max[0],
+        il.kind_calls[1],
+        il.kind_elems_moved[1],
+        il.kind_len_max[1],
+        il.kind_calls[2],
+        il.kind_elems_moved[2],
+        il.kind_len_max[2],
     );
     eprintln!(
         "[gc-shape-family] retire_calls={} retire_len_sum={} retire_len_max={} \
@@ -2116,6 +2250,36 @@ crossed_10k={} crossed_100k={}",
         st.crossed_10k,
         st.crossed_100k,
     );
+    eprintln!(
+        "[gc-shape-bigfam] key=0x{:x} removals={} elems_moved={} bytes_moved={} \
+this_minor_removals={} this_minor_elems={} minor_removals_max={} \
+tail_hist_0_1_2t15_16t255_256t4k_4kt64k_64kt1M_1Mp={},{},{},{},{},{},{},{}",
+        st.big_family_key,
+        st.big_removals,
+        st.big_elems_moved,
+        st.big_elems_moved * 4,
+        st.big_removals_this_minor,
+        st.big_elems_this_minor,
+        st.big_removals_minor_max,
+        st.tail_hist[0],
+        st.tail_hist[1],
+        st.tail_hist[2],
+        st.tail_hist[3],
+        st.tail_hist[4],
+        st.tail_hist[5],
+        st.tail_hist[6],
+        st.tail_hist[7],
+    );
+    // Reset the per-minor window AFTER printing it, keeping the peak.
+    SHAPE_PRUNE_STATS.with(|c| {
+        let mut st = c.get();
+        if st.big_removals_this_minor > st.big_removals_minor_max {
+            st.big_removals_minor_max = st.big_removals_this_minor;
+        }
+        st.big_removals_this_minor = 0;
+        st.big_elems_this_minor = 0;
+        c.set(st);
+    });
 }
 
 /// [`prune_dead_shape_keys`] for a MINOR (#9754): only a young keys array can
