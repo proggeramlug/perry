@@ -120,13 +120,17 @@ pub(super) unsafe fn rewrite_heap_object_fields(
 // old objects that still hold nursery children so the next minor GC
 // sees those old→young edges after the normal collection clear.
 #[inline]
+/// Returns whether the slot actually held an old->young (or old->malloc)
+/// edge, i.e. whether this visit found anything. MEASUREMENT ONLY: the return
+/// exists so `restore_surviving_dirty_coverage` can report how much of its
+/// walk is productive; every other caller ignores it.
 pub(super) unsafe fn remember_evacuated_old_to_young_slot(
     sticky: &mut StickyRememberedSet,
     parent_header: *mut GcHeader,
     slot: *mut u64,
-) {
+) -> bool {
     if slot.is_null() {
-        return;
+        return false;
     }
     let child_addr = decode_heap_addr(*slot);
     // Nursery AND malloc-GC children both need their pages kept dirty:
@@ -134,13 +138,14 @@ pub(super) unsafe fn remember_evacuated_old_to_young_slot(
     // leaves — dropping an old→malloc page here would free the malloc
     // child on the next minor (see remembered_child_needs_tracking).
     if child_addr == 0 || !crate::gc::barrier::remembered_child_needs_tracking(child_addr) {
-        return;
+        return false;
     }
     sticky.remember_slot(
         parent_header,
         slot,
         slot_is_external_to(parent_header, slot),
     );
+    true
 }
 
 /// Is `slot` outside `parent_header`'s own allocation, or on a page the
@@ -196,7 +201,7 @@ pub(super) unsafe fn remember_evacuated_old_copy_young_slots(
             return;
         }
         slot.record_layout_read();
-        remember_evacuated_old_to_young_slot(sticky, header, slot.slot);
+        let _ = remember_evacuated_old_to_young_slot(sticky, header, slot.slot);
     });
 }
 
@@ -232,6 +237,11 @@ pub(super) fn restore_surviving_dirty_coverage(
     let mut sticky = StickyRememberedSet::default();
     let mut walked = 0usize;
     let mut skipped = 0usize;
+    // MEASUREMENT ONLY (never a PR): this pass's cost is proportional to the
+    // SLOTS it enumerates, and no shipped line reports that.
+    let mut slots_visited = 0u64;
+    let mut slots_tracking = 0u64;
+    let mut parents_visited = 0u64;
     #[cfg(debug_assertions)]
     let mut skipped_sticky = StickyRememberedSet::default();
     // Mirror scan_remembered_dirty_slots_copying's scan_header guards: the
@@ -259,12 +269,16 @@ pub(super) fn restore_surviving_dirty_coverage(
         {
             return;
         }
+        parents_visited += 1;
         visit_gc_rewrite_slots(header, |slot| {
             if crate::weakref::is_weak_target_trace_slot(header, slot.slot) {
                 return;
             }
+            slots_visited += 1;
             slot.record_layout_read();
-            remember_evacuated_old_to_young_slot(&mut sticky, header, slot.slot);
+            if remember_evacuated_old_to_young_slot(&mut sticky, header, slot.slot) {
+                slots_tracking += 1;
+            }
         });
     };
     if !snapshot.dirty_old_pages.is_empty() {
@@ -326,6 +340,23 @@ pub(super) fn restore_surviving_dirty_coverage(
             "[gc-restore-coverage] {cycle_label} dirty_pages={} objects_walked={walked} objects_skipped={skipped} pages_added={added}",
             snapshot.dirty_pages.len()
         );
+        // MEASUREMENT ONLY. NOTE the line above: `dirty_pages` is NOT the set
+        // this walk iterates -- the walk iterates `dirty_old_pages`, a
+        // different field of the same snapshot. #9835 already mis-sized this
+        // pass from the neighbouring `objects_skipped` (1,026 for a set of
+        // ~119,000); this line prints the quantities the cost is actually
+        // proportional to.
+        eprintln!(
+            "[gc-restore-counter] {cycle_label} dirty_old_pages={} external_entries={} \
+covered={} objects_walked={walked} objects_skipped={skipped} \
+parents_visited={parents_visited} slots_visited={slots_visited} \
+slots_tracking={slots_tracking} pages_added={added} sticky_old={} sticky_external={}",
+            snapshot.dirty_old_pages.len(),
+            snapshot.external_dirty_entries.len(),
+            covered.len(),
+            sticky.old_pages.len(),
+            sticky.external_pages.len(),
+        );
     }
 }
 
@@ -360,7 +391,7 @@ fn debug_visit_covered_parent(header: *mut GcHeader, sticky: &mut StickyRemember
                 return;
             }
             slot.record_layout_read();
-            remember_evacuated_old_to_young_slot(sticky, header, slot.slot);
+            let _ = remember_evacuated_old_to_young_slot(sticky, header, slot.slot);
         });
     }
 }
@@ -397,7 +428,7 @@ unsafe fn remember_retained_old_to_young_slots(
             return;
         }
         slot.record_layout_read();
-        remember_evacuated_old_to_young_slot(sticky, header, slot.slot);
+        let _ = remember_evacuated_old_to_young_slot(sticky, header, slot.slot);
     });
 }
 
