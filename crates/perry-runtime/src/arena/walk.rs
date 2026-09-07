@@ -21,6 +21,38 @@ pub(crate) struct ArenaBlockSnapshot {
     pub(crate) size: usize,
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct ArenaBlockDiagnostic {
+    pub(crate) base: usize,
+    pub(crate) used_end: usize,
+    pub(crate) space: HeapSpace,
+}
+
+/// Locate an address in any arena block and return the initialized extent.
+/// This is intentionally a cold diagnostic walk; callers invoke it only after
+/// a conservative candidate has already failed valid-pointer membership.
+pub(crate) fn arena_block_diagnostic_for_addr(addr: usize) -> Option<ArenaBlockDiagnostic> {
+    let find = |arena: &Arena| {
+        arena.blocks.iter().find_map(|block| {
+            let base = block.data as usize;
+            if base == 0 || addr < base || addr >= base.saturating_add(block.size) {
+                return None;
+            }
+            Some(ArenaBlockDiagnostic {
+                base,
+                used_end: base.saturating_add(block.offset),
+                space: arena.space,
+            })
+        })
+    };
+    ARENA
+        .with(|arena| find(unsafe { &*arena.get() }))
+        .or_else(|| SURVIVOR_ARENA_0.with(|arena| find(unsafe { &*arena.get() })))
+        .or_else(|| SURVIVOR_ARENA_1.with(|arena| find(unsafe { &*arena.get() })))
+        .or_else(|| LONGLIVED_ARENA.with(|arena| find(unsafe { &*arena.get() })))
+        .or_else(|| OLD_ARENA.with(|arena| find(unsafe { &*arena.get() })))
+}
+
 /// Resumable arena object walker used by the GC cycle state machine.
 ///
 /// The cursor owns block base pointers and offsets gathered by

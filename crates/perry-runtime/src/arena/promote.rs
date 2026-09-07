@@ -313,11 +313,16 @@ pub(crate) fn finish_in_place_promotion(
     // for one of these pages would otherwise be folded in afterwards and land
     // behind the run this walk appends.
     super::page_meta::flush_deferred_old_page_registrations();
+    let record_verify_provenance = crate::gc::gc_verify_mark_enabled();
 
     let mut moved_blocks: Vec<ArenaBlock> = Vec::with_capacity(promotion.blocks.len());
     for block in &promotion.blocks {
         let taken = take_block(*block);
-        let Some(taken) = taken else { continue };
+        let Some(mut taken) = taken else { continue };
+        if record_verify_provenance {
+            // One diagnostic store per promoted BLOCK, never per object.
+            taken.promoted_in_place_since_full = true;
+        }
         let (objects, live_objects, live_bytes) = stamp_and_index_block(&taken, liveness);
         stats.objects += objects;
         stats.live_objects += live_objects;
@@ -356,6 +361,17 @@ pub(crate) fn finish_in_place_promotion(
     stats
 }
 
+/// Retire the diagnostic provenance after a full sweep has completed its
+/// linear object walk. Called only with `PERRY_GC_VERIFY_MARK` armed.
+pub(crate) fn clear_in_place_promotion_markers_after_full_sweep() {
+    OLD_ARENA.with(|old| {
+        let old = unsafe { &mut *old.get() };
+        for block in &mut old.blocks {
+            block.promoted_in_place_since_full = false;
+        }
+    });
+}
+
 /// Detach the block from its owning arena, leaving the `data = null, size = 0`
 /// tombstone every arena path already tolerates (C4b-δ leaves the same shape),
 /// so block indices stay stable across the cycle.
@@ -390,6 +406,7 @@ fn take_block(block: PromotedBlock) -> Option<ArenaBlock> {
                 offset: 0,
                 object_starts: Box::new([]),
                 dead_cycles: 0,
+                promoted_in_place_since_full: false,
             },
         ))
     };

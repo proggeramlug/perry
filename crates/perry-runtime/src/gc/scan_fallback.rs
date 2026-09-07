@@ -191,9 +191,17 @@ impl SafepointDrainKind {
     }
 }
 
+#[derive(Clone, Copy)]
+struct ScanFallbackState {
+    counts: [u64; ConservativeScanSite::COUNT],
+    active_site: Option<ConservativeScanSite>,
+}
+
 thread_local! {
-    static SCAN_FALLBACKS: Cell<[u64; ConservativeScanSite::COUNT]> =
-        const { Cell::new([0; ConservativeScanSite::COUNT]) };
+    static SCAN_FALLBACKS: Cell<ScanFallbackState> = const { Cell::new(ScanFallbackState {
+        counts: [0; ConservativeScanSite::COUNT],
+        active_site: None,
+    }) };
     static SAFEPOINT_DRAINS: Cell<[u64; SafepointDrainKind::COUNT]> =
         const { Cell::new([0; SafepointDrainKind::COUNT]) };
 }
@@ -208,10 +216,10 @@ thread_local! {
 /// and how often.
 pub(crate) fn record_scan_fallback(site: ConservativeScanSite) {
     let count = SCAN_FALLBACKS.with(|c| {
-        let mut counts = c.get();
-        counts[site.index()] = counts[site.index()].saturating_add(1);
-        c.set(counts);
-        counts[site.index()]
+        let mut state = c.get();
+        state.counts[site.index()] = state.counts[site.index()].saturating_add(1);
+        c.set(state);
+        state.counts[site.index()]
     });
     if crate::gc::gc_diag_enabled() {
         eprintln!(
@@ -221,6 +229,21 @@ pub(crate) fn record_scan_fallback(site: ConservativeScanSite) {
             count
         );
     }
+}
+
+/// Pair the currently engaged scan guard with its named fallback site. This
+/// piggybacks on the existing counter state rather than adding another runtime
+/// thread-local solely for diagnostics.
+pub(crate) fn set_active_scan_fallback_site(site: Option<ConservativeScanSite>) {
+    SCAN_FALLBACKS.with(|c| {
+        let mut state = c.get();
+        state.active_site = site;
+        c.set(state);
+    });
+}
+
+pub(crate) fn active_scan_fallback_site() -> Option<ConservativeScanSite> {
+    SCAN_FALLBACKS.with(|c| c.get().active_site)
 }
 
 /// Record that a deferred collection drained at a precise-root safepoint —
@@ -244,7 +267,7 @@ pub(crate) fn record_safepoint_drain(kind: SafepointDrainKind) {
 
 #[cfg(test)]
 pub(crate) fn scan_fallback_count(site: ConservativeScanSite) -> u64 {
-    SCAN_FALLBACKS.with(|c| c.get()[site.index()])
+    SCAN_FALLBACKS.with(|c| c.get().counts[site.index()])
 }
 
 /// Total conservative-scan fallbacks across the four **automatic** sites. This
@@ -253,7 +276,7 @@ pub(crate) fn scan_fallback_count(site: ConservativeScanSite) -> u64 {
 #[cfg(test)]
 pub(crate) fn automatic_scan_fallback_total() -> u64 {
     SCAN_FALLBACKS.with(|c| {
-        let counts = c.get();
+        let counts = c.get().counts;
         ConservativeScanSite::ALL
             .iter()
             .filter(|site| site.is_automatic())
@@ -271,7 +294,7 @@ pub(crate) fn automatic_scan_fallback_total() -> u64 {
 /// total there would pass on a tree that reintroduced the explicit force.
 #[cfg(test)]
 pub(crate) fn scan_fallback_total() -> u64 {
-    SCAN_FALLBACKS.with(|c| c.get().iter().sum())
+    SCAN_FALLBACKS.with(|c| c.get().counts.iter().sum())
 }
 
 #[cfg(test)]
@@ -283,6 +306,10 @@ pub(crate) fn safepoint_drain_count(kind: SafepointDrainKind) -> u64 {
 /// on a real run.
 #[cfg(test)]
 pub(crate) fn reset_scan_fallback_counters() {
-    SCAN_FALLBACKS.with(|c| c.set([0; ConservativeScanSite::COUNT]));
+    SCAN_FALLBACKS.with(|c| {
+        let mut state = c.get();
+        state.counts = [0; ConservativeScanSite::COUNT];
+        c.set(state);
+    });
     SAFEPOINT_DRAINS.with(|c| c.set([0; SafepointDrainKind::COUNT]));
 }

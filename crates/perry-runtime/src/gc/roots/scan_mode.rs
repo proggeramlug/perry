@@ -102,6 +102,7 @@ pub(crate) fn set_conservative_stack_scan_override(
 /// measurement instead of an assumption.
 pub(crate) struct ManualGcScanGuard {
     engaged: bool,
+    verify_site_engaged: bool,
 }
 
 impl ManualGcScanGuard {
@@ -114,7 +115,14 @@ impl ManualGcScanGuard {
             c.set(Some(ConservativeStackScanMode::Full));
             true
         });
-        Self { engaged }
+        let verify_site_engaged = engaged && crate::gc::gc_verify_mark_enabled();
+        if verify_site_engaged {
+            super::set_active_scan_fallback_site(Some(site));
+        }
+        Self {
+            engaged,
+            verify_site_engaged,
+        }
     }
 }
 
@@ -122,6 +130,9 @@ impl Drop for ManualGcScanGuard {
     fn drop(&mut self) {
         if self.engaged {
             CONSERVATIVE_STACK_SCAN_OVERRIDE.with(|c| c.set(None));
+        }
+        if self.verify_site_engaged {
+            super::set_active_scan_fallback_site(None);
         }
     }
 }

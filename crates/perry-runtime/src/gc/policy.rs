@@ -911,7 +911,6 @@ pub(super) enum GcTriggerKind {
 }
 
 impl GcTriggerKind {
-    #[cfg(feature = "diagnostics")]
     #[inline]
     pub(super) fn as_str(self) -> &'static str {
         match self {

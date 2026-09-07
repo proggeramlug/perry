@@ -1100,13 +1100,13 @@ pub(super) fn verify_marked_heap_report_nonfatal(phase: &str) {
         }
     });
     let tn = |t: u8| gc_type_info(t).map_or("?", |i| i.name);
-    if let Some(m) = stats.first_missing {
+    let report = if let Some(m) = stats.first_missing {
         let (ptype, ctype) = unsafe {
             let ph = (m.parent as *const u8).sub(GC_HEADER_SIZE) as *const GcHeader;
             let ch = (m.child as *const u8).sub(GC_HEADER_SIZE) as *const GcHeader;
             ((*ph).obj_type, (*ch).obj_type)
         };
-        eprintln!(
+        format!(
             "[gc-mark-verify:{}] marked->UNMARKED edges={} checked_marked={} checked_edges={} | first parent=0x{:x} ptype={}({}) slot=0x{:x} child=0x{:x} ctype={}({})",
             phase,
             stats.missing_edges,
@@ -1119,13 +1119,89 @@ pub(super) fn verify_marked_heap_report_nonfatal(phase: &str) {
             m.child,
             tn(ctype),
             ctype,
-        );
+        )
     } else {
-        eprintln!(
+        format!(
             "[gc-mark-verify:{}] OK (no marked->unmarked) checked_marked={} checked_edges={}",
             phase, stats.checked_marked_objects, stats.checked_edges,
-        );
-    }
+        )
+    };
+    #[cfg(test)]
+    super::telemetry::test_record_full_verify_line(&report);
+    eprintln!("{report}");
+}
+
+/// Census old blocks promoted in place since the preceding full sweep. Runs at
+/// the full cycle's marks-final boundary, before any object can be reclaimed.
+pub(super) fn verify_full_promoted_blocks_report(
+    scan_site: Option<super::ConservativeScanSite>,
+    trigger_kind: super::GcTriggerKind,
+) {
+    let mut promoted_blocks = 0usize;
+    let mut marked = 0usize;
+    let mut unmarked = 0usize;
+    let mut tenured_flag_missing = 0usize;
+    let mut page_index_missing = 0usize;
+    let mut first_unmarked: Option<(usize, u8)> = None;
+
+    crate::arena::OLD_ARENA.with(|arena| {
+        let arena = unsafe { &*arena.get() };
+        for block in &arena.blocks {
+            if !block.promoted_in_place_since_full || block.data.is_null() {
+                continue;
+            }
+            promoted_blocks += 1;
+            let mut offset = 0usize;
+            while offset < block.offset {
+                let aligned = (offset + 7) & !7;
+                if aligned >= block.offset {
+                    break;
+                }
+                let header = unsafe { block.data.add(aligned) } as *const GcHeader;
+                let total = unsafe { (*header).size as usize };
+                if total < GC_HEADER_SIZE || total > block.size.saturating_sub(aligned) {
+                    break;
+                }
+                let obj_type = unsafe { (*header).obj_type };
+                let flags = unsafe { (*header).gc_flags };
+                if gc_type_is_arena_walkable(obj_type) {
+                    if flags & GC_FLAG_MARKED != 0 {
+                        marked += 1;
+                        if !crate::arena::old_page_index_contains_object(header as usize, total) {
+                            page_index_missing += 1;
+                        }
+                    } else {
+                        unmarked += 1;
+                        first_unmarked.get_or_insert((header as usize, obj_type));
+                    }
+                    if flags & GC_FLAG_TENURED == 0 {
+                        tenured_flag_missing += 1;
+                    }
+                }
+                offset = aligned + total;
+            }
+        }
+    });
+
+    let site = scan_site.map_or("precise", super::ConservativeScanSite::as_str);
+    let (first_addr, first_type) = first_unmarked
+        .map(|(addr, obj_type)| (addr, gc_type_info(obj_type).map_or("?", |info| info.name)))
+        .unwrap_or((0, "none"));
+    let report = format!(
+        "[gc-full-verify] site={} trigger={} promoted_blocks={} promoted_objs marked={} unmarked={} tenured_flag_missing={} page_index_missing={} | first_unmarked=0x{:x} type={}",
+        site,
+        trigger_kind.as_str(),
+        promoted_blocks,
+        marked,
+        unmarked,
+        tenured_flag_missing,
+        page_index_missing,
+        first_addr,
+        first_type,
+    );
+    #[cfg(test)]
+    super::telemetry::test_record_full_verify_line(&report);
+    eprintln!("{report}");
 }
 
 /// Non-fatal minor-sweep probe (`PERRY_GC_VERIFY_MARK`): at the minor's

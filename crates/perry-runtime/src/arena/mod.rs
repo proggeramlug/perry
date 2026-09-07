@@ -96,10 +96,10 @@ pub use walk::{
     old_arena_walk_objects, ArenaResetStats,
 };
 pub(crate) use walk::{
-    arena_block_snapshots, arena_telemetry_snapshot, general_block_in_recent_window,
-    general_block_sizes, old_arena_walk_all_headers_filtered, young_allocation_census,
-    ArenaBlockSnapshot, ArenaObjectCursor, ArenaObjectCursorBuilder, ArenaTelemetrySnapshot,
-    ArenaWalkOrder,
+    arena_block_diagnostic_for_addr, arena_block_snapshots, arena_telemetry_snapshot,
+    general_block_in_recent_window, general_block_sizes, old_arena_walk_all_headers_filtered,
+    young_allocation_census, ArenaBlockDiagnostic, ArenaBlockSnapshot, ArenaObjectCursor,
+    ArenaObjectCursorBuilder, ArenaTelemetrySnapshot, ArenaWalkOrder,
 };
 
 // reset.rs
@@ -117,8 +117,9 @@ pub use reset::{arena_reset_all_blocks_to_zero, arena_reset_empty_blocks};
 #[cfg(debug_assertions)]
 pub(crate) use promote::young_in_use_bytes_after_retag;
 pub(crate) use promote::{
-    finish_in_place_promotion, retag_young_for_in_place_promotion, undo_in_place_promotion_retag,
-    InPlacePromotion, InPlacePromotionStats, PromotionLiveness,
+    clear_in_place_promotion_markers_after_full_sweep, finish_in_place_promotion,
+    retag_young_for_in_place_promotion, undo_in_place_promotion_retag, InPlacePromotion,
+    InPlacePromotionStats, PromotionLiveness,
 };
 
 // quarantine.rs (#7154 from-space protection; default-off)
@@ -147,8 +148,8 @@ pub(crate) use page_meta::{
     old_arena_block_range_index, old_arena_block_ranges, old_arena_page_index_remove_object,
     old_arena_source_blocks_for_pages, old_arena_walk_objects_on_pages, old_object_page_overlaps,
     old_page_account_dirty_slot, old_page_account_dirty_slots, old_page_account_promoted_object,
-    old_page_account_swept_object, old_page_clear_dirty, old_page_mark_dirty,
-    old_page_meta_snapshot, old_page_summary, old_pages_begin_gc_cycle,
+    old_page_account_swept_object, old_page_clear_dirty, old_page_index_contains_object,
+    old_page_mark_dirty, old_page_meta_snapshot, old_page_summary, old_pages_begin_gc_cycle,
     old_pages_reset_sweep_accounting, record_arena_object_start, unregister_old_object_pages,
     HeapGeneration, HeapSpace, OldArenaPageObjectCursor, OldArenaSourceBlockSelection, OldPageMeta,
     OldPageSummary,

@@ -1282,6 +1282,11 @@ impl IncrementalSweepState {
             }
             SweepCycleSubphase::ArenaObjects => {
                 if self.arena.step(budget) {
+                    if !self.arena.minor_sweep && crate::gc::gc_verify_mark_enabled() {
+                        // Every old block has now been walked by this full
+                        // sweep; retire the provenance before block cleanup.
+                        crate::arena::clear_in_place_promotion_markers_after_full_sweep();
+                    }
                     self.arena.maybe_print_diag();
                     self.arena.push_live_block_holes();
                     self.cleanup = Some(ArenaSweepCleanupState::new(

@@ -7,6 +7,7 @@ mod scan_mode;
 mod scanner_shims;
 mod shadow_stack;
 mod stack_maps;
+mod stack_reject_diag;
 pub(crate) use stack_maps::census_rows::stack_map_index_census;
 mod temp_roots;
 pub(super) use stack_maps::ensure_built as ensure_stack_maps_built;
@@ -15,6 +16,7 @@ pub(super) use stack_maps::native_maps_active as native_stack_maps_active;
 pub(super) use stack_maps::publish_rewrite_walk_stats as stack_maps_publish_rewrite_walk_stats;
 pub(super) use stack_maps::record_native_stack_walk_source;
 pub(super) use stack_maps::verify_native_slots_post_walk as stack_maps_native_slot_verify;
+use stack_reject_diag::RejectedStackWordsReport;
 
 pub use rooted_values::RootedValues;
 pub(super) use runtime_handles::{
@@ -422,6 +424,8 @@ pub(super) fn mark_stack_roots_unchecked(
     pin_only_old: bool,
 ) -> ConservativeRootTraceStats {
     let mut stats = ConservativeRootTraceStats::default();
+    let mut rejected =
+        RejectedStackWordsReport::new(!pin_only_old && crate::gc::gc_verify_mark_enabled());
     // Capture callee-saved registers into a buffer via setjmp.
     //
     // On Apple platforms the C `setjmp(3)` saves the signal mask via a
@@ -463,6 +467,8 @@ pub(super) fn mark_stack_roots_unchecked(
     for &word in &jmp_buf.0 {
         if try_mark_conservative_word(word, valid_ptrs, pin_only_old) {
             stats.root_count += 1;
+        } else {
+            rejected.record_if_rejected(word, valid_ptrs);
         }
     }
 
@@ -517,6 +523,8 @@ pub(super) fn mark_stack_roots_unchecked(
         for &word in &fp_regs {
             if try_mark_conservative_word(word, valid_ptrs, pin_only_old) {
                 stats.root_count += 1;
+            } else {
+                rejected.record_if_rejected(word, valid_ptrs);
             }
         }
     }
@@ -553,6 +561,8 @@ pub(super) fn mark_stack_roots_unchecked(
         let word = unsafe { *(addr as *const u64) };
         if try_mark_conservative_word(word, valid_ptrs, pin_only_old) {
             stats.root_count += 1;
+        } else {
+            rejected.record_if_rejected(word, valid_ptrs);
         }
         addr += 8;
     }

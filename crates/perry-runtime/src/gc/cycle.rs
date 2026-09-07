@@ -577,6 +577,9 @@ pub(super) struct GcCycleState {
     #[allow(dead_code)]
     // captured trigger classification retained alongside collection_kind/progress_kind for cycle diagnostics
     trigger_kind: GcTriggerKind,
+    /// Named conservative-stack fallback covering this full cycle, captured
+    /// only while `PERRY_GC_VERIFY_MARK` is armed.
+    full_verify_scan_site: Option<ConservativeScanSite>,
     progress_kind: GcProgressKind,
     phase: GcCyclePhase,
     trace: Option<GcCycleTrace>,
@@ -621,6 +624,9 @@ impl GcCycleState {
         // keep their ordering and pay nothing for the overlap.
         super::roots::ensure_stack_maps_built();
         let trigger_kind = trigger.kind;
+        let full_verify_scan_site = crate::gc::gc_verify_mark_enabled()
+            .then(super::active_scan_fallback_site)
+            .flatten();
         let trace = GcCycleTrace::new(GcCollectionKind::Full, trigger);
         let start = Instant::now();
         crate::arena::old_pages_begin_gc_cycle();
@@ -642,6 +648,7 @@ impl GcCycleState {
         Self {
             collection_kind: GcCollectionKind::Full,
             trigger_kind,
+            full_verify_scan_site,
             progress_kind: trigger_kind.progress_kind(GcCollectionKind::Full),
             phase: GcCyclePhase::BuildValidPointerSet,
             trace,
@@ -689,6 +696,7 @@ impl GcCycleState {
         Self {
             collection_kind: GcCollectionKind::Minor,
             trigger_kind,
+            full_verify_scan_site: None,
             progress_kind,
             phase: GcCyclePhase::BuildValidPointerSet,
             trace,
@@ -1449,6 +1457,17 @@ impl GcCycleState {
             }
             if full_trace {
                 finish_full_trace();
+            }
+            if full_trace && crate::gc::gc_verify_mark_enabled() {
+                // Marks are final, the late barrier-seed closure is drained,
+                // and no sweep state exists yet: diagnostics here observe the
+                // exact set whose unmarked members are about to be freed.
+                super::verify::verify_marked_heap_report_nonfatal("full");
+                super::verify::verify_array_pointer_slots_enumerated_report("full");
+                super::verify::verify_full_promoted_blocks_report(
+                    self.full_verify_scan_site,
+                    self.trigger_kind,
+                );
             }
             if full_trace && !self.progress_kind.is_budgeted() {
                 // `PERRY_GC_CENSUS` pass 2: marks are final and nothing is
