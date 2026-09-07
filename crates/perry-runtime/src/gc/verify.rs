@@ -1131,6 +1131,232 @@ pub(super) fn verify_marked_heap_report_nonfatal(phase: &str) {
     eprintln!("{report}");
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct MaskFreeMissingEdge {
+    parent: usize,
+    parent_type: u8,
+    has_mask: bool,
+    descriptor_visited: bool,
+    promoted_block: bool,
+    parent_space: &'static str,
+    slot_index: usize,
+    child: usize,
+    child_type: u8,
+}
+
+#[derive(Debug, Default)]
+struct MaskFreeObjectVerifyStats {
+    unmasked_live_edges: usize,
+    masked_parents_checked: usize,
+    words_checked: usize,
+    samples: [Option<MaskFreeMissingEdge>; 3],
+}
+
+impl MaskFreeObjectVerifyStats {
+    fn record(&mut self, missing: MaskFreeMissingEdge) {
+        self.unmasked_live_edges = self.unmasked_live_edges.saturating_add(1);
+        if let Some(sample) = self.samples.iter_mut().find(|sample| sample.is_none()) {
+            *sample = Some(missing);
+        }
+    }
+}
+
+fn mask_free_parent_provenance(parent: usize, malloc_parent: bool) -> (bool, &'static str) {
+    if malloc_parent {
+        return (false, "malloc");
+    }
+    let Some(block) = crate::arena::arena_block_diagnostic_for_addr(parent) else {
+        return (false, "old_page");
+    };
+    if block.promoted_in_place_since_full {
+        return (true, "promoted");
+    }
+    if block.space.is_nursery() {
+        (false, "nursery")
+    } else {
+        (false, "old_page")
+    }
+}
+
+unsafe fn verify_mask_free_object_child_marks_for(
+    stats: &mut MaskFreeObjectVerifyStats,
+    header: *mut GcHeader,
+    malloc_parent: bool,
+) {
+    if header.is_null()
+        || (*header).gc_flags & GC_FLAG_FORWARDED != 0
+        || (*header).gc_flags & GC_FLAG_MARKED == 0
+    {
+        return;
+    }
+    let parent_type = (*header).obj_type;
+    if parent_type != GC_TYPE_OBJECT && parent_type != GC_TYPE_CLOSURE {
+        return;
+    }
+    let parent = (header as *mut u8).add(GC_HEADER_SIZE) as usize;
+
+    // Ask the exact lookup paths used by the descriptor selection. Reading the
+    // header's SIDE_MASK/INTACT bits here would merely repeat the claim under
+    // test; these lookups establish that a mask or typed descriptor is really
+    // reachable for this particular parent.
+    let has_mask = super::layout_tables::per_object_slot_mask(parent).is_some()
+        || super::layout::with_typed_descriptor_for_query(parent, |_| ()).is_some();
+    if has_mask {
+        stats.masked_parents_checked = stats.masked_parents_checked.saturating_add(1);
+    }
+
+    // Collect the descriptor walk once. The mask-free walk below never asks
+    // this set which slots to read; it uses it only to explain whether the
+    // ordinary tracer would have reached a missing edge.
+    let mut descriptor_slots = Vec::new();
+    visit_gc_rewrite_slots(header, |slot| {
+        descriptor_slots.push(slot.slot as usize);
+    });
+    let (promoted_block, parent_space) = mask_free_parent_provenance(parent, malloc_parent);
+
+    let mut scan_word = |slot: *mut u64, slot_index: usize| unsafe {
+        if crate::weakref::is_weak_target_trace_slot(header, slot) {
+            return;
+        }
+        stats.words_checked = stats.words_checked.saturating_add(1);
+        let bits = std::ptr::read(slot);
+        let tag = bits & TAG_MASK;
+        if tag != POINTER_TAG && tag != STRING_TAG && tag != BIGINT_TAG {
+            return;
+        }
+        let Some((child, child_header)) = current_heap_header_for_heap_word(bits, None) else {
+            return;
+        };
+        if (*child_header).gc_flags & (GC_FLAG_MARKED | GC_FLAG_PINNED) != 0 {
+            return;
+        }
+        stats.record(MaskFreeMissingEdge {
+            parent,
+            parent_type,
+            has_mask,
+            descriptor_visited: descriptor_slots.contains(&(slot as usize)),
+            promoted_block,
+            parent_space,
+            slot_index,
+            child,
+            child_type: (*child_header).obj_type,
+        });
+    };
+
+    let total_size = (*header).size as usize;
+    let Some(payload_size) = total_size.checked_sub(GC_HEADER_SIZE) else {
+        return;
+    };
+    match parent_type {
+        GC_TYPE_OBJECT => {
+            let prefix = std::mem::size_of::<crate::object::ObjectHeader>();
+            let Some(field_bytes) = payload_size.checked_sub(prefix) else {
+                return;
+            };
+            let fields = (parent as *mut u8).add(prefix) as *mut u64;
+            let inline_words = field_bytes / std::mem::size_of::<u64>();
+            for index in 0..inline_words {
+                scan_word(fields.add(index), index);
+            }
+            // Legacy overflow/dynamic properties are direct logical children
+            // of the Object even though their Vec storage is outside its
+            // allocation. The visitor deliberately enumerates every live Vec
+            // slot without consulting the object's layout mask.
+            let mut overflow_index = 0usize;
+            crate::object::visit_overflow_field_slots_mut(parent, |slot| {
+                let index = overflow_index;
+                overflow_index = overflow_index.saturating_add(1);
+                scan_word(slot, index);
+            });
+        }
+        GC_TYPE_CLOSURE => {
+            let prefix = std::mem::size_of::<crate::closure::ClosureHeader>();
+            let Some(capture_bytes) = payload_size.checked_sub(prefix) else {
+                return;
+            };
+            let captures = (parent as *mut u8).add(prefix) as *mut u64;
+            let capture_words = capture_bytes / std::mem::size_of::<u64>();
+            for index in 0..capture_words {
+                scan_word(captures.add(index), index);
+            }
+            let mut external_index = capture_words;
+            crate::closure::visit_closure_dynamic_prop_value_slots_mut(parent, |slot| {
+                scan_word(slot, external_index);
+                external_index = external_index.saturating_add(1);
+            });
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn mask_free_edge_fields(edge: MaskFreeMissingEdge) -> String {
+    let type_name = |obj_type| gc_type_info(obj_type).map_or("?", |info| info.name);
+    format!(
+        "parent=0x{:x} ptype={} has_mask={} descriptor_visited={} promoted_block={} parent_space={} slot_index={} child=0x{:x} ctype={}",
+        edge.parent,
+        type_name(edge.parent_type),
+        if edge.has_mask { "yes" } else { "no" },
+        if edge.descriptor_visited { "yes" } else { "no" },
+        if edge.promoted_block { "yes" } else { "no" },
+        edge.parent_space,
+        edge.slot_index,
+        edge.child,
+        type_name(edge.child_type),
+    )
+}
+
+/// Mask-independent full-cycle verifier for Object fields and Closure
+/// captures. It reads every bounded JSValue payload word directly, then uses
+/// the ordinary descriptor walk only to explain whether that word was visible
+/// to marking. Diagnostic-only; the sole caller is behind
+/// `gc_verify_mark_enabled()` at the full marks-final boundary.
+pub(super) fn verify_mask_free_object_child_marks_report(phase: &str) {
+    let mut stats = MaskFreeObjectVerifyStats::default();
+    crate::arena::arena_walk_objects(|hp| unsafe {
+        verify_mask_free_object_child_marks_for(&mut stats, hp as *mut GcHeader, false);
+    });
+    MALLOC_STATE.with(|state| {
+        let state = state.borrow();
+        for &header in state.objects.iter() {
+            unsafe {
+                verify_mask_free_object_child_marks_for(&mut stats, header, true);
+            }
+        }
+    });
+
+    let first = stats.samples[0]
+        .map(mask_free_edge_fields)
+        .unwrap_or_else(|| {
+            "parent=0x0 ptype=none has_mask=no descriptor_visited=no promoted_block=no parent_space=none slot_index=0 child=0x0 ctype=none".to_string()
+        });
+    let report = format!(
+        "[gc-mark-verify:{}-maskfree] unmasked_live_edges={} masked_parents_checked={} words_checked={} | first {}",
+        phase,
+        stats.unmasked_live_edges,
+        stats.masked_parents_checked,
+        stats.words_checked,
+        first,
+    );
+    #[cfg(test)]
+    super::telemetry::test_record_full_verify_line(&report);
+    eprintln!("{report}");
+
+    for (index, sample) in stats.samples.iter().copied().enumerate().skip(1) {
+        let Some(sample) = sample else {
+            continue;
+        };
+        let report = format!(
+            "[gc-mark-verify:{}-maskfree] sample={} {}",
+            phase,
+            index + 1,
+            mask_free_edge_fields(sample),
+        );
+        #[cfg(test)]
+        super::telemetry::test_record_full_verify_line(&report);
+        eprintln!("{report}");
+    }
+}
+
 /// Census old blocks promoted in place since the preceding full sweep. Runs at
 /// the full cycle's marks-final boundary, before any object can be reclaimed.
 pub(super) fn verify_full_promoted_blocks_report(

@@ -300,7 +300,7 @@ unsafe fn with_shape_shared_descriptor_from<R>(
 /// forged/stale intact header bit (see
 /// [`layout_typed_accepts_finite_number_slot_for_user`]).
 #[inline]
-fn with_typed_descriptor_for_query<R>(
+pub(super) fn with_typed_descriptor_for_query<R>(
     user_ptr: usize,
     f: impl Fn(&TypedLayoutDescriptor) -> R,
 ) -> Option<R> {
