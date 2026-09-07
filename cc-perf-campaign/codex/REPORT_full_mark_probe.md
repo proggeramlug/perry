@@ -196,3 +196,28 @@ throws are any of:
 
 The S=2 control should keep all three numeric H2 counters at zero and emit no
 full marked-to-unmarked edge.
+
+## Correction after the first box run (FMP on the arm-at tree, 2026-09-08)
+
+The witness failed on its own expectations, not on the collector: the census
+showed `marked=2001 unmarked=1333 tenured_flag_missing=0 page_index_missing=0`,
+`[gc-mark-verify:full] OK`, and three rejected stack words all equal to the
+promoted block's BASE address (raw words, `header_plausible=yes type=string`).
+
+- `unmarked=0` was wrong by construction: the test replaces every parent's
+  original young child after the promotion, so the 1,334 original children in
+  the promoted block are garbage at the full. The assertion is now
+  `marked >= ROOTS` (parsed from the census line).
+- `stack_words_rejected_in_blocks=0` was too strict: a raw word equal to a block
+  base or a header address is a Rust bookkeeping pointer (`*mut GcHeader`,
+  block base) and the scan is right to refuse it. The dropped-root shape is a
+  NaN-boxed pointer at a plausible header that the valid-pointer set refused;
+  the rejection line now carries `nanboxed_plausible=<n>` (and each sample
+  `nanboxed=yes|no`), and the test asserts `nanboxed_plausible == 0`.
+- The header-intact checks (all roots, all parents, all new children, and each
+  parent slot still naming its child) are the decisive assertions and are now
+  reachable.
+
+Reading the cc rows: a nonzero `nanboxed_plausible` at the
+`old_reclaim_alloc_point` full of a run that throws is the H2 signature;
+`stack_words_rejected_in_blocks` alone is not.

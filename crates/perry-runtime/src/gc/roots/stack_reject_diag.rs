@@ -5,11 +5,17 @@ struct RejectedStackWord {
     word: u64,
     block: crate::arena::ArenaBlockDiagnostic,
     header_type: Option<u8>,
+    nanboxed: bool,
 }
 
 pub(super) struct RejectedStackWordsReport {
     enabled: bool,
     count: usize,
+    /// Rejected words that carry a pointer NaN-box tag AND sit at a
+    /// plausible object header: the shape of a dropped root. Raw words equal
+    /// to a block base or a header address are Rust bookkeeping pointers
+    /// (`*mut GcHeader`, block bases) and are counted only in `count`.
+    nanboxed_plausible: usize,
     first: [Option<RejectedStackWord>; 3],
 }
 
@@ -18,6 +24,7 @@ impl RejectedStackWordsReport {
         Self {
             enabled,
             count: 0,
+            nanboxed_plausible: 0,
             first: [None; 3],
         }
     }
@@ -30,7 +37,8 @@ impl RejectedStackWordsReport {
             return;
         }
         let tag = word & TAG_MASK;
-        let candidate = if tag == POINTER_TAG || tag == STRING_TAG || tag == BIGINT_TAG {
+        let nanboxed = tag == POINTER_TAG || tag == STRING_TAG || tag == BIGINT_TAG;
+        let candidate = if nanboxed {
             let ptr = (word & POINTER_MASK) as usize;
             if ptr == 0 || valid_ptrs.contains(&ptr) {
                 return;
@@ -50,11 +58,16 @@ impl RejectedStackWordsReport {
             return;
         };
         self.count = self.count.saturating_add(1);
+        let header_type = plausible_header_type(candidate, block);
+        if nanboxed && header_type.is_some() {
+            self.nanboxed_plausible = self.nanboxed_plausible.saturating_add(1);
+        }
         if let Some(slot) = self.first.iter_mut().find(|slot| slot.is_none()) {
             *slot = Some(RejectedStackWord {
                 word,
                 block,
-                header_type: plausible_header_type(candidate, block),
+                header_type,
+                nanboxed,
             });
         }
     }
@@ -65,13 +78,14 @@ impl RejectedStackWordsReport {
             .map(|obj_type| ("yes", gc_type_info(obj_type).map_or("?", |info| info.name)))
             .unwrap_or(("no", "none"));
         let report = format!(
-            "{}0x{:x} block=0x{:x} space={} header_plausible={} type={}",
+            "{}0x{:x} block=0x{:x} space={} header_plausible={} type={} nanboxed={}",
             prefix,
             sample.word,
             sample.block.base,
             sample.block.space.as_str(),
             plausible,
             type_name,
+            if sample.nanboxed { "yes" } else { "no" },
         );
         #[cfg(test)]
         super::super::telemetry::test_record_full_verify_line(&report);
@@ -87,13 +101,13 @@ impl Drop for RejectedStackWordsReport {
         match self.first[0] {
             Some(first) => Self::print_sample(
                 &format!(
-                    "[gc-full-verify] stack_words_rejected_in_blocks={} first=",
-                    self.count
+                    "[gc-full-verify] stack_words_rejected_in_blocks={} nanboxed_plausible={} first=",
+                    self.count, self.nanboxed_plausible
                 ),
                 first,
             ),
             None => {
-                let report = "[gc-full-verify] stack_words_rejected_in_blocks=0 first=0x0 block=0x0 space=none header_plausible=no type=none";
+                let report = "[gc-full-verify] stack_words_rejected_in_blocks=0 nanboxed_plausible=0 first=0x0 block=0x0 space=none header_plausible=no type=none nanboxed=no";
                 #[cfg(test)]
                 super::super::telemetry::test_record_full_verify_line(report);
                 eprintln!("{report}");
