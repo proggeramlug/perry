@@ -46,6 +46,18 @@ impl HeapSpace {
             HeapSpace::NurseryEden | HeapSpace::Survivor0 | HeapSpace::Survivor1
         )
     }
+
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Unknown => "unknown",
+            Self::NurseryEden => "nursery_eden",
+            Self::Survivor0 => "survivor0",
+            Self::Survivor1 => "survivor1",
+            Self::Longlived => "longlived",
+            Self::Old => "old",
+            Self::PromotedYoung => "promoted_young",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -1072,6 +1084,26 @@ pub(crate) fn register_old_object_pages(header_addr: usize, total_size: usize) {
         }
     });
     update_old_page_meta_for_object(&added_pages, true);
+}
+
+/// Does the old-generation per-page object index contain this complete object?
+/// Diagnostic callers use the same materialization/flush contract as the
+/// remembered-set readers before inspecting the stored header lists.
+pub(crate) fn old_page_index_contains_object(header_addr: usize, total_size: usize) -> bool {
+    if header_addr == 0 || total_size == 0 {
+        return false;
+    }
+    flush_deferred_old_page_registrations();
+    let overlaps = old_object_page_overlaps(header_addr, total_size);
+    materialize_promoted_page_runs(overlaps.iter().map(|(page, _)| *page));
+    OLD_GEN_PAGE_OBJECTS.with(|index| {
+        let index = index.borrow();
+        overlaps.iter().all(|(page, _)| {
+            index
+                .get(page)
+                .is_some_and(|headers| headers.contains(&header_addr))
+        })
+    })
 }
 
 // ---------------------------------------------------------------------------

@@ -343,6 +343,7 @@ fn try_alloc_block(min_size: usize, injectable: bool) -> Option<ArenaBlock> {
             offset: 0,
             object_starts: new_object_start_bitmap(size),
             dead_cycles: 0,
+            promoted_in_place_since_full: false,
         });
     }
     let data = unsafe { alloc(layout) };
@@ -355,6 +356,7 @@ fn try_alloc_block(min_size: usize, injectable: bool) -> Option<ArenaBlock> {
         offset: 0,
         object_starts: new_object_start_bitmap(size),
         dead_cycles: 0,
+        promoted_in_place_since_full: false,
     })
 }
 
@@ -427,6 +429,10 @@ pub(crate) struct ArenaBlock {
     /// scan finds the pointer (counter resets to 0) or the block is
     /// truly dead and resets.
     pub(crate) dead_cycles: u32,
+    /// Diagnostic provenance for `PERRY_GC_VERIFY_MARK`: this old block was
+    /// handed over by whole-block in-place promotion after the previous full
+    /// sweep. Set once per promoted block, never per object.
+    pub(crate) promoted_in_place_since_full: bool,
 }
 
 impl ArenaBlock {
@@ -584,6 +590,7 @@ impl Arena {
                 offset: 0,
                 object_starts: Box::new([]),
                 dead_cycles: 0,
+                promoted_in_place_since_full: false,
             }],
             current: 0,
             generation,

@@ -58,8 +58,81 @@ impl Drop for GcDiagTestGuard {
 /// mark-verifier call sites were presence-only, so `=0` armed a verifier that
 /// walks the whole heap.
 pub(crate) fn gc_verify_mark_enabled() -> bool {
+    #[cfg(test)]
+    if GC_VERIFY_MARK_TEST_FORCED.with(std::cell::Cell::get) {
+        return true;
+    }
     static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *ENABLED.get_or_init(|| env_flag_enabled("PERRY_GC_VERIFY_MARK"))
+}
+
+#[cfg(test)]
+thread_local! {
+    static GC_VERIFY_MARK_TEST_FORCED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+#[cfg(test)]
+pub(crate) struct GcVerifyMarkTestGuard {
+    previous: bool,
+}
+
+#[cfg(test)]
+impl GcVerifyMarkTestGuard {
+    pub(crate) fn force_on() -> Self {
+        let previous = GC_VERIFY_MARK_TEST_FORCED.with(|cell| cell.replace(true));
+        Self { previous }
+    }
+}
+
+#[cfg(test)]
+impl Drop for GcVerifyMarkTestGuard {
+    fn drop(&mut self) {
+        GC_VERIFY_MARK_TEST_FORCED.with(|cell| cell.set(self.previous));
+    }
+}
+
+#[cfg(test)]
+const TEST_FULL_VERIFY_LINES_CAPACITY: usize = 16 * 1024;
+
+#[cfg(test)]
+struct TestFullVerifyLines {
+    bytes: [u8; TEST_FULL_VERIFY_LINES_CAPACITY],
+    len: usize,
+}
+
+#[cfg(test)]
+static TEST_FULL_VERIFY_LINES: std::sync::Mutex<TestFullVerifyLines> =
+    std::sync::Mutex::new(TestFullVerifyLines {
+        bytes: [0; TEST_FULL_VERIFY_LINES_CAPACITY],
+        len: 0,
+    });
+
+#[cfg(test)]
+pub(crate) fn test_record_full_verify_line(line: &str) {
+    let mut saved = TEST_FULL_VERIFY_LINES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let remaining = TEST_FULL_VERIFY_LINES_CAPACITY.saturating_sub(saved.len);
+    let copy_len = line.len().min(remaining.saturating_sub(1));
+    let start = saved.len;
+    let end = start + copy_len;
+    saved.bytes[start..end].copy_from_slice(&line.as_bytes()[..copy_len]);
+    saved.len = end;
+    if saved.len < TEST_FULL_VERIFY_LINES_CAPACITY {
+        let end = saved.len;
+        saved.bytes[end] = b'\n';
+        saved.len += 1;
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn test_take_full_verify_lines() -> String {
+    let mut saved = TEST_FULL_VERIFY_LINES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let lines = String::from_utf8_lossy(&saved.bytes[..saved.len]).into_owned();
+    saved.len = 0;
+    lines
 }
 
 pub struct GcStats {
