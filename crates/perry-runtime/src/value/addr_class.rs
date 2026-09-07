@@ -80,7 +80,7 @@ pub const STREAM_ID_BAND_END: usize = 0x200000;
 /// dispatch tables instead.
 #[inline(always)]
 pub fn is_handle_band(addr: usize) -> bool {
-    addr < HANDLE_BAND_MAX
+    addr < HANDLE_BAND_MAX || crate::native_handle::is_canonical_handle_addr(addr)
 }
 
 /// True for a plausible *live* handle id: non-zero and inside the handle
@@ -88,7 +88,7 @@ pub fn is_handle_band(addr: usize) -> bool {
 /// null / INVALID_HANDLE, not a handle).
 #[inline(always)]
 pub fn is_small_handle(addr: usize) -> bool {
-    (1..HANDLE_BAND_MAX).contains(&addr)
+    (1..HANDLE_BAND_MAX).contains(&addr) || crate::native_handle::is_canonical_handle_addr(addr)
 }
 
 #[inline(always)]
@@ -112,7 +112,7 @@ pub fn is_zlib_handle_band(addr: usize) -> bool {
 /// `0`/null is NOT above the band.
 #[inline(always)]
 pub fn is_above_handle_band(addr: usize) -> bool {
-    addr >= HANDLE_BAND_MAX
+    addr >= HANDLE_BAND_MAX && !crate::native_handle::is_canonical_handle_addr(addr)
 }
 
 /// True when `addr` is a revocable-Proxy id. Callers must still confirm
@@ -220,7 +220,7 @@ pub fn is_valid_obj_ptr(ptr: *const u8) -> bool {
 /// canonical `addr >= 0x100000 && is_valid_obj_ptr(addr)` pairing.
 #[inline(always)]
 pub(crate) fn is_plausible_heap_addr(addr: usize) -> bool {
-    is_above_handle_band(addr) && is_valid_obj_ptr(addr as *const u8)
+    addr >= HANDLE_BAND_MAX && is_valid_obj_ptr(addr as *const u8)
 }
 
 /// Validated GcHeader read: magnitude-classify FIRST (reject the handle band
@@ -266,7 +266,7 @@ fn classify_tracked_gc_header_with(
     arena_range_base: impl FnOnce(usize) -> Option<usize>,
     malloc_header_is_tracked: impl FnOnce(*const GcHeader) -> bool,
 ) -> Option<(usize, TrackedGcStorage)> {
-    if is_handle_band(addr) {
+    if addr < HANDLE_BAND_MAX {
         return None;
     }
     let header_addr = addr.checked_sub(GC_HEADER_SIZE)?;

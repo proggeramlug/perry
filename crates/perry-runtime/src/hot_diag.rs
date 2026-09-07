@@ -73,6 +73,7 @@ pub use receiver_repr::{
 #[cfg(test)]
 pub(crate) use receiver_repr::{
     receiver_repr_test_arm, receiver_repr_test_classification_entries, receiver_repr_test_reset,
+    receiver_repr_test_snapshot,
 };
 
 // ---------------------------------------------------------------------------

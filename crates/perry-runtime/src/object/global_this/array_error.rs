@@ -73,18 +73,19 @@ pub(crate) extern "C" fn global_this_set_timeout_thunk(
 ) -> f64 {
     let callback = unsafe { crate::timer::js_timer_validate_callback(callback, 0) };
     let args = global_this_rest_array_values(rest);
-    if args.is_empty() {
-        crate::value::js_nanbox_pointer(crate::timer::js_set_timeout_callback(callback, delay))
+    let id = if args.is_empty() {
+        crate::timer::js_set_timeout_callback(callback, delay)
     } else {
-        crate::value::js_nanbox_pointer(unsafe {
+        unsafe {
             crate::timer::js_set_timeout_callback_args(
                 callback,
                 delay,
                 args.as_ptr(),
                 args.len() as i32,
             )
-        })
-    }
+        }
+    };
+    crate::timer::js_timer_wrap_id(id)
 }
 
 pub(crate) extern "C" fn global_this_clear_timeout_thunk(
@@ -103,18 +104,19 @@ pub(crate) extern "C" fn global_this_set_interval_thunk(
 ) -> f64 {
     let callback = unsafe { crate::timer::js_timer_validate_callback(callback, 1) };
     let args = global_this_rest_array_values(rest);
-    if args.is_empty() {
-        crate::value::js_nanbox_pointer(crate::timer::setInterval(callback, delay))
+    let id = if args.is_empty() {
+        crate::timer::setInterval(callback, delay)
     } else {
-        crate::value::js_nanbox_pointer(unsafe {
+        unsafe {
             crate::timer::js_set_interval_callback_args(
                 callback,
                 delay,
                 args.as_ptr(),
                 args.len() as i32,
             )
-        })
-    }
+        }
+    };
+    crate::timer::js_timer_wrap_id(id)
 }
 
 pub(crate) extern "C" fn global_this_clear_interval_thunk(
@@ -132,13 +134,14 @@ pub(crate) extern "C" fn global_this_set_immediate_thunk(
 ) -> f64 {
     let callback = unsafe { crate::timer::js_timer_validate_callback(callback, 2) };
     let args = global_this_rest_array_values(rest);
-    if args.is_empty() {
-        crate::value::js_nanbox_pointer(crate::timer::js_set_immediate_callback(callback))
+    let id = if args.is_empty() {
+        crate::timer::js_set_immediate_callback(callback)
     } else {
-        crate::value::js_nanbox_pointer(unsafe {
+        unsafe {
             crate::timer::js_set_immediate_callback_args(callback, args.as_ptr(), args.len() as i32)
-        })
-    }
+        }
+    };
+    crate::timer::js_timer_wrap_id(id)
 }
 
 pub(crate) extern "C" fn global_this_clear_immediate_thunk(

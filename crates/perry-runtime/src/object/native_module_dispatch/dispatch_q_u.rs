@@ -417,19 +417,18 @@ pub(crate) unsafe fn nm_dispatch_timers(ctx: &NmCtx, module_name: &str, method_n
             };
             if args_len > 2 {
                 let extra_ptr = unsafe { args_ptr.add(2) };
-                return f64::from_bits(
-                    JSValue::pointer(crate::timer::js_set_timeout_callback_args(
+                return crate::timer::js_timer_wrap_id(unsafe {
+                    crate::timer::js_set_timeout_callback_args(
                         cb_handle,
                         delay,
                         extra_ptr,
                         (args_len - 2) as i32,
-                    ) as *mut u8)
-                    .bits(),
-                );
+                    )
+                });
             }
-            return f64::from_bits(JSValue::pointer(
-                crate::timer::js_set_timeout_callback(cb_handle, delay) as *mut u8,
-            ).bits());
+            return crate::timer::js_timer_wrap_id(crate::timer::js_set_timeout_callback(
+                cb_handle, delay,
+            ));
         }
         ("timers", "setImmediate") if args_len >= 1 => {
             let cb = arg(0);
@@ -443,19 +442,17 @@ pub(crate) unsafe fn nm_dispatch_timers(ctx: &NmCtx, module_name: &str, method_n
             };
             if args_len > 1 {
                 let extra_ptr = unsafe { args_ptr.add(1) };
-                return f64::from_bits(
-                    JSValue::pointer(crate::timer::js_set_immediate_callback_args(
+                return crate::timer::js_timer_wrap_id(unsafe {
+                    crate::timer::js_set_immediate_callback_args(
                         cb_handle,
                         extra_ptr,
                         (args_len - 1) as i32,
-                    ) as *mut u8)
-                    .bits(),
-                );
+                    )
+                });
             }
-            return f64::from_bits(
-                JSValue::pointer(crate::timer::js_set_immediate_callback(cb_handle) as *mut u8)
-                    .bits(),
-            );
+            return crate::timer::js_timer_wrap_id(crate::timer::js_set_immediate_callback(
+                cb_handle,
+            ));
         }
         ("timers", "setInterval") if args_len >= 2 => {
             let cb = arg(0);
@@ -468,19 +465,16 @@ pub(crate) unsafe fn nm_dispatch_timers(ctx: &NmCtx, module_name: &str, method_n
             };
             if args_len > 2 {
                 let extra_ptr = unsafe { args_ptr.add(2) };
-                return f64::from_bits(
-                    JSValue::pointer(crate::timer::js_set_interval_callback_args(
+                return crate::timer::js_timer_wrap_id(unsafe {
+                    crate::timer::js_set_interval_callback_args(
                         cb_handle,
                         delay,
                         extra_ptr,
                         (args_len - 2) as i32,
-                    ) as *mut u8)
-                    .bits(),
-                );
+                    )
+                });
             }
-            return f64::from_bits(
-                JSValue::pointer(crate::timer::setInterval(cb_handle, delay) as *mut u8).bits(),
-            );
+            return crate::timer::js_timer_wrap_id(crate::timer::setInterval(cb_handle, delay));
         }
         ("timers", "clearTimeout") if args_len >= 1 => {
             crate::timer::js_clear_timeout_value(arg(0));

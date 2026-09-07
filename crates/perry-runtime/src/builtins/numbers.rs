@@ -565,7 +565,7 @@ pub extern "C" fn js_number_coerce(value: f64) -> f64 {
         if crate::value::addr_class::is_small_handle(id as usize)
             && crate::timer::is_known_timer_id(id)
         {
-            return id as f64;
+            return crate::timer::canonical_timer_id(id) as f64;
         }
         // Array → ToPrimitive(number) finds no `valueOf` override, so it
         // falls to `Array.prototype.toString` = `join(",")`, then ToNumber on

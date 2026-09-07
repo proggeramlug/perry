@@ -54,7 +54,7 @@ use anyhow::Result;
 use perry_hir::Expr;
 
 use super::extern_timers::fill_arg_buffer;
-use crate::expr::{lower_expr, nanbox_pointer_inline, unbox_to_i64, FnCtx};
+use crate::expr::{lower_expr, unbox_to_i64, FnCtx};
 use crate::nanbox::double_literal;
 use crate::rooting::with_operands_rooted;
 use crate::types::{DOUBLE, I32, I64, PTR};
@@ -123,7 +123,7 @@ pub fn try_lower_namespace_member_call(
                             "js_set_timeout_callback",
                             &[(I64, &cb_handle), (DOUBLE, &delay_box)],
                         );
-                        return Ok(nanbox_pointer_inline(blk, &id));
+                        return Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]));
                     }
                     let n = vals.len() - 2;
                     let ptr_reg = fill_arg_buffer(ctx, &vals[2..]);
@@ -139,7 +139,7 @@ pub fn try_lower_namespace_member_call(
                             (I32, &n.to_string()),
                         ],
                     );
-                    Ok(nanbox_pointer_inline(blk, &id))
+                    Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
                 })?;
                 return Ok(Some(boxed));
             }
@@ -155,7 +155,7 @@ pub fn try_lower_namespace_member_call(
                             "setInterval",
                             &[(I64, &cb_handle), (DOUBLE, &delay_box)],
                         );
-                        return Ok(nanbox_pointer_inline(blk, &id));
+                        return Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]));
                     }
                     let n = vals.len() - 2;
                     let ptr_reg = fill_arg_buffer(ctx, &vals[2..]);
@@ -171,7 +171,7 @@ pub fn try_lower_namespace_member_call(
                             (I32, &n.to_string()),
                         ],
                     );
-                    Ok(nanbox_pointer_inline(blk, &id))
+                    Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
                 })?;
                 return Ok(Some(boxed));
             }
@@ -184,7 +184,7 @@ pub fn try_lower_namespace_member_call(
                     let blk = ctx.block();
                     let cb_handle = unbox_to_i64(blk, &cb_box);
                     let id = blk.call(I64, "js_set_immediate_callback", &[(I64, &cb_handle)]);
-                    return Ok(Some(nanbox_pointer_inline(blk, &id)));
+                    return Ok(Some(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)])));
                 }
                 let arg_refs: Vec<&Expr> = args.iter().collect();
                 let boxed = with_operands_rooted(ctx, &arg_refs, |ctx, vals| {
@@ -198,7 +198,7 @@ pub fn try_lower_namespace_member_call(
                         "js_set_immediate_callback_args",
                         &[(I64, &cb_handle), (PTR, &ptr_reg), (I32, &n.to_string())],
                     );
-                    Ok(nanbox_pointer_inline(blk, &id))
+                    Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
                 })?;
                 return Ok(Some(boxed));
             }

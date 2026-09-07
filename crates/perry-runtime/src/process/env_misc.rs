@@ -24,7 +24,7 @@ fn timer_handle_id(value: f64) -> Option<i64> {
         return None;
     }
     let id = (value.to_bits() & crate::value::POINTER_MASK) as i64;
-    crate::timer::is_known_timer_id(id).then_some(id)
+    crate::timer::is_known_timer_id(id).then_some(crate::timer::canonical_timer_id(id))
 }
 
 #[no_mangle]

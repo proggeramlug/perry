@@ -122,6 +122,7 @@ fn schedule_promise_timer(delay_ms: f64, value: f64, has_ref: bool) -> *mut Prom
 }
 
 fn timer_has_ref_state(id: i64) -> bool {
+    let id = canonical_timer_id(id);
     TIMER_REF_STATES
         .lock()
         .unwrap()
@@ -472,7 +473,29 @@ pub extern "C" fn js_await_loop_tick_timers() -> i32 {
 }
 
 fn timer_handle_value(id: i64) -> f64 {
-    f64::from_bits(crate::value::JSValue::pointer(id as *mut u8).bits())
+    crate::native_handle::canonical_handle_value(
+        crate::native_handle::NATIVE_HANDLE_PROVIDER_TIMER,
+        id,
+    )
+}
+
+/// Publish a timer registry id as its canonical managed Timeout/Immediate
+/// wrapper. Scheduling APIs keep returning ids internally; every JS boundary
+/// calls this exactly once before publication.
+#[no_mangle]
+pub extern "C" fn js_timer_wrap_id(id: i64) -> f64 {
+    timer_handle_value(id)
+}
+
+/// Accept either an authoritative timer id or the address of its canonical
+/// nonmoving wrapper. Internal queues remain keyed only by the id.
+#[inline]
+pub fn canonical_timer_id(id_or_wrapper: i64) -> i64 {
+    crate::native_handle::canonical_handle_parts_from_addr(id_or_wrapper as usize)
+        .and_then(|(provider, id)| {
+            (provider == crate::native_handle::NATIVE_HANDLE_PROVIDER_TIMER).then_some(id)
+        })
+        .unwrap_or(id_or_wrapper)
 }
 
 fn with_timer_uncaught_trap<F: FnOnce()>(f: F) {
@@ -608,6 +631,7 @@ fn normalize_timer_delay(delay_value: f64) -> u64 {
 }
 
 fn set_timer_ref_state(id: i64, has_ref: bool) {
+    let id = canonical_timer_id(id);
     ref_states::TIMER_IDS_NONEMPTY.arm();
     let mut slot = TIMER_REF_STATES.lock().unwrap();
     slot.get_or_insert_with(TimerRefStates::default)
@@ -629,6 +653,7 @@ fn record_timer_handle_kind(id: i64, kind: CallbackTimerKind) {
 /// after clear/fire just as Node retains the wrapper's prototype. The bounded
 /// inventory avoids unbounded growth in long-running processes.
 pub(crate) fn timer_constructor_value(id: i64) -> Option<f64> {
+    let id = canonical_timer_id(id);
     let kind = TIMER_HANDLE_KINDS.lock().unwrap().get(&id).copied()?;
     let name = match kind {
         CallbackTimerKind::Timeout => b"Timeout".as_slice(),
@@ -657,7 +682,9 @@ pub(crate) fn timer_constructor_value(id: i64) -> Option<f64> {
     Some(crate::value::js_nanbox_pointer(obj_ptr as i64))
 }
 
-pub use ref_states::is_known_timer_id;
+pub fn is_known_timer_id(id: i64) -> bool {
+    ref_states::is_known_timer_id(canonical_timer_id(id))
+}
 
 fn throw_mock_timer_invalid_state(message: &str) -> ! {
     let msg = crate::string::js_string_from_bytes(message.as_ptr(), message.len() as u32);
@@ -899,6 +926,7 @@ fn mock_clear_immediate(timer_id: i64) {
 
 #[no_mangle]
 pub extern "C" fn js_timer_has_ref(timer_id: i64) -> i32 {
+    let timer_id = canonical_timer_id(timer_id);
     // Node's `Timeout.hasRef()` returns the current ref state, which is
     // `true` by default and stays `true` after `clearTimeout` unless the
     // user explicitly called `.unref()` on the handle. Default `true` for
@@ -914,12 +942,12 @@ pub extern "C" fn js_timer_has_ref(timer_id: i64) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn js_timer_ref(timer_id: i64) {
-    set_timer_ref_state(timer_id, true);
+    set_timer_ref_state(canonical_timer_id(timer_id), true);
 }
 
 #[no_mangle]
 pub extern "C" fn js_timer_unref(timer_id: i64) {
-    set_timer_ref_state(timer_id, false);
+    set_timer_ref_state(canonical_timer_id(timer_id), false);
 }
 
 /// Reschedule a Timeout (or revive a cleared one) using its original
@@ -927,6 +955,7 @@ pub extern "C" fn js_timer_unref(timer_id: i64) {
 /// resets the next-deadline cursor to one full interval from now.
 #[no_mangle]
 pub extern "C" fn js_timer_refresh(timer_id: i64) {
+    let timer_id = canonical_timer_id(timer_id);
     let now = Instant::now();
 
     {
@@ -1088,6 +1117,7 @@ fn schedule_callback_timer(
 
     let id = next_timer_id();
     record_timer_handle_kind(id, kind);
+    let public_handle = scope.root_nanbox_f64(timer_handle_value(id));
 
     let mut context = crate::async_context::capture_context();
     let context_roots = crate::async_context::root_snapshot(&scope, &context);
@@ -1096,11 +1126,15 @@ fn schedule_callback_timer(
             || match trigger_async_id {
                 Some(trigger_async_id) => crate::async_hooks::init_resource_with_trigger(
                     type_name,
-                    timer_handle_value(id),
+                    public_handle.get_nanbox_f64(),
                     true,
                     trigger_async_id,
                 ),
-                None => crate::async_hooks::init_resource(type_name, timer_handle_value(id), true),
+                None => crate::async_hooks::init_resource(
+                    type_name,
+                    public_handle.get_nanbox_f64(),
+                    true,
+                ),
             },
         );
     crate::async_context::refresh_snapshot_from_roots(&mut context, &context_roots);
@@ -1462,6 +1496,7 @@ pub extern "C" fn js_callback_timer_next_deadline() -> f64 {
 /// handles are distinct and are only canceled by `clearImmediate`.
 #[no_mangle]
 pub extern "C" fn clearTimeout(timer_id: i64) {
+    let timer_id = canonical_timer_id(timer_id);
     mock_clear_timeout(timer_id);
     let callback_async_id = {
         let mut timers = CALLBACK_TIMERS.lock().unwrap();
@@ -1488,6 +1523,7 @@ pub extern "C" fn clearTimeout(timer_id: i64) {
 /// canceled by `clearImmediate`.
 #[no_mangle]
 pub extern "C" fn clearImmediate(timer_id: i64) {
+    let timer_id = canonical_timer_id(timer_id);
     mock_clear_immediate(timer_id);
     let async_id = {
         let mut timers = CALLBACK_TIMERS.lock().unwrap();
@@ -1519,7 +1555,8 @@ fn arg_to_timer_id(arg: f64) -> Option<i64> {
             None
         }
     } else if v.is_pointer() {
-        Some((arg.to_bits() & 0x0000_FFFF_FFFF_FFFF) as i64)
+        let raw = (arg.to_bits() & 0x0000_FFFF_FFFF_FFFF) as i64;
+        Some(canonical_timer_id(raw))
     } else {
         None
     }
@@ -1605,10 +1642,11 @@ fn schedule_interval_timer(callback: i64, interval_ms: f64, args: Vec<f64>) -> i
 
     let id = next_timer_id();
     record_timer_handle_kind(id, CallbackTimerKind::Timeout);
+    let public_handle = scope.root_nanbox_f64(timer_handle_value(id));
 
     let mut context = crate::async_context::capture_context();
     let context_roots = crate::async_context::root_snapshot(&scope, &context);
-    let ids = crate::async_hooks::init_resource("Timeout", timer_handle_value(id), true);
+    let ids = crate::async_hooks::init_resource("Timeout", public_handle.get_nanbox_f64(), true);
     crate::async_context::refresh_snapshot_from_roots(&mut context, &context_roots);
 
     INTERVAL_TIMERS.lock().unwrap().push(IntervalTimer {
@@ -1649,6 +1687,7 @@ pub unsafe extern "C" fn js_set_interval_callback_args(
 /// Immediate handles are distinct and are only canceled by `clearImmediate`.
 #[no_mangle]
 pub extern "C" fn clearInterval(interval_id: i64) {
+    let interval_id = canonical_timer_id(interval_id);
     mock_clear_interval(interval_id);
     let interval_async_id = {
         let mut timers = INTERVAL_TIMERS.lock().unwrap();

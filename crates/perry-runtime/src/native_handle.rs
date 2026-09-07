@@ -11,6 +11,21 @@ use std::hash::{Hash, Hasher};
 use std::ptr;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+mod canonical;
+
+pub use canonical::{
+    canonical_handle_id_for_provider, canonical_handle_parts_from_addr,
+    canonical_handle_parts_from_value, canonical_handle_value, is_canonical_handle_addr,
+    NATIVE_HANDLE_PROVIDER_COMMON, NATIVE_HANDLE_PROVIDER_FETCH,
+    NATIVE_HANDLE_PROVIDER_TEXT_DECODER, NATIVE_HANDLE_PROVIDER_TEXT_ENCODER,
+    NATIVE_HANDLE_PROVIDER_TIMER,
+};
+
+#[cfg(test)]
+pub(crate) fn canonical_handle_entry_count_for_tests(provider: u64) -> usize {
+    canonical::canonical_entry_count_for_tests(provider)
+}
+
 const NATIVE_HANDLE_MAGIC: u64 = 0x5045_5252_5948_4e44; // "PERRYHND"
 const DEBUG_NAME_CAP: usize = 64;
 
@@ -21,6 +36,8 @@ const OWNERSHIP_OWNED: u8 = 2;
 const THREAD_ANY: u8 = 0;
 const THREAD_MAIN: u8 = 1;
 const THREAD_CREATOR: u8 = 2;
+
+const NATIVE_HANDLE_FLAG_CANONICAL: u32 = 1;
 
 static MAIN_THREAD_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -36,7 +53,7 @@ pub struct NativeHandleHeader {
     pub nullable: u8,
     pub thread_affinity: u8,
     pub finalized: u8,
-    pub _pad0: u32,
+    pub flags: u32,
     pub creator_thread_id: u64,
     pub finalizer: *mut c_void,
     pub finalizer_hint: *mut c_void,
@@ -183,7 +200,7 @@ unsafe fn native_handle_new(
         _ => THREAD_ANY,
     };
     (*handle).finalized = 0;
-    (*handle)._pad0 = 0;
+    (*handle).flags = 0;
     (*handle).creator_thread_id = current_thread_id();
     (*handle).finalizer = if stored_ownership == OWNERSHIP_OWNED {
         finalizer
@@ -200,33 +217,40 @@ unsafe fn native_handle_new(
     f64::from_bits(crate::value::JSValue::pointer(handle as *const u8).bits())
 }
 
-unsafe fn handle_from_value(value: f64) -> *mut NativeHandleHeader {
-    let js_value = crate::value::JSValue::from_bits(value.to_bits());
-    if !js_value.is_pointer() {
+unsafe fn handle_from_addr(addr: usize) -> *mut NativeHandleHeader {
+    if addr == 0 || !crate::value::addr_class::is_valid_obj_ptr(addr as *const u8) {
         return ptr::null_mut();
     }
-    let handle = js_value.as_pointer::<NativeHandleHeader>() as *mut NativeHandleHeader;
-    // #7531: `value` arrives at every native-handle API boundary (finalize,
-    // resource-pointer access, thread-affinity checks, ...) as an arbitrary
-    // POINTER_TAG payload, so it can be a fetch/zlib/proxy/common-registry
-    // handle id rather than a real heap object. The old magnitude floor
-    // (0x1008) sits below every handle band, so a banded id reached the
-    // GcHeader deref below.
-    if handle.is_null() || !crate::value::addr_class::is_plausible_heap_addr(handle as usize) {
+    let Some(header_addr) = addr.checked_sub(crate::gc::GC_HEADER_SIZE) else {
         return ptr::null_mut();
-    }
-    let gc_header =
-        (handle as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
+    };
+    let gc_header = header_addr as *const crate::gc::GcHeader;
     if !crate::gc::gc_malloc_header_is_tracked(gc_header) {
         return ptr::null_mut();
     }
     if (*gc_header).obj_type != crate::gc::GC_TYPE_NATIVE_HANDLE {
         return ptr::null_mut();
     }
+    let handle = addr as *mut NativeHandleHeader;
     if (*handle).magic != NATIVE_HANDLE_MAGIC {
         return ptr::null_mut();
     }
     handle
+}
+
+unsafe fn handle_from_value(value: f64) -> *mut NativeHandleHeader {
+    let js_value = crate::value::JSValue::from_bits(value.to_bits());
+    if !js_value.is_pointer() {
+        return ptr::null_mut();
+    }
+    let handle = js_value.as_pointer::<NativeHandleHeader>() as usize;
+    // #7531: `value` arrives at every native-handle API boundary (finalize,
+    // resource-pointer access, thread-affinity checks, ...) as an arbitrary
+    // POINTER_TAG payload, so it can be a fetch/zlib/proxy/common-registry
+    // handle id rather than a real heap object. The old magnitude floor
+    // (0x1008) sits below every handle band, so a banded id reached the
+    // GcHeader deref below.
+    handle_from_addr(handle)
 }
 
 unsafe fn finalize_once(handle: *mut NativeHandleHeader) -> bool {
@@ -234,6 +258,13 @@ unsafe fn finalize_once(handle: *mut NativeHandleHeader) -> bool {
         return false;
     }
     (*handle).finalized = 1;
+    if (*handle).flags & NATIVE_HANDLE_FLAG_CANONICAL != 0 {
+        // Canonical wrappers are the owner identity for arbitrary string
+        // properties. Those values are unconditional external roots, so they
+        // must be retired before this owner is reclaimed.
+        crate::object::handle_expando::handle_expando_clear(handle as i64);
+        canonical::remove_finalized((*handle).type_id, (*handle).resource_ptr as i64, handle);
+    }
     let should_finalize = (*handle).ownership == OWNERSHIP_OWNED
         && !(*handle).resource_ptr.is_null()
         && !(*handle).finalizer.is_null();

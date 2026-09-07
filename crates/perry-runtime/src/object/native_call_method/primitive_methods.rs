@@ -643,10 +643,9 @@ pub(super) unsafe fn dispatch_primitive(
         }
     }
 
-    // Node timer handles are represented in Perry as small integer ids
-    // NaN-boxed as pointers. Provide the common Timeout/Immediate methods
-    // directly so `timeout.ref().unref().hasRef()` style probes behave like
-    // Node without having to allocate a full JS wrapper object per timer.
+    // Node timer handles are canonical managed wrappers around registry ids.
+    // Provide the common Timeout/Immediate methods directly so
+    // `timeout.ref().unref().hasRef()` style probes behave like Node.
     //
     // Gated on (a) tag == POINTER_TAG (0x7FFD) to avoid catching strings /
     // int32 / nullish tags, and (b) the id being a known timer so unrelated
@@ -667,42 +666,43 @@ pub(super) unsafe fn dispatch_primitive(
             // `clearTimeout`. A genuine timer whose id does not also name a live
             // handle still resolves here.
             if crate::timer::is_known_timer_id(id) && !super::class_handles::ffi_handle_exists(id) {
+                let timer_id = crate::timer::canonical_timer_id(id);
                 match method_name {
                     "ref" => {
-                        crate::timer::js_timer_ref(id);
+                        crate::timer::js_timer_ref(timer_id);
                         return Some(object);
                     }
                     "unref" => {
-                        crate::timer::js_timer_unref(id);
+                        crate::timer::js_timer_unref(timer_id);
                         return Some(object);
                     }
                     "hasRef" => {
-                        return Some(if crate::timer::js_timer_has_ref(id) != 0 {
+                        return Some(if crate::timer::js_timer_has_ref(timer_id) != 0 {
                             f64::from_bits(JSValue::bool(true).bits())
                         } else {
                             f64::from_bits(JSValue::bool(false).bits())
                         });
                     }
                     "refresh" => {
-                        crate::timer::js_timer_refresh(id);
+                        crate::timer::js_timer_refresh(timer_id);
                         return Some(object);
                     }
                     "close" => {
-                        crate::timer::clearTimeout(id);
-                        crate::timer::clearInterval(id);
-                        crate::timer::clearImmediate(id);
+                        crate::timer::clearTimeout(timer_id);
+                        crate::timer::clearInterval(timer_id);
+                        crate::timer::clearImmediate(timer_id);
                         return Some(object);
                     }
                     // `__perry_dispose__` is the class-member form; the
                     // well-known `Symbol.dispose` computed form lowers to
                     // `@@__perry_wk_dispose`. Both clear the timer (#1213).
                     "__perry_dispose__" | "@@__perry_wk_dispose" => {
-                        crate::timer::clearTimeout(id);
-                        crate::timer::clearInterval(id);
-                        crate::timer::clearImmediate(id);
+                        crate::timer::clearTimeout(timer_id);
+                        crate::timer::clearInterval(timer_id);
+                        crate::timer::clearImmediate(timer_id);
                         return Some(f64::from_bits(JSValue::undefined().bits()));
                     }
-                    "@@__perry_wk_toPrimitive" | "valueOf" => return Some(id as f64),
+                    "@@__perry_wk_toPrimitive" | "valueOf" => return Some(timer_id as f64),
                     _ => {}
                 }
             }

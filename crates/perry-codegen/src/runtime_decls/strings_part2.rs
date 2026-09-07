@@ -795,6 +795,7 @@ pub(crate) fn declare_phase_b_strings_part2(module: &mut LlModule) {
     // (callback), returning the unboxed pointer for the valid case and
     // throwing TypeError ERR_INVALID_ARG_TYPE for everything else.
     module.declare_function("js_timer_validate_callback", I64, &[DOUBLE, I32]);
+    module.declare_function("js_timer_wrap_id", DOUBLE, &[I64]);
     module.declare_function("js_set_timeout_callback", I64, &[I64, DOUBLE]);
     // Refs #665: `setTimeout(fn, delay, ...args)` with trailing args. The
     // args are packed into a stack buffer of doubles at the call site and

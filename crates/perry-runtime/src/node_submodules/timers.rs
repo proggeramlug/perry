@@ -339,7 +339,7 @@ pub(crate) extern "C" fn timers_ns_set_timeout(
     rest: f64,
 ) -> f64 {
     let args = rest_array_values(rest);
-    crate::value::js_nanbox_pointer(unsafe {
+    crate::timer::js_timer_wrap_id(unsafe {
         crate::timer::js_set_timeout_callback_args(
             callback_arg_to_i64(cb),
             ms,
@@ -355,7 +355,7 @@ pub(crate) extern "C" fn timers_ns_set_interval(
     rest: f64,
 ) -> f64 {
     let args = rest_array_values(rest);
-    crate::value::js_nanbox_pointer(unsafe {
+    crate::timer::js_timer_wrap_id(unsafe {
         crate::timer::js_set_interval_callback_args(
             callback_arg_to_i64(cb),
             ms,
@@ -370,7 +370,7 @@ pub(crate) extern "C" fn timers_ns_set_immediate(
     rest: f64,
 ) -> f64 {
     let args = rest_array_values(rest);
-    crate::value::js_nanbox_pointer(unsafe {
+    crate::timer::js_timer_wrap_id(unsafe {
         crate::timer::js_set_immediate_callback_args(
             callback_arg_to_i64(cb),
             args.as_ptr(),

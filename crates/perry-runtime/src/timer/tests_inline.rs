@@ -241,3 +241,123 @@ mod expired_batch_order_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod managed_wrapper_tests {
+    use super::*;
+
+    fn wrapper_addr(value: f64) -> usize {
+        crate::value::js_nanbox_get_pointer(value) as usize
+    }
+
+    fn call_timer_method(value: f64, method: &[u8]) -> f64 {
+        unsafe {
+            crate::object::js_native_call_method(
+                value,
+                method.as_ptr().cast(),
+                method.len(),
+                std::ptr::null(),
+                0,
+            )
+        }
+    }
+
+    #[test]
+    fn timer_values_are_managed_wrappers_with_headers() {
+        crate::hot_diag::receiver_repr_test_reset();
+        crate::hot_diag::receiver_repr_test_arm(true);
+
+        let id = js_set_timeout_callback(0, 60_000.0);
+        let value = js_timer_wrap_id(id);
+        let addr = wrapper_addr(value);
+        let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) }
+            .expect("timer wrapper must have a tracked GcHeader");
+        assert_eq!(unsafe { header.as_ref().obj_type }, crate::gc::GC_TYPE_NATIVE_HANDLE);
+
+        let key = crate::string::js_string_from_bytes(b"hasRef".as_ptr(), 6);
+        let property = crate::object::js_object_get_field_by_name_f64(addr as *const _, key);
+        assert_ne!(property.to_bits(), crate::value::TAG_UNDEFINED);
+        assert_ne!(
+            call_timer_method(value, b"hasRef").to_bits(),
+            crate::value::TAG_UNDEFINED
+        );
+
+        let (constructed, observed_old, observed_wrapped) =
+            crate::hot_diag::receiver_repr_test_snapshot(
+                crate::hot_diag::ReceiverReprFamily::Timer,
+            );
+        assert!(constructed > 0);
+        assert_eq!(observed_old, 0);
+        assert!(observed_wrapped > 0);
+
+        clearTimeout(id);
+        crate::hot_diag::receiver_repr_test_arm(false);
+    }
+
+    #[test]
+    fn timer_identity_survives_a_copying_minor() {
+        let _isolation = crate::gc::CopyingNurseryTestGuard::new(0);
+        let scope = crate::gc::RuntimeHandleScope::new();
+        let id = js_set_timeout_callback(0, 60_000.0);
+        let first = scope.root_nanbox_f64(js_timer_wrap_id(id));
+
+        // Ensure the nursery is nonempty so the asserted cycle cannot be a
+        // vacuous collection around the nonmoving malloc wrapper.
+        let young = crate::object::js_object_alloc(0, 0);
+        let _young = scope.root_raw_mut_ptr(young);
+        let before = crate::gc::copying_minor_cycles();
+        let _ = crate::gc::gc_collect_minor();
+        assert!(crate::gc::copying_minor_cycles() > before);
+
+        let after = first.get_nanbox_f64();
+        assert_eq!(after.to_bits(), js_timer_wrap_id(id).to_bits());
+        assert_eq!(canonical_timer_id(wrapper_addr(after) as i64), id);
+        assert_eq!(
+            call_timer_method(after, b"hasRef").to_bits(),
+            crate::value::TAG_TRUE
+        );
+        clearTimeout(id);
+    }
+
+    #[inline(never)]
+    fn schedule_and_drop_wrapper() -> (i64, usize) {
+        let id = js_set_timeout_callback(0, 60_000.0);
+        let addr = wrapper_addr(js_timer_wrap_id(id));
+        (id, addr)
+    }
+
+    #[test]
+    fn timer_wrapper_finalization_or_immortality() {
+        let _isolation = crate::gc::global_side_table_test_lock();
+        let provider = crate::native_handle::NATIVE_HANDLE_PROVIDER_TIMER;
+        crate::gc::js_gc_collect();
+        let before = crate::native_handle::canonical_handle_entry_count_for_tests(provider);
+        let (id, old_addr) = schedule_and_drop_wrapper();
+        assert_eq!(
+            crate::native_handle::canonical_handle_entry_count_for_tests(provider),
+            before + 1
+        );
+
+        crate::gc::js_gc_collect();
+        assert_eq!(
+            crate::native_handle::canonical_handle_entry_count_for_tests(provider),
+            before,
+            "the full-cycle finalizer must remove the weak interner entry"
+        );
+        assert!(
+            is_known_timer_id(id),
+            "timer wrappers are borrowed views: finalization must not close the timer"
+        );
+        assert!(
+            crate::native_handle::canonical_handle_parts_from_addr(old_addr).is_none(),
+            "the finalized allocation must no longer be allocator-owned"
+        );
+        let _replacement = js_timer_wrap_id(id);
+        assert_eq!(
+            crate::native_handle::canonical_handle_entry_count_for_tests(provider),
+            before + 1,
+            "re-publication must install a new live canonical entry"
+        );
+        clearTimeout(id);
+    }
+}

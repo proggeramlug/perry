@@ -48,7 +48,7 @@
 use anyhow::Result;
 use perry_hir::Expr;
 
-use crate::expr::{lower_expr, nanbox_pointer_inline, FnCtx};
+use crate::expr::{lower_expr, FnCtx};
 use crate::nanbox::double_literal;
 use crate::rooting::with_operands_rooted;
 use crate::types::{DOUBLE, I32, I64, PTR};
@@ -112,7 +112,7 @@ pub fn try_lower_extern_timer_call(
                 "js_set_timeout_callback",
                 &[(I64, &cb_handle), (DOUBLE, &zero)],
             );
-            return Ok(Some(nanbox_pointer_inline(blk, &id)));
+            return Ok(Some(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)])));
         }
         // The delay is an arbitrary expression, so lowering it is a collection
         // point sitting between the callback's allocation and the
@@ -135,7 +135,7 @@ pub fn try_lower_extern_timer_call(
                     "js_set_timeout_callback",
                     &[(I64, &cb_handle), (DOUBLE, &delay_box)],
                 );
-                Ok(nanbox_pointer_inline(blk, &id))
+                Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
             })?;
             return Ok(Some(boxed));
         }
@@ -150,7 +150,7 @@ pub fn try_lower_extern_timer_call(
                     &[(DOUBLE, &cb_box), (I32, two_idx)],
                 );
                 let id = blk.call(I64, "js_set_immediate_callback", &[(I64, &cb_handle)]);
-                return Ok(Some(nanbox_pointer_inline(blk, &id)));
+                return Ok(Some(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)])));
             }
 
             // #7210: same treatment as `setTimeout` below — see the comment
@@ -172,7 +172,7 @@ pub fn try_lower_extern_timer_call(
                     "js_set_immediate_callback_args",
                     &[(I64, &cb_handle), (PTR, &ptr_reg), (I32, &n.to_string())],
                 );
-                Ok(nanbox_pointer_inline(blk, &id))
+                Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
             })?;
             return Ok(Some(boxed));
         }
@@ -230,7 +230,7 @@ pub fn try_lower_extern_timer_call(
                         (I32, &n.to_string()),
                     ],
                 );
-                Ok(nanbox_pointer_inline(blk, &id))
+                Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
             })?;
             return Ok(Some(boxed));
         }
@@ -250,7 +250,7 @@ pub fn try_lower_extern_timer_call(
                     "setInterval",
                     &[(I64, &cb_handle), (DOUBLE, &delay_box)],
                 );
-                Ok(nanbox_pointer_inline(blk, &id))
+                Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
             })?;
             return Ok(Some(boxed));
         }
@@ -277,7 +277,7 @@ pub fn try_lower_extern_timer_call(
                         (I32, &n.to_string()),
                     ],
                 );
-                Ok(nanbox_pointer_inline(blk, &id))
+                Ok(blk.call(DOUBLE, "js_timer_wrap_id", &[(I64, &id)]))
             })?;
             return Ok(Some(boxed));
         }

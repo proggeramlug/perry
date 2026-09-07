@@ -117,7 +117,7 @@ fn test_bound_timer_dispatch_roots_args_during_async_hook_init_gc() {
         arg,
     );
 
-    let timer_id = (timer_value.to_bits() & POINTER_MASK) as i64;
+    let timer_id = crate::timer::canonical_timer_id((timer_value.to_bits() & POINTER_MASK) as i64);
     let (callback, arg_bits) = crate::timer::test_callback_timer_snapshot(timer_id)
         .expect("scheduled callback timer should remain queued");
     assert_moved_closure_ptr(ptr_bits(callback), timer_callback_original);
