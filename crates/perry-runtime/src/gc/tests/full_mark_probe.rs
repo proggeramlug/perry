@@ -111,6 +111,20 @@ fn assert_header_intact(record: HeaderRecord, tenured: bool, label: &str) {
     }
 }
 
+/// First `<key><digits>` occurrence in the captured diagnostic lines.
+fn census_field(lines: &str, key: &str) -> usize {
+    let start = lines
+        .find(key)
+        .unwrap_or_else(|| panic!("census field {key:?} missing: {lines}"))
+        + key.len();
+    lines[start..]
+        .chars()
+        .take_while(|c| c.is_ascii_digit())
+        .collect::<String>()
+        .parse()
+        .unwrap_or_else(|_| panic!("census field {key:?} unparsable: {lines}"))
+}
+
 #[test]
 fn alloc_point_full_after_in_place_promotion_keeps_stack_held_objects() {
     std::thread::spawn(|| {
@@ -216,17 +230,30 @@ fn alloc_point_full_after_in_place_promotion_keeps_stack_held_objects() {
             lines.contains("tenured_flag_missing=0 page_index_missing=0"),
             "promotion metadata census found damage: {lines}"
         );
+        // The 1,334 original children were replaced above, so they are
+        // garbage in the promoted block by design: `unmarked` is nonzero on a
+        // correct collector. Every stack-held root must be among the marked.
+        let marked = census_field(&lines, " marked=");
         assert!(
-            lines.contains(" unmarked=0 tenured_flag_missing=0"),
-            "a stack-held promoted object was left unmarked: {lines}"
+            marked >= ROOTS,
+            "a stack-held promoted object was left unmarked (marked={marked} < {ROOTS}): {lines}"
         );
         assert!(
             lines.contains("[gc-mark-verify:full] OK (no marked->unmarked)"),
             "the full mark verifier found a live-to-white edge: {lines}"
         );
+        // Raw words equal to a block base or a header address are Rust
+        // bookkeeping pointers and are rightly rejected; the dropped-root shape
+        // is a NaN-boxed pointer at a plausible header that the valid-pointer
+        // set refused.
         assert!(
-            lines.contains("[gc-full-verify] stack_words_rejected_in_blocks=0"),
-            "the conservative scanner rejected an in-block candidate: {lines}"
+            lines.contains("[gc-full-verify] stack_words_rejected_in_blocks="),
+            "missing the conservative rejection line: {lines}"
+        );
+        let rejected_nanboxed = census_field(&lines, " nanboxed_plausible=");
+        assert_eq!(
+            rejected_nanboxed, 0,
+            "the conservative scanner rejected a NaN-boxed in-block candidate: {lines}"
         );
 
         for record in all_headers {
