@@ -273,3 +273,151 @@ fn alloc_point_full_after_in_place_promotion_keeps_stack_held_objects() {
     .join()
     .expect("in-place promotion/full-scan worker");
 }
+
+#[derive(Clone, Copy)]
+enum MaskWitnessStorePath {
+    GeneratedBarrier,
+    RuntimeStore,
+}
+
+fn run_full_mask_current_witness(store_path: MaskWitnessStorePath) {
+    const PARENTS: usize = 200;
+    const SLOT_COUNT: usize = 8;
+    const CHANGED_SLOT: usize = 3;
+
+    let _isolation = GcTestIsolationGuard::new();
+    let _pacing = crate::gc::policy::force_moving_gc_pacing();
+    let _triggers = GcTriggerThresholdTestGuard::suppress_automatic_triggers();
+    let _barriers = GeneratedWriteBarrierTestGuard::active();
+    let _promote = InPlacePromotionTestGuard::enabled(1000);
+    let _verify = crate::gc::telemetry::GcVerifyMarkTestGuard::force_on();
+
+    let frame = js_shadow_frame_push(PARENTS as u32);
+    let mut stack_roots = [0u64; PARENTS];
+    let mut parents = Vec::with_capacity(PARENTS);
+
+    for (index, root) in stack_roots.iter_mut().enumerate() {
+        let (parent, fields) = unsafe { alloc_nursery_test_object(SLOT_COUNT as u32) };
+        for slot_index in 0..SLOT_COUNT {
+            unsafe {
+                *fields.add(slot_index) = ((index * SLOT_COUNT + slot_index + 1) as f64).to_bits();
+            }
+        }
+        let initial_child = young_leaf();
+        unsafe {
+            *fields = string_bits(initial_child);
+            assert!(
+                layout_init_from_slots(parent as *mut u8, fields, SLOT_COUNT),
+                "the parent birth must contain a pointer"
+            );
+        }
+        assert!(
+            crate::gc::layout_tables::test_per_object_layout_present(parent as usize),
+            "parent {index} must earn a per-object mask before promotion"
+        );
+        assert!(
+            !layout_pointer_bearing_bits(unsafe { *fields.add(CHANGED_SLOT) }),
+            "the changed slot must be a number when the mask is minted"
+        );
+
+        let bits = ptr_bits(parent as usize);
+        *root = bits;
+        js_shadow_slot_set(index as u32, bits);
+        parents.push(ParentRecord {
+            header: header_record(parent as usize),
+            slot: unsafe { fields.add(CHANGED_SLOT) },
+        });
+    }
+
+    let trace = collect_minor_trace(GcTriggerKind::Direct);
+    assert_copied_minor_trace(&trace, true, CopiedMinorFallbackReason::None, false);
+    assert!(trace.copying_nursery.in_place_promotion);
+    assert!(trace.copying_nursery.in_place_promoted_blocks > 0);
+    assert!(trace.copying_nursery.in_place_promoted_objects >= PARENTS);
+    js_shadow_frame_pop(frame);
+
+    for (index, parent) in parents.iter().enumerate() {
+        assert_header_intact(parent.header, true, "promoted masked parent");
+        assert!(
+            crate::gc::layout_tables::test_per_object_layout_present(parent.header.user),
+            "parent {index} lost its per-object mask during in-place promotion"
+        );
+    }
+
+    let mut children = Vec::with_capacity(PARENTS);
+    for parent in &parents {
+        let child = young_leaf();
+        let bits = string_bits(child);
+        unsafe {
+            match store_path {
+                MaskWitnessStorePath::GeneratedBarrier => {
+                    // The generated inline store is a raw slot write followed
+                    // by its slot-aware barrier entry. Deliberately do not use
+                    // runtime_store_jsvalue_slot or manually note the layout:
+                    // this arm asks whether that emitted barrier path alone
+                    // keeps a post-promotion pointer store visible to a full.
+                    std::ptr::write(parent.slot, bits);
+                    js_write_barrier_slot(ptr_bits(parent.header.user), parent.slot as u64, bits);
+                }
+                MaskWitnessStorePath::RuntimeStore => runtime_store_jsvalue_slot(
+                    parent.header.user,
+                    parent.slot as usize,
+                    CHANGED_SLOT,
+                    bits,
+                ),
+            }
+        }
+        children.push(header_record(child));
+    }
+
+    // The promoted parents are visible only through the native stack array;
+    // the Vec records are Rust heap allocations and are not conservative roots.
+    std::hint::black_box(&mut stack_roots);
+    let _ = crate::gc::telemetry::test_take_full_verify_lines();
+    clear_old_reclaim_state();
+    reset_scan_fallback_counters();
+    let _scan_override = RestoredConservativeOverride::clear_for_forced_scan();
+    arm_old_reclaim();
+    gc_check_trigger();
+    std::hint::black_box(&mut stack_roots);
+
+    assert_eq!(
+        scan_fallback_count(ConservativeScanSite::OldReclaimAllocPoint),
+        1
+    );
+    let lines = crate::gc::telemetry::test_take_full_verify_lines();
+    assert!(
+        lines.contains("[gc-mark-verify:full-maskfree] unmasked_live_edges="),
+        "missing mask-free verifier line: {lines}"
+    );
+    let unmasked = census_field(&lines, " unmasked_live_edges=");
+    assert_eq!(
+        unmasked, 0,
+        "the full found a child hidden by a stale object mask: {lines}"
+    );
+
+    for (parent, child) in parents.iter().zip(children) {
+        assert_header_intact(parent.header, true, "promoted masked parent");
+        assert_header_intact(child, false, "post-promotion young child");
+        assert_eq!(
+            unsafe { *parent.slot & POINTER_MASK } as usize,
+            child.user,
+            "promoted parent slot no longer names its child"
+        );
+    }
+    clear_old_reclaim_state();
+}
+
+#[test]
+fn full_mask_stays_current_after_generated_store_into_promoted_parent() {
+    std::thread::spawn(|| run_full_mask_current_witness(MaskWitnessStorePath::GeneratedBarrier))
+        .join()
+        .expect("generated-store in-place-promotion/full worker");
+}
+
+#[test]
+fn full_mask_stays_current_after_generated_store_into_promoted_parent_control_runtime_store() {
+    std::thread::spawn(|| run_full_mask_current_witness(MaskWitnessStorePath::RuntimeStore))
+        .join()
+        .expect("runtime-store in-place-promotion/full worker");
+}

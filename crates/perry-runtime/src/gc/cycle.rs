@@ -1464,6 +1464,7 @@ impl GcCycleState {
                 // and no sweep state exists yet: diagnostics here observe the
                 // exact set whose unmarked members are about to be freed.
                 super::verify::verify_marked_heap_report_nonfatal("full");
+                super::verify::verify_mask_free_object_child_marks_report("full");
                 super::verify::verify_array_pointer_slots_enumerated_report("full");
                 super::verify::verify_full_promoted_blocks_report(
                     self.full_verify_scan_site,

@@ -26,6 +26,7 @@ pub(crate) struct ArenaBlockDiagnostic {
     pub(crate) base: usize,
     pub(crate) used_end: usize,
     pub(crate) space: HeapSpace,
+    pub(crate) promoted_in_place_since_full: bool,
 }
 
 /// Locate an address in any arena block and return the initialized extent.
@@ -42,6 +43,7 @@ pub(crate) fn arena_block_diagnostic_for_addr(addr: usize) -> Option<ArenaBlockD
                 base,
                 used_end: base.saturating_add(block.offset),
                 space: arena.space,
+                promoted_in_place_since_full: block.promoted_in_place_since_full,
             })
         })
     };
