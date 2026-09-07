@@ -221,3 +221,171 @@ promoted block's BASE address (raw words, `header_plausible=yes type=string`).
 Reading the cc rows: a nonzero `nanboxed_plausible` at the
 `old_reclaim_alloc_point` full of a run that throws is the H2 signature;
 `stack_words_rejected_in_blocks` alone is not.
+
+## H4: mask-free verifier and the generated-store witness
+
+Implementation commit: `c25116db788248b3b45211e8fcb5a27bfa8b82ab`.
+This change is diagnostics and tests only; it does not repair or otherwise
+change collector behavior. The new verifier runs once at the existing
+marks-final entry to `GcCycleState::step_sweep`, only for a full trace and only
+when `gc_verify_mark_enabled()` is true. The existing `[gc-full-verify]` and
+`[gc-mark-verify:full]` lines are unchanged.
+
+### Mask-free line and derivation
+
+Every full emits this summary (the suffix after `|` describes the first bad
+edge, or uses zero/`none` values when there is no bad edge):
+
+```text
+[gc-mark-verify:full-maskfree] unmasked_live_edges=<n> masked_parents_checked=<n> words_checked=<n> | first parent=0x<addr> ptype=<name> has_mask=<yes/no> descriptor_visited=<yes/no> promoted_block=<yes/no> parent_space=<old_page|promoted|nursery|malloc> slot_index=<i> child=0x<addr> ctype=<name>
+```
+
+Up to two additional examples use the same fields on lines beginning:
+
+```text
+[gc-mark-verify:full-maskfree] sample=2 ...
+[gc-mark-verify:full-maskfree] sample=3 ...
+```
+
+Field derivation:
+
+- `unmasked_live_edges` counts mask-free JS-value words in marked Object and
+  Closure parents that resolve through `current_heap_header_for_heap_word` to
+  a child with neither `GC_FLAG_MARKED` nor `GC_FLAG_PINNED`. Only
+  pointer/string/bigint NaN-box tags are candidates. Weak-target trace slots
+  are excluded with `weakref::is_weak_target_trace_slot`, as in the existing
+  verifier.
+- `masked_parents_checked` counts checked parents for which the real layout
+  lookup finds either a `LAYOUT_SLOT_MASKS` entry or a typed-layout entry. It
+  does not infer mask presence from header bits.
+- `words_checked` counts every bounded physical JS-value payload word visited:
+  Object inline words, legacy overflow/dynamic-property value words, Closure
+  captures, and Closure dynamic-property value words. Object spill arrays are
+  separately covered by the existing mask-free array verifier. Bounds come
+  from the header's `size`, never from an untrusted logical length alone.
+- `descriptor_visited` is address membership in the slot-address vector
+  collected once for that parent by `visit_gc_rewrite_slots` before the
+  mask-free walk.
+- `promoted_block` comes from the arena block's existing
+  `promoted_in_place_since_full` diagnostic provenance bit.
+- `parent_space` is `malloc` for `MALLOC_STATE`, `promoted` for an arena block
+  with that provenance bit, `nursery` for either young semispace, and
+  `old_page` for another arena block.
+- `slot_index` is the physical inline/capture index; dynamic-property value
+  slots continue after the fixed physical payload so samples remain distinct.
+  `ptype` and `ctype` use the registered GC type names.
+
+### Store-path audit
+
+The crucial distinction is between a barrier entry point and a complete
+generated store. The barrier functions maintain incremental marking and the
+remembered set; they do not maintain the layout descriptor. The complete
+field-store lowering normally emits a separate layout note between its raw
+store and its barrier call.
+
+| Store path | Source | Reaches `layout_note_slot`? | Condition / audit result |
+|---|---|---|---|
+| Generated Object/class field store | `crates/perry-codegen/src/expr/write_barrier.rs:821-926` | Yes, as a separate emitted call | Raw store is at line 840, layout selection/note at 876-905, then `js_write_barrier_slot` at 906-926. The note is elided only for a value proven non-pointer, or for a pointer-declared slot while `SIDE_MASK|INTACT` proves that the existing descriptor already includes it. A per-object mask whose target slot was numeric is not `INTACT`, so a pointer replacement takes the note path. |
+| Generic generated JS-value slot store | `crates/perry-codegen/src/expr/write_barrier.rs:932-1002` | Yes, as a separate emitted call | Raw store at 962; note at 983-999; barrier at 1001-1002. Elision has the same proof obligations as above. |
+| Generated generation-tested barrier | `crates/perry-codegen/src/expr/write_barrier.rs:201-237` | No | Calls `js_write_barrier_slot_validated_parent` only after its caller has handled layout. It is not a complete store. |
+| `js_write_barrier_slot` | `crates/perry-runtime/src/gc/barrier_store.rs:206-208` | No | All parent generations; barrier work only. Raw store plus this entry point, with no separate generated note, is the H4 candidate exercised by the witness. |
+| `js_write_barrier_slot_validated_parent` | `crates/perry-runtime/src/gc/barrier_store.rs:225-250` | No | Tenured parent already validated by generated code; barrier work only. |
+| `write_barrier_slot_inner` / `runtime_write_barrier_slot` | `crates/perry-runtime/src/gc/barrier_store.rs:26-32,252-278` | No | All parents; marking/remembered-set logic only. A direct post-store call does not update an existing mask. |
+| `newborn_parent_needs_barrier` | `crates/perry-runtime/src/gc/barrier_store.rs:373-377` | No | Merely decides whether newborn barrier replay is required; it does not note a slot. |
+| `runtime_store_jsvalue_slot` | `crates/perry-runtime/src/gc/barrier_store.rs:103-132` | Yes | All parents, unconditionally at line 130 after the raw store and before the barrier. This is the control path. |
+| Deferred boxed-Object runtime store | `crates/perry-runtime/src/gc/barrier_store.rs:74-98`; `crates/perry-runtime/src/object/mod.rs:1766-1783` | At construction finish, not per store | Restricted to deferred newborn construction; `layout_finish_deferred_boxed_object` installs the conservative result. It is not a general old-parent mutation path. |
+| Fixed/runtime external GC stores | `crates/perry-runtime/src/gc/barrier/runtime_stores.rs:7-42` | No | Fixed-descriptor or externally visited storage; these paths do not select dynamic payload words through a per-object layout mask. |
+| External JS-value store with layout | `crates/perry-runtime/src/gc/barrier/runtime_stores.rs:47-58` | Yes | All parents, unconditionally at line 56. |
+| Object field helper | `crates/perry-runtime/src/object/mod.rs:1747-1763` | Yes | `note_object_field_slot` notes directly; `store_object_field_slot` delegates to the always-noting runtime store. |
+| Object spill store | `crates/perry-runtime/src/object/spill.rs:65-79,500-529` | Yes | Fast spill slots and both overflow update paths note for all parents before their barrier. |
+| Array slot helpers | `crates/perry-runtime/src/array/header_gc_slots.rs:45-164` | Yes | Direct, resolved, layout-only, and general stores all note. The aware path skips only scalar-to-scalar or pointer-to-pointer classification-preserving writes; a numeric-to-pointer replacement notes. |
+| Array rebuild/growth replay | `crates/perry-runtime/src/array/header_gc_slots.rs:167-290` | Rebuild, then barrier replay | Full/exact rebuild creates the current layout before any old-parent replay. Growth replay needs no per-slot note because it consumes that rebuilt/copied layout. |
+| Array hole/numeric stores | `crates/perry-runtime/src/array/header.rs:1312-1317,1685-1736` | Yes | Hole fill and numeric store/push paths note; numeric values are pointer-free by construction. |
+| Generated array push/index stores | `crates/perry-codegen/src/expr/array_push.rs:220-226,291-321`; `crates/perry-codegen/src/expr/index_set_guarded.rs:208-290` | Yes | A pointer classification change reaches the full or aware layout note before the generation-tested barrier. |
+| Closure bulk birth | `crates/perry-runtime/src/closure/alloc.rs:340-351` | Full initialization | `layout_init_from_slots` observes all captures before newborn barrier replay. |
+| Closure capture update/rebuild | `crates/perry-runtime/src/closure/alloc.rs:372-393,763-775` | Yes | Individual updates call `note_closure_capture_slot`; rebuild scans all captures, then replays barriers. |
+| Layout-aware note | `crates/perry-runtime/src/gc/layout.rs:994-1036` | Conditional by classification | Pointer/scalar classification changes reach `layout_note_slot`; scalar-to-scalar and pointer-to-pointer need no mask-bit change. |
+| Exported layout notes | `crates/perry-runtime/src/gc/layout.rs:1084-1110` | Yes / classification-aware | `js_gc_note_slot_layout` always notes; the aware export uses the classification rule immediately above. |
+
+No complete generated field/array store inspected writes a pointer into a
+previously numeric masked slot without a layout note. The concrete H4
+candidate is therefore the low-level composition “raw slot store + barrier
+entry point” if any caller uses it without the emitter's separate note. The
+generated-path witness deliberately instantiates precisely that composition,
+as requested; it must not be read as evidence that the full field emitter
+omits its preceding note.
+
+### H4 witnesses
+
+Both tests build 200 eight-slot Objects. Slot 0 is initially a pointer, slot 3
+is initially a number, and each parent is asserted to have a real per-object
+layout entry before a traced whole-block in-place promotion. A shadow frame
+and a black-boxed native-stack array retain the parents. After promotion, each
+slot 3 receives a fresh young child and the test drives exactly
+`clear_old_reclaim_state(); reset_scan_fallback_counters();
+arm_old_reclaim(); gc_check_trigger();`, asserting one
+`OldReclaimAllocPoint` fallback. Every child header/type/size and parent slot
+is then checked, along with
+`[gc-mark-verify:full-maskfree] unmasked_live_edges=0`.
+
+- `full_mask_stays_current_after_generated_store_into_promoted_parent` uses a
+  raw slot store followed by `js_write_barrier_slot`, with no
+  `runtime_store_jsvalue_slot` and no manual layout note. Expected negative
+  witness result: the stale mask omits slot 3, the line reports nonzero
+  `unmasked_live_edges`, and the test fails before accepting damaged children.
+- `full_mask_stays_current_after_generated_store_into_promoted_parent_control_runtime_store`
+  performs the same replacement through `runtime_store_jsvalue_slot`.
+  Expected result: zero missing edges and intact children. Sabotage
+  expectation: dropping the control's layout note must make it fail like the
+  barrier-only arm. Sabotage execution was **not run: disk**, so this report
+  cannot claim the expected failure was observed.
+
+The H4 tests themselves were not run locally. Therefore there are no failure
+lines to record verbatim and no runtime H4 finding yet. Per the stop rule, if
+perrymaster observes the generated-path failure on this setup while the
+control passes, its verifier and assertion lines are the finding: append them
+verbatim and stop without collector repair.
+
+### H4 gates
+
+Immediately before the Cargo gates, `df -g /` reported only **2 GB** available,
+below the required 12 GB. No Cargo command was run; the executed test count is
+zero.
+
+- `cargo test -p perry-runtime --release --lib -j4 -- --test-threads=1 gc::tests::full_mark_probe`: **not run: disk** (0 tests ran).
+- `cargo test -p perry-runtime --release --lib -j4 -- --test-threads=1 gc::tests::promote_in_place`: **not run: disk** (0 tests ran).
+- `cargo test -p perry-runtime --release --lib -j4 -- --test-threads=1 gc::tests::scan_fallback`: **not run: disk** (0 tests ran).
+- Verify-test filter (`gc::tests::verify`): **not run: disk** (0 tests ran).
+- Full `cargo test -p perry-runtime --release --lib -j4 -- --test-threads=1`: **not run: disk** (0 tests ran).
+- `cargo build --release -p perry-runtime --features wasm-host -j4`: **not run: disk**.
+- `rustfmt --check`: pass (direct `rustfmt --edition 2021 --check` over all changed Rust files).
+- `git diff --check`: pass.
+- File-size gate: pass; all changed Rust files are below 2,000 lines.
+- `scripts/check_thread_locals.py`: pass.
+- `scripts/gc_runtime_root_holders.py`: pass.
+
+### Perrymaster request: H4
+
+On both the arm-at tree and plain `main`, apply/build the diagnostic test
+revision and run the full module, with capture enabled:
+
+```text
+cargo test --release -p perry-runtime --lib -- --test-threads=1 --nocapture gc::tests::full_mark_probe
+```
+
+Record how many tests ran and paste both new tests' verifier and failure/pass
+lines verbatim. If the generated-path variant fails on its asserted setup and
+the runtime-store control passes, that is the H4 finding and collector work in
+this lane stops.
+
+Then relink the cc FMPrun arms to this diagnostic revision. Re-read the
+throwing run's `site=old_reclaim_alloc_point` full for:
+
+```text
+[gc-mark-verify:full-maskfree] unmasked_live_edges=<n>
+```
+
+Any `unmasked_live_edges > 0` at that full is the mask-under-report signature;
+record its first/sample lines verbatim and correlate the parent type, mask,
+descriptor membership, promotion provenance, space, slot index, and child
+type with the thrown turn.
