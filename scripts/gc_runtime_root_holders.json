@@ -292,8 +292,8 @@
         },
         "sources": {
           "crates/perry-runtime/src/gc/census.rs": "388414f9629f196e84673e91bebd04bdcdcabdaa180252d2dfe4b82d1b49ca5a",
-          "crates/perry-runtime/src/gc/cycle.rs": "f8cbfb8a99d3f30df9f5d45e5bef2a38046273fdb314b2670583a08ff355e12a",
-          "crates/perry-runtime/src/gc/mod.rs": "43523b66595c61516ef6fcd4139d3ec5b4768a13c46ae1470c1d45481eacfdd9",
+          "crates/perry-runtime/src/gc/cycle.rs": "fe4f6b92414b3d0bb90c92a7876efa3365726d260ea255d953441c5411b2dc47",
+          "crates/perry-runtime/src/gc/mod.rs": "00d05872652f4980e50d9d21bf26c3fe30f030521751e8945736aab95d8a0af7",
           "crates/perry-runtime/src/gc/policy.rs": "8ba73cc9935d7d352ec1e4f6a43501fc263954c69d7f1404f34f2562718dd1ca",
           "crates/perry-runtime/src/gc/progress.rs": "a5ad3971bbe4047229ca57325234780daa85921dbc778e1c08dff4ad07ccfb96"
         }
@@ -340,6 +340,30 @@
       "name": "PRIMITIVE_DISPATCH",
       "verdict": "not_a_gc_pointer",
       "why": "#9794: per-method primitive-dispatch counts, `HashMap<String, (u64, u64)>`. Rust-owned method-name strings and counters."
+    },
+    {
+      "file": "crates/perry-runtime/src/gc/poison_swept.rs",
+      "name": "SWEPT_CELLS",
+      "verdict": "not_a_gc_pointer",
+      "why": "Default-off diagnostic provenance for addresses already retired by a full old-gen sweep. Values are the former type, byte size, collection ordinal, static scan-site string, and a reported bit. The addresses must remain dead rather than traced; exact-size reuse and old-block release remove them before the memory is republished."
+    },
+    {
+      "file": "crates/perry-runtime/src/gc/poison_swept.rs",
+      "name": "POISONED_BYTES_SINCE_REPORT",
+      "verdict": "not_a_gc_pointer",
+      "why": "Header-inclusive byte count for the current diagnostic sweep summary; never an address or JS value."
+    },
+    {
+      "file": "crates/perry-runtime/src/gc/poison_swept.rs",
+      "name": "POISONED_CELLS_SINCE_REPORT",
+      "verdict": "not_a_gc_pointer",
+      "why": "Count of poisoned cells for the current diagnostic sweep summary; never an address or JS value."
+    },
+    {
+      "file": "crates/perry-runtime/src/gc/poison_swept.rs",
+      "name": "TEST_POISON_SWEPT_WORK",
+      "verdict": "test_only",
+      "why": "cfg(test) work counter used to prove both the enabled and inert knob arms."
     },
     {
       "file": "crates/perry-runtime/src/gc/oldgen_defrag.rs",

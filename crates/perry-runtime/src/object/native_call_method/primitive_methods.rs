@@ -17,6 +17,17 @@ pub(super) unsafe fn dispatch_primitive(
     let refreshed_args = || crate::gc::RuntimeHandleScope::refreshed_nanbox_f64_slice(arg_handles);
     let _ = (root_scope, object_handle, &refreshed_args, raw_bits, jsval);
     let _ = (method_name_ptr, method_name_len);
+    if (raw_bits & crate::value::TAG_MASK) == crate::value::POINTER_TAG {
+        let user_ptr = (raw_bits & crate::value::POINTER_MASK) as usize;
+        if crate::gc::report_stale_swept_read(user_ptr, "dispatch_primitive") {
+            crate::error::js_throw_type_error_not_a_function(
+                b"object".as_ptr(),
+                b"object".len(),
+                method_name.as_ptr(),
+                method_name.len(),
+            );
+        }
+    }
     // Temporal cell (#4686): `duration.add(x)`, `instant.toString()`, etc. A
     // `Temporal.*` value is a NaN-boxed pointer to a custom cell with no
     // codegen fast-path, so every method call funnels through here. The router

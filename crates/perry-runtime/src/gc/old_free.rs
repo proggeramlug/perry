@@ -80,8 +80,7 @@ fn old_free_push(user_ptr: usize, total_size: usize) {
 }
 
 /// Rebuild the hole map from the heap itself: every invalidated dead
-/// header (`obj_type == 0` — only `invalidate_dead_old_arena_header`
-/// produces those; no live object has type 0) inside an old block that
+/// header (`obj_type == 0`, or the diagnostic dead marker `0xDE`) inside an old block that
 /// still holds a live object. Called at the completion point of every
 /// old-reclaiming sweep, replacing whatever the map held.
 ///
@@ -111,7 +110,7 @@ pub(super) fn old_free_rebuild_from_live_old_blocks(
         |header_ptr, _block_idx| {
             let header = header_ptr as *mut GcHeader;
             unsafe {
-                if (*header).obj_type == 0 {
+                if (*header).obj_type == 0 || (*header).obj_type == POISON_SWEPT_OBJ_TYPE {
                     let total_size = (*header).size as usize;
                     old_free_push(header as usize + GC_HEADER_SIZE, total_size);
                 }
@@ -157,6 +156,9 @@ pub(crate) fn old_free_take_exact(
             OLD_FREE_NONEMPTY.with(|c| c.set(false));
         }
     });
+    unsafe {
+        prepare_swept_cell_reuse(taken);
+    }
     Some(taken)
 }
 
@@ -165,10 +167,16 @@ pub(crate) fn old_free_take_exact(
 /// entry would otherwise hand out a pointer into memory the bump
 /// allocator is about to overwrite (or that has been returned to the OS).
 pub(crate) fn old_free_filter_range(base: usize, size: usize) {
-    if !OLD_FREE_NONEMPTY.with(Cell::get) || size == 0 {
+    if size == 0 {
         return;
     }
     let end = base.saturating_add(size);
+    // The range is changing ownership even when no exact-fit holes survived
+    // the rebuild (for example, an entirely dead old block).
+    forget_swept_cells_in_range(base, end);
+    if !OLD_FREE_NONEMPTY.with(Cell::get) {
+        return;
+    }
     let mut removed_bytes = 0usize;
     OLD_FREE_MAP.with(|m| {
         let mut map = m.borrow_mut();
@@ -221,6 +229,7 @@ pub(crate) fn old_free_filter_pages(excluded_pages: &crate::fast_hash::PtrHashSe
                 let excluded = (first..=last).any(|page| excluded_pages.contains(&page));
                 if excluded {
                     removed_bytes = removed_bytes.saturating_add(slot_size);
+                    forget_swept_cell(ptr);
                 }
                 !excluded
             });
@@ -244,6 +253,7 @@ pub(super) fn old_free_reset_for_test() {
     OLD_FREE_MAP.with(|m| m.borrow_mut().clear());
     OLD_FREE_BYTES.with(|c| c.set(0));
     OLD_FREE_NONEMPTY.with(|c| c.set(false));
+    reset_poison_swept_for_test();
 }
 
 #[cfg(test)]

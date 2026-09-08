@@ -27,6 +27,9 @@ pub extern "C" fn js_object_get_field_by_name(
     obj: *const ObjectHeader,
     key: *const crate::StringHeader,
 ) -> JSValue {
+    if crate::gc::report_stale_swept_read(obj as usize, "js_object_get_field_by_name") {
+        return JSValue::undefined();
+    }
     // Guard hoisted to the call site: an ordinary key is rejected on a length
     // compare and one byte here, so the overwhelmingly common property read
     // makes no call into the private-member path at all.

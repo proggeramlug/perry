@@ -624,9 +624,10 @@ impl GcCycleState {
         // keep their ordering and pay nothing for the overlap.
         super::roots::ensure_stack_maps_built();
         let trigger_kind = trigger.kind;
-        let full_verify_scan_site = crate::gc::gc_verify_mark_enabled()
-            .then(super::active_scan_fallback_site)
-            .flatten();
+        let full_verify_scan_site = (crate::gc::gc_verify_mark_enabled()
+            || crate::gc::poison_swept_enabled())
+        .then(super::active_scan_fallback_site)
+        .flatten();
         let trace = GcCycleTrace::new(GcCollectionKind::Full, trigger);
         let start = Instant::now();
         crate::arena::old_pages_begin_gc_cycle();
@@ -1516,6 +1517,15 @@ impl GcCycleState {
                 .with_dead_collection_finalize(
                     full_trace,
                     full_trace && !self.progress_kind.is_budgeted(),
+                )
+                .with_poison_swept_context(
+                    (full_trace && poison_swept_enabled()).then(|| PoisonSweepContext {
+                        cycle_ordinal: gc_total_collection_count() as usize + 1,
+                        scan_site: self
+                            .full_verify_scan_site
+                            .map(ConservativeScanSite::as_str)
+                            .unwrap_or("precise"),
+                    }),
                 ),
             );
         }
@@ -1531,6 +1541,9 @@ impl GcCycleState {
 
         let sweep = self.sweep_state.take().expect("sweep state exists").stats();
         self.freed_bytes = sweep.freed_bytes;
+        if poison_swept_enabled() && self.minor.is_none() {
+            report_poisoned_sweep_summary_if_diag();
+        }
 
         if let Some(minor) = self.minor.as_mut() {
             minor.evacuation.retained_forwarded_stub_objects =

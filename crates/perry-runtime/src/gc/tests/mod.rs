@@ -43,6 +43,7 @@ mod lazy_intrinsic_towers;
 mod lazy_tape_side_alloc;
 mod oldgen;
 mod os_tag;
+mod poison_swept;
 mod promote_in_place;
 mod proxy_registry;
 mod retention_9628_9629;

@@ -307,6 +307,12 @@ pub(crate) unsafe fn try_read_tracked_gc_header(
     }
     let header = std::ptr::NonNull::new(header_addr as *mut GcHeader)?;
     let header_ptr = header.as_ptr();
+    // The 0xDE marker is a deliberately dead old-arena cell, not an unknown
+    // live type. Mutator entry points name it through the poison-swept read
+    // barrier; allocator-owned classifiers must simply reject it.
+    if (*header_ptr).obj_type == crate::gc::POISON_SWEPT_OBJ_TYPE {
+        return None;
+    }
     if crate::gc::gc_type_info((*header_ptr).obj_type).is_none() {
         return None;
     }

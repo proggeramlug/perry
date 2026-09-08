@@ -123,11 +123,13 @@ pub(crate) use promote::{
 };
 
 // quarantine.rs (#7154 from-space protection; default-off)
-pub(crate) use quarantine::{copying_quarantine_from_spaces_and_flip, protect_fromspace_enabled};
+pub(crate) use quarantine::{
+    copying_quarantine_from_spaces_and_flip, protect_fromspace_enabled, QUARANTINE_POISON_OBJ_TYPE,
+};
 #[cfg(test)]
 pub(crate) use quarantine::{
     parse_protection_mode, parse_quarantine_depth, quarantine_depth, FromSpaceProtection,
-    ProtectionModeGuard, QUARANTINE_POISON_OBJ_TYPE, QUARANTINE_POISON_WORD,
+    ProtectionModeGuard, QUARANTINE_POISON_WORD,
 };
 pub use quarantine::{quarantine_stats, QuarantineStats};
 

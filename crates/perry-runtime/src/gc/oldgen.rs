@@ -1240,6 +1240,11 @@ impl IncrementalSweepState {
         self
     }
 
+    pub(super) fn with_poison_swept_context(mut self, context: Option<PoisonSweepContext>) -> Self {
+        self.arena.poison_swept_context = context;
+        self
+    }
+
     pub(super) fn step(&mut self, budget: usize) -> bool {
         match self.subphase {
             SweepCycleSubphase::CollectionSideBuffers => {
@@ -1388,6 +1393,7 @@ struct ArenaSweepObjectsState {
     freed_bytes: u64,
     retained_forwarded_stub_objects: usize,
     retained_forwarded_stub_bytes: usize,
+    poison_swept_context: Option<PoisonSweepContext>,
     /// #7598 Eden census: see `SweepTraceStats`.
     eden_live_bytes: u64,
     eden_dead_bytes: u64,
@@ -1424,6 +1430,7 @@ impl ArenaSweepObjectsState {
             freed_bytes: 0,
             retained_forwarded_stub_objects: 0,
             retained_forwarded_stub_bytes: 0,
+            poison_swept_context: None,
             eden_live_bytes: 0,
             eden_dead_bytes: 0,
             arena_live_bytes: 0,
@@ -1629,7 +1636,7 @@ impl ArenaSweepObjectsState {
             gc_type_clear_dead_payload_side_tables((*header).obj_type, user_ptr as usize);
         }
         if self.reclaim_dead_old_blocks && dead_old {
-            invalidate_dead_old_arena_header(header, total_size);
+            retire_dead_old_header(header, total_size, self.poison_swept_context);
         } else {
             (*header).gc_flags = flags & !(GC_FLAG_FORWARDED | GC_FLAG_MARKED);
         }
@@ -1648,7 +1655,7 @@ impl ArenaSweepObjectsState {
         }
         finalize_dead_arena_payload(header, user_ptr, self.overflow_active);
         if self.reclaim_dead_old_blocks && dead_old {
-            invalidate_dead_old_arena_header(header, total_size);
+            retire_dead_old_header(header, total_size, self.poison_swept_context);
         }
     }
 }
