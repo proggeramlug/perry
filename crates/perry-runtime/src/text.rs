@@ -96,35 +96,58 @@ pub(crate) fn text_encoder_string_ptr(value: f64) -> *const StringHeader {
     crate::value::js_jsvalue_to_string(value) as *const StringHeader
 }
 
-/// `new TextEncoder()` — returns a non-null sentinel integer pointer.
-///
-/// The returned value is a small integer (`1`) that the codegen NaN-boxes
-/// with `POINTER_TAG`. TextEncoder has no state beyond "I encode UTF-8",
-/// so any non-null sentinel works. We use a distinct value from the
-/// decoder sentinel purely for debuggability.
+fn text_encoder_handle_value() -> f64 {
+    crate::native_handle::canonical_handle_value(
+        crate::native_handle::NATIVE_HANDLE_PROVIDER_TEXT_ENCODER,
+        TEXT_ENCODER_SENTINEL_ID,
+    )
+}
+
+/// `new TextEncoder()` — returns the address of the canonical managed encoder
+/// cell. TextEncoder has no state beyond "I encode UTF-8", so every instance
+/// in an agent may share this immortal-by-republication identity wrapper.
 #[no_mangle]
 pub extern "C" fn js_text_encoder_new() -> i64 {
     if crate::hot_diag::receiver_repr_on() {
         crate::hot_diag::receiver_repr_note_constructed(crate::hot_diag::ReceiverReprFamily::Text);
     }
-    TEXT_ENCODER_SENTINEL_ID
+    crate::value::js_nanbox_get_pointer(text_encoder_handle_value())
 }
 
-/// The stateless `TextEncoder` sentinel handle returned by
-/// `js_text_encoder_new` — see its doc comment.
+/// Leaf metadata stored inside the stateless TextEncoder wrapper.
 pub const TEXT_ENCODER_SENTINEL_ID: i64 = 1;
+
+fn text_decoder_id_from_addr(id_or_wrapper: i64) -> i64 {
+    crate::native_handle::canonical_handle_parts_from_addr(id_or_wrapper as usize)
+        .and_then(|(provider, id)| {
+            (provider == crate::native_handle::NATIVE_HANDLE_PROVIDER_TEXT_DECODER).then_some(id)
+        })
+        .unwrap_or(id_or_wrapper)
+}
+
+pub fn is_text_encoder_handle(id_or_wrapper: i64) -> bool {
+    crate::native_handle::canonical_handle_parts_from_addr(id_or_wrapper as usize)
+        == Some((
+            crate::native_handle::NATIVE_HANDLE_PROVIDER_TEXT_ENCODER,
+            TEXT_ENCODER_SENTINEL_ID,
+        ))
+        || id_or_wrapper == TEXT_ENCODER_SENTINEL_ID
+}
 
 /// Whether `id` is a live `TextDecoder` registry handle. Used by the
 /// dynamic method-call / property-GET handle arms
 /// (`native_call_method.rs` / `get_field_by_name_tail.rs`) to route
 /// `decode`/`encoding`/… on a type-erased receiver to the text natives.
 pub fn is_known_text_decoder_id(id: i64) -> bool {
-    DECODER_REGISTRY.lock().unwrap().contains_key(&id)
+    DECODER_REGISTRY
+        .lock()
+        .unwrap()
+        .contains_key(&text_decoder_id_from_addr(id))
 }
 
 /// `new TextDecoder(label?, { fatal?, ignoreBOM? })` — validates the
 /// label, stores per-instance decode state in `DECODER_REGISTRY`, and
-/// returns a small-int handle that the codegen NaN-boxes with
+/// returns a canonical managed handle address that codegen NaN-boxes with
 /// `POINTER_TAG`. An unsupported label throws a `RangeError`
 /// (`ERR_ENCODING_NOT_SUPPORTED`).
 ///
@@ -178,7 +201,22 @@ fn register_decoder(
     if crate::hot_diag::receiver_repr_on() {
         crate::hot_diag::receiver_repr_note_constructed(crate::hot_diag::ReceiverReprFamily::Text);
     }
-    id
+    crate::value::js_nanbox_get_pointer(crate::native_handle::canonical_handle_value_owned(
+        crate::native_handle::NATIVE_HANDLE_PROVIDER_TEXT_DECODER,
+        id,
+        finalize_text_decoder,
+        b"TextDecoder",
+    ))
+}
+
+unsafe extern "C" fn finalize_text_decoder(
+    resource_ptr: *mut std::ffi::c_void,
+    _hint: *mut std::ffi::c_void,
+) {
+    DECODER_REGISTRY
+        .lock()
+        .unwrap()
+        .remove(&(resource_ptr as i64));
 }
 
 fn decoder_handle_id(handle: f64) -> i64 {
@@ -187,7 +225,7 @@ fn decoder_handle_id(handle: f64) -> i64 {
     const POINTER_MASK: u64 = 0x0000_FFFF_FFFF_FFFF;
     const TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
     if (bits & TAG_MASK) == POINTER_TAG {
-        (bits & POINTER_MASK) as i64
+        text_decoder_id_from_addr((bits & POINTER_MASK) as i64)
     } else if !handle.is_nan() && bits != 0 && bits < 0x0001_0000_0000_0000 {
         bits as i64
     } else {
@@ -705,7 +743,7 @@ pub(crate) unsafe fn text_handle_property(
             _ => {}
         }
     }
-    if raw as i64 == TEXT_ENCODER_SENTINEL_ID {
+    if is_text_encoder_handle(raw as i64) {
         if let Some(method) = text_encoder_method_name_static(key_bytes) {
             return Some(bind_static_method(this_f64, method));
         }
@@ -716,6 +754,94 @@ pub(crate) unsafe fn text_handle_property(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn wrapper_value(addr: i64) -> f64 {
+        f64::from_bits(crate::value::js_nanbox_pointer(addr).to_bits())
+    }
+
+    #[test]
+    fn text_values_are_managed_wrappers_with_headers() {
+        crate::hot_diag::receiver_repr_test_reset();
+        crate::hot_diag::receiver_repr_test_arm(true);
+        let undefined = f64::from_bits(crate::value::TAG_UNDEFINED);
+        let addr = js_text_decoder_new(undefined, undefined, undefined);
+        let value = wrapper_value(addr);
+        let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr as usize) }
+            .expect("TextDecoder wrapper must have a tracked GcHeader");
+        assert_eq!(
+            unsafe { header.as_ref().obj_type },
+            crate::gc::GC_TYPE_NATIVE_HANDLE
+        );
+
+        let decoded = unsafe {
+            crate::object::js_native_call_method(
+                value,
+                b"decode".as_ptr().cast(),
+                6,
+                std::ptr::null(),
+                0,
+            )
+        };
+        assert!(crate::value::JSValue::from_bits(decoded.to_bits()).is_string());
+        let (constructed, observed_old, observed_wrapped) =
+            crate::hot_diag::receiver_repr_test_snapshot(crate::hot_diag::ReceiverReprFamily::Text);
+        assert!(constructed > 0);
+        assert_eq!(observed_old, 0);
+        assert!(observed_wrapped > 0);
+        crate::hot_diag::receiver_repr_test_arm(false);
+    }
+
+    #[test]
+    fn text_identity_survives_a_copying_minor() {
+        let _isolation = crate::gc::CopyingNurseryTestGuard::new(0);
+        let scope = crate::gc::RuntimeHandleScope::new();
+        let undefined = f64::from_bits(crate::value::TAG_UNDEFINED);
+        let addr = js_text_decoder_new(undefined, undefined, undefined);
+        let first = scope.root_nanbox_f64(wrapper_value(addr));
+        let id = text_decoder_id_from_addr(addr);
+
+        let young = crate::object::js_object_alloc(0, 0);
+        let _young = scope.root_raw_mut_ptr(young);
+        let before = crate::gc::copying_minor_cycles();
+        let _ = crate::gc::gc_collect_minor();
+        assert!(crate::gc::copying_minor_cycles() > before);
+
+        let after = first.get_nanbox_f64();
+        let republished = crate::native_handle::canonical_handle_value_owned(
+            crate::native_handle::NATIVE_HANDLE_PROVIDER_TEXT_DECODER,
+            id,
+            finalize_text_decoder,
+            b"TextDecoder",
+        );
+        assert_eq!(after.to_bits(), republished.to_bits());
+        let label = js_text_decoder_encoding(after);
+        assert_eq!(text_string_header_to_string(label), "utf-8");
+    }
+
+    #[inline(never)]
+    fn create_and_drop_decoder_wrapper() -> (i64, usize) {
+        let undefined = f64::from_bits(crate::value::TAG_UNDEFINED);
+        let addr = js_text_decoder_new(undefined, undefined, undefined);
+        (text_decoder_id_from_addr(addr), addr as usize)
+    }
+
+    #[test]
+    fn text_wrapper_finalization_or_immortality() {
+        let _isolation = crate::gc::global_side_table_test_lock();
+        crate::gc::js_gc_collect();
+        let (id, old_addr) = create_and_drop_decoder_wrapper();
+        assert!(DECODER_REGISTRY.lock().unwrap().contains_key(&id));
+
+        crate::gc::js_gc_collect();
+        assert!(
+            !DECODER_REGISTRY.lock().unwrap().contains_key(&id),
+            "a dead owned TextDecoder wrapper must release its decoder state"
+        );
+        assert!(
+            crate::native_handle::canonical_handle_parts_from_addr(old_addr).is_none(),
+            "the finalized wrapper must leave the weak canonical interner"
+        );
+    }
 
     /// `TextDecoder.decode(dataView)` must read the backing store, not the
     /// DataView's construction-time snapshot. A `Uint32Array` over the same

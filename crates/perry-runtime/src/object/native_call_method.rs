@@ -1507,7 +1507,7 @@ pub unsafe extern "C-unwind" fn js_native_call_method(
                     JSValue::string_ptr(sp as *mut crate::string::StringHeader).bits(),
                 );
             }
-            if raw as i64 == crate::text::TEXT_ENCODER_SENTINEL_ID {
+            if crate::text::is_text_encoder_handle(raw as i64) {
                 if method_name == "encode" {
                     let bp = crate::text::js_text_encoder_encode_llvm(arg0);
                     return crate::value::js_nanbox_pointer(bp);

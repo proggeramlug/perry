@@ -497,7 +497,7 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
             Ok(nanbox_pointer_inline(blk, &arr))
         }
         Expr::TextEncoderNew => {
-            // Stateless UTF-8 encoder — return a non-null sentinel pointer.
+            // Stateless UTF-8 encoder — return its canonical managed wrapper.
             // NaN-box with POINTER_TAG so `typeof encoder === "object"` holds.
             let blk = ctx.block();
             let h = blk.call(I64, "js_text_encoder_new", &[]);
@@ -510,7 +510,7 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
         } => {
             // new TextDecoder(label?, { fatal?, ignoreBOM? }) — the runtime
             // validates the label, stores per-instance state, and returns a
-            // small-int handle. NaN-box with POINTER_TAG so the handle reads
+            // managed handle address. NaN-box with POINTER_TAG so it reads
             // back through `decoder_handle_id` for decode/property access.
             let label = lower_expr(ctx, label)?;
             let fatal = lower_expr(ctx, fatal)?;

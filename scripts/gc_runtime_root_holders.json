@@ -3410,6 +3410,10 @@
       "name": "VIEW_REGISTRY"
     },
     {
+      "file": "crates/perry-runtime/src/native_handle/canonical.rs",
+      "name": "CANONICAL_HANDLES"
+    },
+    {
       "file": "crates/perry-runtime/src/node_http2_constants.rs",
       "name": "SENSITIVE_HEADERS_SYMBOL"
     },

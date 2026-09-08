@@ -204,8 +204,9 @@ fn observe_pointer(addr: usize) {
     {
         mark_old(ReceiverReprFamily::Timer);
     }
-    if addr as i64 == crate::text::TEXT_ENCODER_SENTINEL_ID
-        || crate::text::is_known_text_decoder_id(addr as i64)
+    if addr < crate::value::addr_class::HANDLE_BAND_MAX
+        && (addr as i64 == crate::text::TEXT_ENCODER_SENTINEL_ID
+            || crate::text::is_known_text_decoder_id(addr as i64))
     {
         mark_old(ReceiverReprFamily::Text);
     }
@@ -383,11 +384,14 @@ mod tests {
             constructed > 0,
             "{family:?} constructor did not move its bucket"
         );
-        if family == ReceiverReprFamily::Timer {
-            assert_eq!(observed, 0, "timer must no longer use its raw id");
+        if matches!(
+            family,
+            ReceiverReprFamily::Timer | ReceiverReprFamily::Text
+        ) {
+            assert_eq!(observed, 0, "{family:?} must no longer use its raw id");
             assert!(
                 wrapped > 0,
-                "timer receiver did not reach its wrapper bucket"
+                "{family:?} receiver did not reach its wrapper bucket"
             );
         } else {
             assert!(
@@ -430,7 +434,11 @@ mod tests {
             (crate::timer::js_timer_wrap_id(id).to_bits() as usize, true)
         });
         assert_fixture(ReceiverReprFamily::Text, || {
-            (crate::text::js_text_encoder_new() as usize, false)
+            let addr = crate::text::js_text_encoder_new() as usize;
+            (
+                crate::value::js_nanbox_pointer(addr as i64).to_bits() as usize,
+                true,
+            )
         });
         assert_fixture(ReceiverReprFamily::Tui, || {
             let mut handle = crate::tui::state::js_perry_tui_state_alloc(0.0);

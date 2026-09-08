@@ -20,6 +20,7 @@ pub use canonical::{
     NATIVE_HANDLE_PROVIDER_TEXT_DECODER, NATIVE_HANDLE_PROVIDER_TEXT_ENCODER,
     NATIVE_HANDLE_PROVIDER_TIMER,
 };
+pub(crate) use canonical::canonical_handle_value_owned;
 
 #[cfg(test)]
 pub(crate) fn canonical_handle_entry_count_for_tests(provider: u64) -> usize {
@@ -41,7 +42,7 @@ const NATIVE_HANDLE_FLAG_CANONICAL: u32 = 1;
 
 static MAIN_THREAD_ID: AtomicU64 = AtomicU64::new(0);
 
-type NativeHandleFinalizer = unsafe extern "C" fn(*mut c_void, *mut c_void);
+pub(crate) type NativeHandleFinalizer = unsafe extern "C" fn(*mut c_void, *mut c_void);
 
 /// GC payload for a Perry native handle.
 #[repr(C)]

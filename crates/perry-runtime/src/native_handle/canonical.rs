@@ -7,12 +7,21 @@
 //! id)`, never by this address.
 
 use super::{
-    current_thread_id, handle_from_addr, native_handle_new, NativeHandleHeader,
-    NATIVE_HANDLE_FLAG_CANONICAL, OWNERSHIP_BORROWED, THREAD_ANY,
+    current_thread_id, handle_from_addr, native_handle_new, NativeHandleFinalizer,
+    NativeHandleHeader, NATIVE_HANDLE_FLAG_CANONICAL, OWNERSHIP_BORROWED, OWNERSHIP_OWNED,
+    THREAD_ANY,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::ffi::c_void;
 use std::ptr;
+
+/// Monotone negative filter for the generic address classifier. Canonical
+/// wrappers are uncommon, while that classifier sees every pointer-shaped
+/// receiver; reject ordinary heap addresses before resolving TLS and probing
+/// the weak identity table.
+static CANONICAL_HANDLE_ADDR_FILTER: crate::registry_latch::RegistryAddrFilter =
+    crate::registry_latch::RegistryAddrFilter::new();
 
 pub const NATIVE_HANDLE_PROVIDER_TIMER: u64 = 0x5045_5252_5954_494d; // PERRYTIM
 pub const NATIVE_HANDLE_PROVIDER_TEXT_ENCODER: u64 = 0x5045_5252_5954_454e; // PERRYTEN
@@ -20,7 +29,7 @@ pub const NATIVE_HANDLE_PROVIDER_TEXT_DECODER: u64 = 0x5045_5252_5954_4445; // P
 pub const NATIVE_HANDLE_PROVIDER_COMMON: u64 = 0x5045_5252_5943_4f4d; // PERRYCOM
 pub const NATIVE_HANDLE_PROVIDER_FETCH: u64 = 0x5045_5252_5946_4554; // PERRYFET
 
-thread_local! {
+crate::perry_thread_local! {
     /// Integer addresses make this a weak identity index rather than an
     /// unregistered heap-pointer root. `finalize_once` removes each entry.
     static CANONICAL_HANDLES: RefCell<HashMap<(u64, i64), usize>> =
@@ -37,7 +46,13 @@ unsafe fn canonical_parts(handle: *mut NativeHandleHeader) -> Option<(u64, i64)>
     Some(((*handle).type_id, (*handle).resource_ptr as i64))
 }
 
-pub fn canonical_handle_value(provider: u64, id: i64) -> f64 {
+fn canonical_handle_value_with_policy(
+    provider: u64,
+    id: i64,
+    ownership: u8,
+    finalizer: *mut c_void,
+    debug_name: &'static [u8],
+) -> f64 {
     if let Some(addr) = CANONICAL_HANDLES.with(|table| table.borrow().get(&(provider, id)).copied())
     {
         let live = unsafe {
@@ -56,12 +71,12 @@ pub fn canonical_handle_value(provider: u64, id: i64) -> f64 {
         native_handle_new(
             id,
             provider as i64,
-            OWNERSHIP_BORROWED,
+            ownership,
             0,
             THREAD_ANY as i32,
-            ptr::null_mut(),
-            b"registry-handle".as_ptr(),
-            15,
+            finalizer,
+            debug_name.as_ptr(),
+            debug_name.len() as i64,
         )
     };
     let addr = (value.to_bits() & crate::value::POINTER_MASK) as usize;
@@ -69,16 +84,42 @@ pub fn canonical_handle_value(provider: u64, id: i64) -> f64 {
         let handle = handle_from_addr(addr);
         debug_assert!(!handle.is_null());
         (*handle).flags |= NATIVE_HANDLE_FLAG_CANONICAL;
-        (*handle).ownership = OWNERSHIP_BORROWED;
+        (*handle).ownership = ownership;
         // Canonical wrappers are per-agent values. Preserve the creator marker
         // even though the public affinity is ANY so debug inspection can prove
         // the weak table never crosses a runtime thread.
         (*handle).creator_thread_id = current_thread_id();
     }
+    CANONICAL_HANDLE_ADDR_FILTER.admit(addr);
     CANONICAL_HANDLES.with(|table| {
         table.borrow_mut().insert((provider, id), addr);
     });
     value
+}
+
+pub fn canonical_handle_value(provider: u64, id: i64) -> f64 {
+    canonical_handle_value_with_policy(
+        provider,
+        id,
+        OWNERSHIP_BORROWED,
+        ptr::null_mut(),
+        b"registry-handle",
+    )
+}
+
+pub(crate) fn canonical_handle_value_owned(
+    provider: u64,
+    id: i64,
+    finalizer: NativeHandleFinalizer,
+    debug_name: &'static [u8],
+) -> f64 {
+    canonical_handle_value_with_policy(
+        provider,
+        id,
+        OWNERSHIP_OWNED,
+        finalizer as *mut c_void,
+        debug_name,
+    )
 }
 
 pub fn canonical_handle_parts_from_addr(addr: usize) -> Option<(u64, i64)> {
@@ -99,6 +140,9 @@ pub fn canonical_handle_id_for_provider(value: f64, provider: u64) -> Option<i64
 }
 
 pub fn is_canonical_handle_addr(addr: usize) -> bool {
+    if !CANONICAL_HANDLE_ADDR_FILTER.may_contain(addr) {
+        return false;
+    }
     canonical_handle_parts_from_addr(addr).is_some()
 }
 
