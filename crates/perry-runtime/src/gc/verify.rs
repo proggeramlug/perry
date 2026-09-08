@@ -1455,7 +1455,132 @@ pub(super) fn verify_full_promoted_blocks_report(
 /// about to be freed while its parent survives. This is the direct signature
 /// of a dropped remembered-set edge. Logs a per-(parent,child)-type histogram
 /// plus the first edge; diagnostic only.
+/// One `SWEEP-LIVE-CHILD` edge a minor reported, kept until the next full can
+/// say whether its parent was actually alive.
+///
+/// The minor probe cannot answer that question: a minor marks only what it
+/// collects, so an old parent is never marked there, and a dead-but-unswept
+/// old parent naming a dead young child looks exactly like a missed
+/// remembered-set edge. At a FULL the old generation IS marked, so the same
+/// parent's mark state separates the two — retroactively, but decisively.
+#[derive(Clone, Copy)]
+struct PendingSweepLiveEdge {
+    parent_header: usize,
+    parent_type: u8,
+    slot: usize,
+    child: usize,
+    child_type: u8,
+    phase: &'static str,
+}
+
+/// Bounded: the question is qualitative, and an unbounded list would be a leak
+/// in a diagnostic.
+const PENDING_SWEEP_LIVE_EDGE_CAP: usize = 16;
+
+crate::perry_thread_local! {
+    static PENDING_SWEEP_LIVE_EDGES: std::cell::RefCell<Vec<PendingSweepLiveEdge>> =
+        const { std::cell::RefCell::new(Vec::new()) };
+}
+
+fn remember_sweep_live_edge(edge: PendingSweepLiveEdge) {
+    PENDING_SWEEP_LIVE_EDGES.with(|cell| {
+        let mut cell = cell.borrow_mut();
+        if cell.len() < PENDING_SWEEP_LIVE_EDGE_CAP {
+            cell.push(edge);
+        }
+    });
+}
+
+/// Is a walkable header still sitting at `header_addr`, and is it the one we
+/// recorded? Old objects do not move under a minor, but idle compaction and
+/// block reuse can both retire the address, so the type has to agree before
+/// the mark bit means anything.
+unsafe fn recorded_parent_state(edge: PendingSweepLiveEdge) -> &'static str {
+    let Some(block) = crate::arena::arena_block_diagnostic_for_addr(edge.parent_header) else {
+        return "gone";
+    };
+    if edge.parent_header < block.base
+        || edge.parent_header.saturating_add(GC_HEADER_SIZE) > block.used_end
+    {
+        return "gone";
+    }
+    let header = edge.parent_header as *const GcHeader;
+    let (size, obj_type, flags) = (
+        (*header).size as usize,
+        (*header).obj_type,
+        (*header).gc_flags,
+    );
+    if size < GC_HEADER_SIZE || edge.parent_header.saturating_add(size) > block.used_end {
+        return "gone";
+    }
+    if obj_type != edge.parent_type {
+        return "reused";
+    }
+    if flags & (GC_FLAG_MARKED | GC_FLAG_PINNED) != 0 {
+        "marked"
+    } else {
+        "unmarked"
+    }
+}
+
+/// Test seam: record an edge exactly as the minor probe records one, so the
+/// follow-up can be driven without staging a real dropped remembered-set edge.
+#[cfg(test)]
+pub(super) fn test_remember_sweep_live_edge(
+    parent_header: usize,
+    parent_type: u8,
+    slot: usize,
+    child: usize,
+    child_type: u8,
+) {
+    remember_sweep_live_edge(PendingSweepLiveEdge {
+        parent_header,
+        parent_type,
+        slot,
+        child,
+        child_type,
+        phase: "test",
+    });
+}
+
+/// Answer, at a full's marks-final boundary, every edge a minor reported since
+/// the previous full: `parent_at_full=marked` means the parent was live and the
+/// minor really was about to sweep a live child; `unmarked` means the parent
+/// was dead and the report was noise; `reused`/`gone` mean the address no
+/// longer holds that object and nothing can be concluded from it.
+pub(super) fn report_pending_sweep_live_edges() {
+    let pending: Vec<PendingSweepLiveEdge> =
+        PENDING_SWEEP_LIVE_EDGES.with(|cell| cell.borrow_mut().drain(..).collect());
+    let tn = |t: u8| gc_type_info(t).map_or("?", |i| i.name);
+    for (index, edge) in pending.iter().copied().enumerate() {
+        let state = unsafe { recorded_parent_state(edge) };
+        let report = format!(
+            "[gc-full-verify] minor_edge_followup={} reported_at={} parent=0x{:x} ptype={}({}) parent_at_full={} slot=0x{:x} child=0x{:x} ctype={}({})",
+            index + 1,
+            edge.phase,
+            edge.parent_header,
+            tn(edge.parent_type),
+            edge.parent_type,
+            state,
+            edge.slot,
+            edge.child,
+            tn(edge.child_type),
+            edge.child_type,
+        );
+        #[cfg(test)]
+        super::telemetry::test_record_full_verify_line(&report);
+        eprintln!("{report}");
+    }
+}
+
 pub(super) fn verify_minor_unmarked_young_children_report(phase: &str) {
+    // The record outlives this call, so it keeps a 'static tag rather than the
+    // borrowed phase string.
+    let phase_tag: &'static str = match phase {
+        "copying-minor" => "copying-minor",
+        "minor-prelude" => "minor-prelude",
+        _ => "minor",
+    };
     let mut missing = 0usize;
     let mut checked_parents = 0usize;
     let mut checked_edges = 0usize;
@@ -1489,6 +1614,14 @@ pub(super) fn verify_minor_unmarked_young_children_report(phase: &str) {
                 *hist
                     .entry(((*header).obj_type, (*ch).obj_type))
                     .or_insert(0) += 1;
+                remember_sweep_live_edge(PendingSweepLiveEdge {
+                    parent_header: header as usize,
+                    parent_type: (*header).obj_type,
+                    slot: slot.slot as usize,
+                    child: child_addr,
+                    child_type: (*ch).obj_type,
+                    phase: phase_tag,
+                });
                 if first.is_none() {
                     first = Some((
                         header as usize,

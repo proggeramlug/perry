@@ -408,6 +408,69 @@ fn run_full_mask_current_witness(store_path: MaskWitnessStorePath) {
     clear_old_reclaim_state();
 }
 
+/// A minor cannot tell a missed remembered-set edge from a dead-but-unswept
+/// parent: it never marks the old generation. The next full can, and this is
+/// that answer — the instrument that turns the minor probe's counts from noise
+/// into evidence.
+#[test]
+fn minor_reported_edge_is_answered_by_the_next_full() {
+    std::thread::spawn(|| {
+        let _isolation = GcTestIsolationGuard::new();
+        let _verify = crate::gc::telemetry::GcVerifyMarkTestGuard::force_on();
+        let _ = crate::gc::telemetry::test_take_full_verify_lines();
+
+        let child = young_leaf();
+        let (parent, fields) = unsafe { alloc_old_test_object(1) };
+        let (parent_header, parent_type, child_type) = unsafe {
+            *fields = string_bits(child);
+            let parent_header = header_from_user_ptr(parent as *const u8);
+            // Stands in for "this parent was live when the minor reported the
+            // edge": the full's own marking is not the subject here, the
+            // follow-up's reading of it is.
+            (*parent_header).gc_flags |= GC_FLAG_MARKED;
+            let child_header = header_from_user_ptr(child as *const u8);
+            (
+                parent_header as usize,
+                (*parent_header).obj_type,
+                (*child_header).obj_type,
+            )
+        };
+
+        crate::gc::verify::test_remember_sweep_live_edge(
+            parent_header,
+            parent_type,
+            fields as usize,
+            child,
+            child_type,
+        );
+        // An address inside no arena block: the follow-up must say so instead
+        // of reading whatever bytes are there.
+        crate::gc::verify::test_remember_sweep_live_edge(0x1000, parent_type, 0, 0, child_type);
+
+        gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(GcTriggerKind::Manual));
+
+        let lines = crate::gc::telemetry::test_take_full_verify_lines();
+        assert!(
+            lines.contains("minor_edge_followup=1") && lines.contains("parent_at_full=marked"),
+            "the live parent's edge must be answered at the full; lines={lines}"
+        );
+        assert!(
+            lines.contains("parent_at_full=gone"),
+            "an address in no arena block must read as gone; lines={lines}"
+        );
+
+        // The list is drained, so a later full does not re-answer stale edges.
+        gc_collect_full_mark_sweep_with_trigger(GcTriggerSnapshot::capture(GcTriggerKind::Manual));
+        let lines = crate::gc::telemetry::test_take_full_verify_lines();
+        assert!(
+            !lines.contains("minor_edge_followup"),
+            "answered edges must not be reported twice; lines={lines}"
+        );
+    })
+    .join()
+    .expect("minor-edge follow-up worker");
+}
+
 #[test]
 fn full_mask_stays_current_after_generated_store_into_promoted_parent() {
     std::thread::spawn(|| run_full_mask_current_witness(MaskWitnessStorePath::GeneratedBarrier))

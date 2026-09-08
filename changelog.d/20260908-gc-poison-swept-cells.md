@@ -42,3 +42,9 @@ conservative-scan rejection samples are re-read at the marks-final boundary
 and report `at_boundary=marked|unmarked|no_header`, which is what separates a
 dead stack word pointing at a retired cell from a live object the
 valid-pointer set refused.
+
+A minor cannot tell a missed remembered-set edge from a dead-but-unswept
+parent, because it never marks the old generation. Each `SWEEP-LIVE-CHILD`
+edge a minor reports is therefore remembered (bounded) and answered at the
+next full's marks-final boundary as
+`minor_edge_followup=<n> … parent_at_full=marked|unmarked|reused|gone`.
