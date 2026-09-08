@@ -3,9 +3,61 @@ use super::*;
 #[derive(Clone, Copy)]
 struct RejectedStackWord {
     word: u64,
+    candidate: usize,
     block: crate::arena::ArenaBlockDiagnostic,
     header_type: Option<u8>,
     nanboxed: bool,
+}
+
+/// The samples of the most recent full scan, for the marks-final boundary to
+/// re-read. A rejected word is recorded while the mark set is still being
+/// built, so "was it live?" cannot be answered there — and that is the only
+/// question that separates a dead stack word pointing at a retired cell (the
+/// expected case) from a live object the valid-pointer set refused (a dropped
+/// root). Diagnostic-only, written solely under `PERRY_GC_VERIFY_MARK`.
+crate::perry_thread_local! {
+    static LAST_REJECTED_SAMPLES: std::cell::RefCell<Vec<(u64, usize)>> =
+        const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// Mark state, at the boundary, of each word the conservative scan refused.
+pub(in crate::gc) fn report_rejected_sample_marks() {
+    let samples: Vec<(u64, usize)> =
+        LAST_REJECTED_SAMPLES.with(|cell| cell.borrow().iter().copied().collect());
+    for (index, (word, candidate)) in samples.iter().copied().enumerate() {
+        let state = unsafe { sample_mark_state(candidate) };
+        let report = format!(
+            "[gc-full-verify] rejected_sample={} word=0x{word:x} candidate=0x{candidate:x} at_boundary={state}",
+            index + 1
+        );
+        #[cfg(test)]
+        super::super::telemetry::test_record_full_verify_line(&report);
+        eprintln!("{report}");
+    }
+}
+
+/// `marked` / `unmarked` name the header the word points at; `no_header` means
+/// the address no longer carries a walkable header at all.
+unsafe fn sample_mark_state(candidate: usize) -> &'static str {
+    let Some(block) = crate::arena::arena_block_diagnostic_for_addr(candidate) else {
+        return "no_block";
+    };
+    // A NaN-boxed pointer names the USER address, so its header is one header
+    // earlier; a raw word may name the header itself. Take the user reading
+    // first, since that is the shape a dropped root would have.
+    let header = match candidate
+        .checked_sub(GC_HEADER_SIZE)
+        .filter(|addr| plausible_header_at(*addr, block).is_some())
+    {
+        Some(addr) => addr as *const GcHeader,
+        None if plausible_header_at(candidate, block).is_some() => candidate as *const GcHeader,
+        None => return "no_header",
+    };
+    if (*header).gc_flags & (GC_FLAG_MARKED | GC_FLAG_PINNED) != 0 {
+        "marked"
+    } else {
+        "unmarked"
+    }
 }
 
 pub(super) struct RejectedStackWordsReport {
@@ -65,6 +117,7 @@ impl RejectedStackWordsReport {
         if let Some(slot) = self.first.iter_mut().find(|slot| slot.is_none()) {
             *slot = Some(RejectedStackWord {
                 word,
+                candidate,
                 block,
                 header_type,
                 nanboxed,
@@ -98,6 +151,16 @@ impl Drop for RejectedStackWordsReport {
         if !self.enabled {
             return;
         }
+        LAST_REJECTED_SAMPLES.with(|cell| {
+            let mut cell = cell.borrow_mut();
+            cell.clear();
+            cell.extend(
+                self.first
+                    .iter()
+                    .flatten()
+                    .map(|sample| (sample.word, sample.candidate)),
+            );
+        });
         match self.first[0] {
             Some(first) => Self::print_sample(
                 &format!(
@@ -127,23 +190,28 @@ impl Drop for RejectedStackWordsReport {
     }
 }
 
+fn plausible_header_at(addr: usize, block: crate::arena::ArenaBlockDiagnostic) -> Option<u8> {
+    if addr < block.base || addr.checked_add(GC_HEADER_SIZE)? > block.used_end {
+        return None;
+    }
+    let header = addr as *const GcHeader;
+    let (size, obj_type) = unsafe { ((*header).size as usize, (*header).obj_type) };
+    if size < GC_HEADER_SIZE
+        || addr.checked_add(size)? > block.used_end
+        || !gc_type_is_arena_walkable(obj_type)
+    {
+        return None;
+    }
+    Some(obj_type)
+}
+
 fn plausible_header_type(
     candidate: usize,
     block: crate::arena::ArenaBlockDiagnostic,
 ) -> Option<u8> {
-    let plausible_at = |addr: usize| {
-        if addr < block.base || addr.checked_add(GC_HEADER_SIZE)? > block.used_end {
-            return None;
-        }
-        let header = addr as *const GcHeader;
-        let (size, obj_type) = unsafe { ((*header).size as usize, (*header).obj_type) };
-        if size < GC_HEADER_SIZE
-            || addr.checked_add(size)? > block.used_end
-            || !gc_type_is_arena_walkable(obj_type)
-        {
-            return None;
-        }
-        Some(obj_type)
-    };
-    plausible_at(candidate).or_else(|| candidate.checked_sub(GC_HEADER_SIZE).and_then(plausible_at))
+    plausible_header_at(candidate, block).or_else(|| {
+        candidate
+            .checked_sub(GC_HEADER_SIZE)
+            .and_then(|addr| plausible_header_at(addr, block))
+    })
 }

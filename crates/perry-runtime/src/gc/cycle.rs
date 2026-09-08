@@ -1466,6 +1466,7 @@ impl GcCycleState {
                 super::verify::verify_marked_heap_report_nonfatal("full");
                 super::verify::verify_mask_free_object_child_marks_report("full");
                 super::verify::verify_array_pointer_slots_enumerated_report("full");
+                super::roots::report_rejected_sample_marks();
                 super::verify::verify_full_promoted_blocks_report(
                     self.full_verify_scan_site,
                     self.trigger_kind,

@@ -55,7 +55,7 @@ fn full_mark_probe_reports_marked_to_unmarked_edge() {
 
         let lines = crate::gc::telemetry::test_take_full_verify_lines();
         assert!(
-            lines.contains("[gc-mark-verify:full] marked->UNMARKED"),
+            lines.contains("[gc-mark-verify:full] scope=full marked->UNMARKED"),
             "the full marks-final boundary must emit the planted edge; lines={lines}"
         );
 
@@ -239,7 +239,7 @@ fn alloc_point_full_after_in_place_promotion_keeps_stack_held_objects() {
             "a stack-held promoted object was left unmarked (marked={marked} < {ROOTS}): {lines}"
         );
         assert!(
-            lines.contains("[gc-mark-verify:full] OK (no marked->unmarked)"),
+            lines.contains("[gc-mark-verify:full] scope=full OK (no marked->unmarked)"),
             "the full mark verifier found a live-to-white edge: {lines}"
         );
         // Raw words equal to a block base or a header address are Rust

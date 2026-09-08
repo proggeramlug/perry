@@ -33,3 +33,12 @@ points therefore test `poison_swept_maybe_active()` — one relaxed load of a
 flag written once, inside the mode's own resolution — before entering any
 thread-local map. `poison_swept_mode` itself (a `OnceLock` read plus, in test
 builds, a thread-local check) stays on the per-collection paths.
+
+Two instrument corrections from the first cc rows: the non-fatal mark probe
+now reports, on a minor, only children that minor could sweep — an old child
+of a marked parent is unmarked by construction, which on a real bundle is up
+to 1.8M spurious edges per minor — and every line names its `scope=`. The
+conservative-scan rejection samples are re-read at the marks-final boundary
+and report `at_boundary=marked|unmarked|no_header`, which is what separates a
+dead stack word pointing at a retired cell from a live object the
+valid-pointer set refused.

@@ -874,6 +874,7 @@ pub(super) fn panic_mark_invariant_verifier_failed(stats: MarkInvariantVerifySta
 pub(super) unsafe fn verify_marked_object_child_marks(
     stats: &mut MarkInvariantVerifyStats,
     header: *mut GcHeader,
+    young_only: bool,
 ) {
     if header.is_null() {
         return;
@@ -893,6 +894,15 @@ pub(super) unsafe fn verify_marked_object_child_marks(
         else {
             return;
         };
+        // #9982: a MINOR marks only what it collects. An old child of a marked
+        // parent is unmarked by construction — on cc that is up to 1.8M edges
+        // per minor, which drowned the probe's real subject and made every
+        // minor line unreadable. In a minor the invariant only holds for
+        // children the minor could actually sweep, so ask the same predicate
+        // the collector uses instead of reporting a fact about generations.
+        if young_only && !crate::gc::young_log::addr_is_minor_relevant(child) {
+            return;
+        }
         stats.checked_edges = stats.checked_edges.saturating_add(1);
         if (*child_header).gc_flags & (GC_FLAG_MARKED | GC_FLAG_PINNED) == 0 {
             stats.record_missing(parent, slot.slot as usize, child);
@@ -1088,14 +1098,18 @@ pub(super) fn verify_marked_heap_no_unmarked_children() -> MarkInvariantVerifySt
 /// swept-live-child (freed Map value) without aborting. Diagnostic only.
 pub(super) fn verify_marked_heap_report_nonfatal(phase: &str) {
     let mut stats = MarkInvariantVerifyStats::default();
+    // Full traces mark the whole heap, so every unmarked child of a marked
+    // parent is a finding. A minor's mark set covers only what it collects.
+    let young_only = !crate::gc::full_trace_active();
+    let scope = if young_only { "young_only" } else { "full" };
     crate::arena::arena_walk_objects(|hp| unsafe {
-        verify_marked_object_child_marks(&mut stats, hp as *mut GcHeader);
+        verify_marked_object_child_marks(&mut stats, hp as *mut GcHeader, young_only);
     });
     MALLOC_STATE.with(|s| {
         let s = s.borrow();
         for &header in s.objects.iter() {
             unsafe {
-                verify_marked_object_child_marks(&mut stats, header);
+                verify_marked_object_child_marks(&mut stats, header, young_only);
             }
         }
     });
@@ -1107,8 +1121,9 @@ pub(super) fn verify_marked_heap_report_nonfatal(phase: &str) {
             ((*ph).obj_type, (*ch).obj_type)
         };
         format!(
-            "[gc-mark-verify:{}] marked->UNMARKED edges={} checked_marked={} checked_edges={} | first parent=0x{:x} ptype={}({}) slot=0x{:x} child=0x{:x} ctype={}({})",
+            "[gc-mark-verify:{}] scope={} marked->UNMARKED edges={} checked_marked={} checked_edges={} | first parent=0x{:x} ptype={}({}) slot=0x{:x} child=0x{:x} ctype={}({})",
             phase,
+            scope,
             stats.missing_edges,
             stats.checked_marked_objects,
             stats.checked_edges,
@@ -1122,8 +1137,11 @@ pub(super) fn verify_marked_heap_report_nonfatal(phase: &str) {
         )
     } else {
         format!(
-            "[gc-mark-verify:{}] OK (no marked->unmarked) checked_marked={} checked_edges={}",
-            phase, stats.checked_marked_objects, stats.checked_edges,
+            "[gc-mark-verify:{}] scope={} OK (no marked->unmarked) checked_marked={} checked_edges={}",
+            phase,
+            scope,
+            stats.checked_marked_objects,
+            stats.checked_edges,
         )
     };
     #[cfg(test)]

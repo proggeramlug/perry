@@ -16,6 +16,7 @@ pub(super) use stack_maps::native_maps_active as native_stack_maps_active;
 pub(super) use stack_maps::publish_rewrite_walk_stats as stack_maps_publish_rewrite_walk_stats;
 pub(super) use stack_maps::record_native_stack_walk_source;
 pub(super) use stack_maps::verify_native_slots_post_walk as stack_maps_native_slot_verify;
+pub(in crate::gc) use stack_reject_diag::report_rejected_sample_marks;
 use stack_reject_diag::RejectedStackWordsReport;
 
 pub use rooted_values::RootedValues;
