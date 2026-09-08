@@ -26,3 +26,10 @@ protection needs the same bounded ownership plus release-before-reuse protocol
 as the nursery quarantine. That exceeds the optional sub-200-line extension;
 cell poisoning provides the requested mark-sweep capture without changing
 block lifecycle policy.
+
+The knob is default-off and must cost nothing when off. The old-gen exact-fit
+reuse path, the block-reset hole filter and the three mutator read entry
+points therefore test `poison_swept_maybe_active()` — one relaxed load of a
+flag written once, inside the mode's own resolution — before entering any
+thread-local map. `poison_swept_mode` itself (a `OnceLock` read plus, in test
+builds, a thread-local check) stays on the per-collection paths.

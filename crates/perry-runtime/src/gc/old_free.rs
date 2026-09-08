@@ -103,6 +103,7 @@ pub(super) fn old_free_rebuild_from_live_old_blocks(
     // (`arena_walk_objects_filtered` and friends) step over invalidated
     // headers WITHOUT invoking the callback, so a rebuild written against
     // them silently records zero holes.
+    let poison_active = poison_swept_maybe_active();
     crate::arena::old_arena_walk_all_headers_filtered(
         |block_idx| {
             block_idx >= old_block_start && block_has_live.get(block_idx).copied().unwrap_or(false)
@@ -110,7 +111,9 @@ pub(super) fn old_free_rebuild_from_live_old_blocks(
         |header_ptr, _block_idx| {
             let header = header_ptr as *mut GcHeader;
             unsafe {
-                if (*header).obj_type == 0 || (*header).obj_type == POISON_SWEPT_OBJ_TYPE {
+                if (*header).obj_type == 0
+                    || (poison_active && (*header).obj_type == POISON_SWEPT_OBJ_TYPE)
+                {
                     let total_size = (*header).size as usize;
                     old_free_push(header as usize + GC_HEADER_SIZE, total_size);
                 }
@@ -156,8 +159,10 @@ pub(crate) fn old_free_take_exact(
             OLD_FREE_NONEMPTY.with(|c| c.set(false));
         }
     });
-    unsafe {
-        prepare_swept_cell_reuse(taken);
+    if poison_swept_maybe_active() {
+        unsafe {
+            prepare_swept_cell_reuse(taken);
+        }
     }
     Some(taken)
 }
@@ -173,7 +178,9 @@ pub(crate) fn old_free_filter_range(base: usize, size: usize) {
     let end = base.saturating_add(size);
     // The range is changing ownership even when no exact-fit holes survived
     // the rebuild (for example, an entirely dead old block).
-    forget_swept_cells_in_range(base, end);
+    if poison_swept_maybe_active() {
+        forget_swept_cells_in_range(base, end);
+    }
     if !OLD_FREE_NONEMPTY.with(Cell::get) {
         return;
     }

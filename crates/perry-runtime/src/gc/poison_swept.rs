@@ -25,6 +25,33 @@ fn parse_poison_swept_mode(value: Option<&str>) -> PoisonSweptMode {
 
 static POISON_SWEPT_MODE: OnceLock<PoisonSweptMode> = OnceLock::new();
 
+/// Mirror of "the resolved mode is not `Off`", for the paths a default-off
+/// diagnostic must not slow down: the old-gen reuse allocator, the block
+/// reset walk and the mutator read entry points. `poison_swept_mode` is a
+/// `OnceLock` read plus (in test builds) a thread-local check — fine per
+/// collection, too much per property read and per allocation. This is one
+/// relaxed load of a never-written-again flag, and it is set inside the
+/// resolution below, which every poisoning path passes through before any
+/// cell can carry poison.
+static POISON_SWEPT_ACTIVE: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Cheap "could a poisoned cell exist?" test for hot paths. Never a false
+/// negative once a cell has been poisoned; a false positive only costs the
+/// slow path's own early return. Test builds always take the slow path so a
+/// per-thread test mode is honoured.
+#[inline(always)]
+pub(crate) fn poison_swept_maybe_active() -> bool {
+    #[cfg(test)]
+    {
+        true
+    }
+    #[cfg(not(test))]
+    {
+        POISON_SWEPT_ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
+    }
+}
+
 #[cfg(test)]
 crate::perry_thread_local! {
     static TEST_POISON_SWEPT_MODE: Cell<Option<PoisonSweptMode>> = const { Cell::new(None) };
@@ -37,7 +64,11 @@ pub(crate) fn poison_swept_mode() -> PoisonSweptMode {
         return mode;
     }
     *POISON_SWEPT_MODE.get_or_init(|| {
-        parse_poison_swept_mode(std::env::var("PERRY_GC_POISON_SWEPT").ok().as_deref())
+        let mode = parse_poison_swept_mode(std::env::var("PERRY_GC_POISON_SWEPT").ok().as_deref());
+        if mode != PoisonSweptMode::Off {
+            POISON_SWEPT_ACTIVE.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        mode
     })
 }
 

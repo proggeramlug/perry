@@ -19,7 +19,9 @@ pub(super) unsafe fn dispatch_primitive(
     let _ = (method_name_ptr, method_name_len);
     if (raw_bits & crate::value::TAG_MASK) == crate::value::POINTER_TAG {
         let user_ptr = (raw_bits & crate::value::POINTER_MASK) as usize;
-        if crate::gc::report_stale_swept_read(user_ptr, "dispatch_primitive") {
+        if crate::gc::poison_swept_maybe_active()
+            && crate::gc::report_stale_swept_read(user_ptr, "dispatch_primitive")
+        {
             crate::error::js_throw_type_error_not_a_function(
                 b"object".as_ptr(),
                 b"object".len(),
