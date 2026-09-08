@@ -9,7 +9,7 @@ pub(super) fn side_table_document_from(mut ordinary: Vec<SideTableRow>) -> serde
     // Replace the legacy RegExp tuples with the rich, reconciled rows.
     ordinary.retain(|(table, _, _)| !table.starts_with("regex."));
     let non_regex_total = ordinary.iter().map(|(_, _, bytes)| *bytes).sum::<usize>();
-    let mut rows = ordinary
+    let rows = ordinary
         .drain(..)
         .map(|(table, entries, bytes)| {
             serde_json::json!({"table": table, "entries": entries, "bytes": bytes})
