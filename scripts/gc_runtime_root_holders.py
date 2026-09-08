@@ -190,6 +190,7 @@ import tempfile
 from pathlib import Path, PurePath, PureWindowsPath
 
 from gc_snapshot_contracts import snapshot_contract_problems, snapshot_contract_self_test
+from gc_weak_index_contracts import weak_index_contract_problems, weak_index_contract_self_test
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 INVENTORY_PATH = REPO_ROOT / "scripts" / "gc_runtime_root_holders.json"
@@ -1041,6 +1042,7 @@ VERDICTS = {
     "not_a_gc_pointer",  # id, counter, epoch, code address, .rodata, Rust-owned
     "test_only",  # #[cfg(test)] storage
     "non_moving_snapshot",  # deliberately untraced within a pinned collector window
+    "weak_nonmoving_index",  # weak cells with checked identity and pinned cleanup
     "open_gap",  # a real unrooted GC pointer, with an issue
     "unverified",  # enumerated, verdict not established — a dated TODO
 }
@@ -1142,6 +1144,8 @@ def inventory_problems(inventory: list[dict], root: Path | None = None) -> list[
                 f"{label}: covered_elsewhere must name the `scanner` that covers it, or "
                 f"the claim cannot be checked or maintained"
             )
+        if verdict == "weak_nonmoving_index":
+            problems.extend(weak_index_contract_problems(entry, root))
         if verdict == "non_moving_snapshot":
             problems.extend(snapshot_contract_problems(entry, root))
         if verdict == "open_gap" and not (entry.get("issue") or "").strip():
@@ -1924,6 +1928,7 @@ def self_test() -> int:
         )
     failures.extend(inventory_problems(inventory, REPO_ROOT))
     failures.extend(snapshot_contract_self_test())
+    failures.extend(weak_index_contract_self_test())
     # …and the structural checker must itself be able to fail.
     long_why = "x" * 30
     for bad, expect in (

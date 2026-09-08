@@ -128,7 +128,7 @@ impl MallocState {
     /// those during this Drop could hit an already-destroyed TLS and panic
     /// ("cannot access a Thread Local Storage value during or after
     /// destruction"), aborting the thread. We therefore reclaim only the object
-    /// blocks themselves — the audit's primary worker-exit leak. Any external
+    /// blocks themselves, with one native-only canonical lease release — the audit's primary worker-exit leak. Any external
     /// side-allocations those objects own (a Map's entry table, an error's side
     /// tables) are out of scope for this mechanical fix. This also avoids the
     /// re-entrant `MALLOC_STATE.with(...)` the sweep bookkeeping performs.
@@ -151,6 +151,14 @@ impl MallocState {
                 let total_size = (*header).size as usize;
                 if total_size == 0 {
                     continue;
+                }
+                // Canonical wrapper ownership is native-only and independent
+                // of resource finalizers or JS TLS destruction order.
+                if (*header).obj_type == GC_TYPE_NATIVE_HANDLE {
+                    let _ = crate::native_handle::canonical::release_native_metadata(
+                        (header as *mut u8).add(GC_HEADER_SIZE)
+                            as *mut crate::native_handle::NativeHandleHeader,
+                    );
                 }
                 let layout = Layout::from_size_align(total_size, 8).unwrap();
                 dealloc(header as *mut u8, layout);

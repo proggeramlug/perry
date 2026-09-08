@@ -5,6 +5,9 @@
 //! the resource pointer is not a Perry heap edge and finalizers must be basic
 //! native cleanup callbacks only.
 
+/// Exact-identity managed wrapper publication for future native adapters.
+pub mod canonical;
+
 use std::collections::hash_map::DefaultHasher;
 use std::ffi::c_void;
 use std::hash::{Hash, Hasher};
@@ -43,6 +46,8 @@ pub struct NativeHandleHeader {
     pub debug_name_len: u16,
     pub _pad1: [u8; 6],
     pub debug_name: [u8; DEBUG_NAME_CAP],
+    // Native-only metadata; owned by this nonmoving cell until GC cleanup.
+    pub(crate) registration: *mut canonical::Registration,
 }
 
 fn current_thread_id() -> u64 {
@@ -197,6 +202,7 @@ unsafe fn native_handle_new(
         debug_name_len.max(0) as usize,
     );
     (*handle)._pad1 = [0; 6];
+    (*handle).registration = ptr::null_mut();
     f64::from_bits(crate::value::JSValue::pointer(handle as *const u8).bits())
 }
 
@@ -403,6 +409,8 @@ pub extern "C" fn js_native_handle_dispose(value: f64) -> i32 {
 
 pub(crate) unsafe fn finalize_native_handle_for_gc(handle: *mut NativeHandleHeader) {
     let _ = finalize_once(handle);
+    // Disposal and GC cleanup have independent lifetimes.
+    canonical::cleanup_for_gc(handle);
 }
 
 #[cfg(test)]

@@ -43,6 +43,7 @@ mod layout_residue_histogram;
 mod layout_trace;
 mod lazy_intrinsic_towers;
 mod lazy_tape_side_alloc;
+mod native_handle_canonical;
 mod oldgen;
 mod os_tag;
 mod promote_in_place;

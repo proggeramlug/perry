@@ -21,6 +21,10 @@
     "  unverified         - enumerated, verdict NOT established. This also FAILS: an unknown",
     "                       movable-address contract cannot be a production exemption.",
     "",
+    "  weak_nonmoving_index - real nonmoving GC addresses held weakly; checked identity,",
+    "                        matching-address deletion, native-only teardown, and allocator",
+    "                        bodies are review-pinned in contract.sources. Never a root.",
+    "",
     "  non_moving_snapshot - real GC addresses deliberately untraced inside one non-moving",
     "                        collector window. window names start/end/owner functions and",
     "                        SHA-256 source pins for the holder and reviewed control flow.",
@@ -509,6 +513,45 @@
       "verdict": "not_a_gc_pointer",
       "why": "Holds Set/Map header ADDRESSES as identity keys for in-flight forEach walks (#9082); the values are only ever compared (`contains`, `pop` equality) and truncated, never dereferenced, so no collector edge originates here. Correctness across evacuation is maintained by set_header_moved_for_gc / map_header_moved_for_gc, which rewrite every matching entry when a header moves \u2014 see the SET_FOREACH_STACK/MAP_FOREACH_STACK rewrite loops there.",
       "reason": "Holds Set/Map header ADDRESSES as identity keys for in-flight forEach walks (#9082); the values are only ever compared (`contains`, `pop` equality) and truncated, never dereferenced, so no collector edge originates here. Correctness across evacuation is maintained by set_header_moved_for_gc / map_header_moved_for_gc, which rewrite every matching entry when a header moves \u2014 see the SET_FOREACH_STACK/MAP_FOREACH_STACK rewrite loops there."
+    },
+    {
+      "file": "crates/perry-runtime/src/native_handle/canonical.rs",
+      "name": "CANONICAL",
+      "verdict": "weak_nonmoving_index",
+      "why": "Per-JS-thread weak canonical index keyed by immutable native domain/serial/id identity. Values are real malloc-backed GC_TYPE_NATIVE_HANDLE cell addresses, never strong roots and never nursery/old-arena movable addresses. lookup retains the checked native-handle reader and validates exact identity/type. Normal GC removes only the matching address; native lease release takes cell metadata exactly once before best-effort TLS cleanup. Malloc thread teardown invokes only native metadata release, without resource callbacks or JS TLS. Production publishers remain inactive; scalar and acyclic child fixtures do not establish owner-cycle collection. Pinned bodies require re-audit on changes, rather than claiming these addresses are not GC pointers.",
+      "contract": {
+        "allocator": {
+          "file": "crates/perry-runtime/src/native_handle.rs",
+          "function": "native_handle_new"
+        },
+        "recognizer": {
+          "file": "crates/perry-runtime/src/native_handle/canonical.rs",
+          "function": "lookup"
+        },
+        "weak_delete": {
+          "file": "crates/perry-runtime/src/native_handle/canonical.rs",
+          "function": "remove_matching"
+        },
+        "gc_cleanup": {
+          "file": "crates/perry-runtime/src/native_handle/canonical.rs",
+          "function": "cleanup_for_gc"
+        },
+        "native_release": {
+          "file": "crates/perry-runtime/src/native_handle/canonical.rs",
+          "function": "release_native_metadata"
+        },
+        "thread_teardown": {
+          "file": "crates/perry-runtime/src/gc/malloc.rs",
+          "function": "free_all_tracked_objects"
+        },
+        "sources": {
+          "crates/perry-runtime/src/native_handle/canonical.rs": "86a51ae3096698e1a70fd1ae28f24a3ea8da975e41d053ab4516e3715a328cf9",
+          "crates/perry-runtime/src/native_handle.rs": "eaa3b12ee2a424c030e4531f03271cafe4649c78e8e3a378caa0ccbe4283481d",
+          "crates/perry-runtime/src/gc/malloc.rs": "dfbcc6c0815b67f7cc0984f3f4eeac5bbfc7db53afa6f43965488d2de310a643",
+          "crates/perry-runtime/src/object/handle_expando.rs": "aadca95d45e8e684f6038fcd4f1eb978447066b0d1f9b871f36f44a895f60688",
+          "crates/perry-runtime/src/gc/types.rs": "43608dd3c7fa62e07a214cc133479da00b5217c943d1ca49a065ccdc53431658"
+        }
+      }
     },
     {
       "file": "crates/perry-runtime/src/net.rs",

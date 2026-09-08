@@ -6447,6 +6447,7 @@ dependencies = [
  "notify",
  "perry-diagnostics",
  "perry-dispatch",
+ "perry-native-registration",
  "perry-parser",
  "rand 0.10.2",
  "regex",

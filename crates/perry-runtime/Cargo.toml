@@ -301,6 +301,7 @@ dyn-eval = ["dep:perry-parser", "dep:perry-diagnostics"]
 # with perry-hir through perry-dispatch, so the runtime's property-read and
 # method-call paths and the HIR's import lowering cannot drift apart.
 perry-dispatch.workspace = true
+perry-native-registration.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
 libc.workspace = true

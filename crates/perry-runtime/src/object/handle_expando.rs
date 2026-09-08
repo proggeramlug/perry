@@ -100,6 +100,16 @@ pub fn handle_expando_clear(handle: i64) {
     super::descriptor_state::clear_object_descriptors(handle as usize);
 }
 
+/// GC-only removal for a nonmoving canonical owner. A destroyed TLS table
+/// already dropped its entries; native lease release must not depend on it.
+/// Descriptor/symbol/prototype ownership is handled by the collector's existing
+/// dead-owner passes. This does not enable canonical owner-conditioned tracing.
+pub(crate) fn clear_plain_expando_for_gc(handle: i64) {
+    let _ = HANDLE_EXPANDO_PROPS.try_with(|cell| {
+        cell.borrow_mut().remove(&handle);
+    });
+}
+
 /// Read back an own property previously stored via `handle_expando_set`.
 /// Returns `None` when no such property exists (caller falls through to its
 /// `undefined` default). Mirrors `closure_get_own_dynamic_prop`.
