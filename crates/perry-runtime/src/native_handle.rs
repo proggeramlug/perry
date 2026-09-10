@@ -13,6 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 mod canonical;
 
+pub(crate) use canonical::canonical_handle_value_owned;
 pub use canonical::{
     canonical_handle_id_for_provider, canonical_handle_parts_from_addr,
     canonical_handle_parts_from_value, canonical_handle_value, is_canonical_handle_addr,
@@ -20,7 +21,6 @@ pub use canonical::{
     NATIVE_HANDLE_PROVIDER_TEXT_DECODER, NATIVE_HANDLE_PROVIDER_TEXT_ENCODER,
     NATIVE_HANDLE_PROVIDER_TIMER,
 };
-pub(crate) use canonical::canonical_handle_value_owned;
 
 #[cfg(test)]
 pub(crate) fn canonical_handle_entry_count_for_tests(provider: u64) -> usize {
@@ -413,6 +413,36 @@ pub extern "C" fn js_native_handle_unwrap(
     }
 }
 
+/// Static native-ABI adapter for canonical registry wrappers. Managed wrapper
+/// values become their stable registry id; legacy pointer-tagged ids retain
+/// the old unbox behavior while their family is still awaiting migration.
+#[no_mangle]
+pub extern "C" fn js_canonical_handle_id(value: f64) -> i64 {
+    canonical_handle_parts_from_value(value)
+        .map(|(_, id)| id)
+        .unwrap_or_else(|| crate::value::js_nanbox_get_pointer(value))
+}
+
+#[no_mangle]
+pub extern "C" fn js_canonical_handle_id_from_addr(addr: i64) -> i64 {
+    canonical_handle_parts_from_addr(addr as usize)
+        .map(|(_, id)| id)
+        .unwrap_or(addr)
+}
+
+/// Stable FFI publisher for ids allocated by the common/perry-ffi registry.
+#[no_mangle]
+pub extern "C" fn js_canonical_common_handle_value(id: i64) -> f64 {
+    canonical_handle_value(NATIVE_HANDLE_PROVIDER_COMMON, id)
+}
+
+/// Tell the weak canonical interner that the common registry id is no longer
+/// live. A later reuse of the integer receives a fresh JavaScript identity.
+#[no_mangle]
+pub extern "C" fn js_canonical_common_handle_retire(id: i64) {
+    canonical::retire(NATIVE_HANDLE_PROVIDER_COMMON, id);
+}
+
 /// Explicitly dispose a native handle. Used by tests and future explicit
 /// resource-management surfaces.
 #[no_mangle]
@@ -511,6 +541,93 @@ mod tests {
             name.as_ptr(),
             name.len() as i64,
         )
+    }
+
+    fn common_wrapper(id: i64) -> f64 {
+        canonical_handle_value(NATIVE_HANDLE_PROVIDER_COMMON, id)
+    }
+
+    #[test]
+    fn common_handle_values_are_managed_wrappers_with_headers() {
+        crate::hot_diag::receiver_repr_test_reset();
+        crate::hot_diag::receiver_repr_test_arm(true);
+        crate::hot_diag::receiver_repr_note_constructed(
+            crate::hot_diag::ReceiverReprFamily::Common,
+        );
+        let value = common_wrapper(0x2345);
+        let addr = crate::value::js_nanbox_get_pointer(value) as usize;
+        let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) }
+            .expect("common handle wrapper must have a tracked GcHeader");
+        assert_eq!(
+            unsafe { header.as_ref().obj_type },
+            crate::gc::GC_TYPE_NATIVE_HANDLE
+        );
+
+        let key = crate::string::js_string_from_bytes(b"missing".as_ptr(), 7);
+        let _ = crate::object::js_object_get_field_by_name_f64(addr as *const _, key);
+        let (constructed, observed_old, observed_wrapped) =
+            crate::hot_diag::receiver_repr_test_snapshot(
+                crate::hot_diag::ReceiverReprFamily::Common,
+            );
+        assert!(constructed > 0);
+        assert_eq!(observed_old, 0);
+        assert!(observed_wrapped > 0);
+        crate::hot_diag::receiver_repr_test_arm(false);
+    }
+
+    #[test]
+    fn common_handle_identity_survives_a_copying_minor() {
+        let _isolation = crate::gc::CopyingNurseryTestGuard::new(0);
+        let scope = crate::gc::RuntimeHandleScope::new();
+        let first = scope.root_nanbox_f64(common_wrapper(0x2346));
+        let young = crate::object::js_object_alloc(0, 0);
+        let _young = scope.root_raw_mut_ptr(young);
+        let before = crate::gc::copying_minor_cycles();
+        let _ = crate::gc::gc_collect_minor();
+        assert!(crate::gc::copying_minor_cycles() > before);
+        assert_eq!(
+            first.get_nanbox_f64().to_bits(),
+            common_wrapper(0x2346).to_bits()
+        );
+        assert_eq!(
+            canonical_handle_parts_from_value(first.get_nanbox_f64()),
+            Some((NATIVE_HANDLE_PROVIDER_COMMON, 0x2346))
+        );
+    }
+
+    #[inline(never)]
+    fn create_and_drop_common_wrapper() -> usize {
+        crate::value::js_nanbox_get_pointer(common_wrapper(0x2347)) as usize
+    }
+
+    #[test]
+    fn common_handle_wrapper_finalization_or_immortality() {
+        let _isolation = crate::gc::global_side_table_test_lock();
+        crate::gc::js_gc_collect();
+        let before = canonical_handle_entry_count_for_tests(NATIVE_HANDLE_PROVIDER_COMMON);
+        let old_addr = create_and_drop_common_wrapper();
+        assert_eq!(
+            canonical_handle_entry_count_for_tests(NATIVE_HANDLE_PROVIDER_COMMON),
+            before + 1
+        );
+        crate::gc::js_gc_collect();
+        assert_eq!(
+            canonical_handle_entry_count_for_tests(NATIVE_HANDLE_PROVIDER_COMMON),
+            before,
+            "common wrappers are borrowed identities and only release the weak entry"
+        );
+        assert!(canonical_handle_parts_from_addr(old_addr).is_none());
+
+        let retained = common_wrapper(0x2348);
+        let retained_addr = crate::value::js_nanbox_get_pointer(retained) as usize;
+        js_canonical_common_handle_retire(0x2348);
+        assert!(canonical_handle_parts_from_addr(retained_addr).is_none());
+        let recycled = common_wrapper(0x2348);
+        assert_ne!(
+            recycled.to_bits(),
+            retained.to_bits(),
+            "a registry-recycled id must receive a fresh JavaScript identity"
+        );
     }
 
     #[test]

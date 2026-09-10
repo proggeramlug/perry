@@ -60,7 +60,7 @@ extern "C" fn async_local_storage_unbound_method_thunk(
         let receiver_handle = scope.root_nanbox_f64(perry_runtime::object::js_implicit_this_get());
         let receiver = receiver_handle.get_nanbox_f64();
         let receiver_raw = if receiver.to_bits() >> 48 == 0x7FFD {
-            (receiver.to_bits() & POINTER_MASK_BITS) as i64
+            perry_runtime::native_handle::js_canonical_handle_id(receiver)
         } else {
             0
         };
@@ -93,7 +93,7 @@ extern "C" fn async_local_storage_unbound_method_thunk(
         }
         let receiver = receiver_handle.get_nanbox_f64();
         let receiver_raw = if receiver.to_bits() >> 48 == 0x7FFD {
-            (receiver.to_bits() & POINTER_MASK_BITS) as i64
+            perry_runtime::native_handle::js_canonical_handle_id(receiver)
         } else {
             0
         };

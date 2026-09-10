@@ -95,7 +95,7 @@ fn undefined() -> f64 {
 }
 
 fn handle_value(handle: i64) -> f64 {
-    f64::from_bits(POINTER_TAG | (handle as u64 & POINTER_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 fn callback_pointer(value: f64) -> i64 {

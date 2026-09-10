@@ -609,6 +609,7 @@ pub extern "C" fn js_object_get_field_ic_miss(
             }
         }
     }
+    let mut receiver_is_object = false;
     if crate::value::addr_class::is_above_handle_band(obj as usize) {
         // #7753: `arr.length` on a receiver codegen could not prove is an array.
         //
@@ -651,6 +652,15 @@ pub extern "C" fn js_object_get_field_ic_miss(
         }
         if unsafe { key_bytes_are(key, b"length") } {
             match unsafe { gc_type_of(obj) } {
+                Some(crate::gc::GC_TYPE_STRING) => {
+                    // A heap string owns its UTF-16 length. The generic
+                    // property tail returns this same header field after
+                    // repeating receiver classification and family lookups.
+                    if diag {
+                        ic_diag_note(cache_slot, key, R::NonObjectGcType);
+                    }
+                    return unsafe { (*(obj as *const crate::StringHeader)).utf16_len as f64 };
+                }
                 Some(crate::gc::GC_TYPE_ARRAY) => {
                     if diag {
                         ic_diag_note(cache_slot, key, R::ArrayLength);
@@ -679,29 +689,36 @@ pub extern "C" fn js_object_get_field_ic_miss(
                 _ => {}
             }
         }
-        unsafe {
-            if let Some(val) = closure_dynamic_prop_by_key(obj as usize, key) {
-                if diag {
-                    ic_diag_note(cache_slot, key, R::ClosureProp);
+        // Migrated receiver representations carry a GC type before the payload.
+        // Keep only the ordinary-object answer across the remaining local path:
+        // that route performs no callback before PIC admission below.
+        receiver_is_object = unsafe {
+            crate::value::addr_class::direct_receiver_gc_header(obj as usize)
+                .is_some_and(|header| (*header).obj_type == crate::gc::GC_TYPE_OBJECT)
+        };
+        if !receiver_is_object {
+            unsafe {
+                if let Some(val) = closure_dynamic_prop_by_key(obj as usize, key) {
+                    if diag {
+                        ic_diag_note(cache_slot, key, R::ClosureProp);
+                    }
+                    return val;
                 }
-                return val;
-            }
-            // Buffers have no GcHeader. The generic IC-miss object path below may
-            // inspect GC/object metadata, so mirror js_object_get_field_by_name's
-            // buffer-first dispatch here.
-            if crate::buffer::is_registered_buffer(obj as usize) {
-                if diag {
-                    ic_diag_note(cache_slot, key, R::Buffer);
+                // Other receiver families keep their established property routes.
+                if crate::buffer::is_registered_buffer(obj as usize) {
+                    if diag {
+                        ic_diag_note(cache_slot, key, R::Buffer);
+                    }
+                    let value = js_object_get_field_by_name(obj, key);
+                    return f64::from_bits(value.bits());
                 }
-                let value = js_object_get_field_by_name(obj, key);
-                return f64::from_bits(value.bits());
-            }
-            if crate::typedarray::lookup_typed_array_kind(obj as usize).is_some() {
-                if diag {
-                    ic_diag_note(cache_slot, key, R::TypedArray);
+                if crate::typedarray::lookup_typed_array_kind(obj as usize).is_some() {
+                    if diag {
+                        ic_diag_note(cache_slot, key, R::TypedArray);
+                    }
+                    let value = js_object_get_field_by_name(obj, key);
+                    return f64::from_bits(value.bits());
                 }
-                let value = js_object_get_field_by_name(obj, key);
-                return f64::from_bits(value.bits());
             }
         }
     }
@@ -827,13 +844,16 @@ pub extern "C" fn js_object_get_field_ic_miss(
         // The codegen guard funnels non-OBJECT receivers here too, so this
         // belt-and-braces check keeps the cache from being primed with
         // values that would survive into the inline hot path.
-        let is_object = (obj as usize) >= crate::gc::GC_HEADER_SIZE + 0x1000
-            && is_valid_obj_ptr(obj as *const u8)
-            && {
-                let gc_header =
-                    (obj as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
-                (*gc_header).obj_type == crate::gc::GC_TYPE_OBJECT
-            };
+        // Reuse the local object answer; residual routes retain their original
+        // classification. No header pointer is carried through property callbacks.
+        let is_object = receiver_is_object
+            || ((obj as usize) >= crate::gc::GC_HEADER_SIZE + 0x1000
+                && is_valid_obj_ptr(obj as *const u8)
+                && {
+                    let gc_header =
+                        (obj as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
+                    (*gc_header).obj_type == crate::gc::GC_TYPE_OBJECT
+                });
         let has_own_descriptors = is_object && super::super::object_has_descriptors(obj as usize);
         // #8122: ONE shape-table probe. `object_is_regular` is `GC_TYPE_OBJECT
         // && !FORWARDED && descriptor.object_kind == Ordinary`; the kind test
@@ -1080,16 +1100,17 @@ unsafe fn pic_outlined_mru_hit(
         return None;
     }
     let addr = obj_handle as usize;
-    if !crate::value::addr_class::is_above_handle_band(addr) {
-        return None;
-    }
+    // Migrated receivers carry a header before the payload. The type check
+    // below already excludes canonical native handles from ordinary-object
+    // hits, so their address filter and ownership lookup add no information.
+    let header = crate::value::addr_class::direct_receiver_gc_header(addr)?;
     // The site has never primed: there is nothing to hit, and resolving the
     // slot is the miss handler's job.
     let cache = pic_slot_peek(cache_slot);
     if cache.is_null() {
         return None;
     }
-    let header = &*((addr - crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader);
+    let header = &*header;
     if header.obj_type != crate::gc::GC_TYPE_OBJECT
         || header._reserved & crate::gc::OBJ_FLAG_HAS_DESCRIPTORS != 0
     {
@@ -1157,12 +1178,19 @@ pub extern "C" fn js_object_get_field_ic(
     // proxies, small handles all dispatch correctly there, and the per-site cache
     // is primed for any future inline sites sharing this global).
     if (tag & 0xFFFD) == 0x7FFD {
-        crate::typed_feedback::js_typed_feedback_observe_property_get(site_id, obj_handle, key);
+        // Feedback is optional and its enablement is process-stable. Gate
+        // before entering either recorder; the PIC itself remains active.
+        let record_feedback = site_id != 0 && crate::typed_feedback::typed_feedback_active();
+        if record_feedback {
+            crate::typed_feedback::js_typed_feedback_observe_property_get(site_id, obj_handle, key);
+        }
         // The monomorphic hit the emitted diamond does inline. Everything it
         // declines still reaches the handler below, so this only ever removes
         // work. See `pic_outlined_mru_hit`.
         if let Some(value) = unsafe { pic_outlined_mru_hit(obj_handle, cache_slot) } {
-            crate::typed_feedback::js_typed_feedback_record_guard_pass(site_id);
+            if record_feedback {
+                crate::typed_feedback::js_typed_feedback_record_guard_pass(site_id);
+            }
             return value;
         }
         return js_object_get_field_ic_miss(obj_handle, key, cache_slot);

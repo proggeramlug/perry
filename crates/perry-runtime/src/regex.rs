@@ -132,34 +132,25 @@ pub use exec::js_regexp_exec;
 #[cfg(feature = "regex-engine")]
 pub use match_string::{js_string_match, js_string_match_value, js_string_search_value};
 
+/// Source text and local owner registration share one address-keyed entry.
+/// A source-only entry can be added by `RegExp.prototype.compile` for a
+/// receiver recognized through its header in another runtime instance.
+struct RegexMetadata {
+    source: (Arc<str>, Arc<str>),
+    registered_owner: bool,
+}
+
 crate::perry_thread_local! {
     #[cfg(feature = "regex-engine")]
     static LAST_EXEC_INDEX: RefCell<f64> = const { RefCell::new(0.0) };
 
     static LAST_EXEC_GROUPS: RefCell<*mut ObjectHeader> = const { RefCell::new(ptr::null_mut()) };
 
-    /// Set of live RegExpHeader pointers allocated in this thread.
-    /// Used by callers (e.g. `js_string_split`) to distinguish a regex
-    /// delimiter from a string delimiter when the codegen can't tell
-    /// statically. GC move/death hooks rekey and remove entries as cells
-    /// relocate or die. Header magic remains the primary identity check.
-    static REGEX_POINTERS: RefCell<crate::fast_hash::PtrHashSet<usize>> = RefCell::new(crate::fast_hash::new_ptr_hash_set());
-
-    /// Issue #637: Owned copies of pattern and flags strings keyed by
-    /// the RegExpHeader pointer. The header's `pattern_ptr` / `flags_ptr`
-    /// fields hold raw `*const StringHeader` pointers to the input
-    /// strings — when those inputs are temporaries (e.g. the result of
-    /// a template-literal expression `\`^${p}\``), the GC frees them
-    /// after the function call returns and subsequent `.source` /
-    /// `.flags` reads dereference dangling memory. We side-table an
-    /// owned `String` copy at construction time; readers prefer this
-    /// over `pattern_ptr` whenever an entry exists.
-    ///
-    /// The copies are `Arc<str>` shared with `regex::site_cache`: every
-    /// header built from the same literal text bumps two refcounts instead
-    /// of copying the pattern (12 KB for emoji-class patterns, once per
-    /// evaluation of the literal).
-    static REGEX_SOURCE_TABLE: RefCell<crate::fast_hash::PtrHashMap<usize, (Arc<str>, Arc<str>)>> = RefCell::new(crate::fast_hash::new_ptr_hash_map());
+    /// Owned pattern and flags text, shared with the literal-site cache.
+    /// The registration bit records headers constructed in this runtime
+    /// instance; only those entries participate in collector owner walks.
+    /// Source-only entries retain their previous read/update behavior.
+    static REGEX_SOURCE_TABLE: RefCell<crate::fast_hash::PtrHashMap<usize, RegexMetadata>> = RefCell::new(crate::fast_hash::new_ptr_hash_map());
 }
 
 /// Check whether `ptr` is a RegExpHeader pointer that was allocated in
@@ -182,7 +173,7 @@ pub(crate) fn is_regex_pointer(ptr: *const u8) -> bool {
 
 /// Monotone "this process has ever constructed a `RegExp`" latch.
 ///
-/// The three `REGEX_POINTERS` probes all reach the thread-local table only
+/// The three owner-registration probes all reach the thread-local table only
 /// *after* the header-magic check misses — which is the common case, since they
 /// are asked about ordinary objects on the generic property-dispatch path
 /// (`object::exotic_expando::exotic_expando_kind`) and from `String.prototype`
@@ -196,7 +187,12 @@ fn regex_pointers_contains(addr: usize) -> bool {
     if REGEX_EVER_REGISTERED.is_idle() {
         return false;
     }
-    REGEX_POINTERS.with(|s| s.borrow().contains(&addr))
+    REGEX_SOURCE_TABLE.with(|table| {
+        table
+            .borrow()
+            .get(&addr)
+            .is_some_and(|entry| entry.registered_owner)
+    })
 }
 
 /// Rekey every address-owned RegExp table after payload evacuation. Header
@@ -206,16 +202,20 @@ pub(crate) fn regex_header_moved_for_gc(old_addr: usize, new_addr: usize) {
     if old_addr == new_addr {
         return;
     }
-    REGEX_POINTERS.with(|table| {
-        let mut table = table.borrow_mut();
-        if table.remove(&old_addr) {
-            table.insert(new_addr);
-        }
-    });
     REGEX_SOURCE_TABLE.with(|table| {
         let mut table = table.borrow_mut();
-        if let Some(source) = table.remove(&old_addr) {
-            table.insert(new_addr, source);
+        if let Some(mut metadata) = table.remove(&old_addr) {
+            match table.entry(new_addr) {
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    // The former set retained destination registration too;
+                    // the source metadata still comes from the moved owner.
+                    metadata.registered_owner |= entry.get().registered_owner;
+                    entry.insert(metadata);
+                }
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(metadata);
+                }
+            }
         }
     });
     crate::object::exotic_expando::exotic_expando_owner_moved(old_addr, new_addr);
@@ -223,9 +223,6 @@ pub(crate) fn regex_header_moved_for_gc(old_addr: usize, new_addr: usize) {
 
 /// Remove address-owned RegExp metadata when the cell is proven dead.
 pub(crate) fn regex_header_clear_dead_for_gc(addr: usize) {
-    REGEX_POINTERS.with(|table| {
-        table.borrow_mut().remove(&addr);
-    });
     REGEX_SOURCE_TABLE.with(|table| {
         table.borrow_mut().remove(&addr);
     });
@@ -271,7 +268,7 @@ pub(crate) unsafe fn regex_header_finalize_for_gc(re: *mut RegExpHeader) {
 ///
 /// The copying minor's from-space flip runs no per-object finalize hooks, so
 /// a nursery header that was neither evacuated nor pinned would otherwise keep
-/// its `Arc` programs and its `REGEX_POINTERS` / `REGEX_SOURCE_TABLE` / expando
+/// its `Arc` programs and its source/registration metadata and expando
 /// entries forever. Same shape as `map::finalize_dead_copied_minor_from_space_maps`:
 /// walk the registry after the flip, collect the provably-dead addresses, then
 /// finalize each (the finalizer removes its own registry entries, which is why
@@ -281,11 +278,12 @@ pub(crate) unsafe fn regex_header_finalize_for_gc(re: *mut RegExpHeader) {
 /// minor) — the same order as the malloc sweep this replaces, and
 /// proportional to allocation, not to program history.
 pub(crate) fn finalize_dead_copied_minor_from_space_regexps() -> usize {
-    let dead: Vec<usize> = REGEX_POINTERS.with(|table| {
-        table
-            .borrow()
+    let dead: Vec<usize> = REGEX_SOURCE_TABLE.with(|table| {
+        let table = table.borrow();
+        let owners = table
             .iter()
-            .copied()
+            .filter_map(|(&addr, entry)| entry.registered_owner.then_some(addr));
+        crate::gc::prefetch::prefetch_gc_owner_headers(owners)
             .filter(|&addr| {
                 crate::gc::owner_is_dead_copied_minor_from_space_of_type(
                     addr,
@@ -295,7 +293,7 @@ pub(crate) fn finalize_dead_copied_minor_from_space_regexps() -> usize {
             .collect()
     });
     let count = dead.len();
-    for addr in dead {
+    for addr in crate::gc::prefetch::prefetch_gc_owner_headers(dead.iter().copied()) {
         unsafe { regex_header_finalize_for_gc(addr as *mut RegExpHeader) };
     }
     count
@@ -308,11 +306,11 @@ pub(crate) fn finalize_dead_copied_minor_from_space_regexps() -> usize {
 /// Deadness: unmarked ∧ not pinned ∧ not forwarded, and for a minor trace also
 /// not tenured and physically in the nursery.
 pub(crate) fn collect_dead_registered_regexps_post_trace(full_trace: bool) -> Vec<usize> {
-    REGEX_POINTERS.with(|table| {
+    REGEX_SOURCE_TABLE.with(|table| {
         table
             .borrow()
             .iter()
-            .copied()
+            .filter_map(|(&addr, entry)| entry.registered_owner.then_some(addr))
             .filter(|&addr| unsafe { registered_regexp_is_dead_post_trace(addr, full_trace) })
             .collect()
     })
@@ -383,7 +381,12 @@ pub(crate) fn test_regexp_std_program_strong_count(re: *const RegExpHeader) -> u
 
 #[cfg(test)]
 pub(crate) fn test_regex_pointer_entry_exists(addr: usize) -> bool {
-    REGEX_POINTERS.with(|table| table.borrow().contains(&addr))
+    REGEX_SOURCE_TABLE.with(|table| {
+        table
+            .borrow()
+            .get(&addr)
+            .is_some_and(|entry| entry.registered_owner)
+    })
 }
 
 #[cfg(test)]
@@ -423,13 +426,14 @@ pub(crate) fn test_alloc_nursery_regexp_for_move(source: &str, flags: &str) -> *
         (*ptr).repeat_matcher_ptr = std::ptr::null();
 
         REGEX_EVER_REGISTERED.arm();
-        REGEX_POINTERS.with(|table| {
-            table.borrow_mut().insert(ptr as usize);
-        });
         REGEX_SOURCE_TABLE.with(|table| {
-            table
-                .borrow_mut()
-                .insert(ptr as usize, (Arc::from(source), Arc::from(flags)));
+            table.borrow_mut().insert(
+                ptr as usize,
+                RegexMetadata {
+                    source: (Arc::from(source), Arc::from(flags)),
+                    registered_owner: true,
+                },
+            );
         });
         ptr
     }
@@ -551,7 +555,7 @@ pub struct RegExpHeader {
     /// Wall 18 (nestjs / get-intrinsic): self-identifying sentinel.
     ///
     /// `is_valid_regex_ptr` / `is_regex_pointer` / `is_registered_regex` used to
-    /// rely SOLELY on the `REGEX_POINTERS` thread-local set. That breaks when a
+    /// rely SOLELY on thread-local owner registration. That breaks when a
     /// statically-linked app pulls a second copy of `perry-runtime` (every
     /// `perry-ext-*` archive bundles its own — the link emits duplicate-symbol
     /// warnings): `js_regexp_new` inserts into copy-A's thread-local while the
@@ -642,7 +646,7 @@ pub(crate) fn is_valid_ptr<T>(p: *const T) -> bool {
 }
 
 /// Check if a RegExpHeader pointer is legitimate — it must point to a
-/// header we allocated via `js_regexp_new` (tracked in REGEX_POINTERS).
+/// header we allocated via `js_regexp_new` (recorded as a registered owner).
 /// The LLVM backend's `new RegExp(pat, flags)` currently falls through
 /// to the generic `lower_new` path which allocates an empty object and
 /// NaN-boxes it as a regex; subsequent `.exec()` / `.test()` calls would
@@ -1110,7 +1114,7 @@ fn js_regexp_new_impl(
     // old-generation prices to do it.
     //
     // `GC_TYPE_REGEXP` has been movable (`GcMoveHookKind::RegExpSideTables`
-    // rekeys `REGEX_POINTERS`, `REGEX_SOURCE_TABLE` and the expando owner
+    // rekeys `REGEX_SOURCE_TABLE` (including registration) and the expando owner
     // after evacuation; `GcLayoutSlotKind::RegExpFields` traces the two string
     // edges and `meta`) since the copying collector landed, and
     // `test_movable_regexp_evacuation_migrates_all_address_owned_state` has
@@ -1288,23 +1292,22 @@ fn js_regexp_new_impl(
         // `s.split(regex)` without a dedicated runtime decl.
         // Arm before the insert — see `crate::registry_latch`.
         REGEX_EVER_REGISTERED.arm();
-        REGEX_POINTERS.with(|s| {
-            s.borrow_mut().insert(ptr as usize);
-        });
         if crate::hot_diag::regex_on() {
-            // Two address-keyed inserts per construction (this one and
-            // `REGEX_SOURCE_TABLE` below), each a `PtrHasher` hash plus a
-            // hashbrown insert, mirrored by two removals at death and two
-            // rekeys per evacuation. Counted so the pair is a number rather
-            // than a reading of the profile.
-            crate::hot_diag::regex_counters(|d| d.new_side_table_inserts += 2);
+            // One address-keyed insert stores both source and registration,
+            // mirrored by one removal at death and one rekey per evacuation.
+            crate::hot_diag::regex_counters(|d| d.new_side_table_inserts += 1);
         }
 
         // Issue #637: side-table owned copies of pattern + flags so
         // `.source` / `.flags` survive GC of the input StringHeaders.
         REGEX_SOURCE_TABLE.with(|t| {
-            t.borrow_mut()
-                .insert(ptr as usize, (owned_pattern, owned_flags));
+            t.borrow_mut().insert(
+                ptr as usize,
+                RegexMetadata {
+                    source: (owned_pattern, owned_flags),
+                    registered_owner: true,
+                },
+            );
         });
 
         ptr
@@ -1335,7 +1338,11 @@ pub extern "C" fn js_regexp_construct(pattern: f64, flags: f64) -> *mut RegExpHe
 
     let (source_string, inherited_flags) = if pattern_is_regex {
         let re = pv.as_pointer::<RegExpHeader>();
-        let entry = REGEX_SOURCE_TABLE.with(|t| t.borrow().get(&(re as usize)).cloned());
+        let entry = REGEX_SOURCE_TABLE.with(|t| {
+            t.borrow()
+                .get(&(re as usize))
+                .map(|entry| entry.source.clone())
+        });
         match entry {
             Some((pat, fl)) => (pat.to_string(), Some(fl.to_string())),
             None => (String::new(), Some(String::new())),
@@ -1812,9 +1819,11 @@ pub extern "C" fn js_regexp_get_source(re: *const RegExpHeader) -> *mut StringHe
     }
     // Issue #637: prefer the side-tabled owned copy so we survive GC
     // of the input StringHeader (e.g. template-literal temporary).
-    if let Some(pat) =
-        REGEX_SOURCE_TABLE.with(|t| t.borrow().get(&(re as usize)).map(|(p, _)| p.clone()))
-    {
+    if let Some(pat) = REGEX_SOURCE_TABLE.with(|t| {
+        t.borrow()
+            .get(&(re as usize))
+            .map(|entry| entry.source.0.clone())
+    }) {
         return js_string_from_str(&escape_regexp_source(&pat));
     }
     unsafe {
@@ -1842,9 +1851,11 @@ pub extern "C" fn js_regexp_get_flags(re: *const RegExpHeader) -> *mut StringHea
         return js_string_from_str("");
     }
     // Issue #637: prefer the side-tabled owned copy.
-    if let Some(flags) =
-        REGEX_SOURCE_TABLE.with(|t| t.borrow().get(&(re as usize)).map(|(_, f)| f.clone()))
-    {
+    if let Some(flags) = REGEX_SOURCE_TABLE.with(|t| {
+        t.borrow()
+            .get(&(re as usize))
+            .map(|entry| entry.source.1.clone())
+    }) {
         return js_string_from_str(&flags);
     }
     unsafe {

@@ -59,6 +59,10 @@ pub(super) enum NativeArgKind {
     StrPtr,
     /// NaN-boxed closure/pointer → unbox to i64 via the standard mask.
     PtrI64,
+    /// Canonical managed registry wrapper → its stable provider id. During the
+    /// family-by-family migration this also accepts the legacy pointer-tagged
+    /// id representation, so each table row remains independently landable.
+    HandleId,
     /// Pass the NaN-boxed JSValue bits as-is (bitcast f64 → i64, no
     /// unboxing). Use for Rust signatures where the function receives
     /// `name: i64` and internally calls `string_from_nanboxed(name)` or
@@ -122,6 +126,30 @@ pub(super) enum NativeRetKind {
     Void,
 }
 
+/// Native result representation plus the publication adapter required at the
+/// JavaScript ABI. A migrated common-registry provider still returns its stable
+/// integer id from Rust, but its `NR_GCPTR` row materializes that id as the
+/// canonical managed cell before JavaScript can observe it.
+#[derive(Copy, Clone, Debug)]
+pub(super) struct NativeRetSpec {
+    pub(super) kind: NativeRetKind,
+    pub(super) canonical_common_handle: bool,
+}
+
+impl NativeRetSpec {
+    const fn new(kind: NativeRetKind) -> Self {
+        Self {
+            kind,
+            canonical_common_handle: false,
+        }
+    }
+
+    pub(super) const fn managed_common_handle(mut self) -> Self {
+        self.canonical_common_handle = true;
+        self
+    }
+}
+
 #[derive(Copy, Clone, Debug)]
 pub(super) struct NativeModSig {
     pub(super) module: &'static str,
@@ -133,7 +161,7 @@ pub(super) struct NativeModSig {
     pub(super) class_filter: Option<&'static str>,
     pub(super) runtime: &'static str,
     pub(super) args: &'static [NativeArgKind],
-    pub(super) ret: NativeRetKind,
+    pub(super) ret: NativeRetSpec,
 }
 
 // Short aliases to keep the row tables compact without wildcard imports
@@ -143,21 +171,24 @@ pub(super) struct NativeModSig {
 pub(super) const NA_F64: NativeArgKind = NativeArgKind::F64;
 pub(super) const NA_STR: NativeArgKind = NativeArgKind::StrPtr;
 pub(super) const NA_PTR: NativeArgKind = NativeArgKind::PtrI64;
+pub(super) const NA_HANDLE_ID: NativeArgKind = NativeArgKind::HandleId;
 pub(super) const NA_JSV: NativeArgKind = NativeArgKind::JsvalI64;
 pub(super) const NA_VARARGS: NativeArgKind = NativeArgKind::VarArgsAsArray;
-pub(super) const NR_GCPTR: NativeRetKind = NativeRetKind::GcPtr;
-pub(super) const NR_NULLABLE_GCPTR: NativeRetKind = NativeRetKind::NullableGcPtr;
-pub(super) const NR_HANDLE_ID: NativeRetKind = NativeRetKind::HandleId;
-pub(super) const NR_FOREIGN_PTR: NativeRetKind = NativeRetKind::ForeignPtr;
-pub(super) const NR_JS_VALUE: NativeRetKind = NativeRetKind::JsValue;
-pub(super) const NR_PROMISE: NativeRetKind = NativeRetKind::Promise;
-pub(super) const NR_STR: NativeRetKind = NativeRetKind::Str;
-pub(super) const NR_OBJ_FROM_JSON_STR: NativeRetKind = NativeRetKind::ObjFromJsonStr;
-pub(super) const NR_BIGINT: NativeRetKind = NativeRetKind::BigInt;
-pub(super) const NR_F64: NativeRetKind = NativeRetKind::F64;
-pub(super) const NR_BOOL: NativeRetKind = NativeRetKind::Bool;
-pub(super) const NR_I32: NativeRetKind = NativeRetKind::I32Void;
-pub(super) const NR_VOID: NativeRetKind = NativeRetKind::Void;
+pub(super) const NR_GCPTR: NativeRetSpec = NativeRetSpec::new(NativeRetKind::GcPtr);
+pub(super) const NR_NULLABLE_GCPTR: NativeRetSpec =
+    NativeRetSpec::new(NativeRetKind::NullableGcPtr);
+pub(super) const NR_HANDLE_ID: NativeRetSpec = NativeRetSpec::new(NativeRetKind::HandleId);
+pub(super) const NR_FOREIGN_PTR: NativeRetSpec = NativeRetSpec::new(NativeRetKind::ForeignPtr);
+pub(super) const NR_JS_VALUE: NativeRetSpec = NativeRetSpec::new(NativeRetKind::JsValue);
+pub(super) const NR_PROMISE: NativeRetSpec = NativeRetSpec::new(NativeRetKind::Promise);
+pub(super) const NR_STR: NativeRetSpec = NativeRetSpec::new(NativeRetKind::Str);
+pub(super) const NR_OBJ_FROM_JSON_STR: NativeRetSpec =
+    NativeRetSpec::new(NativeRetKind::ObjFromJsonStr);
+pub(super) const NR_BIGINT: NativeRetSpec = NativeRetSpec::new(NativeRetKind::BigInt);
+pub(super) const NR_F64: NativeRetSpec = NativeRetSpec::new(NativeRetKind::F64);
+pub(super) const NR_BOOL: NativeRetSpec = NativeRetSpec::new(NativeRetKind::Bool);
+pub(super) const NR_I32: NativeRetSpec = NativeRetSpec::new(NativeRetKind::I32Void);
+pub(super) const NR_VOID: NativeRetSpec = NativeRetSpec::new(NativeRetKind::Void);
 
 /// Static dispatch table for native stdlib modules. Each entry maps
 /// `(module, has_receiver, method)` → runtime function, with per-arg
@@ -261,13 +292,14 @@ fn arg_kind_tag(a: &NativeArgKind) -> &'static str {
         NativeArgKind::F64 => "NA_F64",
         NativeArgKind::StrPtr => "NA_STR",
         NativeArgKind::PtrI64 => "NA_PTR",
+        NativeArgKind::HandleId => "NA_HANDLE_ID",
         NativeArgKind::JsvalI64 => "NA_JSV",
         NativeArgKind::VarArgsAsArray => "NA_VARARGS",
     }
 }
 
-fn ret_kind_tag(r: &NativeRetKind) -> &'static str {
-    match r {
+fn ret_kind_tag(r: &NativeRetSpec) -> &'static str {
+    match r.kind {
         NativeRetKind::GcPtr => "NR_GCPTR",
         NativeRetKind::NullableGcPtr => "NR_NULLABLE_GCPTR",
         NativeRetKind::HandleId => "NR_HANDLE_ID",

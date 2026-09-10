@@ -249,6 +249,30 @@ pub(crate) unsafe fn try_read_gc_header(addr: usize) -> Option<&'static GcHeader
     Some(&*((addr - GC_HEADER_SIZE) as *const GcHeader))
 }
 
+/// Experimental receiver cut for the migrated cc producer families.
+///
+/// `addr` is a decoded receiver payload. Migrated heap receivers carry their
+/// `GcHeader` immediately before the payload. Low legacy IDs and the unresolved
+/// static stub retain their residual routes; arbitrary bare numeric words must
+/// be classified by the caller before entering here.
+///
+/// This deliberately does not establish the representation of unmigrated
+/// external-buffer/SAB producers. The experiment measures the migrated cc path.
+#[inline(always)]
+pub(crate) unsafe fn direct_receiver_gc_header(addr: usize) -> Option<*const GcHeader> {
+    if addr < HANDLE_BAND_MAX || crate::object::is_null_stub_address(addr) {
+        return None;
+    }
+    let header = (addr - GC_HEADER_SIZE) as *const GcHeader;
+    #[cfg(debug_assertions)]
+    {
+        let tracked = try_read_tracked_gc_header(addr)
+            .expect("receiver producer must publish a header-bearing payload");
+        debug_assert_eq!(tracked.as_ptr() as *const GcHeader, header);
+    }
+    Some(header)
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum TrackedGcStorage {
     Arena,
@@ -312,11 +336,17 @@ pub(crate) unsafe fn try_read_tracked_gc_header(
 ) -> Option<std::ptr::NonNull<GcHeader>> {
     #[cfg(test)]
     TRACKED_HEADER_PROBES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let (header_addr, storage) = classify_tracked_gc_header_with(
-        addr,
-        |candidate| crate::arena::classify_heap_space_in_range(candidate).map(|(_, base, _)| base),
-        crate::gc::gc_malloc_header_is_tracked,
-    )?;
+    let (header_addr, storage) = if crate::symbol::is_immortal_symbol_pointer(addr) {
+        (addr.checked_sub(GC_HEADER_SIZE)?, TrackedGcStorage::Malloc)
+    } else {
+        classify_tracked_gc_header_with(
+            addr,
+            |candidate| {
+                crate::arena::classify_heap_space_in_range(candidate).map(|(_, base, _)| base)
+            },
+            crate::gc::gc_malloc_header_is_tracked,
+        )?
+    };
     if header_addr % std::mem::align_of::<GcHeader>() != 0 {
         return None;
     }

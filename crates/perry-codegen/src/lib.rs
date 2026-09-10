@@ -158,8 +158,9 @@ pub struct NativeMethodRef {
     /// constructed via that class.
     pub class_filter: Option<&'static str>,
     /// Per-arg coercion kinds, in declaration order. Each element is
-    /// one of `"NA_F64"`, `"NA_STR"`, `"NA_PTR"`, `"NA_JSV"`,
-    /// `"NA_VARARGS"`, `"NA_JSON"`. Used by `perry-api-manifest`'s
+    /// one of `"NA_F64"`, `"NA_STR"`, `"NA_PTR"`, `"NA_HANDLE_ID"`,
+    /// `"NA_JSV"`, `"NA_VARARGS"`, `"NA_JSON"`. Used by
+    /// `perry-api-manifest`'s
     /// param-count drift test (#512).
     pub arg_kinds: &'static [&'static str],
     /// Return-kind tag. Pointer-boxed results explicitly distinguish

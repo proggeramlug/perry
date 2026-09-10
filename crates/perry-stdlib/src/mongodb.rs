@@ -198,23 +198,31 @@ pub unsafe extern "C" fn js_mongodb_connect(uri_ptr: *const StringHeader) -> *mu
         }
     };
 
-    spawn_for_promise(promise as *mut u8, async move {
-        let mut opts = mongodb::options::ClientOptions::parse(&uri)
-            .await
-            .map_err(|e| format!("Failed to parse URI: {}", e))?;
-        // Set reasonable timeouts so connect doesn't hang forever
-        let timeout = std::time::Duration::from_secs(5);
-        if opts.connect_timeout.is_none() {
-            opts.connect_timeout = Some(timeout);
-        }
-        if opts.server_selection_timeout.is_none() {
-            opts.server_selection_timeout = Some(timeout);
-        }
-        let client = Client::with_options(opts).map_err(|e| format!("Failed to connect: {}", e))?;
+    // The converter owns registration and wrapper allocation on the JS thread.
+    spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            let mut opts = mongodb::options::ClientOptions::parse(&uri)
+                .await
+                .map_err(|e| format!("Failed to parse URI: {}", e))?;
+            // Set reasonable timeouts so connect doesn't hang forever
+            let timeout = std::time::Duration::from_secs(5);
+            if opts.connect_timeout.is_none() {
+                opts.connect_timeout = Some(timeout);
+            }
+            if opts.server_selection_timeout.is_none() {
+                opts.server_selection_timeout = Some(timeout);
+            }
+            let client =
+                Client::with_options(opts).map_err(|e| format!("Failed to connect: {}", e))?;
 
-        let handle = register_handle(MongoClientHandle::new(client));
-        Ok(handle as u64)
-    });
+            Ok(client)
+        },
+        |client| {
+            let handle = register_handle(MongoClientHandle::new(client));
+            crate::common::nanbox_handle_value(handle).to_bits()
+        },
+    );
 
     promise
 }

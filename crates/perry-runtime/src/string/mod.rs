@@ -847,8 +847,8 @@ pub(crate) fn js_string_alloc_ascii_uninit(len: u32) -> (*mut StringHeader, *mut
     (ptr, data_ptr)
 }
 
-/// GC-safe copy of `byte_len` bytes starting at `byte_start` of source string
-/// `s` into a freshly allocated `StringHeader`.
+/// Copy `byte_len` bytes starting at `byte_start` of source string `s` into
+/// a shared `StringHeader`. Single ASCII code units reuse the character table.
 ///
 /// Why this exists (issue #5062): the normal `js_string_from_bytes` family
 /// allocates the destination *before* copying, and `string_storage_alloc` can
@@ -871,6 +871,14 @@ pub(crate) fn string_copy_range(
     utf16_len: u32,
     flags: u32,
 ) -> *mut StringHeader {
+    if byte_len == 1 && utf16_len == 1 && flags == 0 {
+        // Read the complete result before a cold character-table entry allocates.
+        // The table uses the same shared ownership as the copy below.
+        let byte = unsafe { *string_data(s).add(byte_start) };
+        if byte.is_ascii() {
+            return ascii_char_string(byte);
+        }
+    }
     let scope = crate::gc::RuntimeHandleScope::new();
     let handle = scope.root_string_ptr(s);
     let (ptr, data_ptr) = string_storage_alloc(byte_len);

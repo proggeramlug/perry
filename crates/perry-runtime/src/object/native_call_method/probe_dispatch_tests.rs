@@ -16,19 +16,12 @@
 //!   this one goes red (case 4 of CLAUDE.md's "four ways a gate can be unable to
 //!   fail").
 //! * **the answer is unchanged** — Set, Map, RegExp, fresh `Symbol()` and
-//!   `Box`-leaked (`Symbol.for` / well-known) receivers must all still be
-//!   excluded, including when they are created AFTER the idle fast path has
-//!   already answered for an unrelated address.
+//!   process-global (`Symbol.for` / well-known) receivers must all still be
+//!   excluded. Global symbols now carry an allocator-tracked, pinned
+//!   `GC_TYPE_SYMBOL` header, so the header itself is authoritative and no
+//!   payload-magic or symbol-registry probe is needed here.
 //!
-//! The leaked symbols are the interesting case and the reason
-//! `symbol::may_be_symbol_header` exists: they have no `GcHeader`, so `ptr - 8`
-//! is foreign allocator bytes that can read as any `obj_type` at all. The screen
-//! is therefore on the object's OWN first word (`SYMBOL_MAGIC`), not on the
-//! header. `header_directed_dispatch_needs_the_symbol_magic_screen` sabotages it
-//! and requires the classification to go WRONG, so a future edit that drops the
-//! screen cannot leave these tests quietly green.
-//!
-//! Leaked symbols are minted through `Symbol.for` with a key unique to each
+//! Global symbols are minted through `Symbol.for` with a key unique to each
 //! test rather than through the well-known cache: `WELL_KNOWN_SYMBOLS` is a
 //! process-global cache while `SYMBOL_POINTERS` is `per_test_global!` (i.e. per
 //! THREAD under `cargo test`), so a well-known symbol first created on another
@@ -45,9 +38,9 @@ fn plain_object() -> usize {
     crate::object::js_object_alloc(0, 4) as usize
 }
 
-/// A `Box`-leaked symbol (no `GcHeader`), registered on THIS thread. Same
-/// storage class as `Symbol.iterator` and the Intl fallback symbol.
-fn leaked_symbol(key: &str) -> usize {
+/// A pinned process-global symbol, registered on THIS thread. Same storage
+/// class as `Symbol.iterator` and the Intl fallback symbol.
+fn global_symbol(key: &str) -> usize {
     let key_str = crate::string::js_string_from_str(key);
     let key_f64 = f64::from_bits(crate::value::js_nanbox_string(key_str as i64).to_bits());
     let addr = unsafe { crate::value::js_nanbox_get_pointer(crate::symbol::js_symbol_for(key_f64)) }
@@ -64,38 +57,14 @@ fn classify(addr: usize) -> Option<(*const u8, u8)> {
     unsafe { test_gc_pointer_and_type_from_value(nanboxed(addr)) }
 }
 
-/// The `obj_type` `match` at the tail of `gc_pointer_and_type_from_value`,
-/// mirrored with the byte it switches on supplied by the CALLER instead of read
-/// from `addr - GC_HEADER_SIZE`.
-///
-/// #8728: reading that byte for a `Box`-leaked symbol reads memory this test
-/// does not own — such a symbol has no `GcHeader`, so those bytes are allocator
-/// metadata or a neighbour's tail. It also made the mirror non-deterministic,
-/// because the `GC_TYPE_REGEXP` arm answers `true` *without looking at the
-/// address at all*: whenever the stray byte happened to equal `GC_TYPE_REGEXP`
-/// (20) the mirror reported "excluded" and the assertion below fired. In
-/// isolation the byte is stable — 1000/1000 runs of this test alone passed — so
-/// it only showed up once the rest of the suite had churned the allocator,
-/// which is exactly the shape that reads as a flake.
-///
-/// Taking `obj_type` as a parameter lets the caller quantify over the WHOLE
-/// domain of that byte rather than sample the one value that happens to be
-/// there. That is sound, deterministic, and a strictly stronger statement than
-/// the single-sample version it replaces.
-///
-/// Kept FAITHFUL on purpose: the `GC_TYPE_REGEXP` arm is a bare `true`, not
-/// `regex::is_registered_regex(addr)`, because a bare `true` is what production
-/// does — "RegExp has the dedicated `GC_TYPE_REGEXP` kind", so the header is
-/// treated as authoritative and no registry is consulted. A predicate does
-/// exist (`regex::is_registered_regex`), but the mirror must not call it: it
-/// would prove something about a function this dispatch path never invokes,
-/// and it reaches `try_read_gc_header`, i.e. the very `addr - 8` read this fix
-/// removes.
+/// The `obj_type` match at the tail of `gc_pointer_and_type_from_value`, kept as
+/// a test mirror so the dedicated-kind exclusions are explicitly fail-capable.
 fn excluded_by_the_header_arms(addr: usize, obj_type: u8) -> bool {
     match obj_type {
         crate::gc::GC_TYPE_SET => crate::set::is_registered_set(addr),
         crate::gc::GC_TYPE_MAP => crate::map::is_registered_map(addr),
         crate::gc::GC_TYPE_REGEXP => true,
+        crate::gc::GC_TYPE_SYMBOL => true,
         _ => false,
     }
 }
@@ -109,7 +78,7 @@ fn excluded_by_the_header_arms(addr: usize, obj_type: u8) -> bool {
 #[test]
 fn plain_object_dispatch_probes_no_side_registry() {
     // Arm the latch the way ordinary code does.
-    leaked_symbol("perry-7850-arm-the-latch");
+    global_symbol("perry-7850-arm-the-latch");
     assert!(
         !crate::symbol::test_symbol_latch_is_idle(),
         "test premise: creating a symbol must arm SYMBOL_EVER_REGISTERED"
@@ -164,8 +133,7 @@ fn exotic_receivers_are_still_excluded() {
         "a Map must not classify as an object"
     );
 
-    // Fresh `Symbol(desc)`: a `gc_malloc(_, GC_TYPE_STRING)` allocation, so the
-    // header CAN speak for it — but only through the GC_TYPE_STRING arm.
+    // Fresh `Symbol(desc)` has the same dedicated kind as global symbols.
     let fresh = unsafe {
         crate::value::js_nanbox_get_pointer(crate::symbol::js_symbol_new_empty()) as usize
     };
@@ -175,21 +143,21 @@ fn exotic_receivers_are_still_excluded() {
         "a fresh Symbol must not classify as an object"
     );
 
-    // A `Box`-leaked symbol created AFTER the idle fast path has already
+    // A pinned global symbol created AFTER the idle fast path has already
     // answered for the unrelated addresses above (#7474 shape).
-    let leaked = leaked_symbol("perry-7850-after-the-fast-path");
+    let leaked = global_symbol("perry-7850-after-the-fast-path");
     assert!(
         classify(leaked).is_none(),
-        "a leaked symbol created after the idle fast path must still be excluded"
+        "a global symbol created after the idle fast path must still be excluded"
     );
 
-    // The realistic leaked-symbol path — what a `for…of` mints. It carries no
-    // GcHeader, so only the magic screen can keep it out of the object arms.
+    // The realistic well-known-symbol path — what a `for…of` mints.
     let wk = crate::symbol::well_known_symbol("iterator") as usize;
-    assert!(
-        unsafe { crate::symbol::may_be_symbol_header(wk as *const u8) },
-        "a well-known symbol must carry SYMBOL_MAGIC in its first word; if it \
-         does not, `Symbol.iterator.toString()` reads `ptr - 8` as a GcHeader"
+    let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(wk) }
+        .expect("a well-known symbol must have a tracked header");
+    assert_eq!(
+        unsafe { header.as_ref().obj_type },
+        crate::gc::GC_TYPE_SYMBOL
     );
 }
 
@@ -209,116 +177,50 @@ fn regexp_receiver_is_still_excluded() {
     );
 }
 
-/// Sabotage. The `SYMBOL_MAGIC` screen is what makes the header-directed
-/// dispatch sound; with it forced to "maybe", every dispatch pays the registry
-/// again — and with it forced OFF entirely a leaked symbol's `ptr - 8` would be
-/// read as if it were a real `GcHeader`. This test pins both directions:
-/// screen ON ⟹ no probe for a plain object; screen defeated ⟹ the probe returns.
-/// If it stops failing when sabotaged, the screen is not load-bearing and every
-/// other assertion here is proving nothing.
+/// Sabotage boundary: a global symbol is excluded specifically because its
+/// tracked header says `GC_TYPE_SYMBOL`. Supplying any ordinary object kind to
+/// the mirrored match must remove the exclusion.
 #[test]
-fn header_directed_dispatch_needs_the_symbol_magic_screen() {
-    // Arm the latch, then confirm the screen is what suppresses the probe.
-    leaked_symbol("perry-7850-magic-screen");
-    let obj = plain_object();
-    assert!(classify(obj).is_some());
-
-    let before = crate::symbol::test_symbol_registry_probe_count();
-    assert!(classify(obj).is_some());
-    assert_eq!(
-        crate::symbol::test_symbol_registry_probe_count(),
-        before,
-        "screen ON: a plain object must not reach the symbol registry"
-    );
-
-    let restore = crate::symbol::test_disable_symbol_magic_screen(true);
-    let before = crate::symbol::test_symbol_registry_probe_count();
-    let answer = classify(obj).map(|(_, t)| t);
-    let probed = crate::symbol::test_symbol_registry_probe_count() > before;
-    crate::symbol::test_disable_symbol_magic_screen(restore);
-
+fn header_directed_dispatch_needs_the_symbol_kind() {
+    let symbol = global_symbol("perry-7850-symbol-kind");
+    assert!(excluded_by_the_header_arms(
+        symbol,
+        crate::gc::GC_TYPE_SYMBOL
+    ));
     assert!(
-        probed,
-        "sabotage check: with the magic screen defeated the dispatch MUST fall \
-         through to `is_registered_symbol` — if it does not, the screen is not \
-         what is keeping the fast path fast and this suite is vacuous"
-    );
-    assert_eq!(
-        answer,
-        Some(crate::gc::GC_TYPE_OBJECT),
-        "the slow path must still give the same answer"
+        !excluded_by_the_header_arms(symbol, crate::gc::GC_TYPE_OBJECT),
+        "sabotage: replacing GC_TYPE_SYMBOL with GC_TYPE_OBJECT must route the \
+         value into ordinary-object handling"
     );
 }
 
-/// Every `Box`-leaked symbol must carry `SYMBOL_MAGIC`, and no ordinary GC
-/// object may — the first is soundness (a `false` here is a silent wrong
-/// answer), the second is the performance invariant that keeps the fast path
-/// firing. Both are cheap to check and both have been wrong in this family.
+/// Every symbol storage class must carry the dedicated GC kind, and no ordinary
+/// object may be excluded by that arm.
 #[test]
-fn the_magic_screen_covers_every_symbol_and_no_ordinary_object() {
+fn the_symbol_kind_covers_every_symbol_and_no_ordinary_object() {
     for i in 0..8 {
-        let sym = leaked_symbol(&format!("perry-7850-magic-{i}"));
-        assert!(
-            unsafe { crate::symbol::may_be_symbol_header(sym as *const u8) },
-            "leaked symbol {sym:#x} must carry SYMBOL_MAGIC"
+        let sym = global_symbol(&format!("perry-7850-kind-{i}"));
+        assert_eq!(classify(sym), None, "global symbol {sym:#x} excluded");
+        let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(sym) }
+            .expect("global symbol header");
+        assert_eq!(
+            unsafe { header.as_ref().obj_type },
+            crate::gc::GC_TYPE_SYMBOL
         );
-        assert!(classify(sym).is_none(), "leaked symbol {sym:#x} excluded");
     }
     let fresh = unsafe {
         crate::value::js_nanbox_get_pointer(crate::symbol::js_symbol_new_empty()) as usize
     };
-    assert!(
-        unsafe { crate::symbol::may_be_symbol_header(fresh as *const u8) },
-        "a gc_malloc'd Symbol must carry SYMBOL_MAGIC too"
-    );
-
-    // Soundness, expressed as data rather than a switch: without the screen a
-    // leaked symbol is classified by whatever `obj_type` the arms are handed,
-    // and `ptr - 8` for such a symbol is allocator bytes that can read as ANY
-    // value. So don't sample that byte (#8728 — that is what made this
-    // assertion fail intermittently, and it read memory the test does not own).
-    // Ask the mirror for the ENTIRE domain of the byte instead, and pin the
-    // answer exactly.
-    //
-    // Exactly one value may exclude these symbols: `GC_TYPE_REGEXP`, whose arm
-    // is a bare `true` and never consults the address — so its exclusion is an
-    // accident of the production `match`, not evidence that anything recognises
-    // a symbol. The other 255 fall through to `_ => false`, i.e. production
-    // WOULD hand a leaked symbol back as an ordinary object. `may_be_symbol_header`
-    // is the only thing standing between them and that, which is what makes the
-    // `classify(sym).is_none()` assertions above non-vacuous.
-    //
-    // This fails in BOTH directions, and both are the right way round: an added
-    // arm that covers leaked symbols grows the set, and giving the RegExp arm a
-    // real predicate shrinks it. Either way the mirror must be re-derived from
-    // `gc_pointer_and_type_from_value` rather than left to drift.
-    for i in 0..8 {
-        let sym = leaked_symbol(&format!("perry-7850-magic-{i}"));
-        let excluding: Vec<u8> = (0..=u8::MAX)
-            .filter(|&obj_type| excluded_by_the_header_arms(sym, obj_type))
-            .collect();
-        assert_eq!(
-            excluding,
-            vec![crate::gc::GC_TYPE_REGEXP],
-            "leaked symbol {sym:#x}: the production `obj_type` match must exclude it for \
-             EXACTLY the one byte value whose arm excludes unconditionally \
-             (GC_TYPE_REGEXP), and for no other. Got {excluding:?}. More values ⇒ some \
-             arm now recognises leaked symbols, so the magic screen is no longer the \
-             only thing keeping them out and every `classify(sym).is_none()` above is \
-             vacuous. Fewer ⇒ the production match changed and this mirror is stale."
-        );
-    }
-
-    let mut covered = 0usize;
-    for _ in 0..64 {
-        let o = plain_object();
-        if unsafe { crate::symbol::may_be_symbol_header(o as *const u8) } {
-            covered += 1;
-        }
-    }
+    let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(fresh) }
+        .expect("fresh symbol header");
     assert_eq!(
-        covered, 0,
-        "{covered}/64 fresh GC objects read as SYMBOL_MAGIC; the #7850 fast path \
-         is not firing and the symbol registry mutex is back on every dispatch"
+        unsafe { header.as_ref().obj_type },
+        crate::gc::GC_TYPE_SYMBOL
     );
+
+    let object = plain_object();
+    assert!(!excluded_by_the_header_arms(
+        object,
+        crate::gc::GC_TYPE_OBJECT
+    ));
 }

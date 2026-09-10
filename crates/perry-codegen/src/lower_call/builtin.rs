@@ -140,7 +140,11 @@ pub(super) fn lower_builtin_new<'a>(
                 .push(("js_bun_transpiler_new".to_string(), I64, vec![DOUBLE]));
             let block = ctx.block();
             let handle = block.call(I64, "js_bun_transpiler_new", &[(DOUBLE, &options)]);
-            Ok(Some(nanbox_pointer_inline(block, &handle)))
+            Ok(Some(block.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         "Resolver"
             if import_src.is_some_and(|source| {
@@ -408,7 +412,11 @@ pub(super) fn lower_builtin_new<'a>(
             }
             let blk = ctx.block();
             let handle = blk.call(I64, "js_commander_new", &[]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // events.EventEmitter — `new EventEmitter()` produces a real
         // EventEmitterHandle so `.on(...)` / `.emit(...)` find their
@@ -421,7 +429,11 @@ pub(super) fn lower_builtin_new<'a>(
             let opts = adopt_leading_arg_discard_rest(ctx, args, group)?;
             let blk = ctx.block();
             let handle = blk.call(I64, "js_event_emitter_new_with_options", &[(DOUBLE, &opts)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // The public Node constructor creates an inert ChildProcess whose
         // low-level `.spawn(options)` validates its own option bag. Normal
@@ -441,7 +453,11 @@ pub(super) fn lower_builtin_new<'a>(
                 "js_event_emitter_async_resource_new",
                 &[(DOUBLE, &opts)],
             );
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         "BlockList" => {
             for a in args {
@@ -449,14 +465,22 @@ pub(super) fn lower_builtin_new<'a>(
             }
             let blk = ctx.block();
             let handle = blk.call(I64, "js_net_block_list_new", &[]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         "SocketAddress" => {
             // #6986: `options` was held across the discard loop's lowering.
             let options = adopt_leading_arg_discard_rest(ctx, args, group)?;
             let blk = ctx.block();
             let handle = blk.call(I64, "js_net_socket_address_new", &[(DOUBLE, &options)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         "EventTarget" => {
             for a in args {
@@ -607,7 +631,11 @@ pub(super) fn lower_builtin_new<'a>(
             let blk = ctx.block();
             let enc_handle = unbox_to_i64(blk, &enc_box);
             let handle = blk.call(I64, "js_string_decoder_new", &[(I64, &enc_handle)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // node:stream — `new Readable(opts)` / `new Writable(opts)` /
         // `new Duplex(opts)` / `new Transform(opts)` / `new PassThrough(opts)`.
@@ -648,7 +676,11 @@ pub(super) fn lower_builtin_new<'a>(
             let opts_val = adopt_leading_arg_discard_rest(ctx, args, group)?;
             let blk = ctx.block();
             let handle = blk.call(I64, "js_lru_cache_new", &[(DOUBLE, &opts_val)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // (`WebSocketServer` is handled by an earlier branch lower in this
         // file — pre-existing from 2026-04-14. No new branch needed here.)
@@ -670,7 +702,11 @@ pub(super) fn lower_builtin_new<'a>(
             };
             let blk = ctx.block();
             let handle = blk.call(I64, "js_pg_client_new", &[(DOUBLE, &config_val)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // pg Pool — `new Pool(config)`. sqlx's `connect_lazy` makes this
         // synchronous (no actual connections opened until first `.query()`),
@@ -685,7 +721,11 @@ pub(super) fn lower_builtin_new<'a>(
             };
             let blk = ctx.block();
             let handle = blk.call(I64, "js_pg_pool_new", &[(DOUBLE, &config_val)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // bun:sqlite Database — distinct internal name avoids colliding with
         // better-sqlite3's exported `Database` while preserving full JS values
@@ -708,7 +748,11 @@ pub(super) fn lower_builtin_new<'a>(
                 "js_bun_sqlite_database_new",
                 &[(DOUBLE, &path_value), (DOUBLE, &options_value)],
             );
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // better-sqlite3 Database — `new Database(filename)` opens a SQLite
         // connection. Without this, `new Database(...)` falls into lower_new's
@@ -725,7 +769,11 @@ pub(super) fn lower_builtin_new<'a>(
             };
             let blk = ctx.block();
             let handle = blk.call(I64, "js_sqlite_open", &[(I64, &path_ptr)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // node:sqlite DatabaseSync — keep full NaN-boxed values for path and
         // options so the runtime can preserve Node-shaped validation errors.
@@ -749,7 +797,11 @@ pub(super) fn lower_builtin_new<'a>(
                 "js_node_sqlite_database_sync_new",
                 &[(DOUBLE, &path_value), (DOUBLE, &options_value)],
             );
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         "StatementSync" => {
             // #6986: `arg0` was held in a bare SSA register across `arg1`'s
@@ -806,7 +858,11 @@ pub(super) fn lower_builtin_new<'a>(
             };
             let blk = ctx.block();
             let handle = blk.call(I64, "js_mongodb_client_new", &[(I64, &uri_ptr)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // ioredis Redis — `new Redis()` or `new Redis(opts)`. The runtime's
         // `js_ioredis_new` reads connection settings from REDIS_HOST /
@@ -826,7 +882,11 @@ pub(super) fn lower_builtin_new<'a>(
             // The runtime sig takes one i64 (currently *const c_void, ignored).
             // Pass 0 — semantically "use env-var defaults".
             let handle = blk.call(I64, "js_ioredis_new", &[(I64, "0")]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // rate-limiter-flexible `new RateLimiterMemory({ points, duration })`.
         // Gated on the import source above. The options object crosses as
@@ -846,7 +906,11 @@ pub(super) fn lower_builtin_new<'a>(
                 "js_ratelimit_new_from_options",
                 &[(I64, &options_bits)],
             );
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // npm `cron` package: `new CronJob(cronTime, onTick, onComplete?,
         // start?)`. Gated on the import source above. Unlike node-cron's
@@ -912,7 +976,11 @@ pub(super) fn lower_builtin_new<'a>(
                 "js_cron_job_new",
                 &[(I64, &expr_ptr), (I64, &cb_ptr), (DOUBLE, &start)],
             );
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // async_hooks.AsyncLocalStorage — `new AsyncLocalStorage()` produces a
         // real handle so `.run(store, cb)` / `.getStore()` / `.enterWith(store)`
@@ -926,7 +994,11 @@ pub(super) fn lower_builtin_new<'a>(
             }
             let blk = ctx.block();
             let handle = blk.call(I64, "js_async_local_storage_new", &[]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // #1367: `new crypto.X509Certificate(pem | der)` — parse the cert
         // into a handle exposing subject/issuer/validFrom/validTo/
@@ -1036,7 +1108,11 @@ pub(super) fn lower_builtin_new<'a>(
             };
             let blk = ctx.block();
             let handle = blk.call(I64, "js_decimal_coerce_to_handle", &[(DOUBLE, &val)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         "Array" => {
             // `new Array()` → empty array, `new Array(n)` → length-n sparse
@@ -1805,7 +1881,11 @@ pub(super) fn lower_builtin_new<'a>(
                 .push(("js_ws_server_new".to_string(), I64, vec![DOUBLE]));
             let blk = ctx.block();
             let handle = blk.call(I64, "js_ws_server_new", &[(DOUBLE, &opts)]);
-            Ok(Some(nanbox_pointer_inline(blk, &handle)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &handle)],
+            )))
         }
         // Issue #606 — `new WebSocket(url)` from `import { WebSocket } from
         // "ws"`. npm ws's API is sync-ctor: returns the client handle
@@ -1829,13 +1909,16 @@ pub(super) fn lower_builtin_new<'a>(
                 .push(("js_ws_connect_start".to_string(), DOUBLE, vec![DOUBLE]));
             let blk = ctx.block();
             // js_ws_connect_start returns the ws_id as a plain f64
-            // (1.0, 2.0, …). Convert to i64 then NaN-box with
-            // POINTER_TAG so the standard `unbox_to_i64` receiver
-            // contract recovers the right ws_id at every method call
-            // site (`client.on(...)`, `.send(...)`, `.close()`).
+            // (1.0, 2.0, …). Preserve that numeric ABI, then publish the
+            // canonical Common wrapper so constructor and fluent results
+            // share identity while receiver dispatch recovers the ws_id.
             let raw_f64 = blk.call(DOUBLE, "js_ws_connect_start", &[(DOUBLE, &url_box)]);
             let raw_i64 = blk.fptosi(DOUBLE, &raw_f64, I64);
-            Ok(Some(nanbox_pointer_inline(blk, &raw_i64)))
+            Ok(Some(blk.call(
+                DOUBLE,
+                "js_canonical_common_handle_value",
+                &[(I64, &raw_i64)],
+            )))
         }
 
         _ => Ok(None),

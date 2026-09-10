@@ -84,6 +84,37 @@ pub type Handle = i64;
 /// JS side has `null` / `undefined`.
 pub const INVALID_HANDLE: Handle = 0;
 
+extern "C" {
+    fn js_canonical_common_handle_value(handle: i64) -> f64;
+    fn js_canonical_handle_id(value: f64) -> i64;
+    #[cfg(not(test))]
+    fn js_canonical_common_handle_retire(handle: i64);
+}
+
+#[inline]
+fn retire_canonical_handle(handle: Handle) {
+    #[cfg(not(test))]
+    unsafe {
+        js_canonical_common_handle_retire(handle);
+    }
+    #[cfg(test)]
+    let _ = handle;
+}
+
+/// Publish a common-registry id as its canonical managed JavaScript wrapper.
+/// Repeated publication of the same live id returns the same wrapper cell.
+#[inline]
+pub fn canonical_handle_value(handle: Handle) -> f64 {
+    unsafe { js_canonical_common_handle_value(handle) }
+}
+
+/// Decode a canonical managed registry wrapper, accepting legacy pointer-tagged
+/// ids during the staged migration.
+#[inline]
+pub fn canonical_handle_id(value: f64) -> Handle {
+    unsafe { js_canonical_handle_id(value) }
+}
+
 static HANDLES: Lazy<DashMap<Handle, Box<dyn Any + Send + Sync>>> = Lazy::new(DashMap::new);
 const FFI_HANDLE_ID_START: Handle = 1;
 const FFI_HANDLE_ID_END: Handle = 0x40000;
@@ -645,6 +676,7 @@ pub fn get_handle_mut<T: 'static + Send + Sync>(handle: Handle) -> Option<&'stat
 pub fn take_handle<T: 'static + Send + Sync>(handle: Handle) -> Option<T> {
     let removed = HANDLES.remove(&handle);
     if removed.is_some() {
+        retire_canonical_handle(handle);
         // Removed from the registry — the id is dead and safe to recycle.
         recycle_handle(handle);
     }
@@ -657,6 +689,7 @@ pub fn take_handle<T: 'static + Send + Sync>(handle: Handle) -> Option<T> {
 /// handle existed.
 pub fn drop_handle(handle: Handle) -> bool {
     if HANDLES.remove(&handle).is_some() {
+        retire_canonical_handle(handle);
         // Removed from the registry — the id is dead and safe to recycle.
         recycle_handle(handle);
         true
@@ -676,6 +709,7 @@ pub fn drop_handle(handle: Handle) -> bool {
 /// window. See [`QUARANTINED_UNTIL`].
 pub fn drop_handle_until(handle: Handle, deadline: Instant) -> bool {
     if HANDLES.remove(&handle).is_some() {
+        retire_canonical_handle(handle);
         recycle_handle_until(handle, deadline);
         true
     } else {

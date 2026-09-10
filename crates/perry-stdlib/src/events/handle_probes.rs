@@ -13,6 +13,9 @@ pub(super) fn stream_value_from_handle(handle: Handle) -> Option<f64> {
     if !(MIN_HEAP_POINTER..=MAX_HEAP_POINTER).contains(&addr) || addr & 0x7 != 0 {
         return None;
     }
+    // Classic node:stream constructors allocate ObjectHeaders. Both callers
+    // pass the decoded receiver address (the abort path captures that same
+    // address), so preserve it for the hidden readable/writable field probes.
     let value = js_nanbox_pointer(handle);
     let readable = perry_runtime::node_stream::js_node_stream_is_readable(value);
     let writable = perry_runtime::node_stream::js_node_stream_is_writable(value);

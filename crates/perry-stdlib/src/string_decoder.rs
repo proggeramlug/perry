@@ -927,9 +927,7 @@ pub unsafe fn dispatch_string_decoder_property(handle: i64, property: &str) -> f
                 "end" => b"end",
                 _ => b"text",
             };
-            let this_f64 = f64::from_bits(
-                0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF),
-            );
+            let this_f64 = crate::common::nanbox_handle_value(handle);
             extern "C" {
                 fn js_class_method_bind(
                     instance: f64,

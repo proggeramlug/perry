@@ -241,20 +241,22 @@ pub(crate) fn make_segment_record(
         // thread-local. No address here predates the allocation above.
         let obj = || crate::js_nanbox_get_pointer(obj_h.get_nanbox_f64()) as *mut ObjectHeader;
         crate::object::js_object_set_keys(obj(), cached_segment_keys(shape));
-        crate::object::js_object_set_field(
+        // Allocation established all n slots, and installing the keys preserves
+        // that live bound. These stores retain their usual layout and barriers.
+        crate::object::object_store_known_live_slot(
             obj(),
             0,
             JSValue::from_bits(segment_h.get_nanbox_f64().to_bits()),
         );
         // `index` is a plain Number (UTF-16 code-unit offset into the input).
-        crate::object::js_object_set_field(obj(), 1, JSValue::number(index as f64));
-        crate::object::js_object_set_field(
+        crate::object::object_store_known_live_slot(obj(), 1, JSValue::number(index as f64));
+        crate::object::object_store_known_live_slot(
             obj(),
             2,
             JSValue::from_bits(input_h.get_nanbox_f64().to_bits()),
         );
         if let Some(word_like) = word_like {
-            crate::object::js_object_set_field(obj(), 3, JSValue::bool(word_like));
+            crate::object::object_store_known_live_slot(obj(), 3, JSValue::bool(word_like));
         }
         js_nanbox_pointer(obj() as i64)
     }

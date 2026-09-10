@@ -24,8 +24,7 @@ fn unsupported_type_names_are_human_readable() {
         unsupported_transfer_type_name(gc::GC_TYPE_TEMPORAL),
         "Temporal value"
     );
-    // A Symbol is POINTER_TAG'd but allocated with GC_TYPE_STRING.
-    assert_eq!(unsupported_transfer_type_name(gc::GC_TYPE_STRING), "Symbol");
+    assert_eq!(unsupported_transfer_type_name(gc::GC_TYPE_SYMBOL), "Symbol");
     // Any unrecognized type still yields a message, never a panic.
     assert_eq!(
         unsupported_transfer_type_name(250),

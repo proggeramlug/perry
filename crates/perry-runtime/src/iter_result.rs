@@ -225,13 +225,20 @@ pub(crate) unsafe fn emit_iter_result_cached(
         return build_iter_result_ordered(first, second, order);
     }
     let iter_obj = || crate::js_nanbox_get_pointer(iter_h.get_nanbox_f64()) as *mut ObjectHeader;
-    let cached = crate::object::js_object_get_field(iter_obj(), cache_field);
+    // Array/Map/Set constructors reserve this cache slot; named properties
+    // start after their reserved prefix and cannot move it.
+    let iter_fields = (iter_obj() as *const u8).add(std::mem::size_of::<ObjectHeader>())
+        as *const JSValue;
+    let mut cached = *iter_fields.add(cache_field as usize);
+    if cached.bits() == crate::value::POINTER_TAG {
+        cached = crate::object::js_object_get_field(iter_obj(), cache_field);
+    }
     if JSValue::from_bits(cached.bits()).is_pointer() {
         let res = crate::js_nanbox_get_pointer(f64::from_bits(cached.bits())) as *mut ObjectHeader;
-        // Barriered field stores: the iterator (and its cached result) may be
-        // tenured while `value` is young.
-        crate::object::js_object_set_field(res, 0, first);
-        crate::object::js_object_set_field(res, 1, second);
+        // The compiler-only cached result keeps the two live slots established
+        // by build_iter_result_ordered. Keep the complete per-slot store work.
+        crate::object::object_store_known_live_slot(res, 0, first);
+        crate::object::object_store_known_live_slot(res, 1, second);
         return crate::js_nanbox_pointer(res as i64);
     }
     // First fused advance on this iterator: build the result once and cache it.

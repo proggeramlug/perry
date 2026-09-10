@@ -985,7 +985,7 @@ pub(crate) fn process_request(app_handle: Handle, mut pending: FastifyPendingReq
 
     // NaN-box the context handle — POINTER_TAG so codegen-side
     // method dispatch on `request.*` / `reply.*` Just Works.
-    let ctx_f64 = f64::from_bits(POINTER_TAG | (ctx_handle as u64 & PTR_MASK));
+    let ctx_f64 = perry_ffi::canonical_handle_value(ctx_handle);
 
     let mut response_sent = false;
     for hook in &on_request_hooks {

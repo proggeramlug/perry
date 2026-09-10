@@ -239,7 +239,7 @@ pub(super) fn prune_dead_owner_side_tables_post_trace(
     fan_out(
         &|addr| probe.owner_is_dead(addr, None),
         &|addr| probe.owner_is_dead(addr, Some(GC_TYPE_CLOSURE)),
-        &|addr| probe.owner_is_dead(addr, Some(GC_TYPE_STRING)),
+        &|addr| probe.owner_is_dead(addr, Some(GC_TYPE_SYMBOL)),
         /* young_only = */ !full_trace,
     );
     // #6182: drop dead weak-target HOLDERS (WeakRef / FinalizationRegistry /
@@ -261,7 +261,7 @@ pub(super) fn prune_dead_owner_side_tables_copied_minor() {
     fan_out(
         &|addr| owner_is_dead_copied_minor_from_space(addr, None),
         &|addr| owner_is_dead_copied_minor_from_space(addr, Some(GC_TYPE_CLOSURE)),
-        &|addr| owner_is_dead_copied_minor_from_space(addr, Some(GC_TYPE_STRING)),
+        &|addr| owner_is_dead_copied_minor_from_space(addr, Some(GC_TYPE_SYMBOL)),
         /* young_only = */ true,
     );
 }
@@ -277,7 +277,7 @@ pub(super) enum DeadKeyOwner {
     Any,
     /// `GC_TYPE_CLOSURE` only.
     Closure,
-    /// `GC_TYPE_STRING` only — symbols are `gc_malloc`'d with that type.
+    /// `GC_TYPE_SYMBOL` only.
     Symbol,
 }
 

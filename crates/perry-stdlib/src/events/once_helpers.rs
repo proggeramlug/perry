@@ -18,7 +18,7 @@ unsafe fn remove_stream_or_socket_once_listener(
     listener: i64,
 ) {
     if matches!(
-        event_helper_target(js_nanbox_pointer(handle)),
+        event_helper_target(crate::common::nanbox_handle_value(handle)),
         Some(EventHelperTarget::NetSocket(_))
     ) {
         let _ = super::module_helpers::call_net_socket_method(

@@ -475,7 +475,7 @@ fn x509_handle_arg(value: f64) -> Option<i64> {
     if (bits & 0xFFFF_0000_0000_0000) != 0x7FFD_0000_0000_0000 {
         return None;
     }
-    let handle = (bits & 0x0000_FFFF_FFFF_FFFF) as i64;
+    let handle = perry_runtime::native_handle::js_canonical_handle_id(value);
     crate::common::handle::with_handle::<X509Handle, bool, _>(handle, |_| true)
         .unwrap_or(false)
         .then_some(handle)
@@ -922,7 +922,7 @@ unsafe fn x509_check_private_key_value(handle: &X509Handle, args: &[f64]) -> f64
 }
 
 fn x509_handle_value(handle: Handle) -> f64 {
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 fn throw_x509_parse_error(message: &str) -> ! {
@@ -1177,8 +1177,7 @@ pub unsafe fn dispatch_x509_method_property(handle: i64, property: &str) -> f64 
         "checkIssued" => b"checkIssued",
         _ => return nanbox_undefined(),
     };
-    let this_f64 =
-        f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF));
+    let this_f64 = crate::common::nanbox_handle_value(handle);
     extern "C" {
         fn js_class_method_bind(
             instance: f64,

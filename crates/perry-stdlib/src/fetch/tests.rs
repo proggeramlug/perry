@@ -1,5 +1,86 @@
 use super::*;
 
+fn header_name(name: &[u8]) -> *mut StringHeader {
+    js_string_from_bytes(name.as_ptr(), name.len() as u32)
+}
+
+#[test]
+fn fetch_values_are_managed_wrappers_with_headers() {
+    let headers = js_headers_new();
+    let id = handle_id(headers);
+    let addr = perry_runtime::value::js_nanbox_get_pointer(headers) as usize;
+    let header = unsafe { perry_runtime::value::addr_class::try_read_tracked_gc_header(addr) }
+        .expect("Fetch wrapper must have a tracked GcHeader");
+    assert_eq!(
+        unsafe { header.as_ref().obj_type },
+        perry_runtime::gc::GC_TYPE_NATIVE_HANDLE
+    );
+    unsafe {
+        let name = header_name(b"x-test");
+        let value = header_name(b"yes");
+        js_headers_set(headers, name, value);
+        assert_eq!(
+            string_from_header(js_headers_get(headers, name)).as_deref(),
+            Some("yes")
+        );
+        let method = header_name(b"get");
+        let property = perry_runtime::object::js_object_get_field_by_name_f64(
+            addr as *const perry_runtime::ObjectHeader,
+            method,
+        );
+        assert_ne!(property.to_bits(), perry_runtime::value::TAG_UNDEFINED);
+    }
+    HEADERS_REGISTRY.lock().unwrap().remove(&id);
+}
+
+#[test]
+fn fetch_identity_survives_a_copying_minor() {
+    let scope = perry_runtime::gc::RuntimeHandleScope::new();
+    let headers = js_headers_new();
+    let id = handle_id(headers);
+    let first = scope.root_nanbox_f64(headers);
+    let young = perry_runtime::object::js_object_alloc(0, 0);
+    let _young = scope.root_raw_mut_ptr(young);
+    let _ = perry_runtime::gc::gc_collect_minor();
+    let after = first.get_nanbox_f64();
+    assert_eq!(after.to_bits(), handle_to_f64(id).to_bits());
+    unsafe {
+        let name = header_name(b"x-after-gc");
+        let value = header_name(b"live");
+        js_headers_set(after, name, value);
+        assert_eq!(
+            string_from_header(js_headers_get(after, name)).as_deref(),
+            Some("live")
+        );
+    }
+    HEADERS_REGISTRY.lock().unwrap().remove(&id);
+}
+
+#[inline(never)]
+fn create_and_drop_fetch_wrapper() -> (usize, usize) {
+    let headers = js_headers_new();
+    (
+        handle_id(headers),
+        perry_runtime::value::js_nanbox_get_pointer(headers) as usize,
+    )
+}
+
+#[test]
+fn fetch_wrapper_finalization_or_immortality() {
+    perry_runtime::gc::js_gc_collect();
+    let (id, old_addr) = create_and_drop_fetch_wrapper();
+    perry_runtime::gc::js_gc_collect();
+    assert!(
+        HEADERS_REGISTRY.lock().unwrap().contains_key(&id),
+        "Fetch wrappers are borrowed; explicit Fetch lifecycle owns registry state"
+    );
+    assert!(
+        perry_runtime::native_handle::canonical_handle_parts_from_addr(old_addr).is_none(),
+        "a dead Fetch wrapper must leave the weak canonical interner"
+    );
+    HEADERS_REGISTRY.lock().unwrap().remove(&id);
+}
+
 /// #8546: Coop hosts each in-process deployment on its own dedicated Perry
 /// thread. The Fetch scanner registry is thread-local, so a process-global
 /// registration latch makes the first Next application safe and leaves the

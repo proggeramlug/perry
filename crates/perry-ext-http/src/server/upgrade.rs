@@ -78,7 +78,7 @@ pub(crate) fn fire_upgrade_listeners(
     // low-48 bits as the original ws_id. A plain `ws_id as f64`
     // (1.0_f64) would have bits 0x3FF0_…, which `unbox_to_i64`
     // AND-masks to 0, missing the WS_CONNECTIONS lookup entirely.
-    let ws_id_f64 = f64::from_bits(POINTER_TAG | (ws_id as u64 & PTR_MASK));
+    let ws_id_f64 = perry_ffi::canonical_handle_value(ws_id);
     let head_str = if head_data.is_empty() {
         f64::from_bits(TAG_UNDEFINED)
     } else {

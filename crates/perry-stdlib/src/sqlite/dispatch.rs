@@ -15,7 +15,11 @@ unsafe fn bind_static_handle_method(handle: Handle, method: &'static [u8]) -> f6
             method_name_len: usize,
         ) -> f64;
     }
-    js_class_method_bind(js_nanbox_pointer(handle), method.as_ptr(), method.len())
+    js_class_method_bind(
+        crate::common::nanbox_handle_value(handle),
+        method.as_ptr(),
+        method.len(),
+    )
 }
 
 fn database_method_name_static(property: &str) -> Option<&'static [u8]> {
@@ -115,11 +119,11 @@ pub unsafe fn dispatch_node_sqlite_database_method(
         }
         "prepare" => {
             let stmt = js_node_sqlite_database_sync_prepare(handle, arg0, arg1);
-            Some(js_nanbox_pointer(stmt))
+            Some(crate::common::nanbox_handle_value(stmt))
         }
-        "query" => Some(js_nanbox_pointer(js_bun_sqlite_database_query(
-            handle, arg0,
-        ))),
+        "query" => Some(crate::common::nanbox_handle_value(
+            js_bun_sqlite_database_query(handle, arg0),
+        )),
         "run" => {
             let params = packed_args_array(args.get(1..).unwrap_or_default());
             Some(js_nanbox_pointer(
@@ -154,11 +158,11 @@ pub unsafe fn dispatch_node_sqlite_database_method(
         }
         "createTagStore" => {
             let store = js_node_sqlite_database_sync_create_tag_store(handle, arg0);
-            Some(js_nanbox_pointer(store))
+            Some(crate::common::nanbox_handle_value(store))
         }
         "createSession" => {
             let session = js_node_sqlite_database_sync_create_session(handle, arg0);
-            Some(js_nanbox_pointer(session))
+            Some(crate::common::nanbox_handle_value(session))
         }
         "applyChangeset" => Some(js_node_sqlite_database_sync_apply_changeset(
             handle, arg0, arg1,
@@ -256,7 +260,9 @@ pub unsafe fn dispatch_node_sqlite_tag_store_property(
     match property_name {
         "size" => Some(js_node_sqlite_sql_tag_store_size(handle)),
         "capacity" => Some(js_node_sqlite_sql_tag_store_capacity(handle)),
-        "db" => Some(js_nanbox_pointer(js_node_sqlite_sql_tag_store_db(handle))),
+        "db" => Some(crate::common::nanbox_handle_value(
+            js_node_sqlite_sql_tag_store_db(handle),
+        )),
         "constructor" => Some(sql_tag_store_constructor_value()),
         _ => Some(bind_static_handle_method(
             handle,

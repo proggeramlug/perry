@@ -977,7 +977,7 @@ pub unsafe extern "C" fn js_node_https_server_on(
     if let Some(s) = get_handle_mut::<HttpsServer>(handle) {
         s.base.listeners.entry(event).or_default().push(callback);
     }
-    f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 /// `httpsServer.closeAllConnections()` — destroy every tracked

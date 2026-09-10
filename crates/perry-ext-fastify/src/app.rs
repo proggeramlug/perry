@@ -492,7 +492,7 @@ pub unsafe extern "C" fn js_fastify_register(app_handle: Handle, plugin: i64, op
     // NaN-box the parent app handle so the plugin's method dispatch
     // (e.g. `app.get(...)`) sees a POINTER_TAG'd JS handle the
     // codegen-side dispatcher knows how to unbox.
-    let nanboxed_app = f64::from_bits(POINTER_TAG | (app_handle as u64 & PTR_MASK));
+    let nanboxed_app = perry_ffi::canonical_handle_value(app_handle);
 
     // Strip a NaN-box wrapper if codegen handed us one.
     let raw_closure = if (plugin as u64 & 0xFFFF_0000_0000_0000) == POINTER_TAG {

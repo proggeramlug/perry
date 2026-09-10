@@ -48,6 +48,6 @@ pub extern "C" fn js_event_emitter_domain_value(handle: Handle) -> f64 {
     if domain == 0 {
         f64::from_bits(TAG_NULL_F64_BITS)
     } else {
-        js_nanbox_pointer(domain)
+        crate::common::nanbox_handle_value(domain)
     }
 }

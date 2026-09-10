@@ -135,6 +135,6 @@ pub(super) unsafe fn emit_max_listeners_warning(
     set_object_string_prop(warning, "name", "MaxListenersExceededWarning");
     set_object_string_prop(warning, "type", event_name);
     set_object_number_prop(warning, "count", count as f64);
-    set_object_value_prop(warning, "emitter", nanbox_pointer_bits(handle));
+    set_object_value_prop(warning, "emitter", nanbox_handle_or_pointer(handle));
     call_process_emit_warning(nanbox_pointer_bits(warning as i64));
 }

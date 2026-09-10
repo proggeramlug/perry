@@ -1426,6 +1426,13 @@ pub fn try_async_resource_property_dispatch(handle: i64, property: &str) -> Opti
     let emitter = unsafe { (*(handle as *const AsyncResourceHandle)).event_emitter };
     Some(if emitter == 0 {
         TAG_UNDEFINED_F64
+    } else if crate::object::event_emitter_handle_probe()
+        .is_some_and(|probe| unsafe { probe(emitter) })
+    {
+        // Native emitters are Common registry ids. Subclass back-references
+        // below are real ObjectHeader pointers and retain their object identity.
+        let id = crate::native_handle::js_canonical_handle_id_from_addr(emitter);
+        crate::native_handle::js_canonical_common_handle_value(id)
     } else {
         crate::value::js_nanbox_pointer(emitter)
     })

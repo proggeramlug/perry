@@ -447,14 +447,10 @@ fn positive_zero_is_not_routed_to_number_dispatch() {
     assert!(!is_unvouched_bare_word(0.0f64));
 }
 
-/// A headerless registry allocation has no `GcHeader` for the allocator gate to
-/// find, but its owning registry can answer for the address without touching
-/// memory. Such a receiver must be reboxed as a POINTER, not sent to the number
-/// arm — that is the case the deleted tail recovery legitimately served.
+/// A process-global symbol now has an immortal tracked `GcHeader`; a bare
+/// compatibility value must still be reboxed as a POINTER, never a string.
 #[test]
-fn headerless_registry_allocations_are_vouched_as_pointers() {
-    // `Symbol.for` leaks a `Box` with no GcHeader; a unique key guarantees this
-    // thread allocates and registers it (see `probe_dispatch_tests`).
+fn global_symbol_allocations_are_vouched_as_pointers() {
     let key = crate::string::js_string_from_str("perry-9675-vouch");
     let key_f64 = f64::from_bits(crate::value::js_nanbox_string(key as i64).to_bits());
     let addr = unsafe { crate::value::js_nanbox_get_pointer(crate::symbol::js_symbol_for(key_f64)) }
@@ -465,10 +461,11 @@ fn headerless_registry_allocations_are_vouched_as_pointers() {
         "test premise: Symbol.for registered on this thread; otherwise no owner \
          can vouch and this test proves nothing"
     );
-    assert!(
-        unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) }.is_none(),
-        "test premise: a Box-leaked symbol is NOT an allocator-tracked \
-         allocation — that is what makes the registry arm load-bearing"
+    let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) }
+        .expect("Symbol.for must publish an allocator-owned immortal header");
+    assert_eq!(
+        unsafe { header.as_ref().obj_type },
+        crate::gc::GC_TYPE_SYMBOL
     );
 
     let canonical = unsafe { canonicalize_bare_gc_receiver(bare(addr)) };
@@ -479,8 +476,7 @@ fn headerless_registry_allocations_are_vouched_as_pointers() {
     assert_eq!(
         tag_of(canonical),
         POINTER_TAG,
-        "a headerless registry allocation has no GcHeader to read a kind from \
-         and is boxed as a POINTER"
+        "GC_TYPE_SYMBOL values are boxed as POINTER primitives"
     );
     assert_eq!(payload_of(canonical), addr);
 }

@@ -670,6 +670,27 @@ pub(crate) unsafe fn dispatch_array_iterator_method_builtin(
     dispatch_array_iterator_method_inner(iter_obj, method_name, false, false)
 }
 
+/// Read a reserved array-iterator slot from its fixed inline prefix.
+/// Both constructors allocate six slots, and `reserved_slot_floor_for_class_id`
+/// keeps named-property changes above that prefix. Call only with the current
+/// rooted iterator address; the returned value is an immediate snapshot.
+#[inline(always)]
+unsafe fn array_iterator_slot(iter_obj: *const ObjectHeader, index: usize) -> JSValue {
+    let fields = (iter_obj as *const u8).add(std::mem::size_of::<ObjectHeader>())
+        as *const JSValue;
+    *fields.add(index)
+}
+
+/// Slot 1 starts at numeric zero and is only advanced with a u32 index.
+/// Updating that scalar neither changes the slot description nor adds an edge.
+#[inline(always)]
+unsafe fn array_iterator_set_index(iter_obj: *mut ObjectHeader, index: u32) {
+    let fields = (iter_obj as *mut u8).add(std::mem::size_of::<ObjectHeader>())
+        as *mut JSValue;
+    // GC_STORE_AUDIT(NON_GC): this reserved slot contains only numeric indices.
+    fields.add(1).write(JSValue::number(index as f64));
+}
+
 unsafe fn dispatch_array_iterator_method_inner(
     iter_obj: *mut ObjectHeader,
     method_name: &str,
@@ -690,7 +711,7 @@ unsafe fn dispatch_array_iterator_method_inner(
     // Field 2: iterator kind — read up front so the exhausted paths can pick
     // the kind's done-value (`null` for KIND_VALUES_NULL_DONE, `undefined`
     // otherwise).
-    let kind = f64::from_bits(js_object_get_field(iter_obj(), 2).bits()) as i32;
+    let kind = f64::from_bits(array_iterator_slot(iter_obj(), 2).bits()) as i32;
     let done_value = || {
         if kind == KIND_VALUES_NULL_DONE {
             JSValue::null()
@@ -719,9 +740,9 @@ unsafe fn dispatch_array_iterator_method_inner(
             }
             if kind == KIND_VALUES_NULL_DONE {
                 let epoch_ptr = js_nanbox_get_pointer(f64::from_bits(
-                    js_object_get_field(iter_obj(), 3).bits(),
+                    array_iterator_slot(iter_obj(), 3).bits(),
                 )) as *const std::sync::atomic::AtomicU64;
-                let expected = f64::from_bits(js_object_get_field(iter_obj(), 4).bits()) as u64;
+                let expected = f64::from_bits(array_iterator_slot(iter_obj(), 4).bits()) as u64;
                 if epoch_ptr.is_null()
                     || (*epoch_ptr).load(std::sync::atomic::Ordering::Relaxed) != expected
                 {
@@ -732,7 +753,7 @@ unsafe fn dispatch_array_iterator_method_inner(
                 }
             }
             // Field 0: backing array pointer (NaN-boxed).
-            let backing_field = js_object_get_field(iter_obj(), 0);
+            let backing_field = array_iterator_slot(iter_obj(), 0);
             let backing_f64 = f64::from_bits(backing_field.bits());
             // Iterators clear their backing array at exhaustion. A completed
             // SQLite statement iterator is also permanently closed; calling
@@ -750,7 +771,7 @@ unsafe fn dispatch_array_iterator_method_inner(
             }
             let backing_ptr = js_nanbox_get_pointer(backing_f64);
             // Field 1: current index.
-            let idx_field = js_object_get_field(iter_obj(), 1);
+            let idx_field = array_iterator_slot(iter_obj(), 1);
             let idx = f64::from_bits(idx_field.bits()) as u32;
 
             let len = if kind == KIND_ARGUMENTS_VALUES {
@@ -778,15 +799,12 @@ unsafe fn dispatch_array_iterator_method_inner(
 
             // Advance the stored cursor before computing the value so a
             // subsequent `.next()` call sees the bumped index.
-            js_object_set_field(iter_obj(), 1, JSValue::number((idx + 1) as f64));
+            array_iterator_set_index(iter_obj(), idx + 1);
 
-            // #7475: the cursor store above can allocate (shape transition /
-            // storage growth), so `arr_ptr` — read before it — may now name
-            // from-space. Re-derive the backing array from the iterator's
-            // field 0, which the collector DOES rewrite, instead of reusing
-            // the pre-store copy. `iter_obj()` re-reads the iterator's own
-            // address from its root for the same reason.
-            let backing_f64 = f64::from_bits(js_object_get_field(iter_obj(), 0).bits());
+            // Arguments/proxy length lookup above may run user code. Reload
+            // the iterator and backing from their current rooted storage before
+            // reading the element, even though the cursor store cannot collect.
+            let backing_f64 = f64::from_bits(array_iterator_slot(iter_obj(), 0).bits());
             let backing_ptr = js_nanbox_get_pointer(backing_f64) as usize;
             let elem = if kind == KIND_ARGUMENTS_VALUES {
                 crate::object::arguments_object_index_value(backing_ptr as *const ObjectHeader, idx)

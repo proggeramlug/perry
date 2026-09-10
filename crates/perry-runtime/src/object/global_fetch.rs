@@ -62,7 +62,7 @@ pub extern "C" fn js_fetch_take_pending_signal() -> f64 {
 pub extern "C" fn js_fetch_input_ptr(input: f64) -> i64 {
     let input_ptr = crate::value::js_nanbox_get_pointer(input);
     if crate::value::addr_class::is_small_handle(input_ptr as usize) {
-        return input_ptr;
+        return crate::native_handle::js_canonical_handle_id_from_addr(input_ptr);
     }
 
     let href = crate::url::url_class::js_url_href_if_url(input);
@@ -457,7 +457,10 @@ fn headers_init_json_ptr(headers: f64) -> *const crate::StringHeader {
     let jsv = crate::value::JSValue::from_bits(headers.to_bits());
     if jsv.is_pointer() {
         let addr = (headers.to_bits() & 0x0000_FFFF_FFFF_FFFF) as usize;
-        if crate::value::addr_class::is_handle_band(addr) {
+        let is_fetch = crate::native_handle::canonical_handle_parts_from_addr(addr).is_some_and(
+            |(provider, _)| provider == crate::native_handle::NATIVE_HANDLE_PROVIDER_FETCH,
+        );
+        if crate::value::addr_class::is_handle_band(addr) || is_fetch {
             let p = call_global_headers_object_json(headers);
             if !p.is_null() {
                 return p;
@@ -498,7 +501,10 @@ pub extern "C" fn js_node_setheaders_entries_json(value: f64) -> *mut crate::Str
     let jsv = crate::value::JSValue::from_bits(bits);
     if jsv.is_pointer() {
         let addr = (bits & 0x0000_FFFF_FFFF_FFFF) as usize;
-        if crate::value::addr_class::is_handle_band(addr) {
+        let is_fetch = crate::native_handle::canonical_handle_parts_from_addr(addr).is_some_and(
+            |(provider, _)| provider == crate::native_handle::NATIVE_HANDLE_PROVIDER_FETCH,
+        );
+        if crate::value::addr_class::is_handle_band(addr) || is_fetch {
             return call_global_headers_entries_json(value);
         }
     }

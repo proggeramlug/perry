@@ -132,7 +132,7 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
         // A1/A1.5; net.Socket moved to perry-stdlib/perry-ext-net's
         // event-driven model, and this fix adds the missing createServer
         // entry on the same side). It's declared at `runtime_decls.rs:2690`
-        // as `(I64, I64) -> DOUBLE`. The first slot is the options object
+        // as `(I64, I64) -> I64`. The first slot is the options object
         // pointer (or `0` for omitted — the runtime tolerates a null
         // options ptr); the second slot is the connection-listener
         // closure pointer (or `0` for omitted, same tolerance). Closures
@@ -140,11 +140,8 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
         // `unbox_to_i64` before handing to the FFI signature. Options
         // here are an optional plain object — pass the value through
         // after stripping the NaN-box tag so the runtime sees the raw
-        // `*ObjectHeader`. The returned `f64` is a raw handle (positive
-        // small integer) that subsequent server-side ops would consume;
-        // no extra NaN-boxing required at this layer (callers store the
-        // value through the JSValue F64 slot, matching the historic
-        // contract carried over from the deprecated runtime entry).
+        // `*ObjectHeader`. The returned integer id is published below as
+        // a managed Common handle value.
         Expr::NetCreateServer {
             options,
             connection_listener,
@@ -181,22 +178,15 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
                 }
                 None => "0".to_string(),
             };
-            // Issue #1123 followup — call returns the raw handle as `i64`
-            // (runtime_decls.rs declares `(I64, I64) -> I64`); NaN-box
-            // with POINTER_TAG so `unbox_to_i64` on the receiver in
-            // `server.listen(...)` round-trips correctly. This matches
-            // the `js_node_http_create_server` → `nanbox_pointer_inline`
-            // pattern in lower_native_module_dispatch's NR_PTR arm; we
-            // can't go through that arm because the dotted/named-import
-            // forms both lower to `Expr::NetCreateServer` (not a
-            // NativeMethodCall against the table).
+            // The provider ABI returns a registry id. Publish its canonical
+            // Common wrapper, as the native-module table does for factories.
             let blk = ctx.block();
             let raw = blk.call(
                 I64,
                 "js_ext_net_create_server",
                 &[(I64, &options_i64), (I64, &listener_i64)],
             );
-            Ok(nanbox_pointer_inline(blk, &raw))
+            Ok(blk.call(DOUBLE, "js_canonical_common_handle_value", &[(I64, &raw)]))
         }
         Expr::DateParse(s) => {
             let s_box = lower_expr(ctx, s)?;

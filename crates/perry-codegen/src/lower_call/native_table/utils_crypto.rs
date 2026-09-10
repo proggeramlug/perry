@@ -410,7 +410,7 @@ mod tests {
         assert_eq!(row.class_filter, None);
         assert!(matches!(row.args, [NativeArgKind::StrPtr]));
         assert!(
-            matches!(row.ret, NativeRetKind::ObjFromJsonStr),
+            matches!(row.ret.kind, NativeRetKind::ObjFromJsonStr),
             "dotenv.parse must be JSON-decoded into an object, got {:?}",
             row.ret
         );

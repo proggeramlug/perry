@@ -78,7 +78,7 @@ fn bind_agent_method(handle: Handle, name: &'static [u8]) -> i64 {
 }
 
 fn handle_value(handle: Handle) -> f64 {
-    f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 fn bind_agent_method_value(handle: Handle, name: &'static [u8]) -> f64 {

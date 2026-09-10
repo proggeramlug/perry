@@ -15,7 +15,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_from_input",
         args: &[NA_JSV],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -24,7 +24,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_from_input",
         args: &[NA_JSV],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -33,7 +33,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_resize",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -42,7 +42,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_rotate",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -51,7 +51,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_flip",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -60,7 +60,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_flop",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -69,7 +69,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_grayscale",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -78,7 +78,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_blur",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -87,7 +87,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_sharpen",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // `.extract({ left, top, width, height })` — the options object is passed
     // as a NaN-boxed value (NA_F64 slot); `js_sharp_extract` reads its fields.
@@ -98,7 +98,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_extract",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -107,7 +107,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_auto_orient",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // `.extend({ top, bottom, left, right, background })` — options object.
     NativeModSig {
@@ -117,7 +117,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_extend",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -126,7 +126,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_trim",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // `.composite([{ input, top, left }, …])` — array of layer objects, passed
     // as a NaN-boxed pointer (NA_F64 slot); `js_sharp_composite` walks it.
@@ -137,7 +137,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_composite",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -146,7 +146,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_jpeg",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -155,7 +155,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_png",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -164,7 +164,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_webp",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -173,7 +173,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sharp_avif",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sharp",
@@ -229,7 +229,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_load",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -238,7 +238,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_select",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -283,7 +283,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_selection_first",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -292,7 +292,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_selection_last",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -301,7 +301,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_selection_eq",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -310,7 +310,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_selection_find",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -319,7 +319,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_selection_children",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -328,7 +328,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cheerio_selection_parent",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cheerio",
@@ -690,7 +690,7 @@ pub(super) const MEDIA_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_cron_schedule",
         args: &[NA_STR, NA_PTR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "cron",

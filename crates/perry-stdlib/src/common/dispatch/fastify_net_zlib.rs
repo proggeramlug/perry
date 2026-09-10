@@ -44,7 +44,7 @@ pub(crate) unsafe fn dispatch_net_socket(handle: i64, method: &str, args: &[f64]
                 .copied()
                 .unwrap_or(f64::from_bits(0x7FFC_0000_0000_0001));
             crate::net::js_net_socket_set_type_of_service(handle, value);
-            f64::from_bits(0x7FFD_0000_0000_0000u64 | (handle as u64 & 0x0000_FFFF_FFFF_FFFF))
+            super::nanbox_handle_value(handle)
         }
         "on" if args.len() >= 2 => {
             let event_ptr = unbox_to_i64(args[0]);
@@ -90,8 +90,7 @@ pub(crate) unsafe fn dispatch_zlib_stream(handle: i64, method: &str, args: &[f64
     const TRUE: u64 = 0x7FFC_0000_0000_0004;
     // The stream itself, re-boxed as a POINTER_TAG handle (for `.on()` chaining
     // `s.on('data', …).on('end', …)`).
-    let self_ref =
-        f64::from_bits(0x7FFD_0000_0000_0000u64 | (handle as u64 & 0x0000_FFFF_FFFF_FFFF));
+    let self_ref = super::nanbox_handle_value(handle);
     match method {
         "write" if !args.is_empty() => {
             crate::zlib::zlib_stream_write(handle, args[0]);
@@ -167,7 +166,7 @@ pub(crate) unsafe fn dispatch_external_net_socket(handle: i64, method: &str, arg
         (v.to_bits() & 0x0000_FFFF_FFFF_FFFF) as i64
     }
     fn nanbox_handle(h: i64) -> f64 {
-        f64::from_bits(0x7FFD_0000_0000_0000u64 | (h as u64 & 0x0000_FFFF_FFFF_FFFF))
+        super::nanbox_handle_value(h)
     }
     extern "C" {
         // #5021 — route write/end/destroy through perry-ext-net's DISTINCT

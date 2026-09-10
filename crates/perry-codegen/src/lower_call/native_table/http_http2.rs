@@ -9,7 +9,7 @@ pub(super) const HTTP_HTTP2_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_http2_create_server",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http2",
@@ -18,7 +18,7 @@ pub(super) const HTTP_HTTP2_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_http2_create_secure_server",
         args: &[NA_F64, NA_PTR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http2",
@@ -27,7 +27,7 @@ pub(super) const HTTP_HTTP2_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_http2_connect",
         args: &[NA_F64, NA_F64, NA_PTR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http2",
@@ -38,7 +38,7 @@ pub(super) const HTTP_HTTP2_ROWS: &[NativeModSig] = &[
         // Variadic listen() overloads — see the http `listen` row. Issue #2041.
         // Returns the server handle for chainability (#2129).
         args: &[NA_VARARGS],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http2",

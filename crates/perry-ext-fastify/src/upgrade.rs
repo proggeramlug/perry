@@ -154,7 +154,7 @@ pub(crate) fn fire_fastify_upgrade_listeners(
     }
 
     let req_f64 = f64::from_bits(req_handle_bits as u64);
-    let ws_id_f64 = f64::from_bits(POINTER_TAG | (ws_id as u64 & PTR_MASK));
+    let ws_id_f64 = perry_ffi::canonical_handle_value(ws_id);
     let head_f64 = if head_data.is_empty() {
         f64::from_bits(TAG_UNDEFINED)
     } else {

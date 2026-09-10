@@ -312,7 +312,7 @@ fn valid_pointer_membership_spans_every_census_run_including_the_partial_one_764
     );
     for (index, run) in valid_ptrs.arena_runs.iter().enumerate() {
         assert_eq!(
-            valid_ptrs.arena_run_firsts[index], run[0],
+            valid_ptrs.arena_run_firsts[index], run.first(),
             "fence {index} must equal its run's first key"
         );
     }

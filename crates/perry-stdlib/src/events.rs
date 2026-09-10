@@ -121,7 +121,7 @@ enum EventHelperTarget {
 fn handle_from_value(value: f64) -> Handle {
     let bits = value.to_bits();
     if (bits & !POINTER_MASK_BITS) == POINTER_TAG_BITS {
-        (bits & POINTER_MASK_BITS) as Handle
+        perry_runtime::native_handle::js_canonical_handle_id(value)
     } else {
         bits as Handle
     }
@@ -951,7 +951,7 @@ unsafe fn call_emitter_listener(
     callback: i64,
     args: &[f64],
 ) -> f64 {
-    let receiver = js_nanbox_pointer(handle);
+    let receiver = crate::common::nanbox_handle_value(handle);
     let callback_value = js_nanbox_pointer(callback);
     if async_resource_handle != 0 {
         let scope = perry_runtime::gc::RuntimeHandleScope::new();
@@ -1083,8 +1083,12 @@ pub unsafe extern "C" fn js_event_emitter_emit(
     }
 
     if let Some((domain, error)) = domain_error {
-        let _ =
-            crate::domain::js_domain_emit_error(domain, error, js_nanbox_pointer(handle), false);
+        let _ = crate::domain::js_domain_emit_error(
+            domain,
+            error,
+            crate::common::nanbox_handle_value(handle),
+            false,
+        );
         return TAG_FALSE_F64;
     }
     if let Some(error) = throw_error {
@@ -1155,8 +1159,12 @@ pub unsafe extern "C" fn js_event_emitter_emit0(handle: Handle, event_bits: i64)
     }
 
     if let Some((domain, error)) = domain_error {
-        let _ =
-            crate::domain::js_domain_emit_error(domain, error, js_nanbox_pointer(handle), false);
+        let _ = crate::domain::js_domain_emit_error(
+            domain,
+            error,
+            crate::common::nanbox_handle_value(handle),
+            false,
+        );
         return TAG_FALSE_F64;
     }
     if let Some(error) = throw_error {

@@ -65,7 +65,10 @@ pub const GC_TYPE_OBJECT_META: u8 = 19;
 /// ObjectHeader consumer to inspect unrelated payload words for a magic value.
 /// A distinct GC kind is the authoritative, header-external discriminator.
 pub const GC_TYPE_REGEXP: u8 = 20;
-pub const GC_TYPE_MAX: u8 = GC_TYPE_REGEXP;
+/// Symbol identity cell. The payload contains only scalar metadata; symbol
+/// descriptions live in byte side tables and are therefore not GC edges.
+pub const GC_TYPE_SYMBOL: u8 = 21;
+pub const GC_TYPE_MAX: u8 = GC_TYPE_SYMBOL;
 
 pub(super) const MALLOC_KIND_UNKNOWN_INDEX: usize = 0;
 pub(super) const MALLOC_KIND_BUCKET_COUNT: usize = GC_TYPE_MAX as usize + 1;
@@ -685,6 +688,21 @@ pub(super) static GC_TYPE_INFO_BY_ID: [Option<GcTypeInfo>; MALLOC_KIND_BUCKET_CO
         GcMoveHookKind::RegExpSideTables,
         GcRewriteHookKind::None,
         GcFinalizeHookKind::RegExpSideTables,
+    )),
+    Some(gc_type_info_entry(
+        GC_TYPE_SYMBOL,
+        "symbol",
+        GcAllocationPolicy::Malloc,
+        false,
+        GcRewriteDescriptorKind::Leaf,
+        GcLayoutSlotKind::None,
+        false,
+        GcExternalBytePolicy::None,
+        GcLargeObjectPolicy::MallocTracked,
+        true,
+        GcMoveHookKind::None,
+        GcRewriteHookKind::None,
+        GcFinalizeHookKind::None,
     )),
 ];
 

@@ -121,8 +121,9 @@ pub(super) unsafe fn canonicalize_bare_gc_receiver(object: f64) -> f64 {
     if crate::value::addr_class::try_read_tracked_gc_header(addr).is_none() {
         // Vouched for by a header-free registry rather than by the allocator:
         // there is no `GcHeader` to read a kind out of, and every such
-        // allocation (a `Symbol.for` symbol, a registered buffer, a typed
-        // array) is boxed as a POINTER.
+        // allocation (a registered buffer or typed array) is boxed as a
+        // POINTER. Global symbols no longer enter this arm: they are pinned
+        // `GC_TYPE_SYMBOL` allocations with real headers.
         return f64::from_bits(
             crate::value::POINTER_TAG | (addr as u64 & crate::value::POINTER_MASK),
         );
@@ -137,18 +138,7 @@ pub(super) unsafe fn canonicalize_bare_gc_receiver(object: f64) -> f64 {
         return object;
     };
     let tag = match (*header.as_ptr()).obj_type {
-        // `alloc_symbol` gc_mallocs a `SymbolHeader` as `GC_TYPE_STRING`, so the
-        // header alone cannot separate a string from a fresh `Symbol()`. Screen
-        // on the object's own first word the way
-        // `gc_pointer_and_type_from_value` does — `may_be_symbol_header` is
-        // exact in the `false` direction, so a string pays one content load and
-        // a symbol keeps `POINTER_TAG`, which is how symbols are boxed.
-        crate::gc::GC_TYPE_STRING
-            if !(crate::symbol::may_be_symbol_header(resolved as *const u8)
-                && crate::symbol::is_registered_symbol(resolved)) =>
-        {
-            crate::value::STRING_TAG
-        }
+        crate::gc::GC_TYPE_STRING => crate::value::STRING_TAG,
         crate::gc::GC_TYPE_BIGINT => crate::value::BIGINT_TAG,
         _ => crate::value::POINTER_TAG,
     };
@@ -160,8 +150,8 @@ pub(super) unsafe fn canonicalize_bare_gc_receiver(object: f64) -> f64 {
 /// The allocator is the strongest answer (`try_read_tracked_gc_header` proves
 /// arena page membership or an exact malloc-registry hit). The rest are the
 /// address-keyed registries that own allocations carrying no `GcHeader` at all —
-/// a `Symbol.for` symbol, an `ArrayBuffer`/`Uint8Array` backing store, a typed
-/// array. Every one of these is a table lookup behind an idle latch, so a
+/// an `ArrayBuffer`/`Uint8Array` backing store or a typed array. Every one of
+/// these is a table lookup behind an idle latch, so a
 /// program that never made one pays a single atomic load; and every one of them
 /// is consulted by `gc_pointer_and_type_from_value` for the same reason.
 ///
@@ -171,7 +161,6 @@ pub(super) unsafe fn canonicalize_bare_gc_receiver(object: f64) -> f64 {
 fn bare_word_has_an_owner(addr: usize) -> bool {
     let allocator_owns = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) };
     allocator_owns.is_some()
-        || crate::symbol::is_registered_symbol(addr)
         || crate::buffer::is_registered_buffer(addr)
         || crate::buffer::is_any_array_buffer(addr)
         || crate::buffer::is_uint8array_buffer(addr)

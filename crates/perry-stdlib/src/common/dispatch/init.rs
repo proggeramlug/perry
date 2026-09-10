@@ -251,7 +251,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
         return if handle == 0 {
             undefined
         } else {
-            perry_runtime::js_nanbox_pointer(handle)
+            super::nanbox_handle_value(handle)
         };
     }
     if module == "http" && method == "OutgoingMessage" {
@@ -259,7 +259,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
         return if handle == 0 {
             undefined
         } else {
-            perry_runtime::js_nanbox_pointer(handle)
+            super::nanbox_handle_value(handle)
         };
     }
     // #4904: Node exposes Agent / ClientRequest / IncomingMessage /
@@ -275,7 +275,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
         return if handle == 0 {
             undefined
         } else {
-            perry_runtime::js_nanbox_pointer(handle)
+            super::nanbox_handle_value(handle)
         };
     }
     if module == "http" && method == "ServerResponse" {
@@ -286,7 +286,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
         return if handle == 0 {
             undefined
         } else {
-            perry_runtime::js_nanbox_pointer(handle)
+            super::nanbox_handle_value(handle)
         };
     }
     // `net.connect` / `net.createConnection` reached as a bound VALUE —
@@ -341,7 +341,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
         return if handle == 0 {
             undefined
         } else {
-            perry_runtime::js_nanbox_pointer(handle)
+            super::nanbox_handle_value(handle)
         };
     }
     #[cfg(feature = "external-http-client-pump")]
@@ -385,7 +385,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
             return if handle == 0 {
                 undefined
             } else {
-                perry_runtime::js_nanbox_pointer(handle)
+                super::nanbox_handle_value(handle)
             };
         }
         if method == "Agent" && (module == "http" || module == "https") {
@@ -397,7 +397,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
             return if handle == 0 {
                 undefined
             } else {
-                perry_runtime::js_nanbox_pointer(handle)
+                super::nanbox_handle_value(handle)
             };
         }
         if module == "http" && method == "ClientRequest" {
@@ -405,7 +405,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
             return if handle == 0 {
                 undefined
             } else {
-                perry_runtime::js_nanbox_pointer(handle)
+                super::nanbox_handle_value(handle)
             };
         }
     }
@@ -438,7 +438,7 @@ unsafe extern "C" fn js_node_http_native_dispatch(
     if handle == 0 {
         undefined
     } else {
-        perry_runtime::js_nanbox_pointer(handle)
+        super::nanbox_handle_value(handle)
     }
 }
 
@@ -639,7 +639,7 @@ pub unsafe extern "C" fn js_stdlib_init_dispatch() {
             }
             _ => return TAG_UNDEFINED_F64,
         };
-        perry_runtime::js_nanbox_pointer(handle)
+        super::nanbox_handle_value(handle)
     }
     #[cfg(any(feature = "bundled-events", feature = "external-events-construct"))]
     perry_runtime::js_set_native_events_construct(events_native_construct);
@@ -659,7 +659,7 @@ pub unsafe extern "C" fn js_stdlib_init_dispatch() {
         match method {
             b"AsyncLocalStorage" => {
                 let handle = crate::async_local_storage::js_async_local_storage_new();
-                perry_runtime::js_nanbox_pointer(handle)
+                super::nanbox_handle_value(handle)
             }
             b"AsyncResource" => {
                 let type_value = if !args_ptr.is_null() && args_len > 0 {

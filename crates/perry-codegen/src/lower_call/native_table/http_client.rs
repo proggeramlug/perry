@@ -4,7 +4,7 @@ const fn cr(
     method: &'static str,
     runtime: &'static str,
     args: &'static [NativeArgKind],
-    ret: NativeRetKind,
+    ret: NativeRetSpec,
 ) -> NativeModSig {
     NativeModSig {
         module: "http",
@@ -15,6 +15,17 @@ const fn cr(
         args,
         ret,
     }
+}
+
+const fn cr_managed(
+    method: &'static str,
+    runtime: &'static str,
+    args: &'static [NativeArgKind],
+    ret: NativeRetSpec,
+) -> NativeModSig {
+    let mut row = cr(method, runtime, args, ret);
+    row.ret = row.ret.managed_common_handle();
+    row
 }
 
 pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
@@ -44,7 +55,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_http_request_overload",
         args: &[NA_VARARGS],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -53,7 +64,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_http_get_overload",
         args: &[NA_VARARGS],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "https",
@@ -62,7 +73,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_https_request_overload",
         args: &[NA_VARARGS],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "https",
@@ -71,7 +82,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_https_get_overload",
         args: &[NA_VARARGS],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // #3712 — module-level header-validation / parser-proxy helpers. Runtime
     // impls live in `crates/perry-runtime/src/object/native_module_dispatch.rs`.
@@ -134,7 +145,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("ClientRequest"),
         runtime: "js_http_on",
         args: &[NA_STR, NA_PTR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -143,7 +154,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("ClientRequest"),
         runtime: "js_http_once",
         args: &[NA_STR, NA_PTR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -156,7 +167,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         // `(encoding?, callback?)` tail.
         runtime: "js_http_client_request_end_full",
         args: &[NA_F64, NA_JSV, NA_JSV],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -180,7 +191,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("ClientRequest"),
         runtime: "js_http_set_header",
         args: &[NA_STR, NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -192,7 +203,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         // `req.setTimeout(n, cb)` on a never-responding server hung forever).
         runtime: "js_http_set_timeout_full",
         args: &[NA_F64, NA_JSV],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -240,11 +251,11 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         NR_F64,
     ),
     cr("abort", "js_http_client_request_abort", &[], NR_F64),
-    cr(
+    cr_managed(
         "destroy",
         "js_http_client_request_destroy",
         &[NA_F64],
-        NR_HANDLE_ID,
+        NR_GCPTR,
     ),
     cr(
         "flushHeaders",
@@ -373,7 +384,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_http_agent_new",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "https",
@@ -382,7 +393,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_https_agent_new",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // Agent instance methods. Most are chainable no-ops today — Perry
     // doesn't pool sockets, but Node's test suite asserts the methods
@@ -407,7 +418,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("Agent"),
         runtime: "js_http_agent_destroy",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -416,7 +427,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("Agent"),
         runtime: "js_http_agent_noop_self",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "http",
@@ -425,7 +436,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("Agent"),
         runtime: "js_http_agent_noop_self",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // Property accessors as `__get_<name>` synthetic methods. The HIR
     // rewrites bare `agent.maxSockets` reads to `agent.__get_maxSockets()`
@@ -718,7 +729,7 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("Agent"),
         runtime: "js_http_agent_create_connection",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR,
     },
     NativeModSig {
         module: "http",
@@ -727,6 +738,6 @@ pub(super) const HTTP_CLIENT_ROWS: &[NativeModSig] = &[
         class_filter: Some("Agent"),
         runtime: "js_http_agent_create_socket",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR,
     },
 ];

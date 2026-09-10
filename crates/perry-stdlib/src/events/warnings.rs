@@ -31,7 +31,11 @@ unsafe fn make_warning(handle: Handle, event: &str, count: usize, max: f64) -> f
         "name",
         js_string_value("MaxListenersExceededWarning"),
     );
-    set_field(warning_obj, "emitter", js_nanbox_pointer(handle));
+    set_field(
+        warning_obj,
+        "emitter",
+        crate::common::nanbox_handle_value(handle),
+    );
     set_field(warning_obj, "type", js_string_value(event));
     set_field(warning_obj, "count", count as f64);
     js_nanbox_pointer(warning as i64)

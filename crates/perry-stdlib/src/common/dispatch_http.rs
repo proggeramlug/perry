@@ -175,7 +175,7 @@ pub(super) unsafe fn dispatch_client_incoming_method(
         return None;
     }
 
-    let self_ref = f64::from_bits(0x7FFD_0000_0000_0000u64 | (handle as u64 & PTR_MASK));
+    let self_ref = crate::common::nanbox_handle_value(handle);
     let value = match method_name {
         "setEncoding" if !args.is_empty() => {
             let ptr = (args[0].to_bits() & PTR_MASK) as *const perry_runtime::StringHeader;

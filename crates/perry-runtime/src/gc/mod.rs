@@ -153,7 +153,7 @@ pub use pin::{
 use pin::{note_preflight_skipped, note_preflight_walked, young_pin_latch_armed};
 /// Software prefetch helpers for the collector's pointer-chasing loops
 /// (drain, `clear_marks`, the remembered-set dirty scan).
-mod prefetch;
+pub(crate) mod prefetch;
 
 mod copying;
 mod copying_first_cycle;

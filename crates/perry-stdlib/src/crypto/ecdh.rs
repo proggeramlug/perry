@@ -12,7 +12,7 @@ pub unsafe extern "C" fn js_crypto_create_sign(alg_ptr: i64) -> f64 {
         data: std::sync::Mutex::new(Vec::new()),
         finalized: std::sync::atomic::AtomicBool::new(false),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 #[no_mangle]
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn js_crypto_create_verify(alg_ptr: i64) -> f64 {
         data: std::sync::Mutex::new(Vec::new()),
         finalized: std::sync::atomic::AtomicBool::new(false),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 #[no_mangle]
@@ -41,7 +41,7 @@ pub unsafe extern "C" fn js_crypto_create_ecdh(curve_ptr: i64) -> f64 {
     let handle: Handle = register_handle(EcdhHandle {
         private_key: std::sync::Mutex::new(None),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 #[no_mangle]
@@ -88,7 +88,7 @@ pub unsafe extern "C" fn js_crypto_create_diffie_hellman(
         private_key: std::sync::Mutex::new(None),
         public_key: std::sync::Mutex::new(None),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 #[no_mangle]
@@ -99,7 +99,7 @@ pub unsafe extern "C" fn js_crypto_get_diffie_hellman(_group_val: f64) -> f64 {
         private_key: std::sync::Mutex::new(None),
         public_key: std::sync::Mutex::new(None),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 #[no_mangle]
@@ -155,7 +155,7 @@ pub unsafe fn dispatch_sign(handle: i64, method: &str, args: &[f64]) -> f64 {
             let ptr = (args[0].to_bits() & 0x0000_FFFF_FFFF_FFFF) as i64;
             let bytes = bytes_from_ptr(ptr);
             h.data.lock().unwrap().extend_from_slice(&bytes);
-            f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+            crate::common::nanbox_handle_value(handle)
         }
         "sign" if !args.is_empty() => {
             // The handle is consumed by `.sign()` regardless of outcome.
@@ -479,7 +479,7 @@ pub unsafe fn dispatch_verify(handle: i64, method: &str, args: &[f64]) -> f64 {
             let ptr = (args[0].to_bits() & 0x0000_FFFF_FFFF_FFFF) as i64;
             let bytes = bytes_from_ptr(ptr);
             h.data.lock().unwrap().extend_from_slice(&bytes);
-            f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+            crate::common::nanbox_handle_value(handle)
         }
         "verify" if args.len() >= 2 => {
             // The handle is consumed by `.verify()` regardless of outcome.

@@ -26,7 +26,7 @@ pub(super) unsafe fn call_net_socket_method(handle: i64, name: &str, args: &[f64
         .map(|value| value.get_nanbox_f64())
         .collect::<Vec<_>>();
     perry_runtime::object::js_native_call_method_str_key(
-        js_nanbox_pointer(handle),
+        crate::common::nanbox_handle_value(handle),
         name.get_raw_const_ptr::<StringHeader>() as i64,
         args.as_ptr(),
         args.len(),

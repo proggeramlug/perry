@@ -56,13 +56,13 @@ fn js_bool(value: bool) -> f64 {
 }
 
 fn boxed_handle(handle: i64) -> f64 {
-    f64::from_bits(0x7FFD_0000_0000_0000 | (handle as u64 & 0x0000_FFFF_FFFF_FFFF))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 fn handle_from_value(value: f64) -> Option<i64> {
     let value = JsValue::from_bits(value.to_bits());
     if value.is_pointer() {
-        Some(value.as_pointer::<u8>() as i64)
+        Some(perry_ffi::canonical_handle_id(f64::from_bits(value.bits())))
     } else if value.is_number() {
         Some(value.to_number() as i64)
     } else {

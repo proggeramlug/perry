@@ -196,7 +196,11 @@ fn global_this_fetch_option(init: f64, name: &[u8]) -> f64 {
     // `js_object_get_field_by_name_f64` routes a handle through the handle
     // property dispatch (where Response `.status` etc. resolve), so hand it the
     // handle directly instead of bailing.
-    if crate::value::addr_class::is_handle_band(raw as usize) {
+    let is_fetch = crate::native_handle::canonical_handle_parts_from_addr(raw as usize)
+        .is_some_and(|(provider, _)| {
+            provider == crate::native_handle::NATIVE_HANDLE_PROVIDER_FETCH
+        });
+    if crate::value::addr_class::is_handle_band(raw as usize) || is_fetch {
         if raw == 0 {
             return f64::from_bits(crate::value::TAG_UNDEFINED);
         }
@@ -396,7 +400,7 @@ unsafe fn attach_fetch_handle_to_this(this_box: f64, handle_box: f64) {
     if let Some(obj) = subclass_this_object_ptr(this_box) {
         crate::object::field_get_set::FETCH_SUBCLASS_EVER
             .store(true, std::sync::atomic::Ordering::Relaxed);
-        let id = crate::value::js_nanbox_get_pointer(handle_box);
+        let id = crate::native_handle::js_canonical_handle_id(handle_box);
         let key = crate::string::js_string_from_bytes(
             FETCH_SUBCLASS_HANDLE_FIELD.as_ptr(),
             FETCH_SUBCLASS_HANDLE_FIELD.len() as u32,

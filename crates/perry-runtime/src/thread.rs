@@ -481,12 +481,9 @@ unsafe fn serialize_capture_for_thread(slot_bits: u64) -> SerializedValue {
 /// Human-readable name for a GC object type that cannot cross a thread
 /// boundary. Used only to build the TypeError message (#6185).
 ///
-/// Note: a Symbol is POINTER_TAG'd but allocated with `GC_TYPE_STRING`
-/// (real strings arrive under `STRING_TAG` and never reach this match), so
-/// `GC_TYPE_STRING` here means "Symbol".
 fn unsupported_transfer_type_name(obj_type: u8) -> &'static str {
     match obj_type {
-        gc::GC_TYPE_STRING => "Symbol",
+        gc::GC_TYPE_SYMBOL => "Symbol",
         gc::GC_TYPE_PROMISE => "Promise",
         gc::GC_TYPE_BIGINT => "BigInt",
         gc::GC_TYPE_ERROR => "Error",

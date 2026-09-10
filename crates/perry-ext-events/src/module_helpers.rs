@@ -11,6 +11,15 @@ extern "C" {
     ) -> f64;
 }
 
+#[inline]
+pub(super) fn nanbox_handle_or_pointer(handle: i64) -> f64 {
+    if (1..0x40000).contains(&handle) {
+        perry_ffi::canonical_handle_value(handle)
+    } else {
+        nanbox_pointer_bits(handle)
+    }
+}
+
 pub(super) unsafe fn call_net_socket_method(handle: Handle, name: &str, args: &[f64]) -> f64 {
     let scope = perry_ffi::TransientRootScope::enter();
     let args = args
@@ -21,7 +30,7 @@ pub(super) unsafe fn call_net_socket_method(handle: Handle, name: &str, args: &[
     let name = scope.root_nanbox(f64::from_bits(nanbox_string_bits(name_ptr)));
     let args = args.iter().map(|value| value.get()).collect::<Vec<_>>();
     js_native_call_method_str_key(
-        nanbox_pointer_bits(handle),
+        nanbox_handle_or_pointer(handle),
         (name.get().to_bits() & POINTER_MASK) as i64,
         args.as_ptr(),
         args.len(),

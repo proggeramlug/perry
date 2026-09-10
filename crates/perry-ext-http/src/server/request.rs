@@ -647,7 +647,7 @@ pub unsafe extern "C" fn js_node_http_im_on(
                 let _ = js_http_on(handle, event_name_ptr, callback);
                 // Node's `.on()` returns the receiver — re-NaN-box
                 // the handle so chained calls still work.
-                return f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK));
+                return perry_ffi::canonical_handle_value(handle);
             }
         };
         im.listeners
@@ -701,7 +701,7 @@ pub unsafe extern "C" fn js_node_http_im_on(
     }
     // Node's `req.on` returns the IncomingMessage itself for chaining.
     // Return the same handle re-NaN-boxed so `req.on().on()` works.
-    f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 /// `IncomingMessage#once` for both server requests and client responses.
@@ -716,11 +716,11 @@ pub unsafe extern "C" fn js_node_http_im_once(
             fn js_http_once(handle: i64, event_ptr: *const StringHeader, callback: i64) -> i64;
         }
         let _ = js_http_once(handle, event_name_ptr, callback);
-        return f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK));
+        return perry_ffi::canonical_handle_value(handle);
     }
     let event = read_string_header(event_name_ptr as *mut _).unwrap_or_default();
     if event.is_empty() || callback == 0 {
-        return f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK));
+        return perry_ffi::canonical_handle_value(handle);
     }
     let wrapper =
         crate::client_request_surface::create_client_once_wrapper(handle, &event, callback, false);
@@ -920,7 +920,7 @@ pub(crate) fn incoming_peer_certificate_json(handle: i64) -> *mut StringHeader {
 /// (codegen treats it as an object pointer, calls accessors via the
 /// vtable) Just Works.
 pub(crate) fn handle_to_pointer_f64(handle: i64) -> f64 {
-    f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 extern "C" {

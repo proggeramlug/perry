@@ -95,24 +95,19 @@ fn notify_crypto_key_death(addr: usize) {
 
 pub type CryptoKeyMeta = (u8, u8, u8, bool, u32, u32);
 
-crate::perry_thread_local! {
-    static BUFFER_REGISTRY: RefCell<PtrHashSet<usize>> = RefCell::new(new_ptr_hash_set());
+/// The local address filter and its authoritative set share one TLS record.
+/// A range-admitted lookup therefore resolves that record once. The bounds
+/// still only widen, and registration publishes them before the set entry.
+struct BufferRegistry {
+    addresses: RefCell<PtrHashSet<usize>>,
+    range: Cell<(usize, usize)>,
+}
 
-    /// Smallest and largest address ever inserted into `BUFFER_REGISTRY` on
-    /// this thread, as a conservative filter in front of the hash lookup.
-    ///
-    /// The latch above answers "has anything EVER been registered?", which
-    /// stops being useful the moment a program registers its first buffer —
-    /// after that all ~216 probe sites pay a TLS access, a `RefCell` borrow
-    /// and a hash lookup to ask whether an arbitrary pointer is a buffer, and
-    /// almost every caller is asking about something that is not one.
-    ///
-    /// The range only ever widens and every registration extends it before
-    /// inserting, so an address outside it cannot be in the set: rejecting is
-    /// sound, and accepting merely falls through to the lookup that was
-    /// already there. Thread-local like the registry it guards, so there is
-    /// no ordering to reason about.
-    static BUFFER_ADDR_RANGE: Cell<(usize, usize)> = const { Cell::new((usize::MAX, 0)) };
+crate::perry_thread_local! {
+    static BUFFER_REGISTRY: BufferRegistry = BufferRegistry {
+        addresses: RefCell::new(new_ptr_hash_set()),
+        range: Cell::new((usize::MAX, 0)),
+    };
     /// `BufferHeader` wrappers whose bytes live in memory owned by native
     /// code. The wrapper itself is an ordinary, non-moving GC object; only
     /// its data pointer is external. `bun:ffi.toArrayBuffer`/`toBuffer` use
@@ -124,7 +119,7 @@ crate::perry_thread_local! {
     static UINT8ARRAY_FROM_CTOR: RefCell<PtrHashSet<usize>> = RefCell::new(new_ptr_hash_set());
 
     /// Address range of `UINT8ARRAY_FROM_CTOR`, on the same terms as
-    /// `BUFFER_ADDR_RANGE`.
+    /// `BufferRegistry::range`.
     static UINT8ARRAY_ADDR_RANGE: Cell<(usize, usize)> = const { Cell::new((usize::MAX, 0)) };
     /// Issue #579: buffers allocated as `new ArrayBuffer(n)` — sources that
     /// `new Uint8Array(ab)` should ALIAS rather than copy. Survives across
@@ -468,13 +463,13 @@ pub fn register_buffer(ptr: *const BufferHeader) {
     BUFFER_LIKE_ADDR_WINDOW.admit(addr);
     BUFFER_LIKE_ADDR_FILTER.admit(addr);
     BUFFER_LIKE_EVER_REGISTERED.arm();
-    BUFFER_ADDR_RANGE.with(|r| {
-        let (lo, hi) = r.get();
-        r.set((lo.min(addr), hi.max(addr)));
+    BUFFER_REGISTRY.with(|r| {
+        let (lo, hi) = r.range.get();
+        r.range.set((lo.min(addr), hi.max(addr)));
+        r.addresses.borrow_mut().insert(addr);
     });
-    BUFFER_REGISTRY.with(|r| r.borrow_mut().insert(addr));
     if crate::hot_diag::buffer_on() {
-        let live = BUFFER_REGISTRY.with(|r| r.borrow().len());
+        let live = BUFFER_REGISTRY.with(|r| r.addresses.borrow().len());
         crate::hot_diag::buffer_note_registration(live);
     }
 }
@@ -564,12 +559,15 @@ fn is_registered_buffer_slow(addr: usize) -> bool {
     // Outside the registered range ⟹ not in the thread-local set, so skip the
     // borrow and the hash. The external and shared-SAB registries below keep
     // their own gates and are unaffected.
-    let (lo, hi) = if buffer_range_filter_enabled() {
-        BUFFER_ADDR_RANGE.with(|r| r.get())
-    } else {
-        (0, usize::MAX)
-    };
-    if addr >= lo && addr <= hi && BUFFER_REGISTRY.with(|r| r.borrow().contains(&addr)) {
+    let range_filter_enabled = buffer_range_filter_enabled();
+    if BUFFER_REGISTRY.with(|r| {
+        let (lo, hi) = if range_filter_enabled {
+            r.range.get()
+        } else {
+            (0, usize::MAX)
+        };
+        addr >= lo && addr <= hi && r.addresses.borrow().contains(&addr)
+    }) {
         return true;
     }
     if EXTERNAL_BUFFERS_NONEMPTY.load(std::sync::atomic::Ordering::Acquire)
@@ -1104,7 +1102,8 @@ pub(crate) fn collect_dead_registered_buffers_post_trace(full_trace: bool) -> Ve
     // `None` — nearly every process — means no SAB was ever allocated.
     let shared_sabs = crate::shared_sab::snapshot_shared_sabs();
     BUFFER_REGISTRY.with(|r| {
-        r.borrow()
+        r.addresses
+            .borrow()
             .iter()
             .copied()
             .filter(|&addr| unsafe {
@@ -1159,7 +1158,7 @@ unsafe fn registered_buffer_is_dead_post_trace(
 /// the #6080 ABA class) and the entries leak forever.
 pub(crate) fn finalize_collected_dead_buffer(addr: usize) {
     BUFFER_REGISTRY.with(|r| {
-        r.borrow_mut().remove(&addr);
+        r.addresses.borrow_mut().remove(&addr);
     });
     if crate::hot_diag::buffer_on() {
         crate::hot_diag::buffer_note_unregistration();

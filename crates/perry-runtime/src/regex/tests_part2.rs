@@ -638,8 +638,12 @@ fn site_cache_reconstruction_is_born_built() {
     let (p1, p2) = REGEX_SOURCE_TABLE.with(|t| {
         let t = t.borrow();
         (
-            t.get(&(re1 as usize)).map(|(p, _)| p.clone()).unwrap(),
-            t.get(&(re2 as usize)).map(|(p, _)| p.clone()).unwrap(),
+            t.get(&(re1 as usize))
+                .map(|entry| entry.source.0.clone())
+                .unwrap(),
+            t.get(&(re2 as usize))
+                .map(|entry| entry.source.0.clone())
+                .unwrap(),
         )
     });
     assert!(Arc::ptr_eq(&p1, &p2), "source text is shared, not copied");

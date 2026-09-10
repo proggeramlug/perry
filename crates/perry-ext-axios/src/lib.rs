@@ -129,8 +129,9 @@ where
         match result {
             Ok(resp) => {
                 let handle = register_handle(resp);
-                // POINTER_TAG-tagged handle value — see #340.
-                promise.resolve(JsValue::from_object_ptr(handle as *mut ()));
+                promise.resolve_with(move || {
+                    JsValue::from_bits(perry_ffi::canonical_handle_value(handle).to_bits())
+                });
             }
             Err(msg) => promise.reject_string(&msg),
         }

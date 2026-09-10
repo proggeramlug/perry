@@ -153,6 +153,9 @@ pub fn declare_phase1(module: &mut LlModule) {
         I64,
         &[DOUBLE, I64, I32, I32, I32],
     );
+    module.declare_function("js_canonical_handle_id", I64, &[DOUBLE]);
+    module.declare_function("js_canonical_handle_id_from_addr", I64, &[I64]);
+    module.declare_function("js_canonical_common_handle_value", DOUBLE, &[I64]);
 
     // Strings (enough to produce string literals for later phases).
     module.declare_function("js_string_from_bytes", I64, &[PTR, I32]);

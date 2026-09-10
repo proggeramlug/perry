@@ -55,7 +55,7 @@ pub(super) extern "C" fn events_once_stream_resolve_listener(
                 f64::from_bits(nanbox_string_bits(error_event_ptr as *mut StringHeader));
             let error_listener_value = nanbox_pointer_bits(error_listener);
             if matches!(
-                event_helper_target(nanbox_pointer_bits(handle)),
+                event_helper_target(nanbox_handle_or_pointer(handle)),
                 Some(EventHelperTarget::NetSocket(_) | EventHelperTarget::NativeHandle(_))
             ) {
                 let _ = call_net_socket_method(
@@ -90,7 +90,7 @@ pub(super) extern "C" fn events_once_stream_reject_listener(
             let event = f64::from_bits(nanbox_string_bits(event_name_ptr as *mut StringHeader));
             let resolve_listener_value = nanbox_pointer_bits(resolve_listener);
             if matches!(
-                event_helper_target(nanbox_pointer_bits(handle)),
+                event_helper_target(nanbox_handle_or_pointer(handle)),
                 Some(EventHelperTarget::NetSocket(_) | EventHelperTarget::NativeHandle(_))
             ) {
                 let _ = call_net_socket_method(

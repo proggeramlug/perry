@@ -21,10 +21,11 @@ TABLE_DIR = Path("crates/perry-codegen/src/lower_call/native_table")
 LEDGER = Path("scripts/native_result_ledger.tsv")
 # The campaign's textual census reported 372 `ret: NR_PTR` hits. Two were
 # prose comments in fastify.rs, while one real row uses the positional `cr(...)`
-# helper, leaving 371 executable declarations. The scanner parses declarations,
-# not comments, and includes that helper row.
-EXPECTED_ROWS = 371
-EXPECTED_PROVIDERS = 322
+# helper, leaving 371 executable declarations. The Common migration adds the
+# formerly NR_I32 ws.on handle return as row 372. The scanner parses
+# declarations, not comments, and includes that helper row.
+EXPECTED_ROWS = 372
+EXPECTED_PROVIDERS = 323
 KINDS = {
     "NR_GCPTR",
     "NR_NULLABLE_GCPTR",
@@ -86,7 +87,7 @@ def scan_rows(root: Path, table_dir: Path) -> list[Row]:
                 strings: list[str] = []
                 for previous in reversed(lines[:index]):
                     strings.extend(re.findall(r'"([^"]+)"', previous))
-                    if re.search(r"\bcr\s*\(", previous):
+                    if re.search(r"\bcr(?:_managed)?\s*\(", previous):
                         break
                 if len(strings) >= 2:
                     runtime = strings[-2]

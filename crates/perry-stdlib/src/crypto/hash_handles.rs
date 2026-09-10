@@ -99,7 +99,7 @@ extern "C" {
 }
 
 fn nanbox_handle(handle: i64) -> f64 {
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 fn js_true() -> f64 {
@@ -430,7 +430,7 @@ pub unsafe extern "C" fn js_crypto_create_hash_options(alg_ptr: i64, options_bit
         output_len,
         stream: Mutex::new(CryptoDigestStream::default()),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 /// Dispatch `update` / `digest` / `copy` on a HashHandle. Called from
@@ -459,7 +459,7 @@ pub unsafe fn dispatch_hash(handle: i64, method: &str, args: &[f64]) -> f64 {
             if let Some(state) = guard.as_mut() {
                 update_hash_state(state, &bytes);
             }
-            f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+            crate::common::nanbox_handle_value(handle)
         }
         "digest" => {
             let state = {
@@ -524,7 +524,7 @@ pub unsafe fn dispatch_hash(handle: i64, method: &str, args: &[f64]) -> f64 {
                 output_len: h.output_len,
                 stream: Mutex::new(CryptoDigestStream::default()),
             });
-            f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+            crate::common::nanbox_handle_value(handle)
         }
         "write" if !args.is_empty() => {
             let encoding = arg_string(args, 1);
@@ -690,7 +690,7 @@ pub unsafe extern "C" fn js_crypto_create_hmac(alg_ptr: i64, key_ptr: i64) -> f6
         state: Mutex::new(Some(state)),
         stream: Mutex::new(CryptoDigestStream::default()),
     });
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+    crate::common::nanbox_handle_value(handle)
 }
 
 /// Dispatch `update` / `digest` on an HmacHandle. Called from
@@ -724,7 +724,7 @@ pub unsafe fn dispatch_hmac(handle: i64, method: &str, args: &[f64]) -> f64 {
             // Return the same handle (NaN-boxed) so the chain
             // `hmac.update(data).digest(enc)` continues against the same
             // state. Mirrors Node's behavior (`update` returns `this`).
-            f64::from_bits(0x7FFD_0000_0000_0000u64 | ((handle as u64) & 0x0000_FFFF_FFFF_FFFF))
+            crate::common::nanbox_handle_value(handle)
         }
         "digest" => {
             let state = {

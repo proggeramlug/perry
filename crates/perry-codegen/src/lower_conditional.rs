@@ -3,6 +3,8 @@
 //! Contains `lower_conditional` (ternary), `lower_logical` (&&/||/??),
 //! and `lower_truthy` (truthiness test).
 
+mod number_range_union;
+
 use anyhow::Result;
 use perry_hir::{Expr, LogicalOp};
 
@@ -291,6 +293,10 @@ pub(crate) fn lower_logical(
     left: &Expr,
     right: &Expr,
 ) -> Result<String> {
+    if let Some(result) = number_range_union::try_lower(ctx, op, left, right)? {
+        return Ok(result);
+    }
+
     // ?? — nullish coalesce. Inline test: bitcast left to i64, compare
     // against TAG_NULL_I64 and TAG_UNDEFINED_I64. If either matches, the
     // value is "nullish" and we return the right side; otherwise return

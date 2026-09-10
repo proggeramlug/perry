@@ -1132,7 +1132,7 @@ unsafe fn invoke_create_socket(
     ));
     let cb = (cb_val.get().to_bits() & PTR_MASK) as *mut perry_ffi::ClosureHeader;
     perry_ffi::set_closure_capture_f64(cb, 0, request_handle as f64);
-    let req_val = f64::from_bits(POINTER_TAG | (request_handle as u64 & PTR_MASK));
+    let req_val = perry_ffi::canonical_handle_value(request_handle);
     let options = scope.root_nanbox(agent::build_connect_options(agent_handle, host, port, path));
 
     let closure = JsClosure::from_raw(cs.get() as *const RawClosureHeader);

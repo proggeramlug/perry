@@ -10,7 +10,7 @@
 //!   symbol-keyed properties are not yet wired into the object shape system)
 //!
 //! Symbols are opaque heap objects allocated via `gc_malloc` with
-//! `GC_TYPE_STRING` (treated as leaf objects by the GC — no internal
+//! `GC_TYPE_SYMBOL` (treated as leaf objects by the GC — no internal
 //! references). They are NaN-boxed with `POINTER_TAG`, which means they
 //! round-trip through the runtime as regular pointer JSValues.
 //!
@@ -114,12 +114,12 @@ pub(crate) fn symbol_property_ic_epoch_bump() {
     PERRY_SYMBOL_PROPERTY_IC_EPOCH.fetch_add(1, Ordering::Release);
 }
 
-/// Magic number distinguishing SymbolHeader from other GC_TYPE_STRING objects.
+/// Magic number distinguishing a SymbolHeader payload.
 /// Placed at offset 0 so `js_is_symbol` can cheaply detect symbols.
 pub const SYMBOL_MAGIC: u32 = 0x5359_4D42; // "SYMB"
 
-/// Symbol object header. Allocated via `gc_malloc` (or malloc for registered
-/// symbols that need to outlive GC cycles).
+/// Symbol object header. Allocated via `gc_malloc`; process-global symbols are
+/// pinned so they outlive GC cycles and creator-thread teardown.
 #[repr(C)]
 pub struct SymbolHeader {
     /// Magic number for type discrimination. Always SYMBOL_MAGIC.
@@ -135,12 +135,49 @@ pub struct SymbolHeader {
 }
 
 // Global registry for Symbol.for(key) — maps key → symbol pointer (as usize).
-// The symbol pointers stored here are leaked (never freed) so that
-// `Symbol.for("x") === Symbol.for("x")` always returns the same pointer.
+// The symbol pointers stored here are pinned GC allocations that are never
+// finalized, so `Symbol.for("x") === Symbol.for("x")` always returns the same
+// pointer.
 static SYMBOL_REGISTRY: Mutex<Option<HashMap<String, usize>>> = Mutex::new(None);
 
-// Side-table tracking ALL allocated symbol pointers (both gc_malloc'd from
-// `Symbol(desc)` and Box::leak'd from `Symbol.for(key)`). Used by
+/// Process-global symbols are pinned malloc objects. Their creator thread's
+/// malloc registry can disappear while another agent still uses the symbol,
+/// so this exact-address set is the cross-thread ownership proof used by the
+/// tracked-header resolver.
+static IMMORTAL_SYMBOL_POINTERS: Mutex<Option<PtrHashSet<usize>>> = Mutex::new(None);
+
+pub(crate) fn is_immortal_symbol_pointer(ptr: usize) -> bool {
+    if SYMBOL_EVER_REGISTERED.is_idle() || !SYMBOL_ADDR_FILTER.may_contain(ptr) {
+        return false;
+    }
+    IMMORTAL_SYMBOL_POINTERS
+        .lock()
+        .unwrap()
+        .as_ref()
+        .is_some_and(|set| set.contains(&ptr))
+}
+
+unsafe fn alloc_immortal_symbol(registered: bool) -> *mut SymbolHeader {
+    let ptr = crate::gc::gc_malloc(
+        std::mem::size_of::<SymbolHeader>(),
+        crate::gc::GC_TYPE_SYMBOL,
+    ) as *mut SymbolHeader;
+    (*ptr).magic = SYMBOL_MAGIC;
+    (*ptr).registered = u32::from(registered);
+    (*ptr).description = std::ptr::null_mut();
+    (*ptr).id = next_id();
+    let gc_header = (ptr as *mut u8).sub(crate::gc::GC_HEADER_SIZE) as *mut crate::gc::GcHeader;
+    crate::gc::pin_object(gc_header);
+    IMMORTAL_SYMBOL_POINTERS
+        .lock()
+        .unwrap()
+        .get_or_insert_with(new_ptr_hash_set)
+        .insert(ptr as usize);
+    ptr
+}
+
+// Side-table tracking ALL allocated symbol pointers (both ordinary
+// `Symbol(desc)` allocations and pinned global-symbol allocations). Used by
 // `is_registered_symbol` so the runtime's property/method dispatch can
 // detect symbol pointers safely without reading the (possibly nonexistent)
 // GcHeader byte.
@@ -149,7 +186,7 @@ per_test_global! {
 }
 
 /// Process-lifetime descriptions for registered (`Symbol.for`) and well-known
-/// symbols. These symbols are Box-leaked so they outlive every GC cycle, but
+/// symbols. These symbols are pinned so they outlive every GC cycle, but
 /// the description StringHeader they used to point at was allocated in the
 /// calling thread's arena — which gets freed when a `perry/thread` worker
 /// exits, leaving the symbol with a dangling description pointer. Storing
@@ -319,19 +356,13 @@ pub fn well_known_symbol(short_name: &str) -> *mut SymbolHeader {
     if let Some(&ptr_usize) = cache.get(short_name) {
         return ptr_usize as *mut SymbolHeader;
     }
-    // First use: allocate a persistent (leaked) SymbolHeader. Description is
+    // First use: allocate a persistent pinned SymbolHeader. Description is
     // null-on-the-header — the actual text lives in REGISTERED_SYMBOL_DESCRIPTIONS,
     // and readers materialize a StringHeader in their own arena on demand. We
     // can't store a real StringHeader pointer here because this allocation may
     // be made on a worker thread whose arena will later be torn down, while
     // the SymbolHeader itself is Box-leaked and outlives that arena.
-    let boxed = Box::new(SymbolHeader {
-        magic: SYMBOL_MAGIC,
-        registered: 0,
-        description: std::ptr::null_mut(),
-        id: next_id(),
-    });
-    let sym_ptr = Box::into_raw(boxed);
+    let sym_ptr = unsafe { alloc_immortal_symbol(false) };
     if crate::hot_diag::receiver_repr_on() {
         crate::hot_diag::receiver_repr_note_constructed(
             crate::hot_diag::ReceiverReprFamily::SymbolGlobal,
@@ -644,17 +675,11 @@ pub fn intl_legacy_constructed_symbol() -> f64 {
     if let Some(ptr) = *guard {
         return f64::from_bits(POINTER_TAG | (ptr as u64 & POINTER_MASK));
     }
-    // Persistent (leaked) symbol so it outlives every GC cycle — its identity is
+    // Persistent pinned symbol so it outlives every GC cycle — its identity is
     // realm-global. Description text lives in REGISTERED_SYMBOL_DESCRIPTIONS
     // (readers materialize a fresh StringHeader on demand), matching the
     // well-known-symbol contract.
-    let boxed = Box::new(SymbolHeader {
-        magic: SYMBOL_MAGIC,
-        registered: 0,
-        description: std::ptr::null_mut(),
-        id: next_id(),
-    });
-    let sym_ptr = Box::into_raw(boxed) as usize;
+    let sym_ptr = unsafe { alloc_immortal_symbol(false) } as usize;
     if crate::hot_diag::receiver_repr_on() {
         crate::hot_diag::receiver_repr_note_constructed(
             crate::hot_diag::ReceiverReprFamily::SymbolGlobal,
@@ -880,7 +905,7 @@ pub(crate) unsafe fn alloc_symbol(
     description: *mut StringHeader,
     registered: bool,
 ) -> *mut SymbolHeader {
-    // Allocated via gc_malloc as a leaf: `GC_TYPE_STRING`'s type info is
+    // Allocated via gc_malloc as a leaf: `GC_TYPE_SYMBOL`'s type info is
     // `pointer_free: true` / `GcRewriteDescriptorKind::Leaf` /
     // `GcLayoutSlotKind::None`, so nothing walks into the payload.
     //
@@ -909,7 +934,7 @@ pub(crate) unsafe fn alloc_symbol(
     let description_text = description_bytes_from_header(description);
     let raw = crate::gc::gc_malloc(
         std::mem::size_of::<SymbolHeader>(),
-        crate::gc::GC_TYPE_STRING,
+        crate::gc::GC_TYPE_SYMBOL,
     );
     let ptr = raw as *mut SymbolHeader;
     let id = next_id();
@@ -1116,6 +1141,93 @@ per_test_global! {
 #[cfg(test)]
 mod wellknown_desc_tests {
     use super::*;
+
+    unsafe fn global_symbol(key: &[u8]) -> f64 {
+        let key = crate::string::js_string_from_bytes(key.as_ptr(), key.len() as u32);
+        constructors::js_symbol_for(f64::from_bits(STRING_TAG | (key as u64 & POINTER_MASK)))
+    }
+
+    #[test]
+    fn global_symbol_values_are_managed_wrappers_with_headers() {
+        crate::hot_diag::receiver_repr_test_reset();
+        crate::hot_diag::receiver_repr_test_arm(true);
+        let value = unsafe { global_symbol(b"receiver-repr-header") };
+        let addr = crate::value::js_nanbox_get_pointer(value) as usize;
+        let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) }
+            .expect("global symbol must have a tracked GcHeader");
+        assert_eq!(
+            unsafe { header.as_ref().obj_type },
+            crate::gc::GC_TYPE_SYMBOL
+        );
+        let rendered = unsafe {
+            crate::object::js_native_call_method(
+                value,
+                b"toString".as_ptr().cast(),
+                8,
+                std::ptr::null(),
+                0,
+            )
+        };
+        assert!(crate::value::JSValue::from_bits(rendered.to_bits()).is_any_string());
+        let (constructed, observed_old, observed_wrapped) =
+            crate::hot_diag::receiver_repr_test_snapshot(
+                crate::hot_diag::ReceiverReprFamily::SymbolGlobal,
+            );
+        assert!(constructed > 0);
+        assert_eq!(observed_old, 0);
+        assert!(observed_wrapped > 0);
+        crate::hot_diag::receiver_repr_test_arm(false);
+    }
+
+    #[test]
+    fn global_symbol_identity_survives_a_copying_minor() {
+        let _isolation = crate::gc::CopyingNurseryTestGuard::new(0);
+        let scope = crate::gc::RuntimeHandleScope::new();
+        let first = scope.root_nanbox_f64(unsafe { global_symbol(b"receiver-repr-identity") });
+        let young = crate::object::js_object_alloc(0, 0);
+        let _young = scope.root_raw_mut_ptr(young);
+        let before = crate::gc::copying_minor_cycles();
+        let _ = crate::gc::gc_collect_minor();
+        assert!(crate::gc::copying_minor_cycles() > before);
+        let after = first.get_nanbox_f64();
+        let republished = unsafe { global_symbol(b"receiver-repr-identity") };
+        assert_eq!(after.to_bits(), republished.to_bits());
+        assert_eq!(
+            unsafe { constructors::js_symbol_equals(after, republished) },
+            1
+        );
+        let description = unsafe { constructors::js_symbol_description(after) };
+        assert_eq!(
+            unsafe {
+                crate::symbol::str_from_header(
+                    crate::value::js_nanbox_get_pointer(description) as *const StringHeader
+                )
+            }
+            .as_deref(),
+            Some("receiver-repr-identity")
+        );
+    }
+
+    #[test]
+    fn global_symbol_wrapper_finalization_or_immortality() {
+        let value = unsafe { global_symbol(b"receiver-repr-immortal") };
+        let addr = crate::value::js_nanbox_get_pointer(value) as usize;
+        crate::gc::js_gc_collect();
+        let header = unsafe { crate::value::addr_class::try_read_tracked_gc_header(addr) }
+            .expect("global symbol must remain tracked after a full cycle");
+        assert_eq!(
+            unsafe { header.as_ref().obj_type },
+            crate::gc::GC_TYPE_SYMBOL
+        );
+        assert_ne!(
+            unsafe { header.as_ref().gc_flags } & crate::gc::GC_FLAG_PINNED,
+            0
+        );
+        assert_eq!(
+            unsafe { global_symbol(b"receiver-repr-immortal") }.to_bits(),
+            value.to_bits()
+        );
+    }
 
     #[test]
     fn well_known_symbols_use_qualified_description() {

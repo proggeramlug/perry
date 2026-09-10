@@ -1774,7 +1774,7 @@ pub unsafe extern "C" fn js_net_socket_upgrade_tls(
 /// pump from inside a user callback is safe; capacity retained → zero
 /// steady-state allocation).
 unsafe fn emit_socket_no_arg(handle: i64, event: &str) {
-    let receiver = f64::from_bits(0x7FFD_0000_0000_0000 | (handle as u64 & 0x0000_FFFF_FFFF_FFFF));
+    let receiver = crate::common::nanbox_handle_value(handle);
     let previous_this = perry_runtime::object::js_implicit_this_set(receiver);
     for callback in listeners_for(handle, event) {
         if callback != 0 {

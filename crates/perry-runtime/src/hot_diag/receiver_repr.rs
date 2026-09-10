@@ -237,7 +237,8 @@ fn observe_pointer(addr: usize) {
         return;
     }
 
-    if unsafe { (*tracked.unwrap().as_ptr()).obj_type } == crate::gc::GC_TYPE_NATIVE_HANDLE {
+    let obj_type = unsafe { (*tracked.unwrap().as_ptr()).obj_type };
+    if obj_type == crate::gc::GC_TYPE_NATIVE_HANDLE {
         if let Some((provider, _)) = crate::native_handle::canonical_handle_parts_from_addr(addr) {
             let family = match provider {
                 crate::native_handle::NATIVE_HANDLE_PROVIDER_TIMER => {
@@ -259,6 +260,9 @@ fn observe_pointer(addr: usize) {
                 receiver_repr_note_wrapped(family);
             }
         }
+    }
+    if obj_type == crate::gc::GC_TYPE_SYMBOL && crate::symbol::is_immortal_symbol_pointer(addr) {
+        receiver_repr_note_wrapped(ReceiverReprFamily::SymbolGlobal);
     }
 
     // Debug-only trust-the-tag audit. The ownership-derived header makes the
@@ -386,7 +390,11 @@ mod tests {
         );
         if matches!(
             family,
-            ReceiverReprFamily::Timer | ReceiverReprFamily::Text
+            ReceiverReprFamily::Common
+                | ReceiverReprFamily::Fetch
+                | ReceiverReprFamily::Timer
+                | ReceiverReprFamily::Text
+                | ReceiverReprFamily::SymbolGlobal
         ) {
             assert_eq!(observed, 0, "{family:?} must no longer use its raw id");
             assert!(
@@ -409,11 +417,25 @@ mod tests {
         // source-witness test below; the fixtures exercise their audited bands.
         assert_fixture(ReceiverReprFamily::Common, || {
             receiver_repr_note_constructed(ReceiverReprFamily::Common);
-            (2, false)
+            (
+                crate::native_handle::canonical_handle_value(
+                    crate::native_handle::NATIVE_HANDLE_PROVIDER_COMMON,
+                    2,
+                )
+                .to_bits() as usize,
+                true,
+            )
         });
         assert_fixture(ReceiverReprFamily::Fetch, || {
             receiver_repr_note_constructed(ReceiverReprFamily::Fetch);
-            (crate::value::addr_class::FETCH_HANDLE_BAND_START, false)
+            (
+                crate::native_handle::canonical_handle_value(
+                    crate::native_handle::NATIVE_HANDLE_PROVIDER_FETCH,
+                    crate::value::addr_class::FETCH_HANDLE_BAND_START as i64,
+                )
+                .to_bits() as usize,
+                true,
+            )
         });
         assert_fixture(ReceiverReprFamily::Zlib, || {
             receiver_repr_note_constructed(ReceiverReprFamily::Zlib);

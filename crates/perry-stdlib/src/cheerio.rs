@@ -467,9 +467,8 @@ pub(crate) unsafe fn dispatch_cheerio(handle: Handle, method: &str, args: &[f64]
     const TAG_UNDEFINED_F64: u64 = 0x7FFC_0000_0000_0001;
     const TAG_NULL_F64: u64 = 0x7FFC_0000_0000_0002;
 
-    let nanbox_pointer = |raw: i64| -> f64 {
-        f64::from_bits(0x7FFD_0000_0000_0000 | (raw as u64 & 0x0000_FFFF_FFFF_FFFF))
-    };
+    let nanbox_handle = crate::common::nanbox_handle_value;
+    let nanbox_pointer = perry_runtime::value::js_nanbox_pointer;
     let nanbox_string = |ptr: *mut StringHeader| -> f64 {
         if ptr.is_null() {
             return f64::from_bits(TAG_NULL_F64);
@@ -494,7 +493,7 @@ pub(crate) unsafe fn dispatch_cheerio(handle: Handle, method: &str, args: &[f64]
     // for the document; the rest of the table is selection-only.
     if is_document && method == "select" {
         let raw = js_cheerio_select(handle, arg_str_ptr(0));
-        return Some(nanbox_pointer(raw));
+        return Some(nanbox_handle(raw));
     }
     if !is_selection {
         return None;
@@ -508,21 +507,21 @@ pub(crate) unsafe fn dispatch_cheerio(handle: Handle, method: &str, args: &[f64]
             arg_str_ptr(0),
         ))),
         "length" => Some(js_cheerio_selection_length(handle)),
-        "first" => Some(nanbox_pointer(js_cheerio_selection_first(handle))),
-        "last" => Some(nanbox_pointer(js_cheerio_selection_last(handle))),
+        "first" => Some(nanbox_handle(js_cheerio_selection_first(handle))),
+        "last" => Some(nanbox_handle(js_cheerio_selection_last(handle))),
         "eq" => {
             let idx = if args.is_empty() { 0.0 } else { args[0] };
-            Some(nanbox_pointer(js_cheerio_selection_eq(handle, idx)))
+            Some(nanbox_handle(js_cheerio_selection_eq(handle, idx)))
         }
-        "find" => Some(nanbox_pointer(js_cheerio_selection_find(
+        "find" => Some(nanbox_handle(js_cheerio_selection_find(
             handle,
             arg_str_ptr(0),
         ))),
-        "children" => Some(nanbox_pointer(js_cheerio_selection_children(
+        "children" => Some(nanbox_handle(js_cheerio_selection_children(
             handle,
             arg_str_ptr(0),
         ))),
-        "parent" => Some(nanbox_pointer(js_cheerio_selection_parent(handle))),
+        "parent" => Some(nanbox_handle(js_cheerio_selection_parent(handle))),
         "hasClass" => {
             let r = js_cheerio_selection_has_class(handle, arg_str_ptr(0));
             Some(f64::from_bits(JSValue::bool(r).bits()))

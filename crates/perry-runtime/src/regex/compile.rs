@@ -211,8 +211,21 @@ pub extern "C" fn js_regexp_compile_value(
         (*re).unicode = flags_str.contains('u') || flags_str.contains('v');
         (*re).has_indices = flags_str.contains('d');
         super::REGEX_SOURCE_TABLE.with(|t| {
-            t.borrow_mut()
-                .insert(re as usize, (Arc::from(pattern_str), Arc::from(flags_str)));
+            let source = (Arc::from(pattern_str), Arc::from(flags_str));
+            match t.borrow_mut().entry(re as usize) {
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    // Updating source text does not change owner registration.
+                    entry.get_mut().source = source;
+                }
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    // Header identity also accepts receivers constructed in
+                    // another runtime instance. Retain source-only metadata.
+                    entry.insert(super::RegexMetadata {
+                        source,
+                        registered_owner: false,
+                    });
+                }
+            }
         });
     }
     // Spec RegExpInitialize step 12: `Set(obj, "lastIndex", 0, true)` runs LAST,

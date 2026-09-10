@@ -768,10 +768,16 @@
       "why": "A StringHeader living in .rodata, not in the arena. It has no GcHeader, is never allocated and never moves; the collector's heap-attribution predicates reject its address."
     },
     {
+      "file": "crates/perry-runtime/src/symbol.rs",
+      "name": "IMMORTAL_SYMBOL_POINTERS",
+      "verdict": "not_a_gc_pointer",
+      "why": "Exact-address identity set for process-global Symbol.for / well-known Symbol cells. Every member is allocated with GC_TYPE_SYMBOL, immediately pinned through gc::pin_object before publication, and intentionally never finalized or freed. The set is therefore ownership metadata for stable immortal addresses, not an unreported movable root; try_read_tracked_gc_header consults it after the creating thread's malloc registry has gone away."
+    },
+    {
       "file": "crates/perry-runtime/src/symbol/properties.rs",
       "name": "CACHED",
       "verdict": "not_a_gc_pointer",
-      "why": "Memoizes the sym_key of the Symbol.for('NextInternalRequestMeta') REGISTERED symbol. Registered / well-known symbols are Box::leak'd (symbol.rs's SYMBOL_REGISTRY / WELL_KNOWN_SYMBOLS), so they live outside the GC arena and their addresses are stable for the process. A FRESH Symbol() would not be \u2014 see #7246."
+      "why": "Memoizes the sym_key of the Symbol.for('NextInternalRequestMeta') REGISTERED symbol. Registered / well-known symbols are pinned GC_TYPE_SYMBOL malloc allocations recorded in symbol.rs's IMMORTAL_SYMBOL_POINTERS, so their addresses are stable for the process and they are never finalized. A fresh Symbol() is not immortal \u2014 see #7246."
     },
     {
       "file": "crates/perry-runtime/src/text.rs",

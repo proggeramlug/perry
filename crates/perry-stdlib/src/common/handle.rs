@@ -97,15 +97,23 @@ pub fn get_handle_mut<T: 'static + Send + Sync>(handle: Handle) -> Option<&'stat
 
 /// Remove and return a registered object
 pub fn take_handle<T: 'static + Send + Sync>(handle: Handle) -> Option<T> {
-    HANDLES
-        .remove(&handle)
+    let removed = HANDLES.remove(&handle);
+    if removed.is_some() {
+        perry_runtime::native_handle::js_canonical_common_handle_retire(handle);
+    }
+    removed
         .and_then(|(_, boxed)| boxed.downcast::<T>().ok())
         .map(|b| *b)
 }
 
 /// Remove a handle without returning the value (drop it)
 pub fn drop_handle(handle: Handle) -> bool {
-    HANDLES.remove(&handle).is_some()
+    if HANDLES.remove(&handle).is_some() {
+        perry_runtime::native_handle::js_canonical_common_handle_retire(handle);
+        true
+    } else {
+        false
+    }
 }
 
 /// Check if a handle exists

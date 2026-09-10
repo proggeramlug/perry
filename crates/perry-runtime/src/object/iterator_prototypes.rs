@@ -409,9 +409,11 @@ pub(crate) unsafe fn call_overridden_iterator_next(
     iter_obj: *mut ObjectHeader,
     class_id: u32,
 ) -> Option<f64> {
-    let scope = crate::gc::RuntimeHandleScope::new();
-    let iter = scope.root_nanbox_f64(crate::value::js_nanbox_pointer(iter_obj as i64));
-    let previous = scope.root_nanbox_f64(super::js_implicit_this_get());
+    // The own-slot and canonical-prototype proofs below only read existing
+    // fields; they cannot collect or invoke a user callback. Open a handle
+    // scope only after one of those proofs selects the calling path.
+    let iter_value = crate::value::js_nanbox_pointer(iter_obj as i64);
+    let keys = super::object_keys_array(iter_obj);
     // #9019: an OWN `next` (`it.next = fn`, stored past the reserved floor
     // by `object/reserved_floor.rs`) shadows the prototype thunk and exists
     // independently of the tower, so probe it BEFORE the tower-null
@@ -420,15 +422,19 @@ pub(crate) unsafe fn call_overridden_iterator_next(
     // null keys edge. A PRESENT own value that is not a closure throws,
     // matching IteratorNext's GetV+Call — it must never fall through to the
     // builtin advance, which would ignore the patch the user installed.
-    let own = super::js_object_get_own_field_or_undef(iter.get_nanbox_f64(), b"next".as_ptr(), 4);
+    // A null keys edge is the same absence proof used by the own-field
+    // helper. Avoid entering that helper and rereading the shape in this case.
+    let own = if keys.is_null() {
+        f64::from_bits(crate::value::TAG_UNDEFINED)
+    } else {
+        super::js_object_get_own_field_or_undef(iter_value, b"next".as_ptr(), 4)
+    };
     // `it.next = undefined` is PRESENT but non-callable (GetV yields the
     // stored undefined, Call throws), which the value read alone cannot
     // distinguish from absence. The bytes-based keys scan allocates nothing,
     // and an unpatched iterator's keys edge is null, so the hot path pays
     // one null check.
     let own_present = own.to_bits() != crate::value::TAG_UNDEFINED || {
-        let obj = crate::value::js_nanbox_get_pointer(iter.get_nanbox_f64()) as *const ObjectHeader;
-        let keys = super::object_keys_array(obj);
         !keys.is_null()
             && super::keys_find_slot_by_bytes(
                 keys,
@@ -438,6 +444,9 @@ pub(crate) unsafe fn call_overridden_iterator_next(
             .is_some()
     };
     if own_present {
+        let scope = crate::gc::RuntimeHandleScope::new();
+        let iter = scope.root_nanbox_f64(iter_value);
+        let previous = scope.root_nanbox_f64(super::js_implicit_this_get());
         if !JSValue::from_bits(own.to_bits()).is_pointer() {
             crate::closure::throw_not_callable();
         }
@@ -488,10 +497,10 @@ pub(crate) unsafe fn call_overridden_iterator_next(
         ),
         _ => return None,
     };
-    // Building the tower above may collect. Reload its realm-owned root only
-    // after the build rather than retaining a pre-build raw address.
-    let proto = scope.root_raw_const_ptr(slot.load(Ordering::Acquire) as *const ObjectHeader);
-    if proto.with_const_ptr::<ObjectHeader, _>(|proto| proto.is_null()) {
+    // The tower was already materialized; this slot load and the proof below
+    // cannot collect. Root its current address before the allocating fallback.
+    let proto = slot.load(Ordering::Acquire) as *const ObjectHeader;
+    if proto.is_null() {
         return None;
     }
     // The null-tower proof above is dead on any program that has allocated
@@ -512,13 +521,13 @@ pub(crate) unsafe fn call_overridden_iterator_next(
     // an existing data property leaves the old closure in the slot and puts
     // the accessor in the side table. Anything else — replaced, deleted,
     // accessor, a bound copy — takes the by-name path, unchanged.
-    // The closure body is NOT covered by the enclosing `unsafe fn`'s implicit
-    // unsafe block, so the call is spelled out.
-    if proto.with_const_ptr::<ObjectHeader, _>(|proto| unsafe {
-        prototype_next_is_canonical(proto, canonical)
-    }) {
+    if prototype_next_is_canonical(proto, canonical) {
         return None;
     }
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let iter = scope.root_nanbox_f64(iter_value);
+    let previous = scope.root_nanbox_f64(super::js_implicit_this_get());
+    let proto = scope.root_raw_const_ptr(proto);
     let key = scope.root_raw_const_ptr(crate::string::js_string_from_bytes(b"next".as_ptr(), 4));
     let method = proto.with_const_ptr::<ObjectHeader, _>(|proto| {
         key.with_const_ptr::<crate::string::StringHeader, _>(|key| {

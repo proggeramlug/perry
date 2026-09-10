@@ -75,7 +75,7 @@ fn null() -> f64 {
 }
 
 fn nanbox_handle(handle: i64) -> f64 {
-    f64::from_bits(POINTER_TAG | (handle as u64 & POINTER_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 fn nanbox_ptr<T>(ptr: *mut T) -> f64 {

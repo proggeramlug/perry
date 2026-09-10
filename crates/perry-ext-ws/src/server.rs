@@ -236,7 +236,7 @@ pub(super) fn undefined() -> f64 {
 
 pub(super) fn decode_client_id(value: f64) -> usize {
     if value.to_bits() & TAG_MASK == POINTER_TAG {
-        (value.to_bits() & POINTER_MASK) as usize
+        perry_ffi::canonical_handle_id(value) as usize
     } else {
         value as usize
     }

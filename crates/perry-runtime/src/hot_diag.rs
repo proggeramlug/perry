@@ -180,10 +180,9 @@ pub struct RegexDiag {
     /// or missed: this is the `memcmp` volume alone, which is what a 12 KB
     /// emoji pattern makes expensive and a 60-byte one does not.
     pub new_site_verify_bytes: u64,
-    /// Address-keyed side-table inserts performed per construction
-    /// (`REGEX_POINTERS` and `REGEX_SOURCE_TABLE`) — two per header, each a
-    /// `PtrHasher` hash plus a hashbrown insert, mirrored by two removals at
-    /// death and two rekeys per evacuation.
+    /// Address-keyed side-table inserts performed per construction: one
+    /// `REGEX_SOURCE_TABLE` entry contains source text and owner registration,
+    /// mirrored by one removal at death and one rekey per evacuation.
     pub new_side_table_inserts: u64,
     /// Constructions answered from the LITERAL-SITE table — identity by the
     /// compiler-emitted site global's address, so neither the pattern's

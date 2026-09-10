@@ -90,3 +90,33 @@ pub unsafe extern "C" fn js_object_live_slot_count(obj: *const ObjectHeader) -> 
 pub(crate) unsafe fn set_object_live_slot_count(obj: *mut ObjectHeader, field_count: u32) {
     shapes::publish_object_live_slot_count(obj, field_count);
 }
+
+/// Store into an object slot whose live bound is already established.
+///
+/// Runtime constructors and private fixed-layout records can use their
+/// construction facts instead of resolving the same shape bound per field.
+/// All value normalization and reference-store work remains on the usual path.
+///
+/// # Safety
+/// `obj` must be its current raw object address, and `field_index` must be
+/// below the object's already-published live inline-slot bound.
+#[inline]
+pub(crate) unsafe fn object_store_known_live_slot(
+    obj: *mut ObjectHeader,
+    field_index: u32,
+    value: crate::value::JSValue,
+) {
+    if value.bits() == crate::value::POINTER_TAG {
+        // Preserve the indexed setter's normalization and diagnostic verbatim.
+        super::js_object_set_field(obj, field_index, value);
+        return;
+    }
+    let fields = (obj as *mut u8).add(std::mem::size_of::<ObjectHeader>())
+        as *mut crate::value::JSValue;
+    crate::gc::runtime_store_jsvalue_slot(
+        obj as usize,
+        fields.add(field_index as usize) as usize,
+        field_index as usize,
+        value.bits(),
+    );
+}

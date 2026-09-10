@@ -44,7 +44,7 @@ mod module_on;
 pub use module_on::{js_events_add_abort_listener, js_events_on};
 mod target_helpers;
 
-use module_helpers::{call_net_socket_method, js_events_native_dispatch};
+use module_helpers::{call_net_socket_method, js_events_native_dispatch, nanbox_handle_or_pointer};
 pub use module_helpers::{
     js_events_get_event_listeners, js_events_get_max_listeners, js_events_listener_count,
     js_events_set_max_listeners,
@@ -534,7 +534,7 @@ unsafe extern "C" fn events_native_construct(
         f64::from_bits(TAG_UNDEFINED_F64_BITS)
     };
     match class_name {
-        b"EventEmitter" => nanbox_pointer_bits(js_event_emitter_new_with_options(options)),
+        b"EventEmitter" => nanbox_handle_or_pointer(js_event_emitter_new_with_options(options)),
         b"EventEmitterAsyncResource" => {
             nanbox_pointer_bits(js_event_emitter_async_resource_new(options))
         }
@@ -653,7 +653,7 @@ unsafe fn stream_value_from_handle(handle: Handle) -> Option<f64> {
     if !(EVENT_TARGET_MIN_HEAP_POINTER..=MAX_HEAP_POINTER).contains(&addr) || addr & 0x7 != 0 {
         return None;
     }
-    let value = nanbox_pointer_bits(handle);
+    let value = nanbox_handle_or_pointer(handle);
     let readable = js_node_stream_is_readable(value);
     let writable = js_node_stream_is_writable(value);
     if readable.to_bits() == TAG_NULL_F64_BITS && writable.to_bits() == TAG_NULL_F64_BITS {
@@ -666,7 +666,7 @@ unsafe fn stream_value_from_handle(handle: Handle) -> Option<f64> {
 fn handle_from_value(value: f64) -> Handle {
     let bits = value.to_bits();
     if (bits & 0xFFFF_0000_0000_0000) == POINTER_TAG {
-        (bits & POINTER_MASK) as Handle
+        perry_ffi::canonical_handle_id(value)
     } else if value.is_finite() && value > 0.0 && value.fract() == 0.0 {
         value as Handle
     } else {
@@ -1184,7 +1184,7 @@ unsafe fn collect_emit_args(args_ptr: *const ArrayHeader) -> Vec<f64> {
 }
 
 unsafe fn call_emitter_listener(handle: Handle, callback: i64, args: &[f64]) -> f64 {
-    let receiver = nanbox_pointer_bits(handle);
+    let receiver = nanbox_handle_or_pointer(handle);
     let callback_value = nanbox_pointer_bits(callback);
     let previous_this = js_implicit_this_set(receiver);
     let result = if args.is_empty() {
@@ -1396,7 +1396,7 @@ unsafe fn js_event_emitter_emit_impl(
         }
     }
     if let Some((domain, error)) = domain_error {
-        let _ = js_domain_emit_error(domain, error, nanbox_pointer_bits(handle), false);
+        let _ = js_domain_emit_error(domain, error, nanbox_handle_or_pointer(handle), false);
         return TAG_FALSE_F64;
     }
     if let Some(error) = throw_error {
@@ -1494,7 +1494,7 @@ unsafe fn js_event_emitter_emit0_impl(handle: Handle, event_name: &str) -> f64 {
         }
     }
     if let Some((domain, error)) = domain_error {
-        let _ = js_domain_emit_error(domain, error, nanbox_pointer_bits(handle), false);
+        let _ = js_domain_emit_error(domain, error, nanbox_handle_or_pointer(handle), false);
         return TAG_FALSE_F64;
     }
     if let Some(error) = throw_error {
@@ -1677,7 +1677,7 @@ pub extern "C" fn js_event_emitter_domain_value(handle: Handle) -> f64 {
     if domain == 0 {
         f64::from_bits(TAG_NULL_F64_BITS)
     } else {
-        nanbox_pointer_bits(domain)
+        nanbox_handle_or_pointer(domain)
     }
 }
 

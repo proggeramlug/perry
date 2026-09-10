@@ -4,7 +4,7 @@
 use super::*;
 
 fn socket_receiver(handle: i64) -> f64 {
-    f64::from_bits(0x7FFD_0000_0000_0000 | (handle as u64 & 0x0000_FFFF_FFFF_FFFF))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 unsafe fn emit_socket_no_arg(handle: i64, event: &str) {
@@ -292,9 +292,7 @@ pub unsafe extern "C" fn js_ext_net_drain_pending() -> i32 {
                 // receiver back to the raw id). Bare-number sockets
                 // skipped the dispatch and hit the generic property
                 // path → `(number).on is not a function`.
-                let sock_f64 = f64::from_bits(
-                    0x7FFD_0000_0000_0000 | (socket_id as u64 & 0x0000_FFFF_FFFF_FFFF),
-                );
+                let sock_f64 = perry_ffi::canonical_handle_value(socket_id);
                 // #8259: sock_f64 is a handle id (not a heap address), so
                 // only the callbacks need custody.
                 let frame = dispatch_custody::DispatchFrame::park(cbs);

@@ -4,8 +4,8 @@
 //! Provides HTTP client functionality with a promise-based API.
 
 use crate::common::{
-    get_handle, register_handle, spawn_for_promise, string_from_header_lossy as string_from_header,
-    Handle,
+    get_handle, register_handle, spawn_for_promise, spawn_for_promise_deferred,
+    string_from_header_lossy as string_from_header, Handle,
 };
 use perry_runtime::{js_promise_new_cross_thread, js_string_from_bytes, Promise, StringHeader};
 
@@ -45,6 +45,10 @@ pub struct AxiosResponseHandle {
     pub headers: Vec<(String, String)>,
 }
 
+fn publish_response(response: AxiosResponseHandle) -> u64 {
+    crate::common::nanbox_handle_value(register_handle(response)).to_bits()
+}
+
 unsafe fn request_without_body(
     url_ptr: *const StringHeader,
     method: reqwest::Method,
@@ -60,40 +64,39 @@ unsafe fn request_without_body(
             return promise;
         }
     };
-    spawn_for_promise(promise as *mut u8, async move {
-        let client = reqwest::Client::new();
-        match client.request(method, &url).send().await {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let status_text = response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("")
-                    .to_string();
-                let headers: Vec<(String, String)> = response
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
-                    .collect();
+    spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            let client = reqwest::Client::new();
+            match client.request(method, &url).send().await {
+                Ok(response) => {
+                    let status = response.status().as_u16();
+                    let status_text = response
+                        .status()
+                        .canonical_reason()
+                        .unwrap_or("")
+                        .to_string();
+                    let headers: Vec<(String, String)> = response
+                        .headers()
+                        .iter()
+                        .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+                        .collect();
 
-                match response.text().await {
-                    Ok(data) => {
-                        let handle = register_handle(AxiosResponseHandle {
+                    match response.text().await {
+                        Ok(data) => Ok(AxiosResponseHandle {
                             status,
                             status_text,
                             data,
                             headers,
-                        });
-                        // NaN-box the handle so the awaiter keeps it as an
-                        // object instead of treating the small id as a number.
-                        Ok((handle as u64) | 0x7FFD_0000_0000_0000)
+                        }),
+                        Err(e) => Err(format!("Failed to read response body: {}", e)),
                     }
-                    Err(e) => Err(format!("Failed to read response body: {}", e)),
                 }
+                Err(e) => Err(format!("Request failed: {}", e)),
             }
-            Err(e) => Err(format!("Request failed: {}", e)),
-        }
-    });
+        },
+        publish_response,
+    );
 
     promise
 }
@@ -137,48 +140,45 @@ pub unsafe extern "C" fn js_axios_post(url_ptr: *const StringHeader, data: f64) 
     // would access the wrong arena.
     let body = body_string_from_value(data);
 
-    spawn_for_promise(promise as *mut u8, async move {
-        let client = reqwest::Client::new();
-        match client
-            .post(&url)
-            .header("Content-Type", "application/json")
-            .body(body)
-            .send()
-            .await
-        {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let status_text = response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("")
-                    .to_string();
-                let headers: Vec<(String, String)> = response
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
-                    .collect();
+    spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            let client = reqwest::Client::new();
+            match client
+                .post(&url)
+                .header("Content-Type", "application/json")
+                .body(body)
+                .send()
+                .await
+            {
+                Ok(response) => {
+                    let status = response.status().as_u16();
+                    let status_text = response
+                        .status()
+                        .canonical_reason()
+                        .unwrap_or("")
+                        .to_string();
+                    let headers: Vec<(String, String)> = response
+                        .headers()
+                        .iter()
+                        .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+                        .collect();
 
-                match response.text().await {
-                    Ok(data) => {
-                        let handle = register_handle(AxiosResponseHandle {
+                    match response.text().await {
+                        Ok(data) => Ok(AxiosResponseHandle {
                             status,
                             status_text,
                             data,
                             headers,
-                        });
-                        // Issue #340: NaN-box the handle as POINTER_TAG
-                        // (0x7FFD) so the awaiter sees a proper handle
-                        // value, not a subnormal float that decays to
-                        // undefined on `r.status` / `r.data` accesses.
-                        Ok((handle as u64) | 0x7FFD_0000_0000_0000)
+                        }),
+                        Err(e) => Err(format!("Failed to read response body: {}", e)),
                     }
-                    Err(e) => Err(format!("Failed to read response body: {}", e)),
                 }
+                Err(e) => Err(format!("Request failed: {}", e)),
             }
-            Err(e) => Err(format!("Request failed: {}", e)),
-        }
-    });
+        },
+        publish_response,
+    );
 
     promise
 }
@@ -201,48 +201,45 @@ pub unsafe extern "C" fn js_axios_put(url_ptr: *const StringHeader, data: f64) -
     // #598: stringify on the main thread (see js_axios_post).
     let body = body_string_from_value(data);
 
-    spawn_for_promise(promise as *mut u8, async move {
-        let client = reqwest::Client::new();
-        match client
-            .put(&url)
-            .header("Content-Type", "application/json")
-            .body(body)
-            .send()
-            .await
-        {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let status_text = response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("")
-                    .to_string();
-                let headers: Vec<(String, String)> = response
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
-                    .collect();
+    spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            let client = reqwest::Client::new();
+            match client
+                .put(&url)
+                .header("Content-Type", "application/json")
+                .body(body)
+                .send()
+                .await
+            {
+                Ok(response) => {
+                    let status = response.status().as_u16();
+                    let status_text = response
+                        .status()
+                        .canonical_reason()
+                        .unwrap_or("")
+                        .to_string();
+                    let headers: Vec<(String, String)> = response
+                        .headers()
+                        .iter()
+                        .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+                        .collect();
 
-                match response.text().await {
-                    Ok(data) => {
-                        let handle = register_handle(AxiosResponseHandle {
+                    match response.text().await {
+                        Ok(data) => Ok(AxiosResponseHandle {
                             status,
                             status_text,
                             data,
                             headers,
-                        });
-                        // Issue #340: NaN-box the handle as POINTER_TAG
-                        // (0x7FFD) so the awaiter sees a proper handle
-                        // value, not a subnormal float that decays to
-                        // undefined on `r.status` / `r.data` accesses.
-                        Ok((handle as u64) | 0x7FFD_0000_0000_0000)
+                        }),
+                        Err(e) => Err(format!("Failed to read response body: {}", e)),
                     }
-                    Err(e) => Err(format!("Failed to read response body: {}", e)),
                 }
+                Err(e) => Err(format!("Request failed: {}", e)),
             }
-            Err(e) => Err(format!("Request failed: {}", e)),
-        }
-    });
+        },
+        publish_response,
+    );
 
     promise
 }
@@ -262,42 +259,39 @@ pub unsafe extern "C" fn js_axios_delete(url_ptr: *const StringHeader) -> *mut P
         }
     };
 
-    spawn_for_promise(promise as *mut u8, async move {
-        let client = reqwest::Client::new();
-        match client.delete(&url).send().await {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let status_text = response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("")
-                    .to_string();
-                let headers: Vec<(String, String)> = response
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
-                    .collect();
+    spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            let client = reqwest::Client::new();
+            match client.delete(&url).send().await {
+                Ok(response) => {
+                    let status = response.status().as_u16();
+                    let status_text = response
+                        .status()
+                        .canonical_reason()
+                        .unwrap_or("")
+                        .to_string();
+                    let headers: Vec<(String, String)> = response
+                        .headers()
+                        .iter()
+                        .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+                        .collect();
 
-                match response.text().await {
-                    Ok(data) => {
-                        let handle = register_handle(AxiosResponseHandle {
+                    match response.text().await {
+                        Ok(data) => Ok(AxiosResponseHandle {
                             status,
                             status_text,
                             data,
                             headers,
-                        });
-                        // Issue #340: NaN-box the handle as POINTER_TAG
-                        // (0x7FFD) so the awaiter sees a proper handle
-                        // value, not a subnormal float that decays to
-                        // undefined on `r.status` / `r.data` accesses.
-                        Ok((handle as u64) | 0x7FFD_0000_0000_0000)
+                        }),
+                        Err(e) => Err(format!("Failed to read response body: {}", e)),
                     }
-                    Err(e) => Err(format!("Failed to read response body: {}", e)),
                 }
+                Err(e) => Err(format!("Request failed: {}", e)),
             }
-            Err(e) => Err(format!("Request failed: {}", e)),
-        }
-    });
+        },
+        publish_response,
+    );
 
     promise
 }
@@ -320,48 +314,45 @@ pub unsafe extern "C" fn js_axios_patch(url_ptr: *const StringHeader, data: f64)
     // #598: stringify on the main thread (see js_axios_post).
     let body = body_string_from_value(data);
 
-    spawn_for_promise(promise as *mut u8, async move {
-        let client = reqwest::Client::new();
-        match client
-            .patch(&url)
-            .header("Content-Type", "application/json")
-            .body(body)
-            .send()
-            .await
-        {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let status_text = response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("")
-                    .to_string();
-                let headers: Vec<(String, String)> = response
-                    .headers()
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
-                    .collect();
+    spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            let client = reqwest::Client::new();
+            match client
+                .patch(&url)
+                .header("Content-Type", "application/json")
+                .body(body)
+                .send()
+                .await
+            {
+                Ok(response) => {
+                    let status = response.status().as_u16();
+                    let status_text = response
+                        .status()
+                        .canonical_reason()
+                        .unwrap_or("")
+                        .to_string();
+                    let headers: Vec<(String, String)> = response
+                        .headers()
+                        .iter()
+                        .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+                        .collect();
 
-                match response.text().await {
-                    Ok(data) => {
-                        let handle = register_handle(AxiosResponseHandle {
+                    match response.text().await {
+                        Ok(data) => Ok(AxiosResponseHandle {
                             status,
                             status_text,
                             data,
                             headers,
-                        });
-                        // Issue #340: NaN-box the handle as POINTER_TAG
-                        // (0x7FFD) so the awaiter sees a proper handle
-                        // value, not a subnormal float that decays to
-                        // undefined on `r.status` / `r.data` accesses.
-                        Ok((handle as u64) | 0x7FFD_0000_0000_0000)
+                        }),
+                        Err(e) => Err(format!("Failed to read response body: {}", e)),
                     }
-                    Err(e) => Err(format!("Failed to read response body: {}", e)),
                 }
+                Err(e) => Err(format!("Request failed: {}", e)),
             }
-            Err(e) => Err(format!("Request failed: {}", e)),
-        }
-    });
+        },
+        publish_response,
+    );
 
     promise
 }

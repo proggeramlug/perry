@@ -56,19 +56,33 @@ fn with_runtime_handle_stack<R>(f: impl FnOnce(&RefCell<Vec<RuntimeHandleSlot>>)
 /// scope removes every handle created from it.
 pub struct RuntimeHandleScope {
     pub(super) base: usize,
+    // The thread-local RefCell stays at one address even when its Vec grows.
+    // Keep that address, never a pointer to an individual root slot.
+    stack: *const RefCell<Vec<RuntimeHandleSlot>>,
 }
 
 impl RuntimeHandleScope {
     #[inline]
     pub fn new() -> Self {
-        let base = with_runtime_handle_stack(|stack| stack.borrow().len());
-        Self { base }
+        with_runtime_handle_stack(|stack| Self {
+            base: stack.borrow().len(),
+            stack: stack as *const _,
+        })
+    }
+
+    #[inline(always)]
+    fn with_stack<R>(&self, f: impl FnOnce(&RefCell<Vec<RuntimeHandleSlot>>) -> R) -> R {
+        // The scope is confined to its originating thread by the raw pointer.
+        // That thread's TLS RefCell outlives this scope. Each operation still
+        // borrows the current Vec, so growth and collector slot rewrites are
+        // observed before a handle value is returned.
+        f(unsafe { &*self.stack })
     }
 
     #[inline]
     pub(super) fn push<'scope>(&'scope self, slot: RuntimeHandleSlot) -> RuntimeHandle<'scope> {
         runtime_handle_slot_write_barrier(slot);
-        let index = with_runtime_handle_stack(|stack| {
+        let index = self.with_stack(|stack| {
             let mut stack = stack.borrow_mut();
             let index = stack.len();
             stack.push(slot);
@@ -76,7 +90,7 @@ impl RuntimeHandleScope {
         });
         RuntimeHandle {
             index,
-            _scope: PhantomData,
+            _scope: self,
         }
     }
 
@@ -198,7 +212,7 @@ impl Default for RuntimeHandleScope {
 impl Drop for RuntimeHandleScope {
     #[inline]
     fn drop(&mut self) {
-        with_runtime_handle_stack(|stack| {
+        self.with_stack(|stack| {
             stack.borrow_mut().truncate(self.base);
         });
     }
@@ -207,7 +221,7 @@ impl Drop for RuntimeHandleScope {
 #[derive(Clone, Copy)]
 pub struct RuntimeHandle<'scope> {
     pub(super) index: usize,
-    pub(super) _scope: PhantomData<&'scope RuntimeHandleScope>,
+    pub(super) _scope: &'scope RuntimeHandleScope,
 }
 
 /// The two failure paths every handle accessor carries. Out of line and
@@ -231,7 +245,7 @@ fn handle_kind_mismatch(expected: &str) -> ! {
 impl<'scope> RuntimeHandle<'scope> {
     #[inline]
     pub(super) fn with_slot<R>(&self, f: impl FnOnce(RuntimeHandleSlot) -> R) -> R {
-        with_runtime_handle_stack(|stack| {
+        self._scope.with_stack(|stack| {
             let stack = stack.borrow();
             let slot = match stack.get(self.index) {
                 Some(slot) => *slot,
@@ -243,7 +257,7 @@ impl<'scope> RuntimeHandle<'scope> {
 
     #[inline]
     pub(super) fn with_slot_mut<R>(&self, f: impl FnOnce(&mut RuntimeHandleSlot) -> R) -> R {
-        with_runtime_handle_stack(|stack| {
+        self._scope.with_stack(|stack| {
             let mut stack = stack.borrow_mut();
             let slot = match stack.get_mut(self.index) {
                 Some(slot) => slot,

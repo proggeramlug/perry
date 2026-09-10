@@ -61,8 +61,14 @@ pub extern "C" fn js_response_body_init_ptr(value: f64) -> i64 {
         let jsval = JSValue::from_bits(value.to_bits());
         if jsval.is_pointer() {
             let addr = jsval.as_pointer::<u8>() as usize;
-            if perry_runtime::value::addr_class::is_handle_band(addr) {
-                if let Some(bytes) = crate::fetch::blob_bytes_clone(addr) {
+            let fetch_id = perry_runtime::native_handle::canonical_handle_parts_from_addr(addr)
+                .and_then(|(provider, id)| {
+                    (provider == perry_runtime::native_handle::NATIVE_HANDLE_PROVIDER_FETCH)
+                        .then_some(id as usize)
+                })
+                .or_else(|| perry_runtime::value::addr_class::is_handle_band(addr).then_some(addr));
+            if let Some(fetch_id) = fetch_id {
+                if let Some(bytes) = crate::fetch::blob_bytes_clone(fetch_id) {
                     return js_string_from_bytes(bytes.as_ptr(), bytes.len() as u32) as i64;
                 }
             }

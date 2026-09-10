@@ -164,9 +164,12 @@ pub(super) fn mark_pattern_validated(pattern: &str, flags: &str) {
 /// header's own string payloads, which — unlike the thread-local table — are
 /// readable from a second statically-linked copy of the runtime (Wall 18).
 pub(super) fn source_and_flags(re: *const RegExpHeader) -> (Arc<str>, Arc<str>) {
-    if let Some(source) =
-        REGEX_SOURCE_TABLE.with(|table| table.borrow().get(&(re as usize)).cloned())
-    {
+    if let Some(source) = REGEX_SOURCE_TABLE.with(|table| {
+        table
+            .borrow()
+            .get(&(re as usize))
+            .map(|entry| entry.source.clone())
+    }) {
         return source;
     }
     unsafe {

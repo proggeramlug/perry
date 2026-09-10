@@ -46,6 +46,7 @@ fn typed_feedback_enabled() -> bool {
 /// #5093: whether typed-feedback tracing is active. Read once at `js_gc_init`
 /// to disable the codegen-inlined class-field fast path (which would skip the
 /// observation recording the guard does in this mode).
+#[inline(always)]
 pub(crate) fn typed_feedback_active() -> bool {
     typed_feedback_enabled()
 }

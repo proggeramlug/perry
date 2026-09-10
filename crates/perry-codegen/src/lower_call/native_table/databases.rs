@@ -18,7 +18,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_mysql2_create_pool",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "mysql2/promise",
@@ -36,7 +36,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_mysql2_create_pool",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // mysql2 Pool-specific methods (class_filter: Some("Pool"))
     NativeModSig {
@@ -374,7 +374,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         // js_ioredis_new ignores its arg and reads env vars — same behavior.
         runtime: "js_ioredis_new",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "ioredis",
@@ -512,7 +512,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_mongodb_client_db",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "mongodb",
@@ -521,7 +521,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_mongodb_db_collection",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // `_value` wrapper variants — every collection method that accepts an
     // object/filter arg goes through a wrapper that JSON-stringifies the
@@ -637,7 +637,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sqlite_open",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "better-sqlite3",
@@ -646,7 +646,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sqlite_prepare",
         args: &[NA_STR],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // stmt.run/get/all/iterate take JS-side variadic params. The runtime
     // consumes them as a single `*const ArrayHeader`, so VarArgsAsArray
@@ -697,7 +697,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_sqlite_stmt_raw",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "better-sqlite3",
@@ -725,7 +725,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_bun_sqlite_database_call",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "bun:sqlite",
@@ -734,7 +734,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: Some("Database"),
         runtime: "js_bun_sqlite_database_query",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "bun:sqlite",
@@ -743,7 +743,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: Some("Database"),
         runtime: "js_bun_sqlite_database_query",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "bun:sqlite",
@@ -852,7 +852,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_sqlite_database_sync_call",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -861,7 +861,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_sqlite_session_call",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -870,7 +870,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_sqlite_statement_sync_call",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -933,7 +933,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_sqlite_database_sync_prepare",
         args: &[NA_F64, NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -996,7 +996,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: Some("DatabaseSync"),
         runtime: "js_node_sqlite_database_sync_create_tag_store",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -1005,7 +1005,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: Some("DatabaseSync"),
         runtime: "js_node_sqlite_database_sync_create_session",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -1068,7 +1068,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_node_sqlite_database_sync_limits",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",
@@ -1185,7 +1185,7 @@ pub(super) const DATABASES_ROWS: &[NativeModSig] = &[
         class_filter: Some("SQLTagStore"),
         runtime: "js_node_sqlite_sql_tag_store_db",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "sqlite",

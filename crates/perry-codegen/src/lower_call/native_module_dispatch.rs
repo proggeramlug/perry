@@ -8,8 +8,8 @@ use perry_hir::Expr;
 use crate::expr::{nanbox_bigint_inline, nanbox_string_inline, unbox_to_i64, FnCtx};
 use crate::nanbox::double_literal;
 use crate::native_value::{
-    materialize_native_handle_to_js_value, materialize_promise_boundary_to_js_value, LoweredValue,
-    MaterializationReason,
+    materialize_native_handle_to_js_value, materialize_promise_boundary_to_js_value,
+    record_runtime_native_handle_box_transition, LoweredValue, MaterializationReason,
 };
 use crate::types::{DOUBLE, I32, I64};
 
@@ -91,7 +91,10 @@ pub fn lower_native_module_dispatch(
 
         // Receiver handle
         if let Some(handle) = recv_i64 {
-            llvm_args.push((I64, handle.to_string()));
+            let raw_id =
+                ctx.block()
+                    .call(I64, "js_canonical_handle_id_from_addr", &[(I64, handle)]);
+            llvm_args.push((I64, raw_id));
             arg_types.push(I64);
         }
 
@@ -135,6 +138,12 @@ pub fn lower_native_module_dispatch(
                     llvm_args.push((I64, handle));
                     arg_types.push(I64);
                 }
+                NativeArgKind::HandleId => {
+                    let blk = ctx.block();
+                    let handle = blk.call(I64, "js_canonical_handle_id", &[(DOUBLE, &lowered)]);
+                    llvm_args.push((I64, handle));
+                    arg_types.push(I64);
+                }
                 NativeArgKind::JsvalI64 => {
                     // Bitcast the NaN-boxed f64 to i64 without unboxing —
                     // the callee will interpret the raw bits.
@@ -157,7 +166,7 @@ pub fn lower_native_module_dispatch(
                     ));
                     arg_types.push(DOUBLE);
                 }
-                NativeArgKind::StrPtr | NativeArgKind::PtrI64 => {
+                NativeArgKind::StrPtr | NativeArgKind::PtrI64 | NativeArgKind::HandleId => {
                     llvm_args.push((I64, "0".to_string()));
                     arg_types.push(I64);
                 }
@@ -189,7 +198,7 @@ pub fn lower_native_module_dispatch(
         }
 
         // Determine return type for the declare
-        let ret_type = match sig.ret {
+        let ret_type = match sig.ret.kind {
             NativeRetKind::GcPtr
             | NativeRetKind::NullableGcPtr
             | NativeRetKind::HandleId
@@ -210,7 +219,19 @@ pub fn lower_native_module_dispatch(
         let arg_slices: Vec<(crate::types::LlvmType, &str)> =
             llvm_args.iter().map(|(t, s)| (*t, s.as_str())).collect();
 
-        match sig.ret {
+        match sig.ret.kind {
+            NativeRetKind::GcPtr if sig.ret.canonical_common_handle => {
+                let raw = ctx.block().call(I64, sig.runtime, &arg_slices);
+                let boxed =
+                    ctx.block()
+                        .call(DOUBLE, "js_canonical_common_handle_value", &[(I64, &raw)]);
+                record_runtime_native_handle_box_transition(
+                    ctx,
+                    &boxed,
+                    MaterializationReason::ReturnAbi,
+                );
+                Ok(boxed)
+            }
             NativeRetKind::GcPtr
             | NativeRetKind::NullableGcPtr
             | NativeRetKind::HandleId

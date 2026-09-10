@@ -166,7 +166,7 @@ fn string_value(value: &str) -> f64 {
 }
 
 fn handle_value(handle: Handle) -> f64 {
-    f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 pub(crate) fn scan_roots(visitor: &mut GcRootVisitor<'_>) {

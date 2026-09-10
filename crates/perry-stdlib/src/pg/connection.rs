@@ -129,18 +129,19 @@ pub unsafe extern "C" fn js_pg_connect(config_f: f64) -> *mut Promise {
     // Parse the config
     let pg_config = parse_pg_config(config);
 
-    crate::common::spawn_for_promise(promise as *mut u8, async move {
-        let url = pg_config.to_url();
-
-        match PgConnection::connect(&url).await {
-            Ok(conn) => {
-                let handle = register_handle(PgConnectionHandle::new(conn));
-                // Return the handle as bits
-                Ok(handle as u64)
-            }
-            Err(e) => Err(format!("Failed to connect: {}", e)),
-        }
-    });
+    // Carry Rust data across Tokio; register and wrap only on the owner thread.
+    crate::common::spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            PgConnection::connect(&pg_config.to_url())
+                .await
+                .map_err(|e| format!("Failed to connect: {}", e))
+        },
+        |conn| {
+            let handle = register_handle(PgConnectionHandle::new(conn));
+            crate::common::nanbox_handle_value(handle).to_bits()
+        },
+    );
 
     promise
 }

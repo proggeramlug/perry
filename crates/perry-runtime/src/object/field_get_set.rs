@@ -106,7 +106,10 @@ pub extern "C" fn js_fetch_unwrap_handle(value: f64) -> f64 {
     }
     let raw = crate::value::js_nanbox_get_pointer(value) as usize;
     match unsafe { fetch_subclass_handle_id(raw) } {
-        Some(id) => crate::value::js_nanbox_pointer(id),
+        Some(id) => crate::native_handle::canonical_handle_value(
+            crate::native_handle::NATIVE_HANDLE_PROVIDER_FETCH,
+            id,
+        ),
         None => value,
     }
 }

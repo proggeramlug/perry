@@ -48,13 +48,23 @@ pub unsafe extern "C" fn js_node_sqlite_native_dispatch(
     let arg2 = arg(2);
 
     match (method_name, construct != 0) {
-        ("DatabaseSync", true) => js_nanbox_pointer(js_node_sqlite_database_sync_new(arg0, arg1)),
-        ("DatabaseSync", false) => js_nanbox_pointer(js_node_sqlite_database_sync_call(arg0, arg1)),
-        ("Session", true) => js_nanbox_pointer(js_node_sqlite_session_new(arg0, arg1)),
-        ("Session", false) => js_nanbox_pointer(js_node_sqlite_session_call(arg0, arg1)),
-        ("StatementSync", true) => js_nanbox_pointer(js_node_sqlite_statement_sync_new(arg0, arg1)),
+        ("DatabaseSync", true) => {
+            crate::common::nanbox_handle_value(js_node_sqlite_database_sync_new(arg0, arg1))
+        }
+        ("DatabaseSync", false) => {
+            crate::common::nanbox_handle_value(js_node_sqlite_database_sync_call(arg0, arg1))
+        }
+        ("Session", true) => {
+            crate::common::nanbox_handle_value(js_node_sqlite_session_new(arg0, arg1))
+        }
+        ("Session", false) => {
+            crate::common::nanbox_handle_value(js_node_sqlite_session_call(arg0, arg1))
+        }
+        ("StatementSync", true) => {
+            crate::common::nanbox_handle_value(js_node_sqlite_statement_sync_new(arg0, arg1))
+        }
         ("StatementSync", false) => {
-            js_nanbox_pointer(js_node_sqlite_statement_sync_call(arg0, arg1))
+            crate::common::nanbox_handle_value(js_node_sqlite_statement_sync_call(arg0, arg1))
         }
         ("backup", _) => js_nanbox_pointer(js_node_sqlite_backup(arg0, arg1, arg2) as i64),
         _ => undefined_f64(),
@@ -200,7 +210,7 @@ pub(crate) unsafe fn register_node_sqlite_database(
     let type_symbol =
         perry_runtime::symbol::js_symbol_for(f64_from_jsvalue(string_value("sqlite-type")));
     perry_runtime::symbol::js_object_set_symbol_property(
-        js_nanbox_pointer(handle),
+        crate::common::nanbox_handle_value(handle),
         type_symbol,
         f64_from_jsvalue(string_value(type_name)),
     );

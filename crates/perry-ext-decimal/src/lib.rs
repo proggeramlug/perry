@@ -259,8 +259,7 @@ pub unsafe extern "C" fn js_decimal_coerce_to_handle(value: f64) -> Handle {
     let bits = value.to_bits();
     let tag = bits >> 48;
     if tag == POINTER_TAG_HI16 {
-        // Already a Decimal handle — extract the lower 48 bits as the handle id.
-        return (bits & 0x0000_FFFF_FFFF_FFFF) as Handle;
+        return perry_ffi::canonical_handle_id(value);
     }
     if tag == STRING_TAG_HI16 {
         let ptr = (bits & 0x0000_FFFF_FFFF_FFFF) as *const StringHeader;

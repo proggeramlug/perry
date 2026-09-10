@@ -174,6 +174,11 @@ static EVENT_EMITTER_ON_PTR: AtomicPtr<()> = AtomicPtr::new(ptr::null_mut());
 
 const TAG_UNDEFINED: u64 = 0x7FFC_0000_0000_0001;
 
+#[inline]
+fn canonical_registry_id(handle: i64) -> i64 {
+    crate::native_handle::js_canonical_handle_id_from_addr(handle)
+}
+
 fn has_extension(slots: &[AtomicPtr<()>]) -> bool {
     slots
         .iter()
@@ -204,6 +209,7 @@ unsafe extern "C" fn composite_handle_method_dispatch(
     args_ptr: *const f64,
     args_len: usize,
 ) -> f64 {
+    let handle = crate::native_handle::js_canonical_handle_id_from_addr(handle);
     for slot in HANDLE_METHOD_EXTENSION_DISPATCH_PTRS.iter() {
         let p = slot.load(Ordering::Acquire);
         if p.is_null() {
@@ -238,6 +244,7 @@ unsafe extern "C" fn composite_handle_property_dispatch(
     property_name_ptr: *const u8,
     property_name_len: usize,
 ) -> f64 {
+    let handle = crate::native_handle::js_canonical_handle_id_from_addr(handle);
     for slot in HANDLE_PROPERTY_EXTENSION_DISPATCH_PTRS.iter() {
         let p = slot.load(Ordering::Acquire);
         if p.is_null() {
@@ -265,6 +272,7 @@ unsafe extern "C" fn composite_handle_property_set_dispatch(
     property_name_len: usize,
     value: f64,
 ) {
+    let handle = crate::native_handle::js_canonical_handle_id_from_addr(handle);
     for slot in HANDLE_PROPERTY_SET_EXTENSION_DISPATCH_PTRS.iter() {
         let p = slot.load(Ordering::Acquire);
         if p.is_null() {
@@ -283,30 +291,158 @@ unsafe extern "C" fn composite_handle_property_set_dispatch(
     }
 }
 
+unsafe extern "C" fn canonical_handle_own_property_names_dispatch(handle: i64) -> f64 {
+    let f = std::mem::transmute::<*mut (), HandleOwnPropertyNamesDispatchFn>(
+        HANDLE_OWN_PROPERTY_NAMES_DISPATCH_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_primary_handle_method_dispatch(
+    handle: i64,
+    method_name_ptr: *const u8,
+    method_name_len: usize,
+    args_ptr: *const f64,
+    args_len: usize,
+) -> f64 {
+    let f = std::mem::transmute::<*mut (), HandleMethodDispatchFn>(
+        HANDLE_METHOD_DISPATCH_PTR.load(Ordering::Acquire),
+    );
+    f(
+        canonical_registry_id(handle),
+        method_name_ptr,
+        method_name_len,
+        args_ptr,
+        args_len,
+    )
+}
+
+unsafe extern "C" fn canonical_primary_handle_property_dispatch(
+    handle: i64,
+    property_name_ptr: *const u8,
+    property_name_len: usize,
+) -> f64 {
+    let f = std::mem::transmute::<*mut (), HandlePropertyDispatchFn>(
+        HANDLE_PROPERTY_DISPATCH_PTR.load(Ordering::Acquire),
+    );
+    f(
+        canonical_registry_id(handle),
+        property_name_ptr,
+        property_name_len,
+    )
+}
+
+unsafe extern "C" fn canonical_handle_prototype_dispatch(handle: i64) -> f64 {
+    let f = std::mem::transmute::<*mut (), HandlePrototypeDispatchFn>(
+        HANDLE_PROTOTYPE_DISPATCH_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_fetch_handle_kind_probe(handle: usize) -> u8 {
+    let f = std::mem::transmute::<*mut (), FetchHandleKindProbeFn>(
+        FETCH_HANDLE_KIND_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle as i64) as usize)
+}
+
+unsafe extern "C" fn canonical_event_emitter_handle_probe(handle: i64) -> bool {
+    let f = std::mem::transmute::<*mut (), EventEmitterHandleProbeFn>(
+        EVENT_EMITTER_HANDLE_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_event_emitter_async_resource_handle_probe(handle: i64) -> bool {
+    let f = std::mem::transmute::<*mut (), EventEmitterAsyncResourceHandleProbeFn>(
+        EVENT_EMITTER_ASYNC_RESOURCE_HANDLE_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_event_emitter_async_resource_dispatch(
+    handle: i64,
+    operation: u32,
+) -> f64 {
+    let f = std::mem::transmute::<*mut (), EventEmitterAsyncResourceDispatchFn>(
+        EVENT_EMITTER_ASYNC_RESOURCE_DISPATCH_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle), operation)
+}
+
+unsafe extern "C" fn canonical_event_emitter_get_domain(handle: i64) -> i64 {
+    let f = std::mem::transmute::<*mut (), EventEmitterGetDomainFn>(
+        EVENT_EMITTER_GET_DOMAIN_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_event_emitter_set_domain(handle: i64, domain: i64) -> i32 {
+    let f = std::mem::transmute::<*mut (), EventEmitterSetDomainFn>(
+        EVENT_EMITTER_SET_DOMAIN_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle), canonical_registry_id(domain))
+}
+
+unsafe extern "C" fn canonical_net_socket_handle_probe(handle: i64) -> bool {
+    let f = std::mem::transmute::<*mut (), NetSocketHandleProbeFn>(
+        NET_SOCKET_HANDLE_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_http_agent_handle_probe(handle: i64) -> bool {
+    let f = std::mem::transmute::<*mut (), HttpAgentHandleProbeFn>(
+        HTTP_AGENT_HANDLE_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_tls_handle_kind_probe(handle: i64) -> u8 {
+    let f = std::mem::transmute::<*mut (), TlsHandleKindProbeFn>(
+        TLS_HANDLE_KIND_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_ffi_handle_exists_probe(handle: i64) -> bool {
+    let f = std::mem::transmute::<*mut (), FfiHandleExistsProbeFn>(
+        FFI_HANDLE_EXISTS_PROBE_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle))
+}
+
+unsafe extern "C" fn canonical_event_emitter_on(
+    handle: i64,
+    event_bits: i64,
+    callback: i64,
+) -> i64 {
+    let f = std::mem::transmute::<*mut (), EventEmitterOnFn>(
+        EVENT_EMITTER_ON_PTR.load(Ordering::Acquire),
+    );
+    f(canonical_registry_id(handle), event_bits, callback)
+}
+
 #[inline]
 pub fn handle_method_dispatch() -> Option<HandleMethodDispatchFn> {
-    if has_extension(&HANDLE_METHOD_EXTENSION_DISPATCH_PTRS) {
+    if has_extension(&HANDLE_METHOD_EXTENSION_DISPATCH_PTRS)
+        || !HANDLE_METHOD_DISPATCH_PTR.load(Ordering::Acquire).is_null()
+    {
         return Some(composite_handle_method_dispatch);
     }
-    let p = HANDLE_METHOD_DISPATCH_PTR.load(Ordering::Acquire);
-    if p.is_null() {
-        None
-    } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandleMethodDispatchFn>(p) })
-    }
+    None
 }
 
 #[inline]
 pub fn handle_property_dispatch() -> Option<HandlePropertyDispatchFn> {
-    if has_extension(&HANDLE_PROPERTY_EXTENSION_DISPATCH_PTRS) {
+    if has_extension(&HANDLE_PROPERTY_EXTENSION_DISPATCH_PTRS)
+        || !HANDLE_PROPERTY_DISPATCH_PTR
+            .load(Ordering::Acquire)
+            .is_null()
+    {
         return Some(composite_handle_property_dispatch);
     }
-    let p = HANDLE_PROPERTY_DISPATCH_PTR.load(Ordering::Acquire);
-    if p.is_null() {
-        None
-    } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandlePropertyDispatchFn>(p) })
-    }
+    None
 }
 
 /// #4973: the PRIMARY (stdlib) handle method dispatcher only, skipping the
@@ -321,7 +457,7 @@ pub(crate) fn handle_method_dispatch_primary() -> Option<HandleMethodDispatchFn>
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandleMethodDispatchFn>(p) })
+        Some(canonical_primary_handle_method_dispatch)
     }
 }
 
@@ -333,21 +469,20 @@ pub(crate) fn handle_property_dispatch_primary() -> Option<HandlePropertyDispatc
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandlePropertyDispatchFn>(p) })
+        Some(canonical_primary_handle_property_dispatch)
     }
 }
 
 #[inline]
 pub fn handle_property_set_dispatch() -> Option<HandlePropertySetDispatchFn> {
-    if has_extension(&HANDLE_PROPERTY_SET_EXTENSION_DISPATCH_PTRS) {
+    if has_extension(&HANDLE_PROPERTY_SET_EXTENSION_DISPATCH_PTRS)
+        || !HANDLE_PROPERTY_SET_DISPATCH_PTR
+            .load(Ordering::Acquire)
+            .is_null()
+    {
         return Some(composite_handle_property_set_dispatch);
     }
-    let p = HANDLE_PROPERTY_SET_DISPATCH_PTR.load(Ordering::Acquire);
-    if p.is_null() {
-        None
-    } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandlePropertySetDispatchFn>(p) })
-    }
+    None
 }
 
 #[inline]
@@ -356,7 +491,7 @@ pub fn handle_own_property_names_dispatch() -> Option<HandleOwnPropertyNamesDisp
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandleOwnPropertyNamesDispatchFn>(p) })
+        Some(canonical_handle_own_property_names_dispatch)
     }
 }
 
@@ -366,7 +501,7 @@ pub fn handle_prototype_dispatch() -> Option<HandlePrototypeDispatchFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HandlePrototypeDispatchFn>(p) })
+        Some(canonical_handle_prototype_dispatch)
     }
 }
 
@@ -443,7 +578,7 @@ pub fn fetch_handle_kind_probe() -> Option<FetchHandleKindProbeFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), FetchHandleKindProbeFn>(p) })
+        Some(canonical_fetch_handle_kind_probe)
     }
 }
 
@@ -459,7 +594,7 @@ pub fn event_emitter_handle_probe() -> Option<EventEmitterHandleProbeFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), EventEmitterHandleProbeFn>(p) })
+        Some(canonical_event_emitter_handle_probe)
     }
 }
 
@@ -475,7 +610,7 @@ pub fn event_emitter_async_resource_handle_probe() -> Option<EventEmitterAsyncRe
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), EventEmitterAsyncResourceHandleProbeFn>(p) })
+        Some(canonical_event_emitter_async_resource_handle_probe)
     }
 }
 
@@ -492,7 +627,7 @@ pub fn event_emitter_async_resource_dispatch() -> Option<EventEmitterAsyncResour
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), EventEmitterAsyncResourceDispatchFn>(p) })
+        Some(canonical_event_emitter_async_resource_dispatch)
     }
 }
 
@@ -509,7 +644,7 @@ pub fn event_emitter_get_domain() -> Option<EventEmitterGetDomainFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), EventEmitterGetDomainFn>(p) })
+        Some(canonical_event_emitter_get_domain)
     }
 }
 
@@ -524,7 +659,7 @@ pub fn event_emitter_set_domain() -> Option<EventEmitterSetDomainFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), EventEmitterSetDomainFn>(p) })
+        Some(canonical_event_emitter_set_domain)
     }
 }
 
@@ -539,7 +674,7 @@ pub fn net_socket_handle_probe() -> Option<NetSocketHandleProbeFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), NetSocketHandleProbeFn>(p) })
+        Some(canonical_net_socket_handle_probe)
     }
 }
 
@@ -554,7 +689,7 @@ pub fn http_agent_handle_probe() -> Option<HttpAgentHandleProbeFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), HttpAgentHandleProbeFn>(p) })
+        Some(canonical_http_agent_handle_probe)
     }
 }
 
@@ -564,7 +699,7 @@ pub fn tls_handle_kind_probe() -> Option<TlsHandleKindProbeFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), TlsHandleKindProbeFn>(p) })
+        Some(canonical_tls_handle_kind_probe)
     }
 }
 
@@ -593,7 +728,7 @@ pub fn ffi_handle_exists_probe() -> Option<FfiHandleExistsProbeFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), FfiHandleExistsProbeFn>(p) })
+        Some(canonical_ffi_handle_exists_probe)
     }
 }
 
@@ -627,7 +762,7 @@ pub fn event_emitter_on() -> Option<EventEmitterOnFn> {
     if p.is_null() {
         None
     } else {
-        Some(unsafe { std::mem::transmute::<*mut (), EventEmitterOnFn>(p) })
+        Some(canonical_event_emitter_on)
     }
 }
 

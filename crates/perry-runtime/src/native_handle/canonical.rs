@@ -131,7 +131,16 @@ pub fn canonical_handle_parts_from_value(value: f64) -> Option<(u64, i64)> {
     if !js.is_pointer() {
         return None;
     }
-    canonical_handle_parts_from_addr(js.as_pointer::<u8>() as usize)
+    unsafe {
+        let addr = js.as_pointer::<u8>() as usize;
+        let header = crate::value::addr_class::direct_receiver_gc_header(addr)?;
+        if (*header).obj_type != crate::gc::GC_TYPE_NATIVE_HANDLE {
+            return None;
+        }
+        let handle = addr as *mut NativeHandleHeader;
+        debug_assert_eq!((*handle).magic, super::NATIVE_HANDLE_MAGIC);
+        canonical_parts(handle)
+    }
 }
 
 pub fn canonical_handle_id_for_provider(value: f64, provider: u64) -> Option<i64> {
@@ -153,6 +162,22 @@ pub(super) unsafe fn remove_finalized(provider: u64, id: i64, finalized: *mut Na
             table.remove(&(provider, id));
         }
     });
+}
+
+/// Retire the canonical identity when its authoritative registry entry dies.
+/// This prevents an id recycled by the provider from reusing the wrapper of a
+/// logically different resource that JavaScript still happens to retain.
+pub(crate) fn retire(provider: u64, id: i64) {
+    let addr = CANONICAL_HANDLES.with(|table| table.borrow_mut().remove(&(provider, id)));
+    let Some(addr) = addr else {
+        return;
+    };
+    unsafe {
+        let handle = handle_from_addr(addr);
+        if canonical_parts(handle) == Some((provider, id)) {
+            let _ = super::finalize_once(handle);
+        }
+    }
 }
 
 #[cfg(test)]

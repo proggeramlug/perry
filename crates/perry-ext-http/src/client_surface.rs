@@ -218,7 +218,7 @@ pub extern "C" fn js_http_incoming_message_socket(handle: Handle) -> f64 {
         if response.socket_handle == 0 {
             f64::from_bits(TAG_UNDEFINED)
         } else {
-            f64::from_bits(POINTER_TAG | (response.socket_handle as u64 & PTR_MASK))
+            perry_ffi::canonical_handle_value(response.socket_handle)
         }
     })
     .unwrap_or_else(|| f64::from_bits(TAG_UNDEFINED))
@@ -231,7 +231,7 @@ pub extern "C" fn js_http_incoming_message_req(handle: Handle) -> f64 {
         if response.request_handle == 0 {
             f64::from_bits(TAG_UNDEFINED)
         } else {
-            f64::from_bits(POINTER_TAG | (response.request_handle as u64 & PTR_MASK))
+            perry_ffi::canonical_handle_value(response.request_handle)
         }
     })
     .unwrap_or_else(|| f64::from_bits(TAG_UNDEFINED))

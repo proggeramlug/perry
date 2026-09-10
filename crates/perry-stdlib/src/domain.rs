@@ -153,13 +153,13 @@ fn js_bool(value: bool) -> f64 {
 }
 
 fn nanbox_handle(handle: Handle) -> f64 {
-    js_nanbox_pointer(handle)
+    crate::common::nanbox_handle_value(handle)
 }
 
 fn handle_from_value(value: f64) -> Handle {
     let bits = value.to_bits();
     if (bits >> 48) == 0x7FFD {
-        (bits & 0x0000_FFFF_FFFF_FFFF) as Handle
+        perry_runtime::native_handle::js_canonical_handle_id(value)
     } else if value.is_finite() && value > 0.0 && value.fract() == 0.0 {
         value as Handle
     } else {

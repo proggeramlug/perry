@@ -118,7 +118,7 @@ pub(crate) fn resolve_async_local_storage_handle(receiver: Handle) -> Option<Han
     if value.to_bits() >> 48 != 0x7FFD {
         return None;
     }
-    let backing = (value.to_bits() & POINTER_MASK) as Handle;
+    let backing = perry_runtime::native_handle::js_canonical_handle_id(value);
     get_handle_mut::<AsyncLocalStorageHandle>(backing).map(|_| backing)
 }
 
@@ -130,7 +130,7 @@ pub extern "C" fn js_async_local_storage_subclass_init(this_value: f64) -> f64 {
     let scope = perry_runtime::gc::RuntimeHandleScope::new();
     let this_handle = scope.root_nanbox_f64(this_value);
     let backing = js_async_local_storage_new();
-    let backing_value = scope.root_nanbox_f64(perry_runtime::value::js_nanbox_pointer(backing));
+    let backing_value = scope.root_nanbox_f64(crate::common::nanbox_handle_value(backing));
     let raw = perry_runtime::value::js_nanbox_get_pointer(this_handle.get_nanbox_f64())
         as *mut perry_runtime::object::ObjectHeader;
     if !raw.is_null()

@@ -57,7 +57,10 @@ pub(crate) const POINTER_TAG_BITS: u64 = 0x7FFD_0000_0000_0000;
 pub(crate) const POINTER_MASK_BITS: u64 = 0x0000_FFFF_FFFF_FFFF;
 
 pub(crate) fn nanbox_handle_value(handle: i64) -> f64 {
-    f64::from_bits(POINTER_TAG_BITS | (handle as u64 & POINTER_MASK_BITS))
+    perry_runtime::native_handle::canonical_handle_value(
+        perry_runtime::native_handle::NATIVE_HANDLE_PROVIDER_COMMON,
+        handle,
+    )
 }
 
 pub(crate) unsafe fn pack_args_array(args: &[f64]) -> *mut perry_runtime::ArrayHeader {

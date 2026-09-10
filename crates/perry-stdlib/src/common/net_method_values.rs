@@ -1,7 +1,7 @@
 //! net.Socket/net.Server method-value helpers for handle dispatch.
 
 fn nanbox_handle(handle: i64) -> f64 {
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | (handle as u64 & 0x0000_FFFF_FFFF_FFFF))
+    super::nanbox_handle_value(handle)
 }
 
 #[cfg(all(

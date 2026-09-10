@@ -172,7 +172,7 @@ pub unsafe extern "C" fn js_mysql2_create_connection(config_f: f64) -> *mut Prom
         },
         |connection| {
             let handle = register_handle(MysqlConnectionHandle::new(connection));
-            perry_runtime::js_nanbox_pointer(handle).to_bits()
+            crate::common::nanbox_handle_value(handle).to_bits()
         },
         MysqlPromiseError::to_jsvalue_bits,
     );

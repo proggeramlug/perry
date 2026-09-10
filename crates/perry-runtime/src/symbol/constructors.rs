@@ -92,21 +92,15 @@ pub unsafe extern "C" fn js_symbol_for(key_f64: f64) -> f64 {
         return f64::from_bits(POINTER_TAG | (ptr_usize as u64 & POINTER_MASK));
     }
 
-    // Not found — allocate a persistent SymbolHeader. We use Box::leak so the
-    // pointer outlives any GC cycle (the registry holds it as a root). The
+    // Not found — allocate a persistent pinned SymbolHeader so the pointer
+    // outlives every GC cycle and creator-thread teardown. The
     // description text is stored in REGISTERED_SYMBOL_DESCRIPTIONS as a
     // process-lifetime Arc<str>; the header's `description` pointer stays
     // null. Readers (`sym.description`, `sym.toString()`, key_for) consult
     // the side table and materialize a StringHeader in *their own* arena on
     // demand, so cross-thread reads are safe even when the originating
     // worker's arena was torn down.
-    let boxed = Box::new(SymbolHeader {
-        magic: SYMBOL_MAGIC,
-        registered: 1,
-        description: std::ptr::null_mut(),
-        id: next_id(),
-    });
-    let sym_ptr = Box::into_raw(boxed);
+    let sym_ptr = alloc_immortal_symbol(true);
     if crate::hot_diag::receiver_repr_on() {
         crate::hot_diag::receiver_repr_note_constructed(
             crate::hot_diag::ReceiverReprFamily::SymbolGlobal,

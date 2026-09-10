@@ -20,12 +20,26 @@ pub(super) unsafe fn dispatch_primitive(
     let refreshed_args = || crate::gc::RuntimeHandleScope::refreshed_nanbox_f64_slice(arg_handles);
     let _ = (root_scope, object_handle, &refreshed_args, raw_bits, jsval);
     let _ = (method_name_ptr, method_name_len);
+    // The enclosing native-call bridge has canonicalized the receiver and
+    // already uses this header contract for class-vtable admission. Cache only
+    // its kind byte: the receiver root may move while later dispatch runs, but
+    // relocation preserves the kind. Residual receivers retain their existing
+    // classifiers below.
+    let receiver_gc_type = if jsval.is_pointer() {
+        crate::value::addr_class::direct_receiver_gc_header(jsval.as_pointer::<u8>() as usize)
+            .map(|header| (*header).obj_type)
+    } else {
+        None
+    };
     // Temporal cell (#4686): `duration.add(x)`, `instant.toString()`, etc. A
     // `Temporal.*` value is a NaN-boxed pointer to a custom cell with no
     // codegen fast-path, so every method call funnels through here. The router
     // throws `TypeError` for an unknown method name on a real Temporal receiver.
     #[cfg(feature = "temporal")]
-    if crate::temporal::is_temporal_value(object) {
+    if receiver_gc_type.map_or_else(
+        || crate::temporal::is_temporal_value(object),
+        |kind| kind == crate::gc::GC_TYPE_TEMPORAL,
+    ) {
         let args = refreshed_args();
         return Some(crate::temporal::dispatch::call_method(
             object,
@@ -189,7 +203,15 @@ pub(super) unsafe fn dispatch_primitive(
         }
     }
 
-    if let Some((_, payload)) = crate::builtins::boxed_primitive_payload(object) {
+    // Only these operations consume a boxed payload. An unrelated method
+    // proceeds to the ordinary dispatch below without classifying or reading
+    // the wrapper's payload merely to discard the answer.
+    let boxed_payload = if matches!(method_name, "valueOf" | "toString" | "toLocaleString") {
+        crate::builtins::boxed_primitive_payload(object)
+    } else {
+        None
+    };
+    if let Some((_, payload)) = boxed_payload {
         // An own `valueOf`/`toString`/`toLocaleString` data property shadows the
         // intrinsic wrapper method: `var s = new String(); s.valueOf =
         // Number.prototype.valueOf; s.valueOf()` must run the *transferred*
@@ -288,7 +310,13 @@ pub(super) unsafe fn dispatch_primitive(
         }
     }
 
-    if crate::web_storage::is_storage_value(object_handle.get_nanbox_f64()) {
+    // Storage branding is useful only for an operation this arm handles.
+    // Other names keep the same ordinary-method fallback.
+    if matches!(
+        method_name,
+        "clear" | "getItem" | "key" | "removeItem" | "setItem"
+    ) && crate::web_storage::is_storage_value(object_handle.get_nanbox_f64())
+    {
         let args = refreshed_args();
         if let Some(result) = crate::web_storage::dispatch_storage_method(
             object_handle.get_nanbox_f64(),
@@ -313,7 +341,9 @@ pub(super) unsafe fn dispatch_primitive(
     // `this` to the receiver and walks the class_id parent chain — but only
     // when the method actually resolves in the static chain, so an own
     // function-valued static field still falls through to the generic path.
-    if crate::object::class_registry::is_class_object_value(object) {
+    if receiver_gc_type.map_or(true, |kind| kind == crate::gc::GC_TYPE_OBJECT)
+        && crate::object::class_registry::is_class_object_value(object)
+    {
         let class_id = crate::object::js_object_get_class_id(jsval.as_pointer::<ObjectHeader>());
         if class_id != 0
             && crate::object::class_registry::lookup_static_method_in_chain(class_id, method_name)
@@ -378,7 +408,11 @@ pub(super) unsafe fn dispatch_primitive(
     // dispatch to a custom `then` when present (test262 all/race/allSettled/any
     // `invoke-then.js`). A callable own override wins here; a promise without
     // one falls through to the intrinsic then/catch/finally block below.
-    if crate::promise::js_value_is_promise(object_handle.get_nanbox_f64()) != 0 {
+    let is_promise_receiver = receiver_gc_type.map_or_else(
+        || crate::promise::js_value_is_promise(object_handle.get_nanbox_f64()) != 0,
+        |kind| kind == crate::gc::GC_TYPE_PROMISE,
+    );
+    if is_promise_receiver {
         let recv = object_handle.get_nanbox_f64();
         let raw = (recv.to_bits() & 0x0000_FFFF_FFFF_FFFF) as usize;
         if let Some(v) = super::exotic_expando::exotic_get_own_property(
@@ -414,9 +448,7 @@ pub(super) unsafe fn dispatch_primitive(
     // and return undefined — drizzle's `MySqlRemoteSession.all` then
     // resolves to undefined and downstream `data[0].insertId` accesses
     // silently fail.
-    if matches!(method_name, "then" | "catch" | "finally")
-        && crate::promise::js_value_is_promise(object_handle.get_nanbox_f64()) != 0
-    {
+    if matches!(method_name, "then" | "catch" | "finally") && is_promise_receiver {
         let promise_val = object_handle.get_nanbox_f64();
         let promise_ptr = (promise_val.to_bits() & 0x0000_FFFF_FFFF_FFFF) as *mut crate::Promise;
         let promise_handle = root_scope.root_raw_mut_ptr(promise_ptr);

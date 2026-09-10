@@ -95,21 +95,21 @@ pub unsafe extern "C" fn js_pg_create_pool(config_f: f64) -> *mut Promise {
     // Extract max connections if provided (default to 10)
     let max_conns = 10u32;
 
-    crate::common::spawn_for_promise(promise as *mut u8, async move {
-        let url = pg_config.to_url();
-
-        match PgPoolOptions::new()
-            .max_connections(max_conns)
-            .connect(&url)
-            .await
-        {
-            Ok(pool) => {
-                let handle = register_handle(PgPoolHandle::new(pool));
-                Ok(handle as u64)
-            }
-            Err(e) => Err(format!("Failed to create pool: {}", e)),
-        }
-    });
+    // Carry Rust data across Tokio; register and wrap only on the owner thread.
+    crate::common::spawn_for_promise_deferred(
+        promise as *mut u8,
+        async move {
+            PgPoolOptions::new()
+                .max_connections(max_conns)
+                .connect(&pg_config.to_url())
+                .await
+                .map_err(|e| format!("Failed to create pool: {}", e))
+        },
+        |pool| {
+            let handle = register_handle(PgPoolHandle::new(pool));
+            crate::common::nanbox_handle_value(handle).to_bits()
+        },
+    );
 
     promise
 }

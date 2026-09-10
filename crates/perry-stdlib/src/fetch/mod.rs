@@ -372,8 +372,8 @@ pub(crate) fn handle_id(value: f64) -> usize {
     let bits = value.to_bits();
     let top16 = bits >> 48;
     if top16 >= 0x7FF8 {
-        // NaN-boxed (POINTER_TAG / STRING_TAG / etc.): extract lower 48 bits.
-        (bits & 0x0000_FFFF_FFFF_FFFF) as usize
+        // Canonical managed handle or a legacy NaN-boxed id.
+        perry_runtime::native_handle::js_canonical_handle_id(value) as usize
     } else if top16 == 0 && bits != 0 {
         // Raw integer bits as f64 (denormal-encoded handle id): use bits directly.
         bits as usize
@@ -387,7 +387,10 @@ pub(crate) fn handle_id(value: f64) -> usize {
 /// for return across the FFI boundary. Pairs with `handle_id` on accessor entry.
 #[inline]
 pub(crate) fn handle_to_f64(id: usize) -> f64 {
-    perry_runtime::value::js_nanbox_pointer(id as i64)
+    perry_runtime::native_handle::canonical_handle_value(
+        perry_runtime::native_handle::NATIVE_HANDLE_PROVIDER_FETCH,
+        id as i64,
+    )
 }
 
 pub(crate) use crate::common::string_from_header;

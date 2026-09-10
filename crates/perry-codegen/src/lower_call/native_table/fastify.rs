@@ -9,7 +9,7 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_fastify_create_with_opts",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "fastify",
@@ -165,7 +165,7 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_fastify_app_server",
         args: &[],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // #1113 — `app.server.on(event, cb)`. `app.server` returns the
     // FastifyApp handle (pointer-tagged), so `.on(…)` lowers as a
@@ -287,7 +287,7 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_fastify_reply_status",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // `reply.code(N)` is an alias for `reply.status(N)` in npm Fastify. Without
     // this row, `reply.code(201)` silently no-op'd and the HTTP status stayed 200.
@@ -298,7 +298,7 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_fastify_reply_status",
         args: &[NA_F64],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     NativeModSig {
         module: "fastify",
@@ -315,7 +315,7 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
     // user code at it. CORS hooks, Cache-Control, and content-type
     // overrides all evaporated.
     //
-    // `ret: NR_HANDLE_ID` is critical — the Rust impl returns `Handle` (i64).
+    // The managed `NR_GCPTR` adapter is critical — the Rust impl returns `Handle` (i64).
     // Previously `NR_F64` caused chained `.header(...).send(...)` to read
     // an uninitialized XMM0/D0 register as the receiver, producing
     // `(number).send is not a function` errors (#1048).
@@ -331,11 +331,11 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
         class_filter: Some("Reply"),
         runtime: "js_fastify_reply_header",
         args: &[NA_JSV, NA_JSV],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // `reply.type(value)` — Fastify alias for setting `content-type`.
     // Routes to `js_fastify_reply_type` (thin wrapper over reply_header).
-    // `ret: NR_HANDLE_ID` for the same reason as `reply.header` above (#1048).
+    // Use the managed `NR_GCPTR` adapter for the same reason as `reply.header` above (#1048).
     NativeModSig {
         module: "fastify",
         has_receiver: true,
@@ -343,7 +343,7 @@ pub(super) const FASTIFY_ROWS: &[NativeModSig] = &[
         class_filter: None,
         runtime: "js_fastify_reply_type",
         args: &[NA_JSV],
-        ret: NR_HANDLE_ID,
+        ret: NR_GCPTR.managed_common_handle(),
     },
     // Fastify context methods (Hono-style)
     NativeModSig {

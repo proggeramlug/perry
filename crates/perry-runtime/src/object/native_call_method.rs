@@ -116,28 +116,14 @@ unsafe fn class_vtable_fast_guard(object: f64, method_bytes: &[u8]) -> Option<(u
         return None;
     }
     let obj_addr = (bits & crate::value::POINTER_MASK) as usize;
-    if !crate::value::addr_class::is_above_handle_band(obj_addr) {
-        return None;
-    }
-    // `gc_pointer_and_type_from_value` — NOT a bare `obj - GC_HEADER_SIZE`
-    // read. Buffers, ArrayBuffers, typed arrays, Sets, Maps, RegExps, Symbols
-    // and AsyncResource handles are raw allocations with no `GcHeader` at that
-    // offset, so reading one directly loads foreign allocator bytes that can
-    // and do coincidentally equal a real GC type (see `handle_methods.rs`'s
-    // buffer comment, and #5625 where a typed array's stale bytes matched
-    // `GC_TYPE_TEMPORAL`). This helper screens every one of those registries
-    // first — and it is the same screen the tower's own object-pointer
-    // resolution uses, so the fast path cannot classify a receiver differently
-    // from the code it is short-circuiting.
+    // The tagged-value classifier supplies the receiver representation and
+    // type. Do not repeat canonical-wrapper membership before that load.
     let (ptr, gc_type) = gc_pointer_and_type_from_value(object)?;
     if gc_type != crate::gc::GC_TYPE_OBJECT || ptr as usize != obj_addr {
         return None;
     }
-    // `meta_capable_object` rather than a bare header read: it is the
-    // classifier `may_have_descriptor_entry` and `object_static_prototype` use,
-    // so a `Some` here means both of those answer authoritatively from the meta
-    // slot rather than falling back to a conservative `true`.
-    let obj = super::prototype_chain::meta_capable_object(obj_addr)?;
+    // The type byte above supplies the same classification as the meta helper.
+    let obj = ptr as *mut ObjectHeader;
     if !crate::object::object_is_regular(obj) {
         return None;
     }
@@ -1026,15 +1012,25 @@ unsafe fn gc_pointer_and_type_from_value(value: f64) -> Option<(*const u8, u8)> 
         crate::hot_diag::receiver_repr_note_value(value);
     }
     let jsval = JSValue::from_bits(value.to_bits());
-    let ptr = if jsval.is_pointer() {
-        jsval.as_pointer::<u8>()
-    } else {
-        let bits = value.to_bits();
-        if (bits >> 48) == 0 && bits >= (crate::gc::GC_HEADER_SIZE as u64) + 0x1000 {
-            bits as *const u8
-        } else {
+    if jsval.is_pointer() {
+        let ptr = jsval.as_pointer::<u8>();
+        let header = crate::value::addr_class::direct_receiver_gc_header(ptr as usize)?;
+        let obj_type = (*header).obj_type;
+        // These families have dedicated dispatch later in the method tower.
+        if matches!(obj_type,
+            crate::gc::GC_TYPE_SET | crate::gc::GC_TYPE_MAP
+                | crate::gc::GC_TYPE_REGEXP | crate::gc::GC_TYPE_SYMBOL)
+        {
             return None;
         }
+        return Some((ptr, obj_type));
+    }
+    // Untagged compatibility keeps its original registry/range classification.
+    let bits = value.to_bits();
+    let ptr = if (bits >> 48) == 0 && bits >= (crate::gc::GC_HEADER_SIZE as u64) + 0x1000 {
+        bits as *const u8
+    } else {
+        return None;
     };
     if ptr.is_null() || (ptr as usize) < crate::gc::GC_HEADER_SIZE + 0x1000 {
         return None;
@@ -1067,26 +1063,15 @@ unsafe fn gc_pointer_and_type_from_value(value: f64) -> Option<(*const u8, u8)> 
     //   * `set::is_registered_set` ends in `obj_type == GC_TYPE_SET`;
     //   * `map::is_registered_map` ends in `obj_type == GC_TYPE_MAP`;
     //   * RegExp has the dedicated `GC_TYPE_REGEXP` kind;
-    //   * a `Symbol` of any storage carries `SYMBOL_MAGIC` in its first word.
-    //
-    // The one kind the header cannot speak for is the `Box`-leaked symbol
-    // (`Symbol.for`, the well-knowns, the Intl fallback): it has no `GcHeader`
-    // at all, so `ptr - 8` is foreign allocator bytes that can coincidentally
-    // equal any `obj_type`. What every symbol DOES have, whatever its storage,
-    // is `SYMBOL_MAGIC` in its own first four bytes — so screen on the object's
-    // content, not on the header. `may_be_symbol_header` is exact in the
-    // `false` direction, and a false `true` merely pays the old probe.
-    if crate::symbol::may_be_symbol_header(ptr as *const u8)
-        && crate::symbol::is_registered_symbol(addr)
-    {
-        return None;
-    }
+    //   * every symbol now has the dedicated `GC_TYPE_SYMBOL` kind, including
+    //     pinned process-global symbols.
     let gc_header = (ptr as *const u8).sub(crate::gc::GC_HEADER_SIZE) as *const crate::gc::GcHeader;
     let obj_type = (*gc_header).obj_type;
     let excluded = match obj_type {
         crate::gc::GC_TYPE_SET => crate::set::is_registered_set(addr),
         crate::gc::GC_TYPE_MAP => crate::map::is_registered_map(addr),
         crate::gc::GC_TYPE_REGEXP => true,
+        crate::gc::GC_TYPE_SYMBOL => true,
         _ => false,
     };
     if excluded {

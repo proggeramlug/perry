@@ -558,7 +558,7 @@ pub unsafe extern "C" fn js_mysql2_pool_get_connection(pool_handle: Handle) -> *
         },
         |connection| {
             let handle = register_handle(MysqlPoolConnectionHandle::new(connection));
-            perry_runtime::js_nanbox_pointer(handle).to_bits()
+            crate::common::nanbox_handle_value(handle).to_bits()
         },
         MysqlPromiseError::to_jsvalue_bits,
     );

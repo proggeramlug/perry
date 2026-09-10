@@ -218,7 +218,7 @@ fn push_ws_event(ev: PendingWsEvent) {
 
 #[inline]
 fn client_js_value(ws_id: usize) -> JsValue {
-    JsValue::from_bits(POINTER_TAG | ws_id as u64)
+    JsValue::from_bits(perry_ffi::canonical_handle_value(ws_id as i64).to_bits())
 }
 
 /// Add a connection to a server's persistent JS-visible clients Set.
@@ -693,7 +693,7 @@ pub unsafe extern "C" fn js_ws_wait_for_message(handle: i64, timeout_ms: f64) ->
 pub extern "C" fn js_ws_handle_to_i64(val_f64: f64) -> i64 {
     let bits = val_f64.to_bits();
     if (bits & TAG_MASK) == POINTER_TAG {
-        (bits & POINTER_MASK) as i64
+        perry_ffi::canonical_handle_id(val_f64)
     } else {
         val_f64 as i64
     }

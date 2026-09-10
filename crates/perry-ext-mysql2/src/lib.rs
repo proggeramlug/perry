@@ -937,10 +937,9 @@ pub unsafe extern "C" fn js_mysql2_create_connection(config_f: f64) -> *mut Prom
         match result {
             Ok(conn) => {
                 let handle = register_handle(MysqlConnectionHandle::new(conn));
-                // Registry handles are pointer-tagged small integers. Returning a
-                // normal JS number loses that identity, so the first method call
-                // cannot find the connection and rejects "Invalid connection handle".
-                promise.resolve(JsValue::from_object_ptr(handle as *mut ()));
+                promise.resolve_with(move || {
+                    JsValue::from_bits(perry_ffi::canonical_handle_value(handle).to_bits())
+                });
             }
             Err(error) => error.reject(promise),
         }
@@ -1346,7 +1345,7 @@ unsafe extern "C" fn js_mysql2_handle_method_dispatch(
         // `mysql2/promise` pools are already promise-based: `pool.promise()`
         // returns the pool itself. Drizzle's `isCallbackClient` only reaches this
         // when it mis-detects; return the same handle to be safe.
-        "promise" => dispatch_nanbox_ptr(handle as *mut u8),
+        "promise" => perry_ffi::canonical_handle_value(handle),
         _ => return 0,
     };
 
@@ -1406,7 +1405,7 @@ unsafe extern "C" fn js_mysql2_handle_property_dispatch(
     }
 
     let value = js_class_method_bind(
-        dispatch_nanbox_ptr(handle as *mut u8),
+        perry_ffi::canonical_handle_value(handle),
         property.as_ptr(),
         property.len(),
     );
@@ -1515,7 +1514,9 @@ pub extern "C" fn js_mysql2_pool_get_connection(pool_handle: Handle) -> *mut Pro
         match result {
             Ok(conn) => {
                 let h = register_handle(MysqlPoolConnectionHandle::new(conn));
-                promise.resolve(JsValue::from_object_ptr(h as *mut ()));
+                promise.resolve_with(move || {
+                    JsValue::from_bits(perry_ffi::canonical_handle_value(h).to_bits())
+                });
             }
             Err(error) => error.reject(promise),
         }

@@ -92,6 +92,104 @@ crate::perry_thread_local! {
 
 const VALID_POINTER_ARENA_RUN_CAPACITY: usize = 1024;
 
+/// A sealed, non-empty census run. Dense runs encode the same exact starts
+/// as one bit per aligned address; sparse runs keep the original sorted list.
+/// The bitmap is selected only when its allocation plus representation
+/// overhead fits within the list's initialized storage. No heap pointer is
+/// dereferenced to answer membership.
+pub(super) enum ArenaPointerRun {
+    Sparse(Vec<usize>),
+    Bitmap { base: usize, words: Box<[usize]> },
+}
+
+impl ArenaPointerRun {
+    const ADDRESS_STEP: usize = std::mem::align_of::<usize>();
+    const WORD_BITS: usize = usize::BITS as usize;
+
+    fn seal(starts: Vec<usize>) -> Self {
+        let base = starts[0];
+        let last = starts[starts.len() - 1];
+        let word_count = (last - base) / Self::ADDRESS_STEP / Self::WORD_BITS + 1;
+        let extra_words = std::mem::size_of::<Self>()
+            .saturating_sub(std::mem::size_of::<Vec<usize>>())
+            .div_ceil(std::mem::size_of::<usize>());
+        if word_count > starts.len().saturating_sub(extra_words)
+            || starts.iter().any(|&ptr| (ptr - base) % Self::ADDRESS_STEP != 0)
+        {
+            return Self::Sparse(starts);
+        }
+        let mut words = vec![0usize; word_count].into_boxed_slice();
+        for ptr in starts {
+            let bit = (ptr - base) / Self::ADDRESS_STEP;
+            words[bit / Self::WORD_BITS] |= 1usize << (bit % Self::WORD_BITS);
+        }
+        Self::Bitmap { base, words }
+    }
+
+    pub(super) fn first(&self) -> usize {
+        match self {
+            Self::Sparse(starts) => starts[0],
+            Self::Bitmap { base, .. } => *base,
+        }
+    }
+
+    fn last(&self) -> usize {
+        match self {
+            Self::Sparse(starts) => starts[starts.len() - 1],
+            Self::Bitmap { base, words } => {
+                let word = words[words.len() - 1];
+                let bit = (words.len() - 1) * Self::WORD_BITS
+                    + (usize::BITS - 1 - word.leading_zeros()) as usize;
+                *base + bit * Self::ADDRESS_STEP
+            }
+        }
+    }
+
+    #[inline]
+    fn contains(&self, ptr: usize) -> bool {
+        match self {
+            Self::Sparse(starts) => ValidPointerSet::find_floor(starts, ptr) == Some(ptr),
+            Self::Bitmap { base, words } => {
+                let Some(offset) = ptr.checked_sub(*base) else {
+                    return false;
+                };
+                if offset % Self::ADDRESS_STEP != 0 {
+                    return false;
+                }
+                let bit = offset / Self::ADDRESS_STEP;
+                words.get(bit / Self::WORD_BITS).is_some_and(|&word| {
+                    word & (1usize << (bit % Self::WORD_BITS)) != 0
+                })
+            }
+        }
+    }
+
+    fn floor(&self, ptr: usize) -> Option<usize> {
+        match self {
+            Self::Sparse(starts) => ValidPointerSet::find_floor(starts, ptr),
+            Self::Bitmap { base, words } => {
+                let bit = ptr.checked_sub(*base)? / Self::ADDRESS_STEP;
+                let mut index = bit / Self::WORD_BITS;
+                let mut word = if index < words.len() {
+                    let mask = usize::MAX >> (Self::WORD_BITS - 1 - bit % Self::WORD_BITS);
+                    words[index] & mask
+                } else {
+                    index = words.len() - 1;
+                    words[index]
+                };
+                loop {
+                    if word != 0 {
+                        let highest = (usize::BITS - 1 - word.leading_zeros()) as usize;
+                        return Some(*base + (index * Self::WORD_BITS + highest) * Self::ADDRESS_STEP);
+                    }
+                    index = index.checked_sub(1)?;
+                    word = words[index];
+                }
+            }
+        }
+    }
+}
+
 pub(crate) struct ValidPointerSet {
     /// Arena-only start pointers in address-ordered runs — **the exact arena
     /// membership set**, not merely an index for `enclosing_object`'s floor
@@ -106,7 +204,7 @@ pub(crate) struct ValidPointerSet {
     /// order. On `json_pipeline` 500k the shadow cost **245.5 ms of a 748.3 ms
     /// full collection** (`phase_us.build_valid_pointer_set`), 12.6% of the
     /// `build_out` phase, and ~40 MB of transient peak heap (#7592).
-    pub(super) arena_runs: Vec<Vec<usize>>,
+    pub(super) arena_runs: Vec<ArenaPointerRun>,
     /// `arena_runs[i].first()`, mirrored into one contiguous vector so the
     /// run-level binary search reads 8-byte fences instead of chasing a
     /// `Vec` header per probe. At 500k `json_pipeline` records this is ~4k
@@ -181,7 +279,7 @@ impl ValidPointerSet {
             .current_arena_run
             .last()
             .copied()
-            .or_else(|| self.arena_runs.last().and_then(|run| run.last()).copied())
+            .or_else(|| self.arena_runs.last().map(ArenaPointerRun::last))
         {
             debug_assert!(previous <= ptr);
         }
@@ -234,9 +332,9 @@ impl ValidPointerSet {
         }
         let sealed = std::mem::take(&mut self.current_arena_run);
         // Non-empty by the guard above, so the fence mirror stays index-aligned
-        // with `arena_runs` — `arena_run_firsts[i] == arena_runs[i][0]`.
+        // with `arena_runs` — `arena_run_firsts[i] == arena_runs[i].first()`.
         self.arena_run_firsts.push(sealed[0]);
-        self.arena_runs.push(sealed);
+        self.arena_runs.push(ArenaPointerRun::seal(sealed));
     }
 
     /// Cheap O(1) range-rejection prefilter. Most stack words and
@@ -270,7 +368,7 @@ impl ValidPointerSet {
             return false;
         }
         // Exact lookup. Arena starts answer from the address-ordered census
-        // runs (a floor lookup that lands ON the query is membership); only
+        // runs (a bitmap bit or exact sorted-list hit is membership); only
         // malloc-tracked starts, which have no usable order, need the B-tree.
         // Arena first because arena hits dominate every workload that reaches
         // here — a malloc pointer pays one extra run-level binary search.
@@ -326,8 +424,8 @@ impl ValidPointerSet {
         }
     }
 
-    /// Exact arena membership: the census runs are address-ordered, so `ptr`
-    /// was censused iff its floor is itself.
+    /// Exact arena membership: choose the address-ordered run, then query
+    /// its bitmap or sorted list. Both encode precisely the censused starts.
     ///
     /// **Load-bearing ordering requirement, which the `BTreeSet` this replaced
     /// did not have.** The B-tree was complete after every `push_arena`, so a
@@ -353,7 +451,8 @@ impl ValidPointerSet {
              {} censused starts are invisible to this lookup",
             self.current_arena_run.len()
         );
-        self.find_arena_floor(ptr) == Some(ptr)
+        let idx = self.arena_run_firsts.partition_point(|&first| first <= ptr);
+        idx != 0 && self.arena_runs[idx - 1].contains(ptr)
     }
 
     fn find_arena_floor(&self, ptr: usize) -> Option<usize> {
@@ -361,7 +460,7 @@ impl ValidPointerSet {
         if idx == 0 {
             return None;
         }
-        Self::find_floor(&self.arena_runs[idx - 1], ptr)
+        self.arena_runs[idx - 1].floor(ptr)
     }
 
     pub(super) fn find_floor(sorted: &[usize], ptr: usize) -> Option<usize> {

@@ -513,7 +513,13 @@ pub(super) struct CipherState {
 
 #[inline]
 pub(super) fn nanbox_pointer_f64(ptr: usize) -> f64 {
-    f64::from_bits(0x7FFD_0000_0000_0000u64 | ((ptr as u64) & 0x0000_FFFF_FFFF_FFFF))
+    if ptr != 0
+        && ptr < perry_runtime::value::addr_class::COMMON_HANDLE_BAND_END
+    {
+        crate::common::nanbox_handle_value(ptr as i64)
+    } else {
+        f64::from_bits(0x7FFD_0000_0000_0000u64 | ((ptr as u64) & 0x0000_FFFF_FFFF_FFFF))
+    }
 }
 
 #[inline]

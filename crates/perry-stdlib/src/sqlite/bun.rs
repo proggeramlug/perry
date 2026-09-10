@@ -199,7 +199,7 @@ pub unsafe extern "C" fn js_bun_sqlite_statement_safe_integers(
     }
     stmt.read_bigints
         .store(enabled.to_bool(), Ordering::Relaxed);
-    js_nanbox_pointer(stmt_handle)
+    crate::common::nanbox_handle_value(stmt_handle)
 }
 
 #[no_mangle]

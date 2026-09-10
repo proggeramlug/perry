@@ -277,7 +277,7 @@ pub unsafe extern "C" fn js_ext_http_server_dispatch_method(
     let is_h2 = get_handle::<Http2SecureServer>(handle).is_some();
     // Server re-boxed as POINTER_TAG so chained calls (`server.on(...).on(...)`,
     // `server.listen(...).address()`) keep flowing through this same dispatcher.
-    let self_ref = f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK));
+    let self_ref = perry_ffi::canonical_handle_value(handle);
 
     match method.as_str() {
         "listen" => {
@@ -1330,7 +1330,7 @@ unsafe fn args_slice<'a>(args_ptr: *const f64, args_len: usize) -> &'a [f64] {
 
 #[inline]
 fn handle_to_pointer_f64(handle: i64) -> f64 {
-    f64::from_bits(POINTER_TAG | (handle as u64 & PTR_MASK))
+    perry_ffi::canonical_handle_value(handle)
 }
 
 #[inline]
