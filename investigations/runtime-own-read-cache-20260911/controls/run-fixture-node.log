@@ -1,0 +1,14 @@
+data 7 7
+updated 8
+getter 91 92 2
+data-again 12 12
+inherited 44
+readded 15
+wide 23 23
+churn 79 71
+proxy 15 15 2
+elements 31 31
+element-update 32
+string a b
+frozen 18 18
+allocations 15

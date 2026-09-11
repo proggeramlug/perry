@@ -1,0 +1,53 @@
+{
+  "status": "complete",
+  "binary": {
+    "control": {
+      "sha256": "5560e04fe7016923d098ea70d254cb8edd3252c9973282aca40ff62d3415bf97",
+      "sections": {
+        ".text": {
+          "address": 3916992,
+          "offset": 3916992,
+          "bytes": 302634802,
+          "sha256": "8d4be9113b2333d6fe8df93ad07a07456198caa06fa9fe904953604115fbe82b"
+        },
+        ".perry_gcmap": {
+          "address": 355833696,
+          "offset": 355833696,
+          "bytes": 24009616,
+          "sha256": "2107ca98c8f2fd20ca770a04e1497b5ea7868033e81d7cfb0c40e703f8a309bd"
+        }
+      },
+      "getter": {
+        "address": 294170144,
+        "bytes": 15891,
+        "sha256": "2c314b31fb2b6ec73fe055d35f3fc0d9f9d7dce1f75e672e966ded1acece89b0",
+        "disassembly_sha256": "bf212a8dc4c7dbb12b75c01367a66459cdbb0d110b19938ebe042468305c8786"
+      },
+      "test_counter_present": false
+    },
+    "candidate": {
+      "sha256": "42bfb149007b5c79d11b11d6acb7ad16008932945a78efe700c19bec9d3e513a",
+      "sections": {
+        ".text": {
+          "address": 3916992,
+          "offset": 3916992,
+          "bytes": 302636530,
+          "sha256": "4a06e1970ae28de2d6a0610c2c6609589c481fa65f93e58d6e37aae0814d25ec"
+        },
+        ".perry_gcmap": {
+          "address": 355837856,
+          "offset": 355837856,
+          "bytes": 24009616,
+          "sha256": "2107ca98c8f2fd20ca770a04e1497b5ea7868033e81d7cfb0c40e703f8a309bd"
+        }
+      },
+      "getter": {
+        "address": 294171712,
+        "bytes": 16055,
+        "sha256": "f3209504cdb5f94158ecd6ad59c6663ad46196bd8a8d9b7db2f350528911cfc8",
+        "disassembly_sha256": "5a6cfa7b82f099ac4a223e3661b3ff3660d0f158c76211bfb0581bf9a0088f93"
+      },
+      "test_counter_present": false
+    }
+  }
+}

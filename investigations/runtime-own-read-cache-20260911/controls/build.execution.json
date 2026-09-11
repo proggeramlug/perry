@@ -1,0 +1,23 @@
+{
+  "status": "complete",
+  "owner": "cc-own-read-cache-build-v1 3758099",
+  "pid": 3758099,
+  "pair": {
+    "control": {
+      "path": "/root/cc-perf-native-recv-0909/property-key-dispatch-20260911/cc-control",
+      "sha256": "5560e04fe7016923d098ea70d254cb8edd3252c9973282aca40ff62d3415bf97",
+      "bytes": 438563920,
+      "fixture_sha256": "ffdd502cf1a13ac1356e2df855994f7c6f2b4cc2c35bfc29d6fdf0560cae9682",
+      "fixture_output_sha256": "f6b69b6750d39c6936ed6a6e46abae28515d3c6a39659251da240065e855421f"
+    },
+    "candidate": {
+      "path": "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911/cc-candidate",
+      "sha256": "42bfb149007b5c79d11b11d6acb7ad16008932945a78efe700c19bec9d3e513a",
+      "bytes": 438569928,
+      "fixture_sha256": "64a1ee1de4057e4001ce8c33dfdf91aee20a73d2f4a91a0e6067b67ba9e0ddd1",
+      "fixture_output_sha256": "f6b69b6750d39c6936ed6a6e46abae28515d3c6a39659251da240065e855421f"
+    }
+  },
+  "compiler_sha256": "d4d3f4678374fb3d452b5d5e55dad6b0c27e242d2037395dd3081e601d1929c5",
+  "source_receipt_sha256": "fe30b7ebd905b56db31e516b29871a03a32b0c456261c005226d46ab223af935"
+}

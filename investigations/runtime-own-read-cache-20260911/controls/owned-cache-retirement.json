@@ -1,0 +1,7 @@
+{
+  "path": "/root/cc-perf-native-recv-0909/plain-object-census-20260911/target",
+  "apparent_bytes": 8795747079,
+  "free_before": 28709838848,
+  "free_after": 37565444096,
+  "preserved": "source, binary, scripts and sealed evidence; original control archives untouched"
+}

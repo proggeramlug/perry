@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911/analyze_pair_v2.py",
+    "--raw",
+    "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911",
+    "--out",
+    "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911/results-v2"
+  ],
+  "exit_code": 0,
+  "owner": "cc-own-read-cache-finish-v1 3763455"
+}

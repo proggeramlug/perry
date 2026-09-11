@@ -1,0 +1,72 @@
+   Compiling perry-runtime v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-runtime)
+warning: unused imports: `POINTER_TAG` and `PTR_MASK`
+  --> crates/perry-ext-http/src/server/http2_server/dispatch.rs:12:73
+   |
+12 |     jsvalue_to_body_bytes, jsvalue_to_owned_string, read_string_header, POINTER_TAG, PTR_MASK,
+   |                                                                         ^^^^^^^^^^^  ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `POINTER_TAG`
+   --> crates/perry-ext-http/src/server/https_server.rs:139:80
+    |
+139 |     extract_host, extract_port, js_promise_run_microtasks, read_string_header, POINTER_TAG,
+    |                                                                                ^^^^^^^^^^^
+
+warning: `perry-ext-http` (lib) generated 2 warnings (run `cargo fix --lib -p perry-ext-http` to apply 2 suggestions)
+warning: unused import: `js_object_get_field`
+  --> crates/perry-runtime/src/array/iter_object.rs:28:38
+   |
+28 | use crate::object::{js_object_alloc, js_object_get_field, js_object_set_field, ObjectHeader};
+   |                                      ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::marker::PhantomData`
+  --> crates/perry-runtime/src/gc/mod.rs:29:5
+   |
+29 | use std::marker::PhantomData;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `first` is never used
+   --> crates/perry-runtime/src/gc/trace.rs:129:19
+    |
+105 | impl ArenaPointerRun {
+    | -------------------- method in this implementation
+...
+129 |     pub(super) fn first(&self) -> usize {
+    |                   ^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `perry-runtime` (lib) generated 3 warnings (run `cargo fix --lib -p perry-runtime` to apply 2 suggestions)
+   Compiling perry-updater v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-updater)
+   Compiling perry-ext-node-forge v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-ext-node-forge)
+   Compiling perry-ext-undici v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-ext-undici)
+   Compiling perry-runtime-static v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-runtime-static)
+   Compiling perry-stdlib v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-stdlib)
+warning: unused import: `perry_runtime::js_nanbox_pointer`
+   --> crates/perry-stdlib/src/common/dispatch/sqlite.rs:106:9
+    |
+106 |     use perry_runtime::js_nanbox_pointer;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `perry_runtime::js_nanbox_pointer`
+  --> crates/perry-stdlib/src/events/domain.rs:10:5
+   |
+10 | use perry_runtime::js_nanbox_pointer;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `js_nanbox_pointer`
+  --> crates/perry-stdlib/src/sqlite/bun.rs:10:5
+   |
+10 |     js_nanbox_pointer, js_string_from_bytes, ArrayHeader, JSValue, ObjectHeader, StringHeader,
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: `perry-stdlib` (lib) generated 3 warnings (run `cargo fix --lib -p perry-stdlib` to apply 3 suggestions)
+   Compiling perry-stdlib-static v0.5.1520 (/root/worktrees/cc-own-read-cache-0911/crates/perry-stdlib-static)
+    Finished `release` profile [optimized] target(s) in 3m 07s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1, redis v1.6.0
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

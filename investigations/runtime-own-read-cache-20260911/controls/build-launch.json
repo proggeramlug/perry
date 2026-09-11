@@ -1,0 +1,11 @@
+{
+  "pid": 3758099,
+  "start_ticks": 124709773,
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911/build_v1.py"
+  ],
+  "cwd": "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911",
+  "exe": "/usr/bin/python3.12"
+}
