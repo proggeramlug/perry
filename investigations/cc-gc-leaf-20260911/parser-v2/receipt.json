@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "cause": "LLVM doubled-backslash string escapes were not admitted by the quoted-string lexer, so alias text inside one string was wrongly read as an alias record.",
+  "prior_analyzer_sha256": "e8e1db299146218d430ecc8d57d9190aed4796928d74de74da80f63004772df5",
+  "files": {
+    "callsite_census.py": {
+      "sha256": "d38dbe1a61d4028baeb7d216494eb0917bbb0c9a48e15dec731550b519ee9901",
+      "bytes": 41328
+    },
+    "test_callsite_census.py": {
+      "sha256": "ee90d725b86f633942b82df4845dda15c494ecee52c417dfc9cd6fdc65975fc4",
+      "bytes": 12906
+    },
+    "test_llvm_escapes.py": {
+      "sha256": "9c09d9ccce81ea04f0c9279f5fa1ceccf1d82c1cf7ba00f567d09cfc27dd0947",
+      "bytes": 1690
+    },
+    "tests.log": {
+      "sha256": "f91631574f941f068e3b35f220512f458294c63b85f9a261dea567f0137b4754",
+      "bytes": 1808
+    },
+    "correction.patch": {
+      "sha256": "7f389dc7b116f8d895ba90fdddf34bba2caebaf2cc820113a89572014c201bd4",
+      "bytes": 2795
+    }
+  },
+  "tests": {
+    "passed": 11,
+    "counterfactual": "The frozen parser rejects the same minimal doubled-backslash constant string; the corrected parser finds zero aliases and one actual definition."
+  },
+  "limits": [
+    "No compiler or runtime edits.",
+    "The comment-free fast case returns the identical stripped line and changes no parser predicates.",
+    "Actual full-capture rerun remains pending."
+  ]
+}

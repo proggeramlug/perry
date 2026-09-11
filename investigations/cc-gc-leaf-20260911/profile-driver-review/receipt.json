@@ -1,0 +1,42 @@
+{
+  "profile_sha256": "0b1077fb6c5422eb7164e9f793dad462379ce7f3e7d08e8650b1d171a391321e",
+  "original_sha256": "88cfcf5ae5ddfa6569027045fb4aab619f2dbbcea57be773c69d232a4fc3b3c3",
+  "selftest": {
+    "pass": true,
+    "controls": [
+      "final-package_seen",
+      "final-source_seen",
+      "final-tool_result_blocks",
+      "final-any_tool_error",
+      "final-request_ordinal",
+      "partial-main-requests",
+      "source-before-second-Read",
+      "owner-pid",
+      "owner-start_ticks",
+      "owner-exe",
+      "owner-cwd",
+      "owner-argv",
+      "verified-timeout-escalation",
+      "changed-owner-before-escalation",
+      "wrong-owner-no-first-signal",
+      "pre-exec-and-app-cleanup-identities",
+      "constructor-enable-failure",
+      "constructor-failure-cleanup-and-receipt",
+      "disable-timeout-retained",
+      "stop-idempotence-after-error",
+      "exact-insertion-literal-newline-and-two-Read-evidence"
+    ],
+    "real_processes_launched": 0
+  },
+  "preserved_ast": [
+    "PACKAGE",
+    "CODE",
+    "PROMPT",
+    "ANSWER",
+    "PIN",
+    "script",
+    "observed_mock",
+    "prepare_fixture"
+  ],
+  "scope": "Only profile_workload.py changed; offline mocked controls only; no real fork/exec/signals, cc, perf, Cargo, box jobs or compiler changes."
+}

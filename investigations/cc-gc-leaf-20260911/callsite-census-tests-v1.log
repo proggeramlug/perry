@@ -1,0 +1,13 @@
+test_actual_statepoint_third_argument_and_relocate_tokens (test_callsite_census.CensusTests.test_actual_statepoint_third_argument_and_relocate_tokens) ... ok
+test_changed_record_malformed_completion_and_all_failed_are_not_zero (test_callsite_census.CensusTests.test_changed_record_malformed_completion_and_all_failed_are_not_zero) ... ok
+test_complete_attempts_only_ranking_and_already_annotated_split (test_callsite_census.CensusTests.test_complete_attempts_only_ranking_and_already_annotated_split) ... ok
+test_direct_indirect_invoke_alias_attributes_and_asm_are_disjoint (test_callsite_census.CensusTests.test_direct_indirect_invoke_alias_attributes_and_asm_are_disjoint) ... ok
+test_exact_dispatch_ledger_and_unknown_relocate_rejection (test_callsite_census.CensusTests.test_exact_dispatch_ledger_and_unknown_relocate_rejection) ... ok
+test_fixed_point_scopes_recursion_and_collecting_exit (test_callsite_census.CensusTests.test_fixed_point_scopes_recursion_and_collecting_exit) ... ok
+test_missing_attributes_unsupported_targets_and_truncation_reject (test_callsite_census.CensusTests.test_missing_attributes_unsupported_targets_and_truncation_reject) ... ok
+test_shadow_and_unobserved_are_not_conflated (test_callsite_census.CensusTests.test_shadow_and_unobserved_are_not_conflated) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.033s
+
+OK

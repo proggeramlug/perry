@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+    "script",
+    "--ns",
+    "-i",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/profile.data",
+    "-F",
+    "pid,tid,time,event,ip,sym,symoff,dso,period"
+  ],
+  "started_ns": 1789129927175880090,
+  "exit": 0,
+  "stdout_sha256": "8a5e3b3858e5b6f9e3f7e1befd440532c7423c7bcc39a9a35bbf712a84ef5eba"
+}

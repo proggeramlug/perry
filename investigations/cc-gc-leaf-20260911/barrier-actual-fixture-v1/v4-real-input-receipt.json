@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "scope": "real emitted IR observer liveness; counterfactual text analysis, no native execution",
+  "admitted_functions": 18,
+  "excluded_functions": 0,
+  "explicit_barrier_sites": 5,
+  "original_fresh_origin_sites": 2,
+  "collecting_arm_fresh_origin_sites": 1,
+  "extra_48_sites": 0,
+  "lost_function": "perry_fn_diagnostic_fixture_ts__exercise$spec_i32",
+  "files": [
+    {
+      "path": "barrier-actual-fixture-v1/pre-rs4gc.ll",
+      "bytes": 265015,
+      "sha256": "1fb2ecc2ba6d144083603618176d9e065deef945d7bdd7030dbd54bcc00ecb3e"
+    },
+    {
+      "path": "audit-v2/helper-audit.csv",
+      "bytes": 1092372,
+      "sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27"
+    },
+    {
+      "path": "barrier_actual_fixture_check.py",
+      "bytes": 4427,
+      "sha256": "e04d12520f6ffe64442cc7d6fc619bf5129800306d1b769588182e578e72d9fe"
+    },
+    {
+      "path": "fresh_barrier_census_v4.py",
+      "bytes": 19641,
+      "sha256": "7b56e80eed169048a668571f4e767ac42449c35346df48310d5efb81afb8bba8"
+    },
+    {
+      "path": "fresh_barrier_batch_v4.py",
+      "bytes": 12241,
+      "sha256": "704760083ed620be09fd7713df91dd902b189d08ea68e88fdda1b3890ee5f92d"
+    },
+    {
+      "path": "barrier-actual-fixture-v1/counterfactual-collecting-arm.ll",
+      "bytes": 265105,
+      "sha256": "16a749b779ca8a4f3034c58e530fe892979b1e64859a45d7b8cae603ad2d5a79"
+    },
+    {
+      "path": "barrier-actual-fixture-v1/observed-v4-original.json",
+      "bytes": 16487,
+      "sha256": "3f81be891400caf8dbc1c33399f644cb1ffd00cf49fe983f9145055958a59113"
+    },
+    {
+      "path": "barrier-actual-fixture-v1/observed-v4-collecting-arm.json",
+      "bytes": 16021,
+      "sha256": "c29dc7c377a38d37a9decec43f50def6f0d36153d98219bf582ecc1aa4754059"
+    }
+  ],
+  "limits": [
+    "static reachable sites, not dynamically executed barriers",
+    "allocation generation/publication remains unknown",
+    "no claim that generational, incremental, or layout work can be removed"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "complete",
+  "files": [
+    {
+      "input": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/fixture-on-bitcode/pid-3681148-attempt-0/pre-rs4gc.bc",
+      "input_sha256": "052c2b434eb39c8c5b4a8bc16acae91cf393bda6293377dc83a04b81f29482b4",
+      "output": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/fixture-ir-text-v1/pid-3681148-attempt-0-pre-rs4gc.ll",
+      "output_sha256": "1fb2ecc2ba6d144083603618176d9e065deef945d7bdd7030dbd54bcc00ecb3e"
+    }
+  ]
+}

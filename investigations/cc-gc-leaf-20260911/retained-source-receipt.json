@@ -1,0 +1,810 @@
+{
+  "kind": "segments_projection_candidate",
+  "parent_receipt_sha256": "36786b0a655f7189cfdffac5bebad1b4923bde4aade2971db1a52b9c3dcfe9a9",
+  "private_base": "f09f7db0fc684553dd4c0f736765d29328441dcc",
+  "patch_sha256": "a317db60d2719571a1fbd12948b1869a5d941f351b76277b88dcc9b64a31094c",
+  "changed_paths": [
+    "changelog.d/unreleased-guarded-segment-projection.md",
+    "changelog.d/unreleased-regexp-test-dispatch.md",
+    "crates/perry-codegen/src/collectors/mod.rs",
+    "crates/perry-codegen/src/collectors/segments_project.rs",
+    "crates/perry-codegen/src/collectors/segments_project_tests.rs",
+    "crates/perry-codegen/src/collectors/segview.rs",
+    "crates/perry-codegen/src/lib.rs",
+    "crates/perry-codegen/src/runtime_decls/strings.rs",
+    "crates/perry-runtime/src/array/iter_object.rs",
+    "crates/perry-runtime/src/array/mod.rs",
+    "crates/perry-runtime/src/intl.rs",
+    "crates/perry-runtime/src/intl/segments_project.rs",
+    "crates/perry-runtime/src/intl/segments_project_tests.rs",
+    "crates/perry-runtime/src/object/iterator_prototypes.rs",
+    "crates/perry-runtime/src/object/native_call_method.rs",
+    "crates/perry-runtime/src/object/native_call_method/regexp_test.rs",
+    "crates/perry-runtime/src/object/native_call_method/regexp_test_tests.rs",
+    "crates/perry-runtime/src/object/regex_proto_thunks.rs",
+    "crates/perry/src/commands/compile/build_cache.rs",
+    "crates/perry/src/commands/compile/run_pipeline.rs"
+  ],
+  "files": [
+    {
+      "path": "changelog.d/unreleased-guarded-segment-projection.md",
+      "sha256": "b88c568affdf09eae4754db3cbba7f3762925132914f313d1b2f46e3c0d311fd",
+      "size": 830
+    },
+    {
+      "path": "changelog.d/unreleased-regexp-test-dispatch.md",
+      "sha256": "08eb857b037892f5664295cc39d79ce80ab535323088fbd4458ce9bd8404ebb8",
+      "size": 542
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/mod.rs",
+      "sha256": "1ddf9e2f5fcf8bbe1747574be8faf8cbb9daf7b8c34aef5979619ec542050243",
+      "size": 5267
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/segments_project.rs",
+      "sha256": "b38d18c425273c28974788af2598215d7d1c13080d82bad1b2cc6bb263236d1a",
+      "size": 20131
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/segments_project_tests.rs",
+      "sha256": "c6e942d3caec6303773d764dc359a595321efe4780459101d789cc4f554c5443",
+      "size": 13888
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/segview.rs",
+      "sha256": "b95185e8cd2e9ea5ce791d8cdea6f3e5a947664ce86cfbc8c380ff3d45b7cee7",
+      "size": 66376
+    },
+    {
+      "path": "crates/perry-codegen/src/expr/call_spread.rs",
+      "sha256": "2650b10577802e37fa0f6e8395704198f51816e8e2fbaf10bba012028702e8ac",
+      "size": 32604
+    },
+    {
+      "path": "crates/perry-codegen/src/expr/dyn_extern_i18n.rs",
+      "sha256": "b0be67badeb20b11b83f93b225ddd44e35011fcfd5ac1dcbc0279551410c56dd",
+      "size": 56537
+    },
+    {
+      "path": "crates/perry-codegen/src/expr/env_clones.rs",
+      "sha256": "4cb15860b1bcb3822f1ad9750347209147486195f4edcfd0a05b59e2db568de3",
+      "size": 20330
+    },
+    {
+      "path": "crates/perry-codegen/src/expr/index_get.rs",
+      "sha256": "a3d4ba1534e558c9ec801e7afb51231f5a9684303e109217572841225b85ae17",
+      "size": 100816
+    },
+    {
+      "path": "crates/perry-codegen/src/expr/property_get.rs",
+      "sha256": "b3fc6c9e87dc2084e81c5074b903aee82cc342e6c39323b249e764ed968c5ca4",
+      "size": 107211
+    },
+    {
+      "path": "crates/perry-codegen/src/expr/static_method.rs",
+      "sha256": "f3960c3dba0d7dbca5c2e29a77a2b5730fee0441b5aff7349382c430fd291d5e",
+      "size": 29067
+    },
+    {
+      "path": "crates/perry-codegen/src/lib.rs",
+      "sha256": "0ec2f1897ff67a377ba746aa7407d5a9528856565495a9a32f4289e38c169123",
+      "size": 11516
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/builtin.rs",
+      "sha256": "f85599d7d803f10dfa8e5c57b402ba25653ac8bc98cc91c7b180e8ee2d4a1672",
+      "size": 90950
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_module_dispatch.rs",
+      "sha256": "396b956c7c2ab45fafcb0d6a0d491b71a21f13a0a771760b0f498b3b6f553b4d",
+      "size": 22343
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/async_decimal.rs",
+      "sha256": "da3b0ea8081b6b661b1142d5a6c409c1a4608196bf0f951058d3d5c0e1c072c8",
+      "size": 12173
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/bun.rs",
+      "sha256": "bdb14bf7a43af96f57ada6305c7fe0dd9eba8d9f02d06d2db184b348ab61605e",
+      "size": 7697
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/databases.rs",
+      "sha256": "2aea1e44d08ac78b9c51954949047fc857ed467c7f47ee3ee3042890f96e9be8",
+      "size": 38613
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/fastify.rs",
+      "sha256": "4267f06b4b66dc0d7538731069ab7cfa10162b934515532eaa4e6f78443bb0f1",
+      "size": 12670
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/http_client.rs",
+      "sha256": "f6aac8948a4d1e1ea51b138bc327b49648272af43f60ea5ffadc0f2d21691f30",
+      "size": 22089
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/http_http2.rs",
+      "sha256": "08333edb049da217a65a2fad7f349f4544639f1eeb6b886bca4be67f51ae9638",
+      "size": 6193
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/http_server.rs",
+      "sha256": "081d897b3456a729910ee5d9c92c66dc8eff7da2c8ac3c6dc7c95f8aac6d3436",
+      "size": 41782
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/media.rs",
+      "sha256": "5926f28ee13dab03abcb0d71d462161b9a921396253e11e6ecfd4fce4812d8c6",
+      "size": 21023
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/mod.rs",
+      "sha256": "9e159c0afe0ddca5e7f794b4fe812f10e7fa91d7261dee972419016d2ce20c4d",
+      "size": 13981
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/net_classes_state.rs",
+      "sha256": "0fd24a020506cea1388fe07f90e7ced25b71019559305394db476e8c26c58f3d",
+      "size": 5508
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/net_events.rs",
+      "sha256": "db3eb32c23f157a6ec187fbcecf81ca92eced5647baa41eeba6199fb48fa672f",
+      "size": 59404
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/node_domain.rs",
+      "sha256": "817f83b06f39a0c09aec421698308842478aadec8f35ab8f1af8b4ae2cd5ffa2",
+      "size": 3069
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/node_misc.rs",
+      "sha256": "a663ca8db5a5813bebbb0ef2f46af68d7cfbb6014ba91a481a8aed31b1787a3f",
+      "size": 13314
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/undici.rs",
+      "sha256": "5808a9e2d2b780fddddf2f913ac463a43d887d80e0b764635bd0ba3e8a68bd83",
+      "size": 3811
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/utils_crypto.rs",
+      "sha256": "a667750661e75087cd50eeefa8513ca28c0b8232a3eaa98410fa8e21c46bd055",
+      "size": 13388
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_call/native_table/ws_events.rs",
+      "sha256": "18eba1f607d1ac9f59f7d344cfdfe59af6a660b0e19e5bed4859777df068bc88",
+      "size": 5505
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_conditional.rs",
+      "sha256": "194ab28f9b366c7b86774cef27c71e33727fe2bf19a91e338861c31c7d9ce3e6",
+      "size": 16703
+    },
+    {
+      "path": "crates/perry-codegen/src/lower_conditional/number_range_union.rs",
+      "sha256": "356f4adb73467feab9baaa498b07cf40b92d996fc95432f9cdb6c2b983b56d2c",
+      "size": 9219
+    },
+    {
+      "path": "crates/perry-codegen/src/runtime_decls/mod.rs",
+      "sha256": "f01d57407f66f9418071583d13fc1f81d656e7f87e4025171d15a1754792894a",
+      "size": 14672
+    },
+    {
+      "path": "crates/perry-codegen/src/runtime_decls/strings.rs",
+      "sha256": "b9cb96b9076b1219dec8a5e3b896876019a24b67d8011967291d5bb6b3baa06b",
+      "size": 105842
+    },
+    {
+      "path": "crates/perry-ext-axios/src/lib.rs",
+      "sha256": "b9019ef5a90c8d3cd6592a721ef9c551c24c6017f9107bf539378d0a1ff250e8",
+      "size": 13378
+    },
+    {
+      "path": "crates/perry-ext-decimal/src/lib.rs",
+      "sha256": "370e307758557b5e56c5bc6832e94f5cb90616885945abae85002a544eb21072",
+      "size": 13983
+    },
+    {
+      "path": "crates/perry-ext-events/src/lib.rs",
+      "sha256": "78a20f0d652b9f7d3bca60e7902fdf0dd2d04053d53bb55a672de1d0460ad94c",
+      "size": 74039
+    },
+    {
+      "path": "crates/perry-ext-events/src/max_listeners.rs",
+      "sha256": "31b0b8d196fb348e9292f29bc18884b8ff8c476a3211c2ebac4d645d9d564f5d",
+      "size": 4652
+    },
+    {
+      "path": "crates/perry-ext-events/src/module_helpers.rs",
+      "sha256": "c29d172259551b108a9b608fe64975960f91e26bbe396c6f52386ca1265ea261",
+      "size": 10117
+    },
+    {
+      "path": "crates/perry-ext-events/src/module_iterators.rs",
+      "sha256": "e9c2f6879352ae3843822c4c7054b03ad565842a3b68448aad736abddc17fa98",
+      "size": 20651
+    },
+    {
+      "path": "crates/perry-ext-fastify/src/app.rs",
+      "sha256": "28f5e2472ecdca774c15bad4b52d59b1fc0af326bb1c50826391503ecc1f8f58",
+      "size": 23468
+    },
+    {
+      "path": "crates/perry-ext-fastify/src/server.rs",
+      "sha256": "6de54e33cd14e345cbc404d795117372b2846506b78b92cdac7314da4e8f5b1e",
+      "size": 75017
+    },
+    {
+      "path": "crates/perry-ext-fastify/src/upgrade.rs",
+      "sha256": "0067655de4ce2f4a63632813db04af938c74138971e15e864cddca777591fd14",
+      "size": 7320
+    },
+    {
+      "path": "crates/perry-ext-http/src/agent.rs",
+      "sha256": "8e2461f5dcf99ac8f89cb0416da2d29aa3cb53f47025ce64a98984f6a1dc098b",
+      "size": 73820
+    },
+    {
+      "path": "crates/perry-ext-http/src/client_request_surface.rs",
+      "sha256": "6f417b115ccfcea43ec1e2b4a62fe4f04486784d2603bec71ea7fa216fbd82a8",
+      "size": 30812
+    },
+    {
+      "path": "crates/perry-ext-http/src/client_surface.rs",
+      "sha256": "edefddac12ed3c3ce3bf2d58bf3a3cb076326874e5254234d998f40abd04a8eb",
+      "size": 12147
+    },
+    {
+      "path": "crates/perry-ext-http/src/lib.rs",
+      "sha256": "c1f0b76803fe0f517d527a0af8d26bdfe4e6c03a098f1c75a2a3f10d3880ca4e",
+      "size": 76692
+    },
+    {
+      "path": "crates/perry-ext-http/src/server/handle_dispatch.rs",
+      "sha256": "192b577f87f465dc220edaedd51eb7f1f51e8fa9de98593a4d8ac40ab7964377",
+      "size": 64827
+    },
+    {
+      "path": "crates/perry-ext-http/src/server/http2_server/dispatch.rs",
+      "sha256": "46c684121b43c301c406429a9f631dfbd48c5415ae2c492c230e53a3a1a805a8",
+      "size": 13675
+    },
+    {
+      "path": "crates/perry-ext-http/src/server/https_server.rs",
+      "sha256": "c41beba93e498aa817f5ec93ae2c032b32d2bc17eb4fe447c6ba2381c11c479e",
+      "size": 48824
+    },
+    {
+      "path": "crates/perry-ext-http/src/server/request.rs",
+      "sha256": "5a8c887f85715978e17908e5ae54028251216e631bab9681be640526bacc31ae",
+      "size": 47641
+    },
+    {
+      "path": "crates/perry-ext-http/src/server/upgrade.rs",
+      "sha256": "046aa59640c6f9d8bae89b6e173915e59afe90c1bb94829a929b8ae99fe4a630",
+      "size": 5122
+    },
+    {
+      "path": "crates/perry-ext-http/src/tests.rs",
+      "sha256": "a5be5af4385ccad66169b4b4b2c7d3f497a14a7f02b81e0a596ea5830a1895e1",
+      "size": 20275
+    },
+    {
+      "path": "crates/perry-ext-mysql2/src/lib.rs",
+      "sha256": "f1f294a726989fff28044b8ac03dd50e7d6d68a8225bb73a9978022e2b5bac68",
+      "size": 72872
+    },
+    {
+      "path": "crates/perry-ext-net/src/bun_tcp.rs",
+      "sha256": "a4899375312eeb16ad4d3dcd913009a87530295db320c68e112f2ad8d3a157e5",
+      "size": 32975
+    },
+    {
+      "path": "crates/perry-ext-net/src/classes.rs",
+      "sha256": "82ce5d11409887bffb26c211990a0439afe95959c42f0b965d783e9d897a359e",
+      "size": 12935
+    },
+    {
+      "path": "crates/perry-ext-net/src/dispatch.rs",
+      "sha256": "c2b1203b6f6cab970036f9e8529997130f28f667e6ff5a74aa126cb53c5473f1",
+      "size": 24906
+    },
+    {
+      "path": "crates/perry-ext-net/src/socket_events.rs",
+      "sha256": "aed2be71b456a045bd7a080159adfe7faf09978a6fd9027f09a6091b0bcf1adc",
+      "size": 20836
+    },
+    {
+      "path": "crates/perry-ext-ws/src/dispatch.rs",
+      "sha256": "fe64db23916ae78d8c45d9412dca7cced456001ed83631ae1a017c53b6761fd0",
+      "size": 3684
+    },
+    {
+      "path": "crates/perry-ext-ws/src/lib.rs",
+      "sha256": "37826ba6aa2cd3b88ff1d37469e7382b66bb209293c2fa864e8ed9eceb4c1620",
+      "size": 59022
+    },
+    {
+      "path": "crates/perry-ext-ws/src/server.rs",
+      "sha256": "1747824d8c1f873d5e42c228cac593580f3eaf597c23df554bd87ee34fc7d657",
+      "size": 13109
+    },
+    {
+      "path": "crates/perry-ffi/src/handle.rs",
+      "sha256": "bd21e2bbdc3b9e1fb5867c9cad31861f2e1887d57aaf0fe9ed82a0292bada518",
+      "size": 70472
+    },
+    {
+      "path": "crates/perry-ffi/src/lib.rs",
+      "sha256": "c7635fef94af2b7e2101efb5474e69166d449dba65a4540e952190df9ad8500a",
+      "size": 14417
+    },
+    {
+      "path": "crates/perry-runtime/src/array/iter_object.rs",
+      "sha256": "87e4eccc1f89c18c02529e9b58ab0e488ea45ab65aee0b82ae019f210dfc7e62",
+      "size": 44051
+    },
+    {
+      "path": "crates/perry-runtime/src/array/mod.rs",
+      "sha256": "594da224ba7a30eb193cadea5648d556766f5496f9f8e8ec7295d1af6dfebbae",
+      "size": 12956
+    },
+    {
+      "path": "crates/perry-runtime/src/async_hooks.rs",
+      "sha256": "879f7f4f8bb019bdbbf024272f22ecdea20eb8fc8a4fd8d08d18621d4c753ac7",
+      "size": 72503
+    },
+    {
+      "path": "crates/perry-runtime/src/buffer/header.rs",
+      "sha256": "811ca5ad0cbe9442a6d4db6a9994ce8c6d87be08ffd5991d3a49640478082f48",
+      "size": 57879
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/dead_owner.rs",
+      "sha256": "622b7568618102315aea68c94ed8fca831426dd621cb9785babcb25678377668",
+      "size": 23788
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/mod.rs",
+      "sha256": "174ced152090872b49fffb324b1b4c26f65c79cdc4b6972e88511e8bbd66a2ae",
+      "size": 84861
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/prefetch.rs",
+      "sha256": "3d4a6ec1c6bc0d5f99cf55f031a936422e0d5e18994644de6f431ba15b5b0516",
+      "size": 4685
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/roots/runtime_handles.rs",
+      "sha256": "bbacfefe1dc987a6e5ed53e5f743f427199ec27033a33ca019eda48c6088a027",
+      "size": 21650
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/tests/cycle_state.rs",
+      "sha256": "6d68c55e40ca1a26bb2535428cbf92b8845eaf4719d91613a3b30b37d93f59c6",
+      "size": 71627
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/trace.rs",
+      "sha256": "f5f00fcbd717299e0ae8a45c476817f609baad05d44df0ab0544a7c3e733560e",
+      "size": 53915
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/types.rs",
+      "sha256": "62a0271375e427c9b5a9f3b64c8c46fb52a52d7b0b888f628769ce216ff4ab1a",
+      "size": 51744
+    },
+    {
+      "path": "crates/perry-runtime/src/hot_diag.rs",
+      "sha256": "c6e7c4bb423180911710ec7b0affa32b40d224d599b2a2006205c8f25b913249",
+      "size": 45449
+    },
+    {
+      "path": "crates/perry-runtime/src/hot_diag/receiver_repr.rs",
+      "sha256": "2cb8ec8ff4bd695ec5997fe9e024e7373e6f768ed461fd1a3523e008033d29a3",
+      "size": 20443
+    },
+    {
+      "path": "crates/perry-runtime/src/intl.rs",
+      "sha256": "2d50fb6af0908ccd67e668ebda895e411ac3c7fb1ef65420742e3908e8c8284c",
+      "size": 80365
+    },
+    {
+      "path": "crates/perry-runtime/src/intl/segmenter.rs",
+      "sha256": "676499c9c056a3e78a45d689cfe1131c53d98fdc4d9bd2ba57ce8c8b10874957",
+      "size": 22426
+    },
+    {
+      "path": "crates/perry-runtime/src/intl/segments_project.rs",
+      "sha256": "5431dc5229dc535223cb3372d2fbd2f8ab8d95e3483137e3389272c9b0f436ca",
+      "size": 14780
+    },
+    {
+      "path": "crates/perry-runtime/src/intl/segments_project_tests.rs",
+      "sha256": "e843b1c4a655215fa6d8f4f83f51f3506ac8b8bc3976c36e4c632d8dd4e8f1cd",
+      "size": 16069
+    },
+    {
+      "path": "crates/perry-runtime/src/iter_result.rs",
+      "sha256": "0ef6f6e103abc705c21ccfabcac3669a2262aff16e20a6cba4ee887dfd05a49f",
+      "size": 14319
+    },
+    {
+      "path": "crates/perry-runtime/src/native_handle.rs",
+      "sha256": "436f20e29884a3c064dc10c4dee5d5b5e51beda1eacb2237b1fc270820567eab",
+      "size": 29083
+    },
+    {
+      "path": "crates/perry-runtime/src/native_handle/canonical.rs",
+      "sha256": "59f9f5938ad465718ecf80e958b9f2dffa5a13633a0d18b1d7016b7370f7b9b1",
+      "size": 6629
+    },
+    {
+      "path": "crates/perry-runtime/src/object/class_handles.rs",
+      "sha256": "ef164ca809cc99f31d3aacaf851dbe2c9480a97c27b33a26b005e3815409dcfa",
+      "size": 29753
+    },
+    {
+      "path": "crates/perry-runtime/src/object/field_get_set.rs",
+      "sha256": "0c2a6c7ad23cf896612b254c2eb65818cd7d0edab8317ee34cec3b3c3abd1842",
+      "size": 19987
+    },
+    {
+      "path": "crates/perry-runtime/src/object/field_get_set/ic_miss.rs",
+      "sha256": "eec332e9efd24123eb69eea705afda9e6bfc908251c43162d22b5490adc66fef",
+      "size": 93091
+    },
+    {
+      "path": "crates/perry-runtime/src/object/global_fetch.rs",
+      "sha256": "2193e35a8abc7a8d45223b0c5c1e95780cc5099d85f018ec78f72e2ef239a733",
+      "size": 29356
+    },
+    {
+      "path": "crates/perry-runtime/src/object/global_this/fetch_globals.rs",
+      "sha256": "beaa346b7ecef7fa98e599495dc48c14e8995e2a80d24c2051bf044eceb8cd83",
+      "size": 50044
+    },
+    {
+      "path": "crates/perry-runtime/src/object/iterator_prototypes.rs",
+      "sha256": "1fb46f9539cdb8561f348121943614658d989765bbe543fd02cd72cac3fd366b",
+      "size": 37702
+    },
+    {
+      "path": "crates/perry-runtime/src/object/live_slots.rs",
+      "sha256": "a8f2492abbe570646f32fe9db854d489914287b51dd10de15fa60551658f60d9",
+      "size": 5709
+    },
+    {
+      "path": "crates/perry-runtime/src/object/mod.rs",
+      "sha256": "c325e3d07fc482506c38c515c10b863d4ec8be83addf502aef7b0301b0d7aec9",
+      "size": 89006
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method.rs",
+      "sha256": "72e0bbf1eb91690887ef560219e27a4c11d3393146f4139a6201831900b73bc4",
+      "size": 135168
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/bare_receiver.rs",
+      "sha256": "67c814569c74ba52e7146d0074a34cf39073b6d014519c76484013a66666a332",
+      "size": 11114
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/bare_receiver/tests.rs",
+      "sha256": "9acea6ede9e02af375230f9c0f0204452de38e607770da2154d0e999a9bef375",
+      "size": 20216
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/primitive_methods.rs",
+      "sha256": "d64066a32a8d9d117a34d5a3b5f3b2b5b917bf3cc8f97e3e25b0d8dcac12442f",
+      "size": 50017
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/probe_dispatch_tests.rs",
+      "sha256": "0f18db918818bf41b389a6142932bc18df058ad86ab2385c93357b61a8de8b52",
+      "size": 9038
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/receiver_class_tests.rs",
+      "sha256": "0c80130e5973eb4d081f0377f246555adc3278c7613133bf270ea2d64aafed5d",
+      "size": 9361
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/regexp_test.rs",
+      "sha256": "5d693394bff3eb76c883269809c4580edfc02af8a0e1577487b6268b198cfd91",
+      "size": 1944
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/regexp_test_tests.rs",
+      "sha256": "d2269d49ef2106fa18f6ea9395b3aecaa720f57362067e467a00e688abdeda3b",
+      "size": 19660
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_module/callable_exports.rs",
+      "sha256": "6eee8fd155138b13e1d6c314260b0d8a40860b8c9db82de7d879da44efe0a23a",
+      "size": 73158
+    },
+    {
+      "path": "crates/perry-runtime/src/object/prototype_chain.rs",
+      "sha256": "6ba57434a930223c88ce01fbcf80e381a995a31cc5e36e4276a86557bd83e9fd",
+      "size": 37885
+    },
+    {
+      "path": "crates/perry-runtime/src/object/regex_proto_thunks.rs",
+      "sha256": "3d8ddeea57ec35e33e2c2764fefe11d77d3e46af8b06b5b1f497cc2d2d392c79",
+      "size": 26277
+    },
+    {
+      "path": "crates/perry-runtime/src/regex.rs",
+      "sha256": "892914b2fb5546f68dc668025bdd216bd58c701a7eadc654bcf9388f21232e7b",
+      "size": 87440
+    },
+    {
+      "path": "crates/perry-runtime/src/regex/compile.rs",
+      "sha256": "f06c902c05c01fa1b919cbee5cbb56c82a88b9196d5d640790e4c6d764ff702e",
+      "size": 10885
+    },
+    {
+      "path": "crates/perry-runtime/src/regex/lazy.rs",
+      "sha256": "ea34e6ad51c4dc346c5b4f17799a61ad997d477a3338228c9ce6a285439073ce",
+      "size": 15858
+    },
+    {
+      "path": "crates/perry-runtime/src/regex/tests_part2.rs",
+      "sha256": "e0245543fe3d1ba7e173136519389572c6d8fb8e4bcaf8ea3ea3e72019eb6a35",
+      "size": 47797
+    },
+    {
+      "path": "crates/perry-runtime/src/string/mod.rs",
+      "sha256": "a891f82aa04b8990d5ae4e90d340954e8e173f7353def8d37b400a104779d265",
+      "size": 45575
+    },
+    {
+      "path": "crates/perry-runtime/src/symbol.rs",
+      "sha256": "337262ef8e5d837b413910ed12abe4c8016b083ca8ed117c97ca2e307f7627c3",
+      "size": 57345
+    },
+    {
+      "path": "crates/perry-runtime/src/symbol/constructors.rs",
+      "sha256": "33dc4a13208166ce3f820234d03e9a5c2bc04d35f408e777976c297fa2a58a97",
+      "size": 13947
+    },
+    {
+      "path": "crates/perry-runtime/src/thread.rs",
+      "sha256": "a0d2265be7428e91f827d99a328fd3217d34503d94cf8542a9eae0cc02581c4c",
+      "size": 82847
+    },
+    {
+      "path": "crates/perry-runtime/src/thread_transfer_guard_tests.rs",
+      "sha256": "aa8dd528b0f33277badaed03a0ad4b09504d1c3807fb951b6630c7097a2d4725",
+      "size": 5775
+    },
+    {
+      "path": "crates/perry-runtime/src/typed_feedback.rs",
+      "sha256": "df5aabad15802a700e3ada434220e386bd7ba275b44cdb2a6c26cb286c7a2b69",
+      "size": 102631
+    },
+    {
+      "path": "crates/perry-runtime/src/value/addr_class.rs",
+      "sha256": "f3b2634e00a1620d1f74cdf2f341f435f25b2e04d14994632e314012a8407905",
+      "size": 23508
+    },
+    {
+      "path": "crates/perry-stdlib/src/async_local_storage.rs",
+      "sha256": "f8d44190054bd5ee3de356b15a18a1ce6b34f5c58173e9a682023d7912dc816b",
+      "size": 12093
+    },
+    {
+      "path": "crates/perry-stdlib/src/axios.rs",
+      "sha256": "392560e596ce0a27bfe9c3f07990f1a6d6a7bc5e435247920f9d1ef0dada428a",
+      "size": 13357
+    },
+    {
+      "path": "crates/perry-stdlib/src/cheerio.rs",
+      "sha256": "1c2e3e4540b99525fc005bf548667f029344b4ca71f5a1bf91d56a049eaf637f",
+      "size": 20092
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/dispatch.rs",
+      "sha256": "0603a653da8f8e75465c0e7f05d93086427343d2c20990e0aecc37c226fc2626",
+      "size": 5740
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/dispatch/emitter_als.rs",
+      "sha256": "ea5a3ba21587b65ad9ea65d00330b8e13af586e099ab51c887098e79d8292c7e",
+      "size": 15083
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/dispatch/fastify_net_zlib.rs",
+      "sha256": "5418cde248a911906cfd04aaaf2a8af0ca0d21b038489febf15f48f7d700dd13",
+      "size": 17309
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/dispatch/init.rs",
+      "sha256": "f672c5705977c6501435d8081ab520374cff03db60079c461261d3b7330b1cca",
+      "size": 37802
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/dispatch/sqlite.rs",
+      "sha256": "1d79c1f8f2d342c8243e1acf12f6831a3b890c5ff1f5413b7d1533b8dfd54a7e",
+      "size": 7607
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/dispatch_http.rs",
+      "sha256": "99b75e35121737730403636d6ba5a8257fd2afb5a29789ca78904e4295d49a80",
+      "size": 8269
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/handle.rs",
+      "sha256": "62fa177e81fb9db350f7abf8f2d0d7ae32608cb5b33affbf5338f202493208f2",
+      "size": 7593
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/net_method_values.rs",
+      "sha256": "067dcda1f3455a6a5a69f83760f4eb3cad2754d9644e55d701071704a375bb7e",
+      "size": 17739
+    },
+    {
+      "path": "crates/perry-stdlib/src/common/net_socket_bridge.rs",
+      "sha256": "ee4cace591ac664b4951a47fc535ebe6cac0d63d336618e22a5c97b60113b407",
+      "size": 4350
+    },
+    {
+      "path": "crates/perry-stdlib/src/crypto/cipher.rs",
+      "sha256": "fe7f578a056400619955c58a77ce8a5b951c18b9031cf63b970380ba5f6a41fc",
+      "size": 49972
+    },
+    {
+      "path": "crates/perry-stdlib/src/crypto/ecdh.rs",
+      "sha256": "f07397df2f4dab8d7a7e26a5de0bb5e618642fca1b6dfa1059dba33e95e6ee6b",
+      "size": 21970
+    },
+    {
+      "path": "crates/perry-stdlib/src/crypto/hash_handles.rs",
+      "sha256": "078f930da40290aaa83f55d85e766c02a725920b4d6fb766955354fc8d0f4cc3",
+      "size": 33602
+    },
+    {
+      "path": "crates/perry-stdlib/src/crypto/x509.rs",
+      "sha256": "4dc8a4d2215a9474c54e08378eff0fdf795b654df1cf812eef0de8a0f8dca3da",
+      "size": 47205
+    },
+    {
+      "path": "crates/perry-stdlib/src/decimal.rs",
+      "sha256": "8ac1afbe79229d6aaa8522c0a4038a550513302b6e7f4d4a1d6b7cf547320fbb",
+      "size": 16774
+    },
+    {
+      "path": "crates/perry-stdlib/src/domain.rs",
+      "sha256": "0615a6ad6e7122d7ee115c19728dcbe0d59afbb769d53f1b19c3dfdba3d1e360",
+      "size": 17931
+    },
+    {
+      "path": "crates/perry-stdlib/src/events.rs",
+      "sha256": "03536e87e2cfa953d6f98888915f48e65a2bf22c7234ef9ae1c072d69494218d",
+      "size": 49694
+    },
+    {
+      "path": "crates/perry-stdlib/src/events/domain.rs",
+      "sha256": "27948f59d4dc75d4b93635380e206d396d70bb8b9c1b2cae117e4239432294a7",
+      "size": 2065
+    },
+    {
+      "path": "crates/perry-stdlib/src/events/handle_probes.rs",
+      "sha256": "a7f035ad193dabd07c1450794e13ed6e8102076803227d423a582a17582b61c5",
+      "size": 1235
+    },
+    {
+      "path": "crates/perry-stdlib/src/events/module_helpers.rs",
+      "sha256": "08b7f322632c871193c6f7967a5131baa08b565628b09959a408b10f98e02d37",
+      "size": 15413
+    },
+    {
+      "path": "crates/perry-stdlib/src/events/once_helpers.rs",
+      "sha256": "54375b6ae39b9a9a05c75d90181cc0d05694b9e34300d07a2680c73d568fa4ab",
+      "size": 16091
+    },
+    {
+      "path": "crates/perry-stdlib/src/events/warnings.rs",
+      "sha256": "9b5a8aa9189567e861a8a8ed2961115b950f4db0fea66414b5cd8d2530f6cd21",
+      "size": 3132
+    },
+    {
+      "path": "crates/perry-stdlib/src/fetch/dispatch.rs",
+      "sha256": "6a746c72ff59b8ed5ab1ae7ed1b789482a07c240397f10dc918ea713973a686a",
+      "size": 39543
+    },
+    {
+      "path": "crates/perry-stdlib/src/fetch/mod.rs",
+      "sha256": "686995903b890cbc081e9eb7efa83efe3d62be0329479a76f52b20f8c8b8da8c",
+      "size": 72192
+    },
+    {
+      "path": "crates/perry-stdlib/src/fetch/tests.rs",
+      "sha256": "a9048d85fa49244f424241ae56ba6da0b0de42ff066d19449fc0eb01f61783e9",
+      "size": 22487
+    },
+    {
+      "path": "crates/perry-stdlib/src/mongodb.rs",
+      "sha256": "ab5c1ee92ed8e69211632631d15ef804859f31e06e5773573f8aea30d386861a",
+      "size": 28742
+    },
+    {
+      "path": "crates/perry-stdlib/src/mysql2/connection.rs",
+      "sha256": "ebef886f0faadc91d82a4ad0efbee431f1bc58669c1f52c9965a856efa13a1e9",
+      "size": 8832
+    },
+    {
+      "path": "crates/perry-stdlib/src/mysql2/pool.rs",
+      "sha256": "d298b4f82834029d0f126dd6312a79e0a3840d6f5d16697ced8d7be684a1bf6c",
+      "size": 22921
+    },
+    {
+      "path": "crates/perry-stdlib/src/net/mod.rs",
+      "sha256": "7111ab5274f92d4783db4af3837ee7b195b4555cc0a3ab51d412ff90b6009e0a",
+      "size": 75086
+    },
+    {
+      "path": "crates/perry-stdlib/src/pg/connection.rs",
+      "sha256": "1e4d72bb7f7beeebfbeb46293609d5e81d85dae6238417ea08880763431d3403",
+      "size": 14816
+    },
+    {
+      "path": "crates/perry-stdlib/src/pg/pool.rs",
+      "sha256": "c04c131cd0d025a6c6056a1cf6d7677001370f28b48f95dbcfd989ee8055cd0e",
+      "size": 7036
+    },
+    {
+      "path": "crates/perry-stdlib/src/sqlite/bun.rs",
+      "sha256": "f758b585ef9219b4a2643a3b02c11ebbc239fb997ce511f8e072cc2eb80ff792",
+      "size": 10836
+    },
+    {
+      "path": "crates/perry-stdlib/src/sqlite/dispatch.rs",
+      "sha256": "256b79ffe64ff5a75e28bbdb6efcc9bfabecac6ee1ccf3afc85b2d12f5d1d460",
+      "size": 19281
+    },
+    {
+      "path": "crates/perry-stdlib/src/sqlite/node_db.rs",
+      "sha256": "0bed1e5bb57cb803bf486379499cdc1a1e38f4591cc105f76dea1b97d1c70e2b",
+      "size": 28561
+    },
+    {
+      "path": "crates/perry-stdlib/src/string_decoder.rs",
+      "sha256": "5f37d2ae9511f01309eecbd6c25713af8f88876c8c753d6c680360f37b3f4c07",
+      "size": 38724
+    },
+    {
+      "path": "crates/perry/src/commands/compile/build_cache.rs",
+      "sha256": "c6da4c52839fa0bf497ce7b3e8d7365e954127527055420081942dd724c91698",
+      "size": 47460
+    },
+    {
+      "path": "crates/perry/src/commands/compile/run_pipeline.rs",
+      "sha256": "3bb1ed72ef31fc7ad41ab77e06d906dc67bdd630a0ff6666c6eaee8fd261cce8",
+      "size": 401923
+    },
+    {
+      "path": "scripts/gc_runtime_root_holders.json",
+      "sha256": "01785611f9d599a2f134b255f2af0353c1368096818de5d03a16c3525c312d02",
+      "size": 178193
+    },
+    {
+      "path": "scripts/native_result_ledger.py",
+      "sha256": "472164a254cd8288fd8a716054e11a93d38e8cdcdf622c7d3261dac03a294680",
+      "size": 8588
+    },
+    {
+      "path": "scripts/native_result_ledger.tsv",
+      "sha256": "5d82f7befc770f9cb7f46fafb578384eb5ff7ea409f7a5ac9de2f4f9a89a9911",
+      "size": 26062
+    }
+  ]
+}

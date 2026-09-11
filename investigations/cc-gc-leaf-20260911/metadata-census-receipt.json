@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "created_utc": "2026-09-11T11:25:53.719961+00:00",
+  "status": "source-and-synthetic-witnesses-complete",
+  "artifacts": [
+    {
+      "path": "investigations/cc-gc-leaf-20260911/metadata_census.py",
+      "bytes": 23896,
+      "sha256": "90772894d3e4be182a98382a67ba7c3ec0a4f355be544cbaa56737c1d5c5e09b"
+    },
+    {
+      "path": "investigations/cc-gc-leaf-20260911/test_metadata_census.py",
+      "bytes": 10607,
+      "sha256": "f83ea46be7bec4fe5f1d80612f860e512c26ed5d0e9c9ccbc21413ca5b86b272"
+    },
+    {
+      "path": "investigations/cc-gc-leaf-20260911/metadata-census.md",
+      "bytes": 8220,
+      "sha256": "d26fee9aba259404adcbfffa91d084738c4cf5bde1b22a7bc37c37e58bf2403e"
+    }
+  ],
+  "source_authorities": [
+    {
+      "path": "crates/perry-codegen/src/gc_map.rs",
+      "bytes": 64112,
+      "sha256": "ba9dfffa29e4bba7e2e1b509edc982c4cbc8a8ce87868ff5e1b3c5364531898f"
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/roots/stack_maps_decode.rs",
+      "bytes": 9615,
+      "sha256": "a5e1f836065cd95dad5c09bd8da25b03a0d1891b5c0924b327ef4ee868d525b0"
+    },
+    {
+      "path": "crates/perry-runtime/src/gc/roots/stack_maps_lazy.rs",
+      "bytes": 29796,
+      "sha256": "b6bbc574b3004c6890544757644231d7224eff45af1a727ddb00280dceaeb683"
+    },
+    {
+      "path": "investigations/cc-gc-leaf-20260911/state-map.md",
+      "bytes": 12083,
+      "sha256": "38ffbc5d19dd97114408a45b93d5d538e881d7ccb13039be8e4c868cb5388b15"
+    }
+  ],
+  "verification": {
+    "command": "python3 -B -W error::ResourceWarning -m unittest test_metadata_census -v",
+    "cwd": "/Users/amlug/projects/perry/agent-trees/cc-gc-leaf-census-0911/investigations/cc-gc-leaf-20260911",
+    "exit_code": 0,
+    "tests": [
+      "test_exact_concatenated_counts_payloads_and_duplicate_pcs",
+      "test_32_bit_function_entry_width_and_mismatch",
+      "test_header_and_table_corruptions_fail",
+      "test_repeat_does_not_cross_function_boundary",
+      "test_derived_base_and_slot_corruption_fail",
+      "test_nonzero_padding_tail_and_unconsumed_stream_fail",
+      "test_truncated_at_each_final_record_byte_fails",
+      "test_64bit_pc_overflow_and_nonaddress_relocation_fail",
+      "test_elf_relative_relocation_symbol_aliases_and_bounded_reads",
+      "test_unsupported_relocation_and_unresolved_address_fail",
+      "test_elf_header_and_symbol_table_bounds_fail",
+      "test_existing_output_is_not_overwritten",
+      "test_sabotage_version_check_and_count_expectation_are_fail_capable"
+    ],
+    "tests_passed": 13,
+    "resource_warnings": 0,
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "golden": {
+      "bytes": 154,
+      "blobs": 2,
+      "padding_bytes": 5,
+      "function_entries": 4,
+      "functions_with_records": 3,
+      "unique_function_addresses": 3,
+      "records": 5,
+      "payloads": 4,
+      "repeat_records": 1,
+      "root_location_occurrences": 8,
+      "derived_location_occurrences": 2,
+      "encoded_root_locations": 5,
+      "encoded_derived_locations": 1
+    },
+    "sabotage": {
+      "wrong_version": "rejected",
+      "valid_repeat_replaced_by_empty_payload": "original root count assertion fails; observed5 vs expected8"
+    }
+  },
+  "limits": {
+    "actual_campaign_elf_run": false,
+    "box_work": false,
+    "cargo_or_native_build": false,
+    "whole_binary_hash": false,
+    "production_behavior_changed": false,
+    "independent_review": "not yet performed; teammate occupied with callsite parser"
+  },
+  "execution": "Root runs against identity-bound linked ELF under campaign lock; require summary.json status=complete."
+}

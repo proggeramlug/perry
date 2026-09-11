@@ -1,0 +1,128 @@
+--- a/crates/perry-codegen/src/gc_leaf_census.rs
++++ b/crates/perry-codegen/src/gc_leaf_census.rs
+@@ -96,6 +96,17 @@
+ }
+ 
+ impl Capture {
++    /// Inkwell 0.9 includes the API's extra NUL in both get_size/as_slice.
++    /// The file must contain exactly LLVM's payload, excluding that one API
++    /// byte. In particular, real zero bytes at the end of the payload stay.
++    pub(crate) fn snapshot_bitcode(
++        &mut self,
++        stage: Stage,
++        buffer: &inkwell::memory_buffer::MemoryBuffer<'_>,
++    ) {
++        self.snapshot(stage, bitcode_payload(buffer));
++    }
++
+     pub(crate) fn begin(
+         root: &Path,
+         module: &str,
+@@ -199,6 +210,13 @@
+     }
+ }
+ 
++fn bitcode_payload<'buffer>(
++    buffer: &'buffer inkwell::memory_buffer::MemoryBuffer<'_>,
++) -> &'buffer [u8] {
++    let payload_len = buffer.get_size() - 1;
++    &buffer.as_slice()[..payload_len]
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -237,12 +255,40 @@
+         let module = context.create_module_from_ir(input).unwrap();
+         let bitcode = module.write_bitcode_to_memory();
+         for stage in [Stage::PreRs4gc, Stage::PostRs4gc, Stage::PostOpt] {
+-            capture.snapshot(stage, bitcode.as_slice());
++            capture.snapshot_bitcode(stage, &bitcode);
+             assert_eq!(
+                 fs::read(dir.join(stage.filename())).unwrap(),
+-                bitcode.as_slice()
++                bitcode_payload(&bitcode)
+             );
+-        }
++            // Read the real file through LLVM, independently of the slice
++            // expression above. Comparing to the same buffer alone accepted
++            // the earlier extra-byte files even though llvm-dis rejects them.
++            let saved =
++                inkwell::memory_buffer::MemoryBuffer::create_from_file(&dir.join(stage.filename()))
++                    .unwrap();
++            let parsed = inkwell::module::Module::parse_bitcode_from_buffer(&saved, &context)
++                .expect("captured file must be valid LLVM bitcode");
++            parsed.verify().unwrap();
++            assert!(parsed
++                .print_to_string()
++                .to_string()
++                .contains("call void @js_write_barrier(i64 1, i64 2)"));
++        }
++        // Counterfactual: the original recipe includes the API sentinel as
++        // a real file byte. LLVM must reject that file, not merely its length.
++        let wrong_path = dir.join("appended-api-sentinel.bc");
++        fs::write(&wrong_path, bitcode.as_slice()).unwrap();
++        let wrong = inkwell::memory_buffer::MemoryBuffer::create_from_file(&wrong_path).unwrap();
++        assert!(
++            inkwell::module::Module::parse_bitcode_from_buffer(&wrong, &context).is_err(),
++            "the prior appended-sentinel recipe must be rejected"
++        );
++        // Exactly one API byte is excluded; this is not trailing-zero trim.
++        let zeros = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
++            b"payload\0\0\0",
++            "payload-zeros",
++        );
++        assert_eq!(bitcode_payload(&zeros), b"payload\0\0");
+         capture.complete(123, true);
+         let complete: serde_json::Value =
+             serde_json::from_slice(&fs::read(dir.join("complete.json")).unwrap()).unwrap();
+--- a/crates/perry-codegen/src/inprocess/optimize_emit.rs
++++ b/crates/perry-codegen/src/inprocess/optimize_emit.rs
+@@ -77,9 +77,9 @@
+         )
+     });
+     if let Some(capture) = &mut gc_leaf_census {
+-        capture.snapshot(
++        capture.snapshot_bitcode(
+             crate::gc_leaf_census::Stage::PreRs4gc,
+-            module.write_bitcode_to_memory().as_slice(),
++            &module.write_bitcode_to_memory(),
+         );
+     }
+ 
+@@ -153,9 +153,9 @@
+             stats.post_rewrite_widest = widest;
+         }
+         if let Some(capture) = &mut gc_leaf_census {
+-            capture.snapshot(
++            capture.snapshot_bitcode(
+                 crate::gc_leaf_census::Stage::PostRs4gc,
+-                module.write_bitcode_to_memory().as_slice(),
++                &module.write_bitcode_to_memory(),
+             );
+         }
+         // The relocation-fan-out backstop (#8583/#8679): stop before the
+@@ -166,9 +166,9 @@
+     } else if let Some(capture) = &mut gc_leaf_census {
+         // Explicitly retain the skipped stage for shadow-only compilations;
+         // attempt.json records native_roots_requested=false.
+-        capture.snapshot(
++        capture.snapshot_bitcode(
+             crate::gc_leaf_census::Stage::PostRs4gc,
+-            module.write_bitcode_to_memory().as_slice(),
++            &module.write_bitcode_to_memory(),
+         );
+     }
+ 
+@@ -200,9 +200,9 @@
+         stats.optimize_secs = optimize_started.elapsed().as_secs_f64();
+     }
+     if let Some(capture) = &mut gc_leaf_census {
+-        capture.snapshot(
++        capture.snapshot_bitcode(
+             crate::gc_leaf_census::Stage::PostOpt,
+-            module.write_bitcode_to_memory().as_slice(),
++            &module.write_bitcode_to_memory(),
+         );
+     }
+ 

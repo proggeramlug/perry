@@ -1,0 +1,29 @@
+{
+  "pass": true,
+  "checks": [
+    {
+      "ack_hex": "61636b0a",
+      "accepted": true
+    },
+    {
+      "ack_hex": "61636b0a00",
+      "accepted": true
+    },
+    {
+      "ack_hex": "61636b",
+      "accepted": false
+    },
+    {
+      "ack_hex": "61636b0a0000",
+      "accepted": false
+    },
+    {
+      "ack_hex": "77726f6e670a",
+      "accepted": false
+    },
+    {
+      "ack_hex": "",
+      "accepted": false
+    }
+  ]
+}

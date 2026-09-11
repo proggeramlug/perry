@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "created_utc": "2026-09-11T12:15:25.019450+00:00",
+  "status": "prepared-with-passing-local-observer-controls-not-full-cc-executed",
+  "test_count": 12,
+  "real_fixture": {
+    "functions_admitted": 18,
+    "functions_excluded": 0,
+    "explicit_barrier_sites": 5,
+    "strict_fresh_origin": 2,
+    "extra48": 0,
+    "counterfactual_collecting_arm_strict_fresh_origin": 1
+  },
+  "files": [
+    {
+      "path": "fresh_barrier_batch_v4.py",
+      "bytes": 12241,
+      "sha256": "704760083ed620be09fd7713df91dd902b189d08ea68e88fdda1b3890ee5f92d"
+    },
+    {
+      "path": "fresh_barrier_census_v4.py",
+      "bytes": 19641,
+      "sha256": "7b56e80eed169048a668571f4e767ac42449c35346df48310d5efb81afb8bba8"
+    },
+    {
+      "path": "test_fresh_barrier_batch_v4.py",
+      "bytes": 2642,
+      "sha256": "50f4487a6673610cf91af5d548c186531514b3c5753cabed9ced192ad0f3d245"
+    },
+    {
+      "path": "test_fresh_barrier_aliases_v4.py",
+      "bytes": 5583,
+      "sha256": "6ce3d53dff0d0b95ddba6176fb2ce451c18474ef1367d5a2f073ff27d3f79e67"
+    },
+    {
+      "path": "barrier_actual_fixture_check.py",
+      "bytes": 4427,
+      "sha256": "e04d12520f6ffe64442cc7d6fc619bf5129800306d1b769588182e578e72d9fe"
+    },
+    {
+      "path": "BARRIER_BATCH_V4.md",
+      "bytes": 3091,
+      "sha256": "596948a162b0e1aa1b6213e0cdd01d598e719fe2f9c3e4e8973538a7b7b983db"
+    },
+    {
+      "path": "audit-v2/helper-audit.csv",
+      "bytes": 1092372,
+      "sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27"
+    },
+    {
+      "path": "audit-v2/source-receipt.json",
+      "bytes": 30220,
+      "sha256": "f01d8637b8b7c1fb79edcfce29e163b6f4c7595874b988c5c832b93d9f752f9f"
+    },
+    {
+      "path": "barrier-actual-fixture-v1/v4-real-input-receipt.json",
+      "bytes": 2033,
+      "sha256": "ca68dda65c36afcd688857c318272ca70af6da1ce765f4c74a8ea26c18a2c67a"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "created_utc": "2026-09-11T12:00:35.163394+00:00",
+  "status": "prepared-not-executed",
+  "files": [
+    {
+      "path": "fresh_barrier_batch_v2.py",
+      "sha256": "d667ae253d9406057df26099177f9744b1e7a1a59958836dd15960c1d141a056",
+      "bytes": 10217
+    },
+    {
+      "path": "fresh_barrier_census_v2.py",
+      "sha256": "0f92023a20a08e8302b5c37be85b729fc69038abd41b70d4fc1efb6b20c68097",
+      "bytes": 18621
+    },
+    {
+      "path": "audit-v2/helper-audit.csv",
+      "sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+      "bytes": 1092372
+    },
+    {
+      "path": "audit-v2/source-receipt.json",
+      "sha256": "f01d8637b8b7c1fb79edcfce29e163b6f4c7595874b988c5c832b93d9f752f9f",
+      "bytes": 30220
+    },
+    {
+      "path": "BARRIER_BATCH_V2.md",
+      "sha256": "77e9c6311ac52a5a0387073c8faa560a7b4f1c98f036d2179f4029102ef27d1d",
+      "bytes": 788
+    }
+  ],
+  "preserved_44_batch": {
+    "path": "fresh_barrier_batch.py",
+    "sha256": "95e72441c3f0f94b2d97415971fa647779f8bfa32cf3f57a1cafa4fd52e54c4a",
+    "bytes": 10217
+  },
+  "cannot_collect_count": 80,
+  "extra_summary_count": 48,
+  "same_alias_tests_as": "barrier-batch-preparation-v1.json",
+  "delta": "only48 population assertion/error and output names; core observer unchanged"
+}

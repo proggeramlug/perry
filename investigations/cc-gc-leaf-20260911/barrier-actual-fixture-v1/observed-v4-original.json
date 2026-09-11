@@ -1,0 +1,531 @@
+{
+  "schema": 1,
+  "measurement": "static syntactic sites, not executions or saved CPU",
+  "allocation_generation": "unknown: fresh return may be old or published",
+  "layout_incremental_string_sharing_elision_claim": false,
+  "strict_barrier_sites": 5,
+  "strict_fresh_origin_sites": 2,
+  "strict_unresolved_parent_sites": 3,
+  "extra_leaf_fresh_origin_sites": 0,
+  "local_alias_observation_enabled": true,
+  "join_policy": "identical-origin-intersection",
+  "strict_hits": [
+    {
+      "line": 6490,
+      "block": "ctor_prologue.barrier.7",
+      "callee": "js_write_barrier_slot_validated_parent",
+      "parent": "%r12",
+      "allocation_origin": "perry_fn_diagnostic_fixture_ts__exercise$spec_i32:6410:js_object_alloc_class_inline_keys_stamped",
+      "parent_definition_opcode": "call",
+      "unresolved_parent": null,
+      "direct_explicit_barrier": true
+    },
+    {
+      "line": 7176,
+      "block": "ctor_prologue.barrier.9",
+      "callee": "js_write_barrier_slot_validated_parent",
+      "parent": "%r16",
+      "allocation_origin": "perry_fn_diagnostic_fixture_ts__exercise:7093:js_object_alloc_class_inline_keys_stamped",
+      "parent_definition_opcode": "call",
+      "unresolved_parent": null,
+      "direct_explicit_barrier": true
+    }
+  ],
+  "extra_leaf_hits": [],
+  "extra_leaf_hypotheses": [
+    "js_get_empty_string",
+    "js_jsvalue_equals",
+    "js_jsvalue_same_value_zero",
+    "js_math_acos",
+    "js_math_acosh",
+    "js_math_asin",
+    "js_math_asinh",
+    "js_math_atan",
+    "js_math_atan2",
+    "js_math_atanh",
+    "js_math_cbrt",
+    "js_math_clz32",
+    "js_math_cos",
+    "js_math_cosh",
+    "js_math_expm1",
+    "js_math_fmod",
+    "js_math_fround",
+    "js_math_hypot",
+    "js_math_log",
+    "js_math_log10",
+    "js_math_log1p",
+    "js_math_log2",
+    "js_math_pow",
+    "js_math_sin",
+    "js_math_sinh",
+    "js_math_tan",
+    "js_math_tanh",
+    "js_nanbox_bigint",
+    "js_nanbox_get_bigint",
+    "js_nanbox_get_string_pointer",
+    "js_nanbox_is_bigint",
+    "js_nanbox_is_pointer",
+    "js_nanbox_is_string",
+    "js_number_is_finite",
+    "js_number_is_integer",
+    "js_number_is_nan",
+    "js_number_is_safe_integer",
+    "js_object_get_field",
+    "js_object_get_field_f64",
+    "js_pod_scalar_write_compatible",
+    "js_string_char_code_at",
+    "js_string_code_point_at",
+    "js_string_compare",
+    "js_string_equals",
+    "js_string_index_of",
+    "js_string_index_of_from",
+    "js_string_length",
+    "js_string_position_to_index"
+  ],
+  "functions": [
+    {
+      "function": "perry_fn_diagnostic_fixture_ts__allocating$spec_b",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r1"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 1
+      }
+    },
+    {
+      "function": "perry_fn_diagnostic_fixture_ts__exercise$spec_i32",
+      "barriers": [
+        {
+          "line": 6490,
+          "block": "ctor_prologue.barrier.7",
+          "callee": "js_write_barrier_slot_validated_parent",
+          "parent": "%r12",
+          "allocation_origin": "perry_fn_diagnostic_fixture_ts__exercise$spec_i32:6410:js_object_alloc_class_inline_keys_stamped",
+          "parent_definition_opcode": "call",
+          "unresolved_parent": null,
+          "direct_explicit_barrier": true
+        },
+        {
+          "line": 6670,
+          "block": "class_field_set.barrier.21",
+          "callee": "js_write_barrier_slot",
+          "parent": "%r299",
+          "allocation_origin": null,
+          "parent_definition_opcode": "bitcast",
+          "unresolved_parent": "no_proven_allocation_origin",
+          "direct_explicit_barrier": true
+        }
+      ],
+      "reachable_blocks": 40,
+      "join_blocks": 16,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r13",
+          "%r2",
+          "%r219",
+          "%r242",
+          "%r6"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 32
+      }
+    },
+    {
+      "function": "perry_fn_diagnostic_fixture_ts__allocating$generic",
+      "barriers": [],
+      "reachable_blocks": 4,
+      "join_blocks": 1,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r1"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 1
+      }
+    },
+    {
+      "function": "perry_fn_diagnostic_fixture_ts__allocating",
+      "barriers": [],
+      "reachable_blocks": 3,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "perry_fn_diagnostic_fixture_ts__dynamicCall",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r1",
+          "%r2"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 3
+      }
+    },
+    {
+      "function": "perry_fn_diagnostic_fixture_ts__exercise",
+      "barriers": [
+        {
+          "line": 7176,
+          "block": "ctor_prologue.barrier.9",
+          "callee": "js_write_barrier_slot_validated_parent",
+          "parent": "%r16",
+          "allocation_origin": "perry_fn_diagnostic_fixture_ts__exercise:7093:js_object_alloc_class_inline_keys_stamped",
+          "parent_definition_opcode": "call",
+          "unresolved_parent": null,
+          "direct_explicit_barrier": true
+        },
+        {
+          "line": 7359,
+          "block": "class_field_set.barrier.23",
+          "callee": "js_write_barrier_slot",
+          "parent": "%r301",
+          "allocation_origin": null,
+          "parent_definition_opcode": "bitcast",
+          "unresolved_parent": "no_proven_allocation_origin",
+          "direct_explicit_barrier": true
+        }
+      ],
+      "reachable_blocks": 42,
+      "join_blocks": 17,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r1",
+          "%r10",
+          "%r17",
+          "%r2",
+          "%r222",
+          "%r6"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 37
+      }
+    },
+    {
+      "function": "perry_closure_diagnostic_fixture_ts__4$typed_f64",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "perry_closure_diagnostic_fixture_ts__4$generic",
+      "barriers": [],
+      "reachable_blocks": 4,
+      "join_blocks": 1,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r1"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 1
+      }
+    },
+    {
+      "function": "perry_closure_diagnostic_fixture_ts__4",
+      "barriers": [],
+      "reachable_blocks": 3,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "diagnostic_fixture_ts____AnonShape_2a938cab61a60894_constructor",
+      "barriers": [
+        {
+          "line": 7950,
+          "block": "class_field_set.barrier.11",
+          "callee": "js_write_barrier_slot",
+          "parent": "%r152",
+          "allocation_origin": null,
+          "parent_definition_opcode": "bitcast",
+          "unresolved_parent": "no_proven_allocation_origin",
+          "direct_explicit_barrier": true
+        }
+      ],
+      "reachable_blocks": 17,
+      "join_blocks": 8,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r1",
+          "%r2",
+          "%r3",
+          "%r4"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 25
+      }
+    },
+    {
+      "function": "__perry_wrap_perry_fn_diagnostic_fixture_ts__allocating",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "__perry_wrap_perry_fn_diagnostic_fixture_ts__dynamicCall",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "__perry_wrap_perry_fn_diagnostic_fixture_ts__exercise",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "__perry_wrap_perry_unknown_func_diagnostic_fixture_ts",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "diagnostic_fixture_ts__init",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "main",
+      "barriers": [],
+      "reachable_blocks": 14,
+      "join_blocks": 4,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [
+          "%r3",
+          "%r8"
+        ],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 6
+      }
+    },
+    {
+      "function": "__perry_init_strings_diagnostic_fixture_ts_chunk0",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    },
+    {
+      "function": "__perry_init_strings_diagnostic_fixture_ts",
+      "barriers": [],
+      "reachable_blocks": 1,
+      "join_blocks": 0,
+      "join_policy": "identical-origin-intersection",
+      "join_blocks_killing_facts": null,
+      "alias_ledger": {
+        "enabled": true,
+        "admitted_scalar_allocas": [],
+        "declined_scalar_allocas": {},
+        "exact_tied_identity_calls": 0
+      }
+    }
+  ],
+  "explicit_noncollecting_summaries": [
+    "js_array_clear_numeric_layout",
+    "js_array_declare_all_pointer_elements",
+    "js_array_is_numeric_f64_layout",
+    "js_array_live_head",
+    "js_array_note_numeric_write",
+    "js_array_numeric_value_to_raw_f64",
+    "js_bool_box_alloc",
+    "js_bool_box_get",
+    "js_bool_box_release",
+    "js_bool_box_set",
+    "js_box_alloc_bits",
+    "js_box_release",
+    "js_box_set_bits",
+    "js_box_set_bits_trusted_no_barrier",
+    "js_closure_exact_func_guard",
+    "js_closure_get_capture_bits",
+    "js_closure_set_box_capture_ptr",
+    "js_closure_set_capture_bits",
+    "js_gc_declare_typed_shape_layout",
+    "js_gc_forget_object_layout",
+    "js_gc_init_typed_shape_layout",
+    "js_gc_note_slot_layout",
+    "js_gc_note_slot_layout_aware",
+    "js_gc_register_global_root",
+    "js_gc_temp_root_get",
+    "js_gc_temp_root_push",
+    "js_gc_temp_root_set",
+    "js_gc_temp_root_truncate",
+    "js_i32_box_alloc",
+    "js_i32_box_get",
+    "js_i32_box_release",
+    "js_i32_box_set",
+    "js_implicit_this_get",
+    "js_implicit_this_set",
+    "js_is_truthy",
+    "js_nanbox_get_pointer",
+    "js_nanbox_pointer",
+    "js_new_target_get",
+    "js_new_target_set",
+    "js_object_get_class_id",
+    "js_object_get_own_field_or_undef",
+    "js_object_own_method_cache_miss",
+    "js_packed_arraylike_loop_revalidate_live",
+    "js_param_type_guard",
+    "js_shadow_frame_pop",
+    "js_shadow_frame_push",
+    "js_shadow_slot_bind",
+    "js_shadow_slot_set",
+    "js_string_addref",
+    "js_string_addref_if_heap_string",
+    "js_tdz_suppress_begin",
+    "js_tdz_suppress_end",
+    "js_transition_ic_note_hit",
+    "js_transition_ic_spill_append",
+    "js_typed_f64_arg_guard",
+    "js_typed_feedback_class_field_get_guard",
+    "js_typed_feedback_class_field_set_guard",
+    "js_typed_feedback_closure_direct_call_guard",
+    "js_typed_feedback_maybe_dump_trace",
+    "js_typed_feedback_numeric_array_index_get_guard",
+    "js_typed_feedback_numeric_array_index_set_guard",
+    "js_typed_feedback_numeric_array_push_guard",
+    "js_typed_feedback_observe_property_get",
+    "js_typed_feedback_observe_property_set",
+    "js_typed_feedback_plain_array_index_get_guard",
+    "js_typed_feedback_plain_array_index_set_guard",
+    "js_typed_feedback_record_fallback_call",
+    "js_typed_feedback_record_guard_fail",
+    "js_typed_feedback_record_guard_pass",
+    "js_typed_i1_arg_guard",
+    "js_typed_i1_arg_to_raw",
+    "js_typed_i32_arg_guard",
+    "js_typed_i32_arg_to_raw",
+    "js_typed_string_arg_guard",
+    "js_write_barrier",
+    "js_write_barrier_root_heap_word",
+    "js_write_barrier_root_nanbox",
+    "js_write_barrier_slot",
+    "js_write_barrier_slot_validated_parent",
+    "perry_transition_cache_base"
+  ],
+  "allocation_summaries": [
+    "js_array_alloc",
+    "js_array_alloc_literal",
+    "js_array_alloc_with_length",
+    "js_closure_alloc",
+    "js_closure_alloc_init",
+    "js_object_alloc",
+    "js_object_alloc_class_inline_keys",
+    "js_object_alloc_class_inline_keys_stamped",
+    "js_object_alloc_class_with_keys",
+    "js_object_alloc_fast",
+    "js_object_alloc_fast_with_parent",
+    "js_object_alloc_null_proto",
+    "js_object_alloc_with_parent",
+    "js_object_alloc_with_shape"
+  ],
+  "limitations": [
+    "joins intersect identical origins across all reachable predecessors",
+    "only ledger-proved scalar alloca loads are aliases",
+    "phi/select/gep/tag arithmetic are not aliases",
+    "allocating invoke results excluded",
+    "only direct explicit barrier calls counted; hidden helper stores excluded",
+    "complete backend emission is not object/link identity"
+  ],
+  "input_sha256": "1fb2ecc2ba6d144083603618176d9e065deef945d7bdd7030dbd54bcc00ecb3e",
+  "analyzer_sha256": "7b56e80eed169048a668571f4e767ac42449c35346df48310d5efb81afb8bba8",
+  "helper_audit_sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27"
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "kind": "diagnostic-bitcode-api-sentinel-correction",
+  "files": [
+    {
+      "path": "crates/perry-codegen/src/gc_leaf_census.rs",
+      "before_sha256": "478675a2b8e6c67692cc18860206eba812d14cf885a52d991ec867ec4ab4a358",
+      "after_sha256": "243c3c2b0bc7bbd5e3c49b7e69594a00d1ad30fd6f4336e5b6904230297211a5",
+      "after_bytes": 12229
+    },
+    {
+      "path": "crates/perry-codegen/src/inprocess/optimize_emit.rs",
+      "before_sha256": "0cb2ccc86f6a88ecf604ed059c2bf95430684f3a0b5d9542aa39b9612131b9f9",
+      "after_sha256": "3b7a84685bb1de5c474d078830bc9beed4d5a21e1d72bd8f9a380a671e04c14b",
+      "after_bytes": 53528
+    }
+  ],
+  "patch_sha256": "68f2f9f8ade7bf3b7b5850817ea128e7c0d5be7215290556f07704640f201658",
+  "test_module": "gc_leaf_census::tests",
+  "test_count": 3,
+  "test_execution": "not run by this lane",
+  "callsite_census_sha256": "e8e1db299146218d430ecc8d57d9190aed4796928d74de74da80f63004772df5"
+}

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "created_utc": "2026-09-11T11:56:38.661904+00:00",
+  "status": "prepared-awaiting-real-emitted-witness",
+  "artifacts": [
+    {
+      "path": "fresh_barrier_census_v2.py",
+      "bytes": 18621,
+      "sha256": "0f92023a20a08e8302b5c37be85b729fc69038abd41b70d4fc1efb6b20c68097"
+    },
+    {
+      "path": "fresh_barrier_batch.py",
+      "bytes": 10217,
+      "sha256": "95e72441c3f0f94b2d97415971fa647779f8bfa32cf3f57a1cafa4fd52e54c4a"
+    },
+    {
+      "path": "test_fresh_barrier_aliases.py",
+      "bytes": 3774,
+      "sha256": "01f75b249f8f6c9d8121bc69c6b6a28936b2d50ead75a5c8a3653a6b9d7fa375"
+    },
+    {
+      "path": "test_fresh_barrier_batch.py",
+      "bytes": 1924,
+      "sha256": "00a370a5dd07e688bc86a277d4cf66c8e9f7eb4e092ae03efed5b295d08790d8"
+    },
+    {
+      "path": "BARRIER_BATCH.md",
+      "bytes": 4713,
+      "sha256": "9e5f3615a159bc08831c26d07d509aa1a5f97ed865bf4ee8ed52f8784018f777"
+    }
+  ],
+  "preserved_v1": {
+    "path": "fresh_barrier_census.py",
+    "bytes": 13349,
+    "sha256": "f25d59e407cc321fdbf87f7ea9d9d5962d304d8d95b65b6eec51abda58a583e2"
+  },
+  "sources": [
+    {
+      "path": "callsite_census.py",
+      "bytes": 41127,
+      "sha256": "e8e1db299146218d430ecc8d57d9190aed4796928d74de74da80f63004772df5"
+    },
+    {
+      "path": "helper-audit.csv",
+      "bytes": 1089542,
+      "sha256": "be08f9ca8842aa0df27be602013e57261f067798461da09e29c6f540b4fbc48a"
+    }
+  ],
+  "tests": {
+    "command": "python3 -B -m unittest test_fresh_barrier_batch test_fresh_barrier_aliases -v",
+    "exit": 0,
+    "passed": 9
+  },
+  "no_native_build": true,
+  "no_box_analysis": true,
+  "pending": [
+    "real emitted positive",
+    "completed full unit counts",
+    "profile-first lock handoff"
+  ],
+  "claim": "conservative static lower bound with unresolved/excluded populations; no barrier elision proof"
+}

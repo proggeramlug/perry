@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "created_utc": "2026-09-11T11:41:46.262584+00:00",
+  "status": "prepared-provisional-perf-format",
+  "artifacts": [
+    {
+      "name": "profile_samples.py",
+      "bytes": 25420,
+      "sha256": "9fb402591135211eee0f8e487f08d72cf69f7d035217ea9ab5f6029ce498b4fc"
+    },
+    {
+      "name": "test_profile_samples.py",
+      "bytes": 13510,
+      "sha256": "363e338757fb8a095f71281968d1ad1d916fd53bc87370a17421c8159cf2b44e"
+    },
+    {
+      "name": "PROFILE_SAMPLES.md",
+      "bytes": 9876,
+      "sha256": "228b9178c6cb83651432fbc08b4aa2d71272617b40701c2363755b98a819cd11"
+    }
+  ],
+  "input_schema_sources": [
+    {
+      "name": "profile_workload.py",
+      "bytes": 29873,
+      "sha256": "0b1077fb6c5422eb7164e9f793dad462379ce7f3e7d08e8650b1d171a391321e"
+    },
+    {
+      "name": "metadata_census.py",
+      "bytes": 23896,
+      "sha256": "90772894d3e4be182a98382a67ba7c3ec0a4f355be544cbaa56737c1d5c5e09b"
+    },
+    {
+      "name": "callsite_census.py",
+      "bytes": 41127,
+      "sha256": "e8e1db299146218d430ecc8d57d9190aed4796928d74de74da80f63004772df5"
+    },
+    {
+      "name": "helper-audit.csv",
+      "bytes": 1089542,
+      "sha256": "be08f9ca8842aa0df27be602013e57261f067798461da09e29c6f540b4fbc48a"
+    }
+  ],
+  "verification": {
+    "command": "python3 -B -m unittest test_profile_samples -v",
+    "exit_code": 0,
+    "tests_passed": 13,
+    "test_names": [
+      "test_exact_ns_period_and_symbol_offsets",
+      "test_unsupported_truncated_callchain_and_loss_lines_rejected",
+      "test_phase_boundaries_are_exact_half_open",
+      "test_failed_or_wrong_clock_run_cannot_supply_phases",
+      "test_integer_totals_phase_scope_and_foreign_partition",
+      "test_load_bias_uses_exact_section_byte_not_map_start_minus_offset",
+      "test_metadata_mismatch_and_unresolved_symbols_stay_unbound",
+      "test_map_overlap_and_ambiguous_anchor_rejected",
+      "test_wrong_event_unmapped_app_and_empty_export_rejected",
+      "test_self_and_joined_artifacts_reconcile_without_binary_reads",
+      "test_multiple_sites_count_caller_self_once_and_ambiguity_stays_explicit",
+      "test_callsite_join_uses_complete_definition_population_including_zero_call_duplicates",
+      "test_sabotage_boundary_and_bias_checks_can_fail"
+    ],
+    "fixtures": "small synthetic perf text, process maps, PGCM census and callsite CSVs only",
+    "sabotage": [
+      "unconditional startup assignment fails command-phase expectation",
+      "wrong load bias prevents required exact function join"
+    ]
+  },
+  "pending": [
+    "Bind actual installed perf full-path text layout and exporter successful completion before accepting a campaign result.",
+    "Root binds immutable app/metadata and accepted emission units to the same executable.",
+    "Independent perf self report reconciliation is separate from internal phase/row reconciliation."
+  ],
+  "no_native_build": true,
+  "no_box_job": true,
+  "no_actual_profile_run": true,
+  "no_binary_read": true,
+  "claims": "Actual-IP self coverage only; no callee time subtraction, saved CPU or instruction-cost estimate."
+}

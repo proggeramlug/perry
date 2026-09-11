@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "same_complete_summary_except_analyzer_and_compression_hashes": true,
+  "same_all_decoded_output_bytes": true,
+  "totals": {
+    "post-opt": {
+      "callsites": 359,
+      "gc_live_operands": 31,
+      "gc_relocate_intrinsics": 31,
+      "leaf_callsites": 144,
+      "relocates_attributed": 31,
+      "relocates_unattributed": 0,
+      "statepoints": 77
+    },
+    "post-rs4gc": {
+      "callsites": 352,
+      "gc_live_operands": 30,
+      "gc_relocate_intrinsics": 30,
+      "leaf_callsites": 142,
+      "relocates_attributed": 30,
+      "relocates_unattributed": 0,
+      "statepoints": 74
+    },
+    "pre-rs4gc": {
+      "callsites": 275,
+      "gc_live_operands": 0,
+      "gc_relocate_intrinsics": 0,
+      "leaf_callsites": 142,
+      "relocates_attributed": 0,
+      "relocates_unattributed": 0,
+      "statepoints": 0
+    }
+  },
+  "lock_owner": "cc-gcleaf-callsite-v4 3692063"
+}

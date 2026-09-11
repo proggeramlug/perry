@@ -1,0 +1,119 @@
+{
+  "branch": "diag/cc-gc-leaf-census-20260911",
+  "private_base": "f09f7db0fc684553dd4c0f736765d29328441dcc",
+  "retained_overlay_receipt_sha256": "2a9123f644c4eaec664e43da011e538a65f1c3e1a6a1b8b6e97a465ebf5d0a78",
+  "base_archive_sha256": "6e473ba08706c13ff70bb44d6058735477ed7343ad77506e20ee74e2011638ab",
+  "overlay_archive_sha256": "d9ee1a31a7065552e635233d823e41d32e1d42b73bcec17019ad9b9cea3ed98c",
+  "overlay_files": [
+    {
+      "path": "changelog.d/unreleased-guarded-segment-projection.md",
+      "sha256": "b88c568affdf09eae4754db3cbba7f3762925132914f313d1b2f46e3c0d311fd",
+      "bytes": 830
+    },
+    {
+      "path": "changelog.d/unreleased-regexp-test-dispatch.md",
+      "sha256": "08eb857b037892f5664295cc39d79ce80ab535323088fbd4458ce9bd8404ebb8",
+      "bytes": 542
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/mod.rs",
+      "sha256": "1ddf9e2f5fcf8bbe1747574be8faf8cbb9daf7b8c34aef5979619ec542050243",
+      "bytes": 5267
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/segments_project.rs",
+      "sha256": "b38d18c425273c28974788af2598215d7d1c13080d82bad1b2cc6bb263236d1a",
+      "bytes": 20131
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/segments_project_tests.rs",
+      "sha256": "c6e942d3caec6303773d764dc359a595321efe4780459101d789cc4f554c5443",
+      "bytes": 13888
+    },
+    {
+      "path": "crates/perry-codegen/src/collectors/segview.rs",
+      "sha256": "b95185e8cd2e9ea5ce791d8cdea6f3e5a947664ce86cfbc8c380ff3d45b7cee7",
+      "bytes": 66376
+    },
+    {
+      "path": "crates/perry-codegen/src/gc_leaf_census.rs",
+      "sha256": "7fca369d032cf094145e873eb8a5b4ddc8c65320a97ca49985177e5cf5c6f0bb",
+      "bytes": 9976
+    },
+    {
+      "path": "crates/perry-codegen/src/inprocess/optimize_emit.rs",
+      "sha256": "0cb2ccc86f6a88ecf604ed059c2bf95430684f3a0b5d9542aa39b9612131b9f9",
+      "bytes": 53536
+    },
+    {
+      "path": "crates/perry-codegen/src/lib.rs",
+      "sha256": "00bcecec710b78fbe3709102b3dc9216dc9477dbc1154ebac9f69b5fb3418081",
+      "bytes": 11582
+    },
+    {
+      "path": "crates/perry-codegen/src/runtime_decls/strings.rs",
+      "sha256": "b9cb96b9076b1219dec8a5e3b896876019a24b67d8011967291d5bb6b3baa06b",
+      "bytes": 105842
+    },
+    {
+      "path": "crates/perry-runtime/src/array/iter_object.rs",
+      "sha256": "87e4eccc1f89c18c02529e9b58ab0e488ea45ab65aee0b82ae019f210dfc7e62",
+      "bytes": 44051
+    },
+    {
+      "path": "crates/perry-runtime/src/array/mod.rs",
+      "sha256": "594da224ba7a30eb193cadea5648d556766f5496f9f8e8ec7295d1af6dfebbae",
+      "bytes": 12956
+    },
+    {
+      "path": "crates/perry-runtime/src/intl.rs",
+      "sha256": "2d50fb6af0908ccd67e668ebda895e411ac3c7fb1ef65420742e3908e8c8284c",
+      "bytes": 80365
+    },
+    {
+      "path": "crates/perry-runtime/src/intl/segments_project.rs",
+      "sha256": "5431dc5229dc535223cb3372d2fbd2f8ab8d95e3483137e3389272c9b0f436ca",
+      "bytes": 14780
+    },
+    {
+      "path": "crates/perry-runtime/src/intl/segments_project_tests.rs",
+      "sha256": "e843b1c4a655215fa6d8f4f83f51f3506ac8b8bc3976c36e4c632d8dd4e8f1cd",
+      "bytes": 16069
+    },
+    {
+      "path": "crates/perry-runtime/src/object/iterator_prototypes.rs",
+      "sha256": "1fb46f9539cdb8561f348121943614658d989765bbe543fd02cd72cac3fd366b",
+      "bytes": 37702
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method.rs",
+      "sha256": "72e0bbf1eb91690887ef560219e27a4c11d3393146f4139a6201831900b73bc4",
+      "bytes": 135168
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/regexp_test.rs",
+      "sha256": "5d693394bff3eb76c883269809c4580edfc02af8a0e1577487b6268b198cfd91",
+      "bytes": 1944
+    },
+    {
+      "path": "crates/perry-runtime/src/object/native_call_method/regexp_test_tests.rs",
+      "sha256": "d2269d49ef2106fa18f6ea9395b3aecaa720f57362067e467a00e688abdeda3b",
+      "bytes": 19660
+    },
+    {
+      "path": "crates/perry-runtime/src/object/regex_proto_thunks.rs",
+      "sha256": "3d8ddeea57ec35e33e2c2764fefe11d77d3e46af8b06b5b1f497cc2d2d392c79",
+      "bytes": 26277
+    },
+    {
+      "path": "crates/perry/src/commands/compile/build_cache.rs",
+      "sha256": "309ff3bf40d3acc75ba8f3699bceb96c2f7b1c763d18cd3e2cbcc71c5ecce959",
+      "bytes": 47648
+    },
+    {
+      "path": "crates/perry/src/commands/compile/run_pipeline.rs",
+      "sha256": "3bb1ed72ef31fc7ad41ab77e06d906dc67bdd630a0ff6666c6eaee8fd261cce8",
+      "bytes": 401923
+    }
+  ]
+}

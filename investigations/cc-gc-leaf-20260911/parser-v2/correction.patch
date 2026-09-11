@@ -1,0 +1,59 @@
+--- a/callsite_census.py
++++ b/callsite_census.py
+@@ -20,7 +20,7 @@
+ import sys
+ import tempfile
+ 
+-NAME = r'(?:[-a-zA-Z$._0-9]+|"(?:\\[0-9a-fA-F]{2}|[^"\\])*")'
++NAME = r'(?:[-a-zA-Z$._0-9]+|"(?:\\(?:[0-9a-fA-F]{2}|\\)|[^"\\])*")'
+ TOKEN = r'[@%]' + NAME
+ TARGET = re.compile(r'(' + TOKEN + r')\s*\(')
+ OP = re.compile(r'^(?:(' + '%' + NAME + r')\s*=\s*)?(?:(?:tail|musttail|notail)\s+)?(call|invoke|callbr)\s+')
+@@ -63,7 +63,10 @@
+         decoded, i = bytearray(), 0
+         while i < len(value):
+             if value[i] == '\\':
+-                decoded.append(int(value[i + 1:i + 3], 16)); i += 3
++                if value[i + 1] == '\\':
++                    decoded.append(92); i += 2
++                else:
++                    decoded.append(int(value[i + 1:i + 3], 16)); i += 3
+             else:
+                 decoded.extend(value[i].encode('utf-8')); i += 1
+         value = decoded.decode('utf-8', errors='surrogateescape')
+@@ -71,6 +74,8 @@
+ 
+ 
+ def uncomment(line):
++    if ';' not in line:
++        return line.strip()
+     quoted = False
+     for i, c in enumerate(line):
+         if c == '"':
+@@ -127,7 +132,7 @@
+         if re.search(r'\basm\b', text[match.end():]):
+             # Assembly strings can contain @foo(...); find arguments only
+             # after the two quoted asm strings, never inside either string.
+-            asm = re.search(r'\basm\s+(?:sideeffect\s+)?(?:alignstack\s+)?(?:inteldialect\s+)?"(?:\\[0-9a-fA-F]{2}|[^"\\])*"\s*,\s*"(?:\\[0-9a-fA-F]{2}|[^"\\])*"\s*\(', text[match.end():])
++            asm = re.search(r'\basm\s+(?:sideeffect\s+)?(?:alignstack\s+)?(?:inteldialect\s+)?"(?:\\(?:[0-9a-fA-F]{2}|\\)|[^"\\])*"\s*,\s*"(?:\\(?:[0-9a-fA-F]{2}|\\)|[^"\\])*"\s*\(', text[match.end():])
+             if not asm:
+                 raise ValueError('unsupported inline assembly call syntax')
+             opening = match.end() + asm.end() - 1
+@@ -180,7 +185,7 @@
+                 yield ('declare', None, None, lineno, line)
+             elif line.startswith('attributes #'):
+                 yield ('attributes', None, None, lineno, line)
+-            elif line.startswith('@') and re.search(r'(?<![%@A-Za-z0-9_.-])alias\b', re.sub(r'"(?:\\[0-9a-fA-F]{2}|[^"\\])*"', '""', line)):
++            elif line.startswith('@') and re.search(r'(?<![%@A-Za-z0-9_.-])alias\b', re.sub(r'"(?:\\(?:[0-9a-fA-F]{2}|\\)|[^"\\])*"', '""', line)):
+                 yield ('alias', None, None, lineno, line)
+             continue
+         if line == '}':
+@@ -202,7 +207,7 @@
+ 
+ def attr_refs(text):
+     # Quoted strings and metadata do not confer call attributes.
+-    unquoted = re.sub(r'"(?:\\[0-9a-fA-F]{2}|[^"\\])*"', '""', text)
++    unquoted = re.sub(r'"(?:\\(?:[0-9a-fA-F]{2}|\\)|[^"\\])*"', '""', text)
+     return set(re.findall(r'#(\d+)\b', unquoted))
+ 
+ 

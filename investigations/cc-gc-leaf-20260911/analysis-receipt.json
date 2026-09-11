@@ -1,0 +1,42 @@
+{
+  "observed_utc": "2026-09-11T11:08:38.933177+00:00",
+  "worktree": "/Users/amlug/projects/perry/agent-trees/cc-gc-leaf-census-0911",
+  "head": "f09f7db0fc684553dd4c0f736765d29328441dcc",
+  "source_sha256": {
+    "crates/perry-codegen/src/gc_call_effects.rs": "01dabfddbec4becf93d7448388c94658b84aa5f95b361dff53c9693a4818f05b",
+    "crates/perry-codegen/src/root_reload.rs": "a5f007f81a85d027302432269849420c3e503e3c6748f54df868612cfa2d9482",
+    "crates/perry-codegen/src/function/precise_roots.rs": "5a035d186fbc00f7df6626cf0a84b836f05323edb0d6ac53a65c8dfa0e121696",
+    "crates/perry-codegen/src/module.rs": "57be737a42b2f34c223eecb68f765e6ef80d525c671fe8fad74b4ea751c1645c",
+    "crates/perry-codegen/src/codegen/mod.rs": "802809c75884189bbc3219c6e5803ee2199cf71f7caf342516fea80f0b6a8f41",
+    "crates/perry-codegen/src/codegen/helpers.rs": "d0c394694848097a43d51c1f0b18503b562fab7400bc8d782e26e03695369f8b",
+    "crates/perry-codegen/src/expr/write_barrier.rs": "55b92a121a98654001d93b75417a5cf71aa35ccac8a90628b25f13ea962ec319",
+    "crates/perry-codegen/src/expr/array_literal.rs": "2c8ffcba69d265a172c6b64e46e11b811614addfd1ca9b083d0f9314448ac678",
+    "crates/perry-codegen/src/expr/object_literal.rs": "c1593d257eb57ecdb285b5a3e9c399968e2d43fd9927835d9050cfb2ec8bf1c4",
+    "crates/perry-runtime/src/arena/allocators.rs": "38382f9eba862753f58c2360f305f4b426147869d8646fb8d5db386d7c08947e",
+    "crates/perry-runtime/src/object/alloc.rs": "0ef3e7f7856b1a7d3fd5bf3025628f85771d8eba55c8d2575c92c24b6a8efe7c",
+    "crates/perry-runtime/src/closure/alloc.rs": "d6256f98056b3d55d3b006590610d9564bef752df51f89e5ab52dbf1a6bc9f12",
+    "crates/perry-runtime/src/array/alloc.rs": "c434a75cade054bd270375bff43b92e538b10abae6032dd237af5feae9880d4f",
+    "crates/perry-runtime/src/gc/barrier_store.rs": "78cb609a8cefe834465d63909b8db5d3e6b28f09c518d5ddab6fa1d6caf127f4",
+    "crates/perry-runtime/src/gc/barrier/mod.rs": "ec2ebdfdb14137509f52b336f1ad64ade01e9cc11a37bbd5ebc0c5f6837d9b99",
+    "crates/perry-runtime/src/object/live_slots.rs": "a8f2492abbe570646f32fe9db854d489914287b51dd10de15fa60551658f60d9"
+  },
+  "profile_sha256": {
+    "cc-perf-campaign/codex/profile_after_test_dispatch_20260910/REPORT.md": "0266393d288d9ad229223e87cdcc7baeee42c041e16db940ce181c5729fc0f31",
+    "cc-perf-campaign/codex/profile_after_test_dispatch_20260910/results/analysis.json": "5333d78efd1ccf131430002aba2c4fc7616ff0af48631a4c4fc4585ae8e9b211",
+    "cc-perf-campaign/codex/profile_after_test_dispatch_20260910/results/captures.json": "2b67d89cfeaf452cc8bf4a714dd4311a5786bacd6bced7fe2aac4b65eca0e9f8",
+    "cc-perf-campaign/codex/profile_after_test_dispatch_20260910/results/self-only-inspection.json": "bd0fa2c2bc6e371b9ded0a512e3fdf04984ebf0b497efe4d127a38a405b0a035"
+  },
+  "validation": {
+    "command": "python3 -B -m unittest test_fresh_barrier_census -v",
+    "exit_code": 0,
+    "tests": 11,
+    "sabotage_controls": 2,
+    "scope": "standalone Python parser/dataflow only"
+  },
+  "artifact_sha256": {
+    "profiling-plan.md": "5719c347a85108b533d6bdd284b1b65790a21bdf8c251dcd6a5c9d9a64b00bab",
+    "barrier-audit.md": "795f294ccc7900ac4d16a1622103b7d0059d8ac6ad2526ca3dab49f4ed6bada8",
+    "fresh_barrier_census.py": "f25d59e407cc321fdbf87f7ea9d9d5962d304d8d95b65b6eec51abda58a583e2",
+    "test_fresh_barrier_census.py": "8f5d9861d3d8920e64bc61390b4dda79e7f96e73f616bd4c498f62379317ce54"
+  }
+}

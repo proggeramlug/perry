@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "diagnostic-only-gc-call-census",
+  "baseline_receipt_sha256": "2a9123f644c4eaec664e43da011e538a65f1c3e1a6a1b8b6e97a465ebf5d0a78",
+  "files": [
+    {
+      "path": "crates/perry-codegen/src/gc_leaf_census.rs",
+      "before_sha256": null,
+      "after_sha256": "7fca369d032cf094145e873eb8a5b4ddc8c65320a97ca49985177e5cf5c6f0bb",
+      "bytes": 9976
+    },
+    {
+      "path": "crates/perry-codegen/src/inprocess/optimize_emit.rs",
+      "before_sha256": "c652f4fb44a2334cf6c20ccc8a7c0bd72bdf1e4a65001fea7800f0f7d3707bfe",
+      "after_sha256": "0cb2ccc86f6a88ecf604ed059c2bf95430684f3a0b5d9542aa39b9612131b9f9",
+      "bytes": 53536
+    },
+    {
+      "path": "crates/perry-codegen/src/lib.rs",
+      "before_sha256": "0ec2f1897ff67a377ba746aa7407d5a9528856565495a9a32f4289e38c169123",
+      "after_sha256": "00bcecec710b78fbe3709102b3dc9216dc9477dbc1154ebac9f69b5fb3418081",
+      "bytes": 11582
+    },
+    {
+      "path": "crates/perry/src/commands/compile/build_cache.rs",
+      "before_sha256": "c6da4c52839fa0bf497ce7b3e8d7365e954127527055420081942dd724c91698",
+      "after_sha256": "309ff3bf40d3acc75ba8f3699bceb96c2f7b1c763d18cd3e2cbcc71c5ecce959",
+      "bytes": 47648
+    }
+  ],
+  "patch_sha256": "f8a51ccb729f36bd1239301f3ac4f0363b5fb45dd22df5ad3aa9079c0ad82916",
+  "tests": {
+    "module": "gc_leaf_census::tests",
+    "count": 3,
+    "executed": false
+  },
+  "state_map_sha256": "38ffbc5d19dd97114408a45b93d5d538e881d7ccb13039be8e4c868cb5388b15"
+}

@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "kind": "offline-static-callsite-census",
+  "files": {
+    "callsite_census.py": {
+      "sha256": "e8e1db299146218d430ecc8d57d9190aed4796928d74de74da80f63004772df5",
+      "bytes": 41127
+    },
+    "test_callsite_census.py": {
+      "sha256": "ee90d725b86f633942b82df4845dda15c494ecee52c417dfc9cd6fdc65975fc4",
+      "bytes": 12906
+    },
+    "CALLSITE_CENSUS.md": {
+      "sha256": "2a116d4cad97f7d8f171e01382997d362ded5f4d9f247bd1b05fdc0f35118934",
+      "bytes": 9075
+    },
+    "callsite-census-tests-v1.log": {
+      "sha256": "b26e14451a8d752b7e2a8ee8d8d90a64c1b33b91becc8519a35f94f7de79f526",
+      "bytes": 1394
+    },
+    "helper-audit.csv": {
+      "sha256": "be08f9ca8842aa0df27be602013e57261f067798461da09e29c6f540b4fbc48a",
+      "bytes": 1089542
+    }
+  },
+  "validation": {
+    "command": "python3 -m unittest discover -s investigations/cc-gc-leaf-20260911 -p test_callsite_census.py -v",
+    "passed": 8,
+    "failed": 0,
+    "real_llvm_or_binary_execution": false
+  },
+  "compiler_files_edited": false
+}

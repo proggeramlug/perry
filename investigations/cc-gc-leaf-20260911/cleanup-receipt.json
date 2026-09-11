@@ -1,0 +1,371 @@
+{
+  "purpose": "reclaim superseded own campaign binaries for GC-leaf diagnostic build; current/preceding retained apps and all source/measurement records preserved",
+  "started_utc": "2026-09-11T11:00:29Z",
+  "free_before": 1558929408,
+  "preserved": {
+    "app-testdispatch25": "230e33392fded4dc8ddb7c4ea49ca86e2f1a7201a84ccdc98b56b5c72666d98d",
+    "app-project23": "1e078dd1316dc1606dee2396c8419e1b449300b9220d92960f77edf8404f6338"
+  },
+  "removed": [
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-arg1h4",
+      "sha256": "b2178e8e4a87fe7ac9ef8cbe04cc450f7b3e17aebf81f149c3dbdbe8de635447",
+      "bytes": 438328544,
+      "allocated_bytes": 438333440,
+      "inode": 33610333
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-argsnap4",
+      "sha256": "3f2ee1a5aa1b98f1c529a1d22093cdcc4ef65464061c424ae2e9eaa012cc046f",
+      "bytes": 437965056,
+      "allocated_bytes": 437972992,
+      "inode": 33609682
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-arrayiter8",
+      "sha256": "54970f32e04c41740ab0e70ba47681f6704683014c22d98d9f9799b18b3c7cfa",
+      "bytes": 438327576,
+      "allocated_bytes": 438333440,
+      "inode": 33612022
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-asciigcdiag8",
+      "sha256": "f619260883c461645fe74a763ad626c7eb3b54f2751fa6f13b28cbb443a3fce2",
+      "bytes": 438327672,
+      "allocated_bytes": 438333440,
+      "inode": 33611802
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-asciiname10",
+      "sha256": "d13ba4b666a85ee25cff95416979d6dd458d7b1447c881e7b050855e1d7ec1d5",
+      "bytes": 438327576,
+      "allocated_bytes": 438333440,
+      "inode": 33612206
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-asciislice7",
+      "sha256": "154682bedbd1b11e26fb7523e9a894f9c2a2b0743a07fde1bcf6115305756c08",
+      "bytes": 438327576,
+      "allocated_bytes": 438333440,
+      "inode": 33611736
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-buftls4",
+      "sha256": "88fe95a1e7559f0fa84295fc1f437bd22a0719f17c63ea241cf41b4d12899299",
+      "bytes": 438328304,
+      "allocated_bytes": 438333440,
+      "inode": 33610981
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-desc0b4",
+      "sha256": "ffb1114c424def2b2b1d5b86cc1467cef7db52d289ed1fa9fffe38a0ec730d95",
+      "bytes": 438328544,
+      "allocated_bytes": 438333440,
+      "inode": 33610475
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-direct",
+      "sha256": "2b21c9fdcbd7d6522127c8434b1556435fd44989d9d57670c6b4b2d631738e1d",
+      "bytes": 437965952,
+      "allocated_bytes": 437972992,
+      "inode": 33599268
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-direct4",
+      "sha256": "e4fef7cfe83c776c0a2c79d266629afb636b3895f87e0318da7a6dd3af54fc3b",
+      "bytes": 437965272,
+      "allocated_bytes": 437972992,
+      "inode": 33607217
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-dispatch2cut5",
+      "sha256": "806a7e9526f8e496ec5acd2df8f599054e7ca346c0eeee3abeb966b0da2a5a31",
+      "bytes": 438327616,
+      "allocated_bytes": 438333440,
+      "inode": 33611433
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-field4",
+      "sha256": "cd15b901f68c4ab74b9d7ed11b28e4703caf0544823f787da6533cba1f24413d",
+      "bytes": 437965872,
+      "allocated_bytes": 437972992,
+      "inode": 33609533
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-gcdiag7",
+      "sha256": "d1967a8e2a64e42018007e01ee8d5aa0dfc99ef74d763112daaab972a0777ce4",
+      "bytes": 438328352,
+      "allocated_bytes": 438333440,
+      "inode": 33611644
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-gcfloor5",
+      "sha256": "61eb3c32e5c5ec65db71f6a7b5708459d654d2d1ab08f10601351ff66657b407",
+      "bytes": 438328304,
+      "allocated_bytes": 438333440,
+      "inode": 33611177
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-gctypereuse12",
+      "sha256": "f2ecdeaeab6352158a6f54236045a57399b5f6305279d8f5eea561be7576e60e",
+      "bytes": 438244080,
+      "allocated_bytes": 438251520,
+      "inode": 33612810
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-glread4",
+      "sha256": "e85fe3bc90f0991d546f03e4a73eb66c8240f63b75e159aab68ecd7c3dd76b8e",
+      "bytes": 438327952,
+      "allocated_bytes": 438333440,
+      "inode": 33610635
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-hcopy5",
+      "sha256": "29261c7c635c021e328d4c9965b5d355d7e328fba052999e83569d37a49e97d4",
+      "bytes": 438197560,
+      "allocated_bytes": 438202368,
+      "inode": 33611123
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-hstack4",
+      "sha256": "1e0d728d76ba1ace935a5cfb849660222d464d4433ca15a8339f2ad5cd216599",
+      "bytes": 438326496,
+      "allocated_bytes": 438333440,
+      "inode": 33610094
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-ic4",
+      "sha256": "783dff346ebb2821fafc57a277676bd339413dede522243527228fe8685422fa",
+      "bytes": 437965184,
+      "allocated_bytes": 437972992,
+      "inode": 33609484
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-iterator18",
+      "sha256": "3811bb4f1f07ac71f712414f65105cd8dcc4d56c164f2c4c2e58ac96067d457b",
+      "bytes": 438246080,
+      "allocated_bytes": 438251520,
+      "inode": 33615281
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-iterroot5",
+      "sha256": "b24854aca74493bc3e1b2150c6bb9bdbae859db389ae8d8a8afce9233a98de6f",
+      "bytes": 438332400,
+      "allocated_bytes": 438337536,
+      "inode": 33611379
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-key4",
+      "sha256": "c18636f2d23dff7718071ea8fe2254e5741b54a18adbd4f26598140069741e88",
+      "bytes": 437965184,
+      "allocated_bytes": 437972992,
+      "inode": 33610028
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-knownlive12",
+      "sha256": "15027f2caf95e86a4bdb763505e3c6667df9dbc1bcd9aade29b56275afab9e9b",
+      "bytes": 438240096,
+      "allocated_bytes": 438247424,
+      "inode": 33612770
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-layow4",
+      "sha256": "3e89fd63067cb64705a10d9549acce74a8624b5f0fd5ae3225e4c0237ff12bf9",
+      "bytes": 438327992,
+      "allocated_bytes": 438333440,
+      "inode": 33610782
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-metadata19",
+      "sha256": "37bf4b92c5acedf56fa9fa52df6aeb471a59411f2bdc9708f3e394a6547b6517",
+      "bytes": 438241048,
+      "allocated_bytes": 438247424,
+      "inode": 33615397
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-own4",
+      "sha256": "3fe41dfb2e7bdc77362889221701aec9c9b08cbca08f40369ad2eb994a38c09b",
+      "bytes": 437965872,
+      "allocated_bytes": 437972992,
+      "inode": 33609971
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-parentgate10",
+      "sha256": "a8f3fcccd6f65666c36b196849f43050f8319760df3a42292e4111c5d3f89b53",
+      "bytes": 438328168,
+      "allocated_bytes": 438333440,
+      "inode": 33612139
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-pmeth5",
+      "sha256": "0b43d5e378915470a24446662103b176915ec92d453db84e354002cd036f3ffa",
+      "bytes": 438328304,
+      "allocated_bytes": 438333440,
+      "inode": 33611311
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-preroot4",
+      "sha256": "bb1f35efe87f0324bb42a1009009ccf32e88a3892c434ba478b4c49cdc003d01",
+      "bytes": 437965872,
+      "allocated_bytes": 437972992,
+      "inode": 33609631
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-record17",
+      "sha256": "5897071b740942c5ef681edf98c7f797ba372de2096d63a4848ecf4f3d8e0b7f",
+      "bytes": 438244688,
+      "allocated_bytes": 438251520,
+      "inode": 33612884
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-recvkind9",
+      "sha256": "74af30c4f735c28e8bc1f940f8e255e90d80765f1f158d62edfe590eec0fa801",
+      "bytes": 438327576,
+      "allocated_bytes": 438333440,
+      "inode": 33612134
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-regextest7",
+      "sha256": "0f69d674ce4b05f1fd169c574f2bae0ef1a518bd4d98cee1aa02838f28088a3d",
+      "bytes": 438327576,
+      "allocated_bytes": 438333440,
+      "inode": 33611572
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-regmap4",
+      "sha256": "e00df40e3793248a4b955334a252a94115bfd308bcdb383f7b5b7412c3f8d21c",
+      "bytes": 438327952,
+      "allocated_bytes": 438333440,
+      "inode": 33610542
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-regneg4",
+      "sha256": "0fa2ba06fbd740a0dd13522aaf6546609f63166624715234f77482d8eaf42741",
+      "bytes": 438337112,
+      "allocated_bytes": 438341632,
+      "inode": 33610203
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-regress15",
+      "sha256": "e9ab724d2042286053951f54f63afc61275547358bc53b4829b7d3abcac70f2c",
+      "bytes": 438114288,
+      "allocated_bytes": 438120448,
+      "inode": 33615030
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-regress16",
+      "sha256": "2c33df7791c0c8248c7fe1f6045640157a2c8e81d408d942f659afd5a0252aaf",
+      "bytes": 438118384,
+      "allocated_bytes": 438124544,
+      "inode": 33614943
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-rootslot4",
+      "sha256": "b7b7a1ddb70b2a68788494b37583ade8b441cfc3545038e79748af2876c5f8f8",
+      "bytes": 438327872,
+      "allocated_bytes": 438333440,
+      "inode": 33610916
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-rxarg04",
+      "sha256": "1541ed8a91e87d65c4fdc1258302b488e434fb03e8dd81ac406953c999f942e2",
+      "bytes": 438327952,
+      "allocated_bytes": 438333440,
+      "inode": 33610906
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-rxcache5",
+      "sha256": "f9f249dea98224e77398c984e222655a81b2e3a756b318206553f74056785ddc",
+      "bytes": 438328248,
+      "allocated_bytes": 438333440,
+      "inode": 33611046
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-rxhdr4",
+      "sha256": "aff75735675229de870f850e4b0db93c2be6b4ca3ff3c189163b25227c46f680",
+      "bytes": 438325120,
+      "allocated_bytes": 438329344,
+      "inode": 33610700
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-rxshare4",
+      "sha256": "44b978c812b7490ebaba8e668a84a7d0a7388dbae7ca0f02713c0408c2afcfa0",
+      "bytes": 438327392,
+      "allocated_bytes": 438333440,
+      "inode": 33610822
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-segbirth5",
+      "sha256": "3bbb7bc2ce1a45e261daf30f3f6077db1ac3989d30b81af4c3f0fb9d053fe9c3",
+      "bytes": 438327832,
+      "allocated_bytes": 438333440,
+      "inode": 33611301
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-segments4",
+      "sha256": "9f9b67c07ae8f6370cc5080e760f3ecae47734b39fcd9b5780bd7823865150b2",
+      "bytes": 437965872,
+      "allocated_bytes": 437972992,
+      "inode": 33609582
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-segshape11",
+      "sha256": "d2af2a758d4d6f119a694565e072f4b929a429ca3b71419cffc10aa557fee41c",
+      "bytes": 438331792,
+      "allocated_bytes": 438337536,
+      "inode": 33612338
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-string4",
+      "sha256": "82c9fb339922ba943d0f5fa445b449cdf560b6394c6b96d0e02ff04768afe7ff",
+      "bytes": 437965272,
+      "allocated_bytes": 437972992,
+      "inode": 33609419
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-strroot4",
+      "sha256": "2198d73ca928f0eda28d84b4d71be8816e23f0bd9cb32b650b458b96d819e774",
+      "bytes": 437969968,
+      "allocated_bytes": 437977088,
+      "inode": 33609749
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-tag4",
+      "sha256": "c004f60cace6c539d9ef21f5dfd6ecdfbae52c3b842f714d7381d835e35c018c",
+      "bytes": 438327856,
+      "allocated_bytes": 438333440,
+      "inode": 33610098
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-ways4",
+      "sha256": "4b1e8eae45fdef5aae2fbb5a8e64b096c3c9efb7100756e5952867f49f83cb33",
+      "bytes": 437966152,
+      "allocated_bytes": 437972992,
+      "inode": 33609810
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-wrap",
+      "sha256": "ec0ed035d0c3db3ff8242d04c161c94c3654a88043faa649219e38122c4d3673",
+      "bytes": 437966064,
+      "allocated_bytes": 437972992,
+      "inode": 33606966
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-wrap4",
+      "sha256": "4db60759d038f1aea3a4cbd90d73ee52496230778cef1c1491cc1c991ba04339",
+      "bytes": 437965376,
+      "allocated_bytes": 437972992,
+      "inode": 33607142
+    },
+    {
+      "path": "/root/cc-perf-native-recv-0909/cc-control/app-zero20",
+      "sha256": "dd489dd057369171700b269910622b7024001f132813e45d7c51ca1d660607dd",
+      "bytes": 438240368,
+      "allocated_bytes": 438247424,
+      "inode": 33615339
+    }
+  ],
+  "free_after": 23907794944,
+  "allocated_bytes_removed": 22348918784,
+  "completed_utc": "2026-09-11T11:00:43Z"
+}

@@ -1,0 +1,16 @@
+{
+  "head": "f09f7db0fc684553dd4c0f736765d29328441dcc",
+  "scope": "source audit only; no effect changes, builds, runtime tests, box jobs or commits",
+  "inventory_rows": 3213,
+  "reviewed_rows": 127,
+  "unreviewed_rows": 3086,
+  "source_files_fingerprinted": 1203,
+  "artifact_sha256": {
+    "build_helper_audit.py": "8b5539d046e68376a402c570419820c254de2e1f70ab78bd28194d5505072d05",
+    "helper-audit.csv": "be08f9ca8842aa0df27be602013e57261f067798461da09e29c6f540b4fbc48a",
+    "helper-audit-source.json": "f2bd18efcb1ad2a89c5d0a5efd44a22284ddf36c7082452b7e2b432b32dc99a2",
+    "inventory-summary.json": "47a3072e2e9ffea19eb961dd01bfc9c1bbf87877d20da17e2b5bedc75bf39a04",
+    "runtime-audit.md": "242680043c9c8ac572d74818bd761662214dab9920ff43b8f8c57529cd5379d5"
+  },
+  "sanity_checks": "PASS: unique keys; finite class enums; unknowns retained; no fabricated dynamic counts; four reentry discrepancies; 44 unannotated no-Perry-collection candidates"
+}

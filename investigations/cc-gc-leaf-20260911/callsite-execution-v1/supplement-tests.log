@@ -1,0 +1,6 @@
+test_zero_call_definition_and_shadow_request_are_separate (__main__.SupplementTest.test_zero_call_definition_and_shadow_request_are_separate) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.021s
+
+OK

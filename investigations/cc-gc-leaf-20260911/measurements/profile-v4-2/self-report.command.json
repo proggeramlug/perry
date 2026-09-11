@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+    "report",
+    "--stdio",
+    "--no-children",
+    "--show-total-period",
+    "--show-nr-samples",
+    "--sort=comm,dso,symbol",
+    "--field-separator=,",
+    "--percent-limit=0",
+    "-i",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/profile.data"
+  ],
+  "started_ns": 1789129928525511787,
+  "exit": 0,
+  "stdout_sha256": "9ae2f3ffb4d34f7ad8aa3cb7f1d8762644c4ca13d32ffd2158b078feda568fcc"
+}

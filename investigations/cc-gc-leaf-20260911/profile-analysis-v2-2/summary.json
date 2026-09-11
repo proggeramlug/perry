@@ -1,0 +1,558 @@
+{
+  "schema": 1,
+  "status": "complete-actual-ip-self-census",
+  "format": "pid-tid-time-period-event-ip-symoff-dso-v1",
+  "format_validation": "validated-installed-perf6.17-three-profile-v4-exports",
+  "analyzer_sha256": "7fd5af65a913288d2ef00acd04943cb0825655ec7ea0cf63f56e097f5de152f9",
+  "inputs": {
+    "measurements/profile-v4-2/samples-v2.txt": "8a5e3b3858e5b6f9e3f7e1befd440532c7423c7bcc39a9a35bbf712a84ef5eba",
+    "measurements/profile-v4-2/run.json": "91863b341d862154135a436134d94919310646df1d967fc572312d85576d36ad",
+    "measurements/profile-v4-2/app-maps.json": "6da21f48664c3b5d0969ba26cf5fc6e6b45560b266530f92550759c258c9ace8",
+    "audit-v2/helper-audit.csv": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27"
+  },
+  "application": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+  "application_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "pid": 3692491,
+  "clock": "CLOCK_MONOTONIC",
+  "phase_boundary_policy": "[begin,end)",
+  "totals": {
+    "samples": 4913,
+    "period": 23824563349
+  },
+  "phases": {
+    "before_startup": {
+      "samples": 0,
+      "period": 0
+    },
+    "startup": {
+      "samples": 1167,
+      "period": 5364303299
+    },
+    "between_phases": {
+      "samples": 2507,
+      "period": 12080845860
+    },
+    "command": {
+      "samples": 1239,
+      "period": 6379414190
+    },
+    "after_command": {
+      "samples": 0,
+      "period": 0
+    }
+  },
+  "phase_scope_totals": [
+    {
+      "phase": "before_startup",
+      "scope": "main_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "before_startup",
+      "scope": "other_target_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "before_startup",
+      "scope": "foreign_pid",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "startup",
+      "scope": "main_thread",
+      "samples": 1040,
+      "period": 5018860542
+    },
+    {
+      "phase": "startup",
+      "scope": "other_target_thread",
+      "samples": 15,
+      "period": 6312
+    },
+    {
+      "phase": "startup",
+      "scope": "foreign_pid",
+      "samples": 112,
+      "period": 345436445
+    },
+    {
+      "phase": "between_phases",
+      "scope": "main_thread",
+      "samples": 2254,
+      "period": 11603531474
+    },
+    {
+      "phase": "between_phases",
+      "scope": "other_target_thread",
+      "samples": 44,
+      "period": 33396
+    },
+    {
+      "phase": "between_phases",
+      "scope": "foreign_pid",
+      "samples": 209,
+      "period": 477280990
+    },
+    {
+      "phase": "command",
+      "scope": "main_thread",
+      "samples": 1239,
+      "period": 6379414190
+    },
+    {
+      "phase": "command",
+      "scope": "other_target_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "command",
+      "scope": "foreign_pid",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "after_command",
+      "scope": "main_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "after_command",
+      "scope": "other_target_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "after_command",
+      "scope": "foreign_pid",
+      "samples": 0,
+      "period": 0
+    }
+  ],
+  "thread_totals": [
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692491,
+      "samples": 2254,
+      "period": 11603531474
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692493,
+      "samples": 14,
+      "period": 7194
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692524,
+      "samples": 5,
+      "period": 2602
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692552,
+      "samples": 5,
+      "period": 4978
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692554,
+      "samples": 5,
+      "period": 4898
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692569,
+      "samples": 5,
+      "period": 5523
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692571,
+      "samples": 5,
+      "period": 4484
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692491,
+      "tid": 3692587,
+      "samples": 5,
+      "period": 3717
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692527,
+      "tid": 3692527,
+      "samples": 8,
+      "period": 39585437
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692527,
+      "tid": 3692530,
+      "samples": 5,
+      "period": 5026
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692527,
+      "tid": 3692531,
+      "samples": 5,
+      "period": 4208
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692527,
+      "tid": 3692532,
+      "samples": 1,
+      "period": 8270718
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692527,
+      "tid": 3692535,
+      "samples": 5,
+      "period": 4229
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692550,
+      "samples": 39,
+      "period": 200331507
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692560,
+      "samples": 5,
+      "period": 1229
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692561,
+      "samples": 15,
+      "period": 8275810
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692562,
+      "samples": 6,
+      "period": 8275481
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692563,
+      "samples": 6,
+      "period": 510914
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692578,
+      "samples": 5,
+      "period": 1905
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692580,
+      "samples": 5,
+      "period": 4644
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692550,
+      "tid": 3692583,
+      "samples": 5,
+      "period": 6386
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692553,
+      "tid": 3692553,
+      "samples": 57,
+      "period": 193522536
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692553,
+      "tid": 3692565,
+      "samples": 7,
+      "period": 17442065
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692553,
+      "tid": 3692566,
+      "samples": 5,
+      "period": 4929
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692553,
+      "tid": 3692567,
+      "samples": 7,
+      "period": 520679
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692553,
+      "tid": 3692568,
+      "samples": 6,
+      "period": 169053
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692553,
+      "tid": 3692577,
+      "samples": 5,
+      "period": 1428
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692570,
+      "tid": 3692570,
+      "samples": 6,
+      "period": 185532
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692574,
+      "tid": 3692574,
+      "samples": 6,
+      "period": 157274
+    },
+    {
+      "phase": "command",
+      "pid": 3692491,
+      "tid": 3692491,
+      "samples": 1239,
+      "period": 6379414190
+    },
+    {
+      "phase": "startup",
+      "pid": 3692491,
+      "tid": 3692491,
+      "samples": 1040,
+      "period": 5018860542
+    },
+    {
+      "phase": "startup",
+      "pid": 3692491,
+      "tid": 3692494,
+      "samples": 5,
+      "period": 1595
+    },
+    {
+      "phase": "startup",
+      "pid": 3692491,
+      "tid": 3692522,
+      "samples": 5,
+      "period": 1982
+    },
+    {
+      "phase": "startup",
+      "pid": 3692491,
+      "tid": 3692524,
+      "samples": 5,
+      "period": 2735
+    },
+    {
+      "phase": "startup",
+      "pid": 3692496,
+      "tid": 3692496,
+      "samples": 5,
+      "period": 750
+    },
+    {
+      "phase": "startup",
+      "pid": 3692497,
+      "tid": 3692497,
+      "samples": 5,
+      "period": 375
+    },
+    {
+      "phase": "startup",
+      "pid": 3692498,
+      "tid": 3692498,
+      "samples": 5,
+      "period": 2063
+    },
+    {
+      "phase": "startup",
+      "pid": 3692508,
+      "tid": 3692508,
+      "samples": 39,
+      "period": 164215618
+    },
+    {
+      "phase": "startup",
+      "pid": 3692508,
+      "tid": 3692509,
+      "samples": 5,
+      "period": 2035
+    },
+    {
+      "phase": "startup",
+      "pid": 3692508,
+      "tid": 3692510,
+      "samples": 2,
+      "period": 14511319
+    },
+    {
+      "phase": "startup",
+      "pid": 3692527,
+      "tid": 3692527,
+      "samples": 37,
+      "period": 156124091
+    },
+    {
+      "phase": "startup",
+      "pid": 3692527,
+      "tid": 3692528,
+      "samples": 5,
+      "period": 1628
+    },
+    {
+      "phase": "startup",
+      "pid": 3692527,
+      "tid": 3692530,
+      "samples": 1,
+      "period": 4586091
+    },
+    {
+      "phase": "startup",
+      "pid": 3692527,
+      "tid": 3692531,
+      "samples": 6,
+      "period": 147737
+    },
+    {
+      "phase": "startup",
+      "pid": 3692527,
+      "tid": 3692532,
+      "samples": 2,
+      "period": 5844738
+    }
+  ],
+  "metadata_join_totals": [
+    {
+      "phase": "between_phases",
+      "join": "exact_start_and_symbol",
+      "samples": 215,
+      "period": 1106683535
+    },
+    {
+      "phase": "between_phases",
+      "join": "no_pgcm_function_at_start",
+      "samples": 1958,
+      "period": 10025617341
+    },
+    {
+      "phase": "between_phases",
+      "join": "not_application_dso",
+      "samples": 334,
+      "period": 948544984
+    },
+    {
+      "phase": "command",
+      "join": "exact_start_and_symbol",
+      "samples": 52,
+      "period": 269790790
+    },
+    {
+      "phase": "command",
+      "join": "no_pgcm_function_at_start",
+      "samples": 1148,
+      "period": 5907138009
+    },
+    {
+      "phase": "command",
+      "join": "not_application_dso",
+      "samples": 39,
+      "period": 202485391
+    },
+    {
+      "phase": "startup",
+      "join": "exact_start_and_symbol",
+      "samples": 10,
+      "period": 49115817
+    },
+    {
+      "phase": "startup",
+      "join": "no_pgcm_function_at_start",
+      "samples": 951,
+      "period": 4676988844
+    },
+    {
+      "phase": "startup",
+      "join": "not_application_dso",
+      "samples": 206,
+      "period": 638198638
+    }
+  ],
+  "metadata": {
+    "summary_sha256": "432ab41646e9ce1ed7d7f0e5cbb9e94a115a687754060d4085186659df6a0206",
+    "function_rows_sha256": "a212a9107b5deb3c62f8e07343e71c6467b3dbbee256103df4b513db2f250549",
+    "load_bias": "0x5b1e295ee000",
+    "gcmap_file_offset": "0x15359760",
+    "gcmap_linked_vma": "0x15359760",
+    "anchor_maps": [
+      {
+        "start": 100185456902144,
+        "end": 100185481076736,
+        "offset": 355672064,
+        "major": 9,
+        "minor": 0,
+        "inode": 36997294,
+        "perms": "rw-p",
+        "path": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      }
+    ],
+    "method": "same file byte: map.start + section.offset - map.offset - section.address",
+    "identity_limit": "coordinator must bind immutable app SHA to this metadata census; no binary bytes are reread"
+  },
+  "helper_audit_sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+  "callsites": null,
+  "hypothesis_caller_self_coverage": [],
+  "first_sample_ns": 1229560336545446,
+  "last_sample_ns": 1229565764597308,
+  "reconciliation": "integer samples and summed periods reconcile across phases, scopes, self rows and IP rows",
+  "limitations": [
+    "Installed perf6.17 exports and independent self reports are bound separately in measurement receipts.",
+    "Samples are actual IP self only. No caller ancestry or callee subtraction is used.",
+    "Captured maps are a startup-end snapshot; only its exact application mappings support PC joins.",
+    "Symbol prefixes identify naming families, not source-proved GC effects.",
+    "Static map counts are not executed spills. Affected caller self is coverage, never saved time.",
+    "A valid syntax cannot prove an exporter did not omit rows; independently reconcile perf self totals and bind exporter exit0."
+  ],
+  "outputs": {
+    "self.csv": {
+      "sha256": "e35b75ba8a80996fdb6b569fa0819e403e9945c411ff41ea31d2b9c59c670951",
+      "bytes": 247434
+    },
+    "by-ip.csv.gz": {
+      "sha256": "15ad8d2c1718cd76e113d9affe67aa29ae74f5b9663b8d4e65f91ac0aaa4d3ea",
+      "bytes": 88256
+    },
+    "self-with-static-metadata.jsonl.gz": {
+      "sha256": "d3ee4a929d2633f53c0a1765ceb3b7ec5b165898a345e1b73dd9faafdccf4ed6",
+      "bytes": 39893
+    }
+  }
+}

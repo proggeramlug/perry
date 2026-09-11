@@ -1,0 +1,23 @@
+{
+  "totals": {
+    "samples": 4913,
+    "period": 23824563349
+  },
+  "self_rows": 1047,
+  "lost_samples": 0,
+  "event": "cycles:u",
+  "schema": 1,
+  "status": "PASS",
+  "scope": "whole-capture integer self samples and periods",
+  "inputs": {
+    "measurements/profile-v4-2/self-report.txt": "9ae2f3ffb4d34f7ad8aa3cb7f1d8762644c4ca13d32ffd2158b078feda568fcc",
+    "profile-analysis-v2-2/summary.json": "05d6b7c00460829daa743a435dc38c7c93618d714f35289b349e0de9ca396921",
+    "measurements/profile-v4-2/self-report.command.json": "acbce77229f09c86a83a4bd7f09a3ef31bc3b6e8ba2a1508947758eca4b8a2c2"
+  },
+  "parser_sha256": "2f0e30679b0f349801ad54e06e6f4bdeeb3f39c718aed6dd397f2e7040f211e6",
+  "limitations": [
+    "phase attribution is separately bound to run.json monotonic windows",
+    "no callchain or saved-time estimate",
+    "report stderr and invocation are retained independently"
+  ]
+}

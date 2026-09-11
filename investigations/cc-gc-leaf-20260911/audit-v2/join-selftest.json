@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "positive_controls": 4,
+  "rejected_mutations": 5,
+  "scope": "Offline join validation only; no runtime/helper behavior tested."
+}

@@ -1,0 +1,5 @@
+Events disabled
+Events enabled
+Events disabled
+[ perf record: Woken up 3 times to write data ]
+[ perf record: Captured and wrote 0.260 MB /root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/profile.data (4913 samples) ]

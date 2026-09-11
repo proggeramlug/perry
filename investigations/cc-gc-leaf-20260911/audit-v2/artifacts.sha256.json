@@ -1,0 +1,8 @@
+{
+  "helper-audit.csv": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+  "source-receipt.json": "f01d8637b8b7c1fb79edcfce29e163b6f4c7595874b988c5c832b93d9f752f9f",
+  "make_audit_v2.py": "da29d40def96097a998e0f5a600f62310441328361f007ca5884f685731f63a7",
+  "runtime-audit.md": "1df609c7255b1f01ace43f589362f8a981cab460894193ed73111ad205e2b8aa",
+  "join_actual_callees.py": "2211048a979a9b3ad9a4f098b561ef8d43b60c34a3a02314184ef16bb8db92a8",
+  "join-selftest.json": "67bbca656a506ba9a87d1b5ddb54f6db36359ef212ae1178edce98a9ed3a09eb"
+}

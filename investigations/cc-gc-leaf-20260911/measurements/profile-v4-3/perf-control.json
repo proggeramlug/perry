@@ -1,0 +1,64 @@
+{
+  "command": [
+    "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+    "record",
+    "-e",
+    "cycles:u",
+    "-F",
+    "999",
+    "-k",
+    "CLOCK_MONOTONIC",
+    "--no-buildid-cache",
+    "--delay=-1",
+    "--control=fd:6,9",
+    "-p",
+    "3692594",
+    "-o",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-3/profile.data"
+  ],
+  "exit": -2,
+  "handshakes": [
+    {
+      "command": "enable",
+      "ack": "ack",
+      "ack_hex": "61636b0a00",
+      "monotonic_ns": 1229567500661686
+    },
+    {
+      "command": "disable",
+      "ack": "ack",
+      "ack_hex": "61636b0a00",
+      "monotonic_ns": 1229573086309923
+    }
+  ],
+  "cleanup": {
+    "exit": -2,
+    "ownership_checks": [
+      {
+        "pid": 3692595,
+        "start_ticks": 122956727,
+        "exe": "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+        "cwd": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911",
+        "argv": [
+          "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+          "record",
+          "-e",
+          "cycles:u",
+          "-F",
+          "999",
+          "-k",
+          "CLOCK_MONOTONIC",
+          "--no-buildid-cache",
+          "--delay=-1",
+          "--control=fd:6,9",
+          "-p",
+          "3692594",
+          "-o",
+          "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-3/profile.data"
+        ]
+      }
+    ]
+  },
+  "errors": [],
+  "constructor_error": null
+}

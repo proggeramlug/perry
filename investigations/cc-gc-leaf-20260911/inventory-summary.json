@@ -1,0 +1,78 @@
+{
+  "inventory_helpers": 3213,
+  "reviewed_helpers": 127,
+  "declaration_helpers": 3113,
+  "literal_direct_call_helpers": 1481,
+  "reviewed_allocation_counts": {
+    "may allocate": 70,
+    "never allocates": 26,
+    "unclear": 31
+  },
+  "reviewed_gc_counts": {
+    "may": 65,
+    "no": 53,
+    "unclear": 9
+  },
+  "existing_effect_counts": {
+    "Unknown": 3122,
+    "CannotCollect": 80,
+    "AllocNoReentry": 11
+  },
+  "unannotated_no_collect": [
+    "js_get_empty_string",
+    "js_math_acos",
+    "js_math_acosh",
+    "js_math_asin",
+    "js_math_asinh",
+    "js_math_atan",
+    "js_math_atan2",
+    "js_math_atanh",
+    "js_math_cbrt",
+    "js_math_clz32",
+    "js_math_cos",
+    "js_math_cosh",
+    "js_math_expm1",
+    "js_math_fmod",
+    "js_math_fround",
+    "js_math_hypot",
+    "js_math_log",
+    "js_math_log10",
+    "js_math_log1p",
+    "js_math_log2",
+    "js_math_pow",
+    "js_math_sin",
+    "js_math_sinh",
+    "js_math_tan",
+    "js_math_tanh",
+    "js_nanbox_bigint",
+    "js_nanbox_get_bigint",
+    "js_nanbox_get_string_pointer",
+    "js_nanbox_is_bigint",
+    "js_nanbox_is_pointer",
+    "js_nanbox_is_string",
+    "js_number_is_finite",
+    "js_number_is_integer",
+    "js_number_is_nan",
+    "js_number_is_safe_integer",
+    "js_pod_scalar_write_compatible",
+    "js_string_char_code_at",
+    "js_string_code_point_at",
+    "js_string_compare",
+    "js_string_equals",
+    "js_string_index_of",
+    "js_string_index_of_from",
+    "js_string_length",
+    "js_string_position_to_index"
+  ],
+  "classified_may_reenter": [
+    "js_array_indexOf_jsvalue",
+    "js_array_length",
+    "js_array_push_f64",
+    "js_array_slice_values"
+  ],
+  "limits": [
+    "Lexical inventory: literal declaration/call names, no computed/indirect-target expansion; test-named files excluded but inline cfg(test) sections may contribute occurrences.",
+    "No dynamic frequency inference, no effect annotation change, no builds or runtime tests. Unknown is conservative, not proof a helper collects.",
+    "No source cache/ABI correctness claim; read-only audit assumes valid existing ABI inputs and ordinary release runtime. Debug-panic/host instrumentation internals are not certified."
+  ]
+}
