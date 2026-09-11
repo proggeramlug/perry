@@ -65,6 +65,24 @@ pub(super) fn optimize_and_emit(
     module.set_triple(&triple);
     module.set_data_layout(&tm.get_target_data().get_data_layout());
 
+    // Observational only: never print IR or touch the filesystem when off.
+    let mut gc_leaf_census = crate::gc_leaf_census::directory().and_then(|directory| {
+        crate::gc_leaf_census::Capture::begin(
+            directory,
+            &module.get_name().to_string_lossy(),
+            effective_target,
+            native_roots,
+            opt,
+            emit_asm,
+        )
+    });
+    if let Some(capture) = &mut gc_leaf_census {
+        capture.snapshot_bitcode(
+            crate::gc_leaf_census::Stage::PreRs4gc,
+            &module.write_bitcode_to_memory(),
+        );
+    }
+
     // RS4GC must run BEFORE the optimization pipeline, and — critically — in
     // this process, against this LLVM.
     //
@@ -134,11 +152,24 @@ pub(super) fn optimize_and_emit(
             stats.post_rewrite_instructions = total;
             stats.post_rewrite_widest = widest;
         }
+        if let Some(capture) = &mut gc_leaf_census {
+            capture.snapshot_bitcode(
+                crate::gc_leaf_census::Stage::PostRs4gc,
+                &module.write_bitcode_to_memory(),
+            );
+        }
         // The relocation-fan-out backstop (#8583/#8679): stop before the
         // super-linear optimizer and ask codegen to retry the named functions
         // with precise shadow-frame roots. The retry keeps this same pipeline
         // and optimization level; only the GC-root representation changes.
         enforce_rs4gc_instruction_budget(module, budget, &pre_sizes, &rewritten_functions)?;
+    } else if let Some(capture) = &mut gc_leaf_census {
+        // Explicitly retain the skipped stage for shadow-only compilations;
+        // attempt.json records native_roots_requested=false.
+        capture.snapshot_bitcode(
+            crate::gc_leaf_census::Stage::PostRs4gc,
+            &module.write_bitcode_to_memory(),
+        );
     }
 
     let pipeline = match opt {
@@ -167,6 +198,12 @@ pub(super) fn optimize_and_emit(
         .map_err(|e| anyhow!("pass pipeline `{pipeline}` failed:\n{}", e.to_string()))?;
     if let Some(stats) = stats.as_deref_mut() {
         stats.optimize_secs = optimize_started.elapsed().as_secs_f64();
+    }
+    if let Some(capture) = &mut gc_leaf_census {
+        capture.snapshot_bitcode(
+            crate::gc_leaf_census::Stage::PostOpt,
+            &module.write_bitcode_to_memory(),
+        );
     }
 
     // The IR pipeline above has already done the requested optimization. For
@@ -220,6 +257,9 @@ pub(super) fn optimize_and_emit(
         .map_err(|e| anyhow!("{kind:?} emission failed:\n{}", e.to_string()))?;
     if let Some(stats) = stats {
         stats.emit_secs = emit_started.elapsed().as_secs_f64();
+    }
+    if let Some(capture) = gc_leaf_census {
+        capture.complete(obj.as_slice().len(), fast_emit.is_some());
     }
     Ok(obj.as_slice().to_vec())
 }

@@ -16,6 +16,8 @@ pub mod expr;
 pub mod ext_registry;
 pub mod function;
 pub(crate) mod gc_call_effects;
+#[cfg(feature = "llvm-inprocess")]
+pub(crate) mod gc_leaf_census;
 pub mod gc_map;
 #[cfg(feature = "llvm-inprocess")]
 pub mod inprocess;

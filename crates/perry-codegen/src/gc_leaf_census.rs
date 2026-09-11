@@ -1,0 +1,345 @@
+//! Diagnostic-only, lossless snapshots around the in-process GC rewrite.
+//!
+//! This module never changes IR, pass selection, root policy, or object bytes.
+//! With the environment flag absent the call site does not print LLVM IR or
+//! touch the filesystem. A fresh output directory and a cache-bypassed compile
+//! are required for a complete census; cached objects execute none of these
+//! hooks. Only attempts with a valid `complete.json` reached LLVM emission. Snapshots are LLVM bitcode;
+//! stream them through matching-version `llvm-dis -o -` for textual analysis.
+//! Failed/budget-retried attempts deliberately retain only partial artifacts.
+
+use std::fs::{self, OpenOptions};
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::OnceLock;
+
+use serde::Serialize;
+
+static DIRECTORY: OnceLock<Option<PathBuf>> = OnceLock::new();
+static NEXT_ATTEMPT: AtomicU64 = AtomicU64::new(0);
+
+#[inline]
+pub(crate) fn directory() -> Option<&'static Path> {
+    DIRECTORY
+        .get_or_init(|| {
+            std::env::var("PERRY_GC_LEAF_CENSUS_DIR")
+                .ok()
+                .filter(|value| !value.is_empty())
+                .map(PathBuf::from)
+        })
+        .as_deref()
+}
+
+#[derive(Serialize)]
+struct AttemptMetadata<'a> {
+    schema: u32,
+    pid: u32,
+    attempt: u64,
+    module: &'a str,
+    target: &'a str,
+    native_roots_requested: bool,
+    optimization: char,
+    emission: &'a str,
+    snapshot_format: &'static str,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum Stage {
+    PreRs4gc,
+    PostRs4gc,
+    PostOpt,
+}
+
+impl Stage {
+    fn index(self) -> usize {
+        match self {
+            Self::PreRs4gc => 0,
+            Self::PostRs4gc => 1,
+            Self::PostOpt => 2,
+        }
+    }
+
+    fn filename(self) -> &'static str {
+        match self {
+            Self::PreRs4gc => "pre-rs4gc.bc",
+            Self::PostRs4gc => "post-rs4gc.bc",
+            Self::PostOpt => "post-opt.bc",
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct Snapshot {
+    file: &'static str,
+    bytes: usize,
+}
+
+#[derive(Serialize)]
+struct Completion<'a> {
+    schema: u32,
+    status: &'static str,
+    snapshots: &'a [Snapshot],
+    emitted_bytes: usize,
+    bounded_o0_machine_emission: bool,
+}
+
+pub(crate) struct Capture {
+    directory: PathBuf,
+    snapshots: Vec<Snapshot>,
+    failed: bool,
+}
+
+fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let mut file = OpenOptions::new().write(true).create_new(true).open(path)?;
+    file.write_all(bytes)
+}
+
+impl Capture {
+    /// Inkwell 0.9 includes the API's extra NUL in both get_size/as_slice.
+    /// The file must contain exactly LLVM's payload, excluding that one API
+    /// byte. In particular, real zero bytes at the end of the payload stay.
+    pub(crate) fn snapshot_bitcode(
+        &mut self,
+        stage: Stage,
+        buffer: &inkwell::memory_buffer::MemoryBuffer<'_>,
+    ) {
+        self.snapshot(stage, bitcode_payload(buffer));
+    }
+
+    pub(crate) fn begin(
+        root: &Path,
+        module: &str,
+        target: &str,
+        native_roots: bool,
+        opt: char,
+        emit_asm: bool,
+    ) -> Option<Self> {
+        match Self::begin_checked(root, module, target, native_roots, opt, emit_asm) {
+            Ok(capture) => Some(capture),
+            Err(error) => {
+                eprintln!("perry: GC leaf census unavailable: {error}");
+                None
+            }
+        }
+    }
+
+    fn begin_checked(
+        root: &Path,
+        module: &str,
+        target: &str,
+        native_roots: bool,
+        opt: char,
+        emit_asm: bool,
+    ) -> io::Result<Self> {
+        fs::create_dir_all(root)?;
+        let pid = std::process::id();
+        // create_dir is exclusive: repeated invocations/PID reuse cannot
+        // overwrite a prior attempt, and parallel module workers stay apart.
+        let (directory, attempt) = loop {
+            let attempt = NEXT_ATTEMPT.fetch_add(1, Ordering::Relaxed);
+            let directory = root.join(format!("pid-{pid}-attempt-{attempt}"));
+            match fs::create_dir(&directory) {
+                Ok(()) => break (directory, attempt),
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
+                Err(error) => return Err(error),
+            }
+        };
+        let metadata = AttemptMetadata {
+            schema: 1,
+            pid,
+            attempt,
+            module,
+            target,
+            native_roots_requested: native_roots,
+            optimization: opt,
+            emission: if emit_asm { "assembly" } else { "object" },
+            snapshot_format: "llvm-bitcode",
+        };
+        write_new(
+            &directory.join("attempt.json"),
+            &serde_json::to_vec(&metadata)?,
+        )?;
+        Ok(Self {
+            directory,
+            snapshots: Vec::with_capacity(3),
+            failed: false,
+        })
+    }
+
+    pub(crate) fn snapshot(&mut self, stage: Stage, bytes: &[u8]) {
+        if self.failed {
+            return;
+        }
+        // A repeated/missing stage must never produce a plausible complete
+        // record. The reader can independently check the same three names.
+        if stage.index() != self.snapshots.len() {
+            self.failed = true;
+            eprintln!("perry: GC leaf census stage order mismatch");
+            return;
+        }
+        match write_new(&self.directory.join(stage.filename()), bytes) {
+            Ok(()) => self.snapshots.push(Snapshot {
+                file: stage.filename(),
+                bytes: bytes.len(),
+            }),
+            Err(error) => {
+                self.failed = true;
+                eprintln!("perry: GC leaf census snapshot unavailable: {error}");
+            }
+        }
+    }
+
+    pub(crate) fn complete(self, emitted_bytes: usize, bounded_o0_machine_emission: bool) {
+        if self.failed || self.snapshots.len() != 3 {
+            return;
+        }
+        let record = Completion {
+            schema: 1,
+            status: "llvm-emission-succeeded",
+            snapshots: &self.snapshots,
+            emitted_bytes,
+            bounded_o0_machine_emission,
+        };
+        let result = serde_json::to_vec(&record)
+            .map_err(io::Error::from)
+            .and_then(|bytes| write_new(&self.directory.join("complete.json"), &bytes));
+        if let Err(error) = result {
+            eprintln!("perry: GC leaf census completion unavailable: {error}");
+        }
+    }
+}
+
+fn bitcode_payload<'buffer>(
+    buffer: &'buffer inkwell::memory_buffer::MemoryBuffer<'_>,
+) -> &'buffer [u8] {
+    let payload_len = buffer.get_size() - 1;
+    &buffer.as_slice()[..payload_len]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temporary_root() -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "perry-gc-leaf-census-test-{}-{}",
+            std::process::id(),
+            NEXT_ATTEMPT.fetch_add(1, Ordering::Relaxed)
+        ))
+    }
+
+    fn begin(root: &Path) -> Capture {
+        Capture::begin_checked(
+            root,
+            "unit/with quoted \"name\"",
+            "x86_64-unknown-linux-gnu",
+            true,
+            '3',
+            false,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn complete_attempt_preserves_every_ir_byte_and_stage() {
+        let root = temporary_root();
+        let mut capture = begin(&root);
+        let dir = capture.directory.clone();
+        let fixture = b"declare void @js_write_barrier(i64, i64)\ndefine void @f() gc \"statepoint-example\" {\nentry:\n  call void @js_write_barrier(i64 1, i64 2) \"gc-leaf-function\"\n  ret void\n}\n\0";
+        let context = inkwell::context::Context::create();
+        let input = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
+            fixture,
+            "census-fixture",
+        );
+        let module = context.create_module_from_ir(input).unwrap();
+        let bitcode = module.write_bitcode_to_memory();
+        for stage in [Stage::PreRs4gc, Stage::PostRs4gc, Stage::PostOpt] {
+            capture.snapshot_bitcode(stage, &bitcode);
+            assert_eq!(
+                fs::read(dir.join(stage.filename())).unwrap(),
+                bitcode_payload(&bitcode)
+            );
+            // Read the real file through LLVM, independently of the slice
+            // expression above. Comparing to the same buffer alone accepted
+            // the earlier extra-byte files even though llvm-dis rejects them.
+            let saved =
+                inkwell::memory_buffer::MemoryBuffer::create_from_file(&dir.join(stage.filename()))
+                    .unwrap();
+            let parsed = inkwell::module::Module::parse_bitcode_from_buffer(&saved, &context)
+                .expect("captured file must be valid LLVM bitcode");
+            parsed.verify().unwrap();
+            assert!(parsed
+                .print_to_string()
+                .to_string()
+                .contains("call void @js_write_barrier(i64 1, i64 2)"));
+        }
+        // Counterfactual: the original recipe includes the API sentinel as
+        // a real file byte. LLVM must reject that file, not merely its length.
+        let wrong_path = dir.join("appended-api-sentinel.bc");
+        fs::write(&wrong_path, bitcode.as_slice()).unwrap();
+        let wrong = inkwell::memory_buffer::MemoryBuffer::create_from_file(&wrong_path).unwrap();
+        assert!(
+            inkwell::module::Module::parse_bitcode_from_buffer(&wrong, &context).is_err(),
+            "the prior appended-sentinel recipe must be rejected"
+        );
+        // Exactly one API byte is excluded; this is not trailing-zero trim.
+        let zeros = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
+            b"payload\0\0\0",
+            "payload-zeros",
+        );
+        assert_eq!(bitcode_payload(&zeros), b"payload\0\0");
+        capture.complete(123, true);
+        let complete: serde_json::Value =
+            serde_json::from_slice(&fs::read(dir.join("complete.json")).unwrap()).unwrap();
+        assert_eq!(complete["status"], "llvm-emission-succeeded");
+        assert_eq!(complete["snapshots"].as_array().unwrap().len(), 3);
+        assert_eq!(complete["emitted_bytes"], 123);
+        assert_eq!(complete["bounded_o0_machine_emission"], true);
+        let attempt: serde_json::Value =
+            serde_json::from_slice(&fs::read(dir.join("attempt.json")).unwrap()).unwrap();
+        assert_eq!(attempt["module"], "unit/with quoted \"name\"");
+        assert_eq!(attempt["native_roots_requested"], true);
+        assert_eq!(attempt["snapshot_format"], "llvm-bitcode");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn abandoned_retry_and_missing_stage_cannot_be_complete() {
+        let root = temporary_root();
+        let mut abandoned = begin(&root);
+        let old = abandoned.directory.clone();
+        abandoned.snapshot(Stage::PreRs4gc, b"abandoned");
+        drop(abandoned);
+        let incomplete = begin(&root);
+        let new = incomplete.directory.clone();
+        assert_ne!(old, new);
+        incomplete.complete(1, false);
+        assert!(!old.join("complete.json").exists());
+        assert!(!new.join("complete.json").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn out_of_order_or_existing_snapshot_cannot_be_complete() {
+        let root = temporary_root();
+        let mut wrong = begin(&root);
+        let wrong_dir = wrong.directory.clone();
+        wrong.snapshot(Stage::PostRs4gc, b"wrong");
+        wrong.complete(1, false);
+        assert!(!wrong_dir.join("complete.json").exists());
+        let mut conflict = begin(&root);
+        let conflict_dir = conflict.directory.clone();
+        fs::write(conflict_dir.join("pre-rs4gc.bc"), b"preserve").unwrap();
+        conflict.snapshot(Stage::PreRs4gc, b"replacement");
+        conflict.snapshot(Stage::PostRs4gc, b"next");
+        conflict.snapshot(Stage::PostOpt, b"last");
+        conflict.complete(1, false);
+        assert_eq!(
+            fs::read(conflict_dir.join("pre-rs4gc.bc")).unwrap(),
+            b"preserve"
+        );
+        assert!(!conflict_dir.join("complete.json").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+}

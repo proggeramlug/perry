@@ -214,6 +214,9 @@ const BUILD_CACHE_ENV_EXCLUSIONS: &[&str] = &[
     "PERRY_LLVM_DIFF_DIR",
     "PERRY_REPSEL_DEBUG",
     "PERRY_STATEPOINT_REPORT",
+    // Lossless pre/post RS4GC/optimization snapshots only; never changes IR.
+    // A cache-bypassed compile is required: cache hits execute no dump hook.
+    "PERRY_GC_LEAF_CENSUS_DIR",
     // Writes malformed dialect IR for diagnostics without changing emitted code.
     // `opt_report`'s own module doc states the contract this exclusion rests
     // on: "Observational only. Nothing in this module is read by codegen …
