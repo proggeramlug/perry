@@ -1586,6 +1586,13 @@ pub fn declare_phase_b_strings(module: &mut LlModule) {
     module.declare_function("js_segments_view_code_point_at", DOUBLE, &[DOUBLE, DOUBLE]);
     module.declare_function("js_segments_view_segment", DOUBLE, &[DOUBLE]);
     module.declare_function("js_segments_view_regexp_test", DOUBLE, &[DOUBLE, DOUBLE]);
+    // Stateful record projection; all values use the common NaN-boxed ABI.
+    module.declare_function("js_segments_project_can_open", DOUBLE, &[DOUBLE]);
+    module.declare_function("js_segments_project_open", DOUBLE, &[DOUBLE, DOUBLE]);
+    module.declare_function("js_segments_project_iterator", DOUBLE, &[DOUBLE]);
+    module.declare_function("js_segments_project_next", DOUBLE, &[DOUBLE]);
+    module.declare_function("js_segments_project_segment", DOUBLE, &[DOUBLE]);
+    module.declare_function("js_segments_project_observe_iterator", DOUBLE, &[DOUBLE]);
     module.declare_function("js_global_get_or_throw_unresolved", DOUBLE, &[DOUBLE]);
     // Ambient `require` for compiled external / compilePackages modules (#5373):
     // bind a bare `require` to a createRequire-backed closure instead of throwing

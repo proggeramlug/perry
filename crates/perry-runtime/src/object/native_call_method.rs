@@ -15,6 +15,10 @@ mod disposal;
 mod handle_methods;
 mod object_proto;
 mod primitive_methods;
+#[cfg(feature = "regex-engine")]
+mod regexp_test;
+#[cfg(all(test, feature = "regex-engine"))]
+mod regexp_test_tests;
 mod proto_dispatch;
 mod string_methods;
 
@@ -1206,6 +1210,21 @@ pub unsafe extern "C-unwind" fn js_native_call_method(
     args_ptr: *const f64,
     args_len: usize,
 ) -> f64 {
+    // Already evaluated heap-string arguments need no coercion. Prove this
+    // builtin call before constructing the generic argument/root vectors.
+    #[cfg(feature = "regex-engine")]
+    if method_name_len == 4
+        && args_len >= 1
+        && !args_ptr.is_null()
+        && !method_name_ptr.is_null()
+        && JSValue::from_bits((*args_ptr).to_bits()).is_string()
+        && JSValue::from_bits(object.to_bits()).is_pointer()
+        && std::slice::from_raw_parts(method_name_ptr as *const u8, 4) == b"test"
+    {
+        if let Some(result) = regexp_test::try_dispatch(object, *args_ptr) {
+            return result;
+        }
+    }
     // #9675: a LEGACY BARE managed receiver — a real GC pointer that was never
     // NaN-boxed — must be reboxed under its true tag HERE, before the root
     // below and before the first probe. See `bare_receiver` for why the tail
@@ -1289,6 +1308,8 @@ pub unsafe extern "C-unwind" fn js_native_call_method(
         String::from_utf8_lossy(bytes)
     };
     let method_name: &str = &method_name_cow;
+    #[cfg(all(test, feature = "regex-engine"))]
+    regexp_test::note_generic_vectors();
     let root_scope = crate::gc::RuntimeHandleScope::new();
     let object_handle = root_scope.root_nanbox_f64(object);
     let original_args: Vec<f64> = if args_len > 0 && !args_ptr.is_null() {

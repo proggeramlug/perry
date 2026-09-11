@@ -109,6 +109,24 @@ unsafe fn alloc_iterator(arr_ptr: *mut ArrayHeader, kind: i32) -> f64 {
     alloc_iterator_backing(js_nanbox_pointer(arr_ptr as i64), kind)
 }
 
+/// A compiler-private projected Segments iterator has the ordinary identity,
+/// prototype and index slots. Its unused slot 3 traces the virtual producer
+/// until full backing materialization; no external table owns that relation.
+pub(crate) unsafe fn array_projected_values_iter(cursor: f64) -> f64 {
+    let scope = crate::gc::RuntimeHandleScope::new();
+    let cursor = scope.root_nanbox_f64(cursor);
+    let iter = scope.root_nanbox_f64(alloc_iterator_backing(
+        f64::from_bits(TAG_UNDEFINED),
+        KIND_VALUES,
+    ));
+    crate::object::object_store_known_live_slot(
+        js_nanbox_get_pointer(iter.get_nanbox_f64()) as *mut ObjectHeader,
+        3,
+        JSValue::from_bits(cursor.get_nanbox_u64()),
+    );
+    iter.get_nanbox_f64()
+}
+
 /// `arr.values()` iterator — yields each element value.
 pub fn array_values_iter(arr_f64: f64) -> f64 {
     if crate::proxy::js_proxy_is_proxy(arr_f64) != 0 {
@@ -707,6 +725,18 @@ unsafe fn dispatch_array_iterator_method_inner(
     let scope = crate::gc::RuntimeHandleScope::new();
     let iter_h = scope.root_nanbox_f64(js_nanbox_pointer(iter_obj as i64));
     let iter_obj = || js_nanbox_get_pointer(iter_h.get_nanbox_f64()) as *mut ObjectHeader;
+
+    // A projected iterator reaches this public/canonical dispatch only when
+    // its full representation can become observable. Restore it before an
+    // override getter/call or the builtin's backing access. Ordinary iterators
+    // keep this slot undefined (SQLite's epoch uses kind 3 instead).
+    if array_iterator_slot(iter_obj(), 2).bits() == JSValue::number(KIND_VALUES as f64).bits()
+        && !array_iterator_slot(iter_obj(), 3).is_undefined()
+    {
+        crate::intl::segments_project::materialize_associated_iterator(
+            iter_h.get_nanbox_f64(),
+        );
+    }
 
     // Field 2: iterator kind — read up front so the exhausted paths can pick
     // the kind's done-value (`null` for KIND_VALUES_NULL_DONE, `undefined`

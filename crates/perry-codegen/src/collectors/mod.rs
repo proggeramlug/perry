@@ -52,6 +52,7 @@ mod safepoint_sites;
 mod scalar_method_dispatch;
 mod scalar_methods;
 pub mod segview;
+pub mod segments_project;
 #[cfg(test)]
 mod segview_tests;
 mod shadow_slots;

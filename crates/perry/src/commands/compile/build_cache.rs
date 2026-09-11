@@ -11,6 +11,8 @@ use super::{BuildCacheStats, CompilationContext, CompileArgs, CompileResult, Lin
 const BUILD_CACHE_MANIFEST_VERSION: u32 = 2;
 
 const BUILD_CACHE_ENV_VARS: &[&str] = &[
+    // Guarded Segmenter projection is on by default; explicit =0 changes HIR.
+    "PERRY_SEGMENTS_PROJECT",
     "PATH",
     "LIB",
     "LIBPATH",
@@ -205,6 +207,8 @@ const BUILD_CACHE_ENV_VARS: &[&str] = &[
 /// that, so a new compile-time gate cannot repeat #7161's omission silently.
 #[cfg(test)]
 const BUILD_CACHE_ENV_EXCLUSIONS: &[&str] = &[
+    // Reports projection eligibility/emission; never changes the lowering.
+    "PERRY_SEGMENTS_PROJECT_DIAG",
     // Diagnostics: emit an extra file / extra stderr, same object bytes.
     "PERRY_SAVE_LL",
     "PERRY_LLVM_DIFF_DIR",

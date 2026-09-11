@@ -656,7 +656,7 @@ fn classify_segment_uses_in_expr(e: &Expr, seg: u32, t: &mut SegmentUseTally) {
 /// Call `f` on every statement list in the region, including the bodies of
 /// nested closures. The `Stmt` arms are enumerated here; the `Expr` descent
 /// that finds `Expr::Closure` delegates to the exhaustive walker.
-fn for_each_stmt_list(stmts: &[Stmt], f: &mut impl FnMut(&[Stmt])) {
+pub(super) fn for_each_stmt_list(stmts: &[Stmt], f: &mut impl FnMut(&[Stmt])) {
     f(stmts);
     for s in stmts {
         for_each_stmt_list_in_stmt(s, f);
@@ -715,7 +715,7 @@ fn for_each_closure_body_in_expr(e: &Expr, f: &mut impl FnMut(&[Stmt])) {
 }
 
 /// Every expression owned directly by `stmt` (not by its nested statements).
-fn for_each_expr_in_stmt_shallow(stmt: &Stmt, f: &mut impl FnMut(&Expr)) {
+pub(super) fn for_each_expr_in_stmt_shallow(stmt: &Stmt, f: &mut impl FnMut(&Expr)) {
     match stmt {
         Stmt::Let { init, .. } => {
             if let Some(e) = init {
@@ -1377,7 +1377,7 @@ fn for_each_expr_in_stmt_shallow_mut(stmt: &mut Stmt, f: &mut impl FnMut(&mut Ex
 /// not only references. A local that is declared and never read still owns its
 /// id, so seeding fresh ids from the reference maximum alone would collide
 /// with it.
-fn max_local_id_in_module(m: &perry_hir::Module) -> u32 {
+pub(super) fn max_local_id_in_module(m: &perry_hir::Module) -> u32 {
     let mut max = 0u32;
     let note_stmts = |stmts: &[Stmt], max: &mut u32| {
         for_each_stmt_list(stmts, &mut |list| {

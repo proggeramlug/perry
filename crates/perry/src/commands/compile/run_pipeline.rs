@@ -1036,6 +1036,15 @@ pub fn run_with_parse_cache(
     // rewrite would emit calls that fail to link. Runs here, at the same point
     // as the counter and the HIR trace, so what it rewrites is exactly what
     // codegen consumes.
+    // Guarded projection is on by default, preserving the original body and
+    // real iterator cleanup. Explicit =0 disables it; the flag keys caches.
+    let project_enabled = perry_codegen::segments_project_enabled();
+    let project_diag = perry_codegen::segments_project_diag_enabled();
+    if project_enabled {
+        for hir_module in ctx.native_modules.values_mut() {
+            perry_codegen::segments_project_rewrite_module(hir_module, true, project_diag);
+        }
+    }
     if perry_codegen::segview_lowering_enabled() {
         for hir_module in ctx.native_modules.values_mut() {
             perry_codegen::segview_rewrite_module(hir_module);

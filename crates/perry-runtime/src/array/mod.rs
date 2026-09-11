@@ -179,7 +179,8 @@ pub use self::iter_object::{
     js_array_keys_iter_obj, js_array_values_iter_obj, ARRAY_ITERATOR_CLASS_ID,
 };
 pub(crate) use self::iter_object::{
-    dispatch_array_iterator_method_builtin, dispatch_array_iterator_method_emit,
+    array_projected_values_iter, dispatch_array_iterator_method_builtin,
+    dispatch_array_iterator_method_emit,
 };
 pub(crate) use self::iterator::iter_bt_dump;
 pub(crate) use self::iterator::{array_from_spread_value, is_builtin_iterator_class_id};

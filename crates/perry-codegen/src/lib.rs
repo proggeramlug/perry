@@ -87,6 +87,9 @@ pub use collectors::CjsPreambleCensus;
 pub use collectors::segview::{
     segview_diag_enabled, segview_lowering_enabled, segview_rewrite_module, SegViewDiag,
 };
+pub use collectors::segments_project::{
+    segments_project_diag_enabled, segments_project_enabled, segments_project_rewrite_module,
+};
 
 /// Return the guarded proven-`this` method-clone capabilities a native module
 /// may safely publish to importing codegen units. The first map contains all

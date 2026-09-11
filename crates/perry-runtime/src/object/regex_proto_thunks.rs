@@ -331,6 +331,10 @@ crate::perry_thread_local! {
     /// The field index its own `test` occupies. Not an address, so not a root.
     static REGEXP_PROTOTYPE_TEST_INDEX_SLOT: std::sync::atomic::AtomicU32 =
         const { std::sync::atomic::AtomicU32::new(u32::MAX) };
+    /// The shape whose recorded index was proved to name `test`. Scalar only;
+    /// the existing prototype/closure root slots supply moving identities.
+    static REGEXP_PROTOTYPE_TEST_SHAPE_SLOT: std::sync::atomic::AtomicU32 =
+        const { std::sync::atomic::AtomicU32::new(0) };
 }
 
 pub(crate) static REGEXP_PROTOTYPE_PTR: super::RealmAtomicI64 =
@@ -369,8 +373,8 @@ pub(crate) static REGEXP_PROTOTYPE_TEST_WALKS: std::sync::atomic::AtomicU64 =
 ///
 /// * `test` replaced or deleted -> the slot no longer holds the recorded
 ///   closure -> decline;
-/// * the prototype reshaped so the index means a different key -> the slot does
-///   not hold the recorded closure -> decline;
+/// * the prototype reshaped so the index means a different key -> a cold
+///   shape revalidation reads the actual key at that index -> decline;
 /// * an accessor installed with `defineProperty(proto,"test",{get})`, which
 ///   leaves the old closure in the data slot -> the per-key accessor Bloom bit
 ///   catches it, read straight off the meta record;
@@ -405,6 +409,15 @@ pub(crate) fn regexp_prototype_test_is_canonical(value: f64) -> bool {
         return false;
     }
     let proto_obj = proto_ptr as *mut ObjectHeader;
+    let shape = unsafe { super::shapes::object_shape_stamp(proto_obj) };
+    if shape == 0 {
+        return false;
+    }
+    let cached_shape = REGEXP_PROTOTYPE_TEST_SHAPE_SLOT
+        .with(|slot| slot.load(std::sync::atomic::Ordering::Relaxed));
+    if shape != cached_shape && !unsafe { canonical_test_key_at(proto_obj, index) } {
+        return false;
+    }
     // Both reads below are of values the collector maintains: the prototype
     // address is a scanned root, and the recorded closure is a scanned nanbox
     // word, so a move rewrites both and this compare stays an identity compare.
@@ -414,13 +427,52 @@ pub(crate) fn regexp_prototype_test_is_canonical(value: f64) -> bool {
     }
     // `defineProperty(proto, "test", { get })` leaves the data slot alone and
     // records the accessor, so the identity compare above cannot see it.
-    !super::descriptor_state::may_have_descriptor_entry(proto_obj as usize, "test", true)
+    if super::descriptor_state::may_have_descriptor_entry(proto_obj as usize, "test", true) {
+        return false;
+    }
+    if shape != cached_shape {
+        REGEXP_PROTOTYPE_TEST_SHAPE_SLOT
+            .with(|slot| slot.store(shape, std::sync::atomic::Ordering::Relaxed));
+    }
+    true
+}
+
+/// A shape change can relocate a key while retaining the same closure at the
+/// old index. Read only ordinary dense key storage; never call a property
+/// getter to decide whether a method call can bypass generic dispatch. This
+/// is the dense arm of `array::indexing_support::keys_array_slot`; its generic
+/// fallback is deliberately excluded. Same-shape tombstone deletion clears
+/// the field value, which the per-call canonical identity comparison checks.
+#[cfg(feature = "regex-engine")]
+unsafe fn canonical_test_key_at(proto: *const ObjectHeader, index: u32) -> bool {
+    let keys = super::object_keys_array(proto);
+    let Some(header) = crate::value::addr_class::try_read_gc_header(keys as usize) else {
+        return false;
+    };
+    if header.obj_type != crate::gc::GC_TYPE_ARRAY
+        || header.gc_flags & crate::gc::GC_FLAG_FORWARDED != 0
+        || header._reserved & crate::gc::OBJ_FLAG_ARRAY_DESCRIPTORS != 0
+        || index >= (*keys).length
+        || index >= (*keys).capacity
+    {
+        return false;
+    }
+    let elements = (keys as *const u8).add(std::mem::size_of::<crate::array::ArrayHeader>())
+        as *const f64;
+    let key = crate::value::JSValue::from_bits((*elements.add(index as usize)).to_bits());
+    crate::string::js_string_key_matches_bytes(key, b"test")
 }
 
 /// Record the prototype, the index of its own `test`, and the canonical
 /// closure. Called once, from the installer below.
 #[cfg(feature = "regex-engine")]
 fn record_canonical_test_site(proto_obj: *mut ObjectHeader) {
+    // Installation appends more properties after `test`. The first admitted
+    // call validates its final shape; reinstalling cannot retain an old proof.
+    REGEXP_PROTOTYPE_TEST_SHAPE_SLOT
+        .with(|slot| slot.store(0, std::sync::atomic::Ordering::Relaxed));
+    REGEXP_PROTOTYPE_TEST_INDEX_SLOT
+        .with(|slot| slot.store(u32::MAX, std::sync::atomic::Ordering::Release));
     REGEXP_PROTOTYPE_TEST_WALKS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let proto_value = crate::value::js_nanbox_pointer(proto_obj as i64);
     let own = super::js_object_get_own_field_or_undef(proto_value, b"test".as_ptr(), 4);

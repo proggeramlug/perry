@@ -575,6 +575,22 @@ unsafe fn prototype_next_is_canonical(proto: *const ObjectHeader, canonical: *co
     !super::descriptor_state::may_have_descriptor_entry(proto as usize, "next", true)
 }
 
+/// Nonobserving admission for a compiler-private, unexposed Array iterator.
+/// A false result requires materialization BEFORE the ordinary next lookup;
+/// in particular, no accessor is invoked just to decide this predicate.
+pub(crate) unsafe fn projected_array_next_is_canonical(iter: *mut ObjectHeader) -> bool {
+    if !super::object_keys_array(iter).is_null()
+        || super::descriptor_state::may_have_descriptor_entry(iter as usize, "next", true)
+    {
+        return false;
+    }
+    if ITERATOR_PROTOTYPE_PTR.load(Ordering::Acquire) == 0 {
+        return true;
+    }
+    let proto = ARRAY_ITERATOR_PROTOTYPE_PTR.load(Ordering::Acquire) as *const ObjectHeader;
+    !proto.is_null() && prototype_next_is_canonical(proto, array_iterator_next_thunk as *const u8)
+}
+
 /// The prototype-override probe must be free on the path every real program
 /// takes: tower materialized (any iterator allocation does that), nothing
 /// patched. Before this module's `prototype_next_is_canonical`, that path
