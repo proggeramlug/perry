@@ -1,0 +1,3 @@
+{"request_ordinal": 1, "tool_result_blocks": 0, "package_seen": false, "source_seen": false, "any_tool_error": false}
+{"request_ordinal": 2, "tool_result_blocks": 1, "package_seen": true, "source_seen": false, "any_tool_error": false}
+{"request_ordinal": 3, "tool_result_blocks": 2, "package_seen": true, "source_seen": true, "any_tool_error": false}

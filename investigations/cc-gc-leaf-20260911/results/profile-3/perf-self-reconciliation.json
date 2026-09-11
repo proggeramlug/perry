@@ -1,0 +1,23 @@
+{
+  "totals": {
+    "samples": 5334,
+    "period": 23357918114
+  },
+  "self_rows": 1129,
+  "lost_samples": 0,
+  "event": "cycles:u",
+  "schema": 1,
+  "status": "PASS",
+  "scope": "whole-capture integer self samples and periods",
+  "inputs": {
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-3/self-report.txt": "8eedf4d7784817c3786900ae6d55794460bbd3daf36ea2e9c2b607f18e0a5154",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-analysis-v4-3/summary.json": "7afbd714ce24654dde021fc520ed950ac04313478d5998b0052db4d5acb1d2c8",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-3/self-report.command.json": "383dcefcb3a802956fa7a0d37639f02941f1970c1024cff858ae3e76c7b1c0b1"
+  },
+  "parser_sha256": "2f0e30679b0f349801ad54e06e6f4bdeeb3f39c718aed6dd397f2e7040f211e6",
+  "limitations": [
+    "phase attribution is separately bound to run.json monotonic windows",
+    "no callchain or saved-time estimate",
+    "report stderr and invocation are retained independently"
+  ]
+}

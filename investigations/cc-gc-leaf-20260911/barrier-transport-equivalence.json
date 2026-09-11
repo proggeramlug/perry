@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "scope": "barrier-v4 imports the original same-directory callsite transport; it does not use the corrected inventory or call lexer",
+  "same_function_AST": {
+    "read_attempts": true,
+    "read_audit": true,
+    "llvm_lines": true,
+    "sha": true
+  }
+}

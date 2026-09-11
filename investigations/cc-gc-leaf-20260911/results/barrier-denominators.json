@@ -1,0 +1,54 @@
+{
+  "primary_barrier_calls_by_stage_and_pre_root_mode": [
+    {
+      "stage": "post-opt",
+      "root_mode": "native",
+      "callsites": 194055
+    },
+    {
+      "stage": "post-opt",
+      "root_mode": "no-root-mechanism-observed",
+      "callsites": 114
+    },
+    {
+      "stage": "post-opt",
+      "root_mode": "shadow-observed",
+      "callsites": 4813
+    },
+    {
+      "stage": "post-rs4gc",
+      "root_mode": "native",
+      "callsites": 194616
+    },
+    {
+      "stage": "post-rs4gc",
+      "root_mode": "no-root-mechanism-observed",
+      "callsites": 114
+    },
+    {
+      "stage": "post-rs4gc",
+      "root_mode": "shadow-observed",
+      "callsites": 4853
+    },
+    {
+      "stage": "pre-rs4gc",
+      "root_mode": "native",
+      "callsites": 224213
+    },
+    {
+      "stage": "pre-rs4gc",
+      "root_mode": "no-root-mechanism-observed",
+      "callsites": 174
+    },
+    {
+      "stage": "pre-rs4gc",
+      "root_mode": "shadow-observed",
+      "callsites": 6252
+    }
+  ],
+  "pre_barrier_excluded_function_explicit_heap_sites": {},
+  "excluded_function_observed_rows": 6,
+  "primary_by_block_sha256": "643a28d39eb44f8ea07d5985db0b22bd3de6f94cd74c9ca0b02cc6f1ebcae92d",
+  "scope": "Primary complete call parser, independent of fresh-origin normalization.",
+  "post_native_count_matches_primary": true
+}

@@ -1,0 +1,1 @@
+{"schema":1,"status":"llvm-emission-succeeded","snapshots":[{"file":"pre-rs4gc.bc","bytes":244548},{"file":"post-rs4gc.bc","bytes":246284},{"file":"post-opt.bc","bytes":31488}],"emitted_bytes":71427,"bounded_o0_machine_emission":false}

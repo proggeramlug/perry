@@ -1,0 +1,18 @@
+{
+  "status": "source-audit-refinement",
+  "changed_helpers": [
+    "js_closure_get_capture_bits",
+    "js_implicit_this_get",
+    "js_implicit_this_set"
+  ],
+  "parent_audit_sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+  "audit_sha256": "8baeb870372437ca00432e2ec1364b605bad6069fc6d034d3d4dfc79f8232b6f",
+  "existing_CannotCollect_and_extra48_sets_unchanged": true,
+  "source_sha256": {
+    "crates/perry-runtime/src/closure/alloc.rs": "d6256f98056b3d55d3b006590610d9564bef752df51f89e5ab52dbf1a6bc9f12",
+    "crates/perry-runtime/src/closure/registry.rs": "f1254d54b5878ca502b1abc56cce127a01d6ebfcd70f1d768c55c7139ba57bef",
+    "crates/perry-runtime/src/object/this_binding.rs": "12a8ed18d4cf7f2e2f3e9d1106a6442d6b16d42de403b2ff2eae9da75aa83d59",
+    "crates/perry-codegen/src/function/precise_roots.rs": "5a035d186fbc00f7df6626cf0a84b836f05323edb0d6ac53a65c8dfa0e121696"
+  },
+  "scope": "Refines allocation/reentry reasons for three already-classified helpers; no census input, effect table or runtime changes."
+}

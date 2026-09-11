@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "scope": "Final report data and packaging checks; no new application test or profile",
+  "timestamp": "2026-09-11T14:09:51.642590+00:00",
+  "exact_aggregate_input_hashes_verified": true,
+  "all_38_leaf_candidate_statepoint_sum": 469456,
+  "runtime_allocation_class_sum": 895,
+  "fresh_plus_unresolved_native_barriers": 194616,
+  "archive_sha256": "d45036a383dd96caad8507995fd430196abd08f634aaa35bac7584fec1c1f0e1",
+  "archive_files": 433,
+  "archive_uncompressed_bytes": 249171000,
+  "report_relative_links_checked_in_both_worktrees": true,
+  "report_sha256": "21018af5a5220c5da2cc4abc56946c0085153eb83bb970e75b2d2e78ac792368",
+  "report_mirror_same_bytes": true,
+  "whitespace_check": {
+    "all_artifact_check": "rejected standard CSV CRLF endings as trailing whitespace; exact evidence bytes preserved",
+    "authored_source_and_markdown": "PASS",
+    "authored_files": 16
+  }
+}

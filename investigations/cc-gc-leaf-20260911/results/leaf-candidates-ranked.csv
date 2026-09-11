@@ -1,0 +1,39 @@
+helper,post_opt_call_sites,post_opt_gc_points,basis,allocation_class,audit_status,gc_live_operands
+js_closure_get_capture_bits,277331,149470,Existing CannotCollect,never allocates,reviewed,445475
+js_write_barrier_root_nanbox,532333,97323,Existing CannotCollect,unclear,unreviewed,656652
+js_box_set_bits,85284,51564,Existing CannotCollect,unclear,unreviewed,168500
+js_write_barrier,63527,45824,Existing CannotCollect,unclear,unreviewed,144729
+js_implicit_this_set,180455,32405,Existing CannotCollect,may allocate,reviewed,104618
+js_string_addref_if_heap_string,87154,29221,Existing CannotCollect,never allocates,reviewed,163471
+js_write_barrier_slot_validated_parent,92848,19909,Existing CannotCollect,unclear,unreviewed,91712
+js_string_equals,13230,12940,New reviewed candidate,never allocates,reviewed,61536
+js_object_get_own_field_or_undef,42375,11890,Existing CannotCollect,may allocate,reviewed,35644
+js_closure_set_box_capture_ptr,60229,4600,Existing CannotCollect,unclear,unreviewed,16295
+js_closure_set_capture_bits,70878,4506,Existing CannotCollect,unclear,unreviewed,16241
+js_write_barrier_slot,42607,3043,Existing CannotCollect,unclear,unreviewed,12283
+js_string_index_of_from,1767,1746,New reviewed candidate,never allocates,reviewed,6071
+js_transition_ic_spill_append,23282,1635,Existing CannotCollect,unclear,unreviewed,6574
+js_box_alloc_bits,56618,558,Existing CannotCollect,may allocate,reviewed,1788
+js_array_note_numeric_write,2238,550,Existing CannotCollect,unclear,unreviewed,3814
+js_string_index_of,511,511,New reviewed candidate,never allocates,reviewed,1810
+js_string_char_code_at,413,413,New reviewed candidate,never allocates,reviewed,1455
+js_string_compare,431,411,New reviewed candidate,never allocates,reviewed,1366
+js_typed_feedback_closure_direct_call_guard,1661,335,Existing CannotCollect,unclear,unreviewed,1576
+js_implicit_this_get,13951,147,Existing CannotCollect,may allocate,reviewed,450
+js_number_is_nan,114,113,New reviewed candidate,never allocates,reviewed,192
+js_math_pow,95,95,New reviewed candidate,unclear,reviewed,340
+js_number_is_finite,94,93,New reviewed candidate,never allocates,reviewed,826
+js_number_is_integer,68,68,New reviewed candidate,never allocates,reviewed,615
+js_string_code_point_at,31,31,New reviewed candidate,never allocates,reviewed,102
+js_array_live_head,53,21,Existing CannotCollect,unclear,unreviewed,81
+js_number_is_safe_integer,7,7,New reviewed candidate,never allocates,reviewed,24
+js_array_declare_all_pointer_elements,150,6,Existing CannotCollect,unclear,unreviewed,30
+js_math_cbrt,6,6,New reviewed candidate,unclear,reviewed,6
+js_math_clz32,7,3,New reviewed candidate,never allocates,reviewed,2
+js_string_position_to_index,3,3,New reviewed candidate,never allocates,reviewed,16
+js_math_atan2,2,2,New reviewed candidate,unclear,reviewed,6
+js_math_fround,2,2,New reviewed candidate,never allocates,reviewed,1
+js_object_get_field,2,2,New reviewed candidate,may allocate,reviewed,2
+js_math_hypot,1,1,New reviewed candidate,unclear,reviewed,3
+js_packed_arraylike_loop_revalidate_live,3,1,Existing CannotCollect,unclear,unreviewed,3
+js_typed_feedback_class_field_get_guard,20,1,Existing CannotCollect,unclear,unreviewed,6

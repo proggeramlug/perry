@@ -1,0 +1,11 @@
+test_changed_allocator_declines (test_post_statepoint_barriers_v1.ActualPointTests.test_changed_allocator_declines) ... ok
+test_delayed_result_cannot_restore_pre_point_origin (test_post_statepoint_barriers_v1.ActualPointTests.test_delayed_result_cannot_restore_pre_point_origin) ... ok
+test_even_known_cannot_collect_statepoint_ends_window (test_post_statepoint_barriers_v1.ActualPointTests.test_even_known_cannot_collect_statepoint_ends_window) ... ok
+test_first_barrier_fresh_second_after_point_is_not (test_post_statepoint_barriers_v1.ActualPointTests.test_first_barrier_fresh_second_after_point_is_not) ... ok
+test_missing_actual_point_kill_defeats_negative_control (test_post_statepoint_barriers_v1.ActualPointTests.test_missing_actual_point_kill_defeats_negative_control) ... ok
+test_plain_leaf_call_preserves_window (test_post_statepoint_barriers_v1.ActualPointTests.test_plain_leaf_call_preserves_window) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+OK

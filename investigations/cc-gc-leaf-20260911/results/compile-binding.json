@@ -1,0 +1,18 @@
+{
+  "application_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "application_bytes": 438563920,
+  "compiler_sha256": "d4d3f4678374fb3d452b5d5e55dad6b0c27e242d2037395dd3081e601d1929c5",
+  "sections": {
+    ".text": {
+      "bytes": 302634802,
+      "sha256": "46ac1cdb3d9b4ab65b493228155a55a33cf1fbf6122245bd16853ee4f19b4a95"
+    },
+    ".perry_gcmap": {
+      "bytes": 24009616,
+      "sha256": "2107ca98c8f2fd20ca770a04e1497b5ea7868033e81d7cfb0c40e703f8a309bd"
+    }
+  },
+  "source_receipt_sha256": "463ec87f14989bc31050b85607973e1ffcb31d10a717c10b9661072703aa8a8c",
+  "bitcode_dir": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-bitcode",
+  "success_marker": "full original cc compiler invocation exited zero"
+}

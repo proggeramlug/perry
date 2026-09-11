@@ -1,0 +1,135 @@
+{
+  "statepoint_categories": {
+    "post-opt": {
+      "LLVM": 0,
+      "dynamic-dispatch": 156208,
+      "external-unclassified": 2006,
+      "inline-asm": 0,
+      "runtime: unclear": 854978,
+      "runtime: existing CannotCollect": 453009,
+      "runtime: reviewed may-GC": 476333,
+      "runtime: reviewed new leaves": 16447,
+      "static-user": 82109
+    },
+    "post-rs4gc": {
+      "LLVM": 0,
+      "dynamic-dispatch": 156267,
+      "external-unclassified": 2004,
+      "inline-asm": 0,
+      "runtime: unclear": 858023,
+      "runtime: existing CannotCollect": 453328,
+      "runtime: reviewed may-GC": 476627,
+      "runtime: reviewed new leaves": 16585,
+      "static-user": 82160
+    },
+    "pre-rs4gc": {
+      "LLVM": 0,
+      "dynamic-dispatch": 0,
+      "external-unclassified": 0,
+      "inline-asm": 0,
+      "runtime: unclear": 0,
+      "runtime: existing CannotCollect": 0,
+      "runtime: reviewed may-GC": 0,
+      "runtime: reviewed new leaves": 0,
+      "static-user": 0
+    }
+  },
+  "actual_runtime_helper_count": 895,
+  "actual_allocation_classes": {
+    "unclear": 832,
+    "may allocate": 49,
+    "never allocates": 14
+  },
+  "actual_review_status": {
+    "unreviewed": 826,
+    "reviewed": 69
+  },
+  "new_candidate_helpers_emitted": 18,
+  "top_unresolved_runtime_statepoints": [
+    [
+      "js_class_field_set_ic",
+      63164
+    ],
+    [
+      "js_try_end",
+      60353
+    ],
+    [
+      "js_closure_unbox_callee_checked",
+      56786
+    ],
+    [
+      "js_closure_alloc",
+      31229
+    ],
+    [
+      "js_object_alloc_class_inline_keys_stamped",
+      30267
+    ],
+    [
+      "js_class_field_get_ic",
+      30206
+    ],
+    [
+      "js_param_or_class_capture_value",
+      29446
+    ],
+    [
+      "js_packed_arraylike_index_get",
+      27049
+    ],
+    [
+      "js_put_value_set_dyn_ic",
+      24818
+    ],
+    [
+      "js_iter_result_set",
+      22530
+    ],
+    [
+      "js_string_coerce",
+      21867
+    ],
+    [
+      "js_eq",
+      16916
+    ],
+    [
+      "js_eh_try_push",
+      16046
+    ],
+    [
+      "js_get_exception",
+      16023
+    ],
+    [
+      "js_clear_exception",
+      15928
+    ],
+    [
+      "js_gc_loop_safepoint",
+      15629
+    ],
+    [
+      "js_throw",
+      15433
+    ],
+    [
+      "js_dyn_index_set_strict",
+      15191
+    ],
+    [
+      "js_closure_alloc_init",
+      14558
+    ],
+    [
+      "js_put_value_set",
+      13057
+    ]
+  ],
+  "input_sha256": {
+    "results/callsite-v5/summary.json": "8e00414d90541d5236390ed602051dea6cd5da3069db938f27e5c1e12976ce2f",
+    "results/callsite-v5/by-callee.csv": "5f90bdc4ea155900b99456240b7903f6016d3cf4db582a30316e15bee3483d2d",
+    "audit-v2/helper-audit.csv": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27"
+  }
+}

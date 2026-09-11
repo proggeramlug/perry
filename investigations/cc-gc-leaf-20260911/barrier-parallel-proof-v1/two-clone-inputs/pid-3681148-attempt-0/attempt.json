@@ -1,0 +1,1 @@
+{"schema": 1, "pid": 3681148, "attempt": 0, "module": "perry_llvm_8a53e85694cb8f7d.ll", "target": "x86_64-unknown-linux-gnu", "native_roots_requested": true, "optimization": "s", "emission": "assembly", "snapshot_format": "llvm-bitcode"}

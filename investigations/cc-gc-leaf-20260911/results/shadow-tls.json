@@ -1,0 +1,14 @@
+{
+  "command": [
+    "readelf",
+    "-Ws",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+  ],
+  "exit": 0,
+  "matching_tls_symbols": [
+    "  8832: 0000000000002670    32 TLS     LOCAL  DEFAULT   21 _RNvNCNKNvNtNtNtCscI5nJwKNRh4_13perry_runtime2gc5roots12shadow_stack6SHADOW0s_023___RUST_STD_INTERNAL_VAL",
+    " 15399: 0000000000002668     1 TLS     LOCAL  DEFAULT   21 _RNvNCNKNvNtNtNtCscI5nJwKNRh4_13perry_runtime2gc5roots12shadow_stack19SHADOW_BUFFER_GUARD0023___RUST_STD_INTERNAL_VAL"
+  ],
+  "lock_owner": "cc-gcleaf-post-barrier-v1 3703997",
+  "source_correction": "The source TLS variable is SHADOW, not SHADOW_STACK. Earlier narrower query preserved."
+}

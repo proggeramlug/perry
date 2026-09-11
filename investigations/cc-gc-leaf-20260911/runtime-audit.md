@@ -1,5 +1,7 @@
 # Runtime helper allocation / collection audit — first finite pass
 
+> Historical first pass. The [v2 supplement](audit-v2/runtime-audit.md) closes four additional candidates; the [v3 refinement](audit-v3/README.md) updates three existing contracts. Use the [final emitted-helper table](results/runtime-helpers.csv) and [report](REPORT.md) for final counts.
+
 Source-only investigation on the retained `testdispatch25` overlay in
 `cc-gc-leaf-census-0911`, rooted at `f09f7db0`. No runtime or compiler effect
 annotations changed. No build, runtime test, box job, or optimization ran.

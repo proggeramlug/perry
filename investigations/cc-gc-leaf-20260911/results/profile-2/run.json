@@ -1,0 +1,172 @@
+{
+  "label": "profile-v4-2",
+  "application": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+  "application_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "fixture_sha256": {
+    "package.json": "0e4fbdd88e3ceb6802ca9a58c07d01681206716ba0e8b84f3cc3c854503f465b",
+    "src/index.ts": "73c0cfb518096e72fa6524dc1fa165ffed3c782b2eaa61ffd43712308c6279e6"
+  },
+  "command": "Explain this project.",
+  "answer_characters": 2852,
+  "sampling": "cycles:u,999Hz,CLOCK_MONOTONIC,no callchains",
+  "phases": {
+    "startup_begin_ns": 1229560336528174,
+    "startup_end_ns": 1229561532197837,
+    "command_begin_ns": 1229564427850822,
+    "marker_ns": 1229565665391450,
+    "command_end_ns": 1229566168145288
+  },
+  "cpu": {
+    "startup_s": 1.13,
+    "command_s": 1.27
+  },
+  "pass": true,
+  "pid": 3692491,
+  "pre_exec_process": {
+    "pid": 3692491,
+    "start_ticks": 122956013,
+    "exe": "/usr/bin/python3.12",
+    "cwd": "/tmp/tt_proj_9831",
+    "argv": [
+      "python3",
+      "-B",
+      "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile_workload_v4.py",
+      "--app",
+      "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+      "--label",
+      "profile-v4-2",
+      "--port",
+      "10552",
+      "--out",
+      "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2"
+    ]
+  },
+  "process": {
+    "pid": 3692491,
+    "start_ticks": 122956013,
+    "exe": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+    "cwd": "/tmp/tt_proj_9831",
+    "argv": [
+      "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+    ]
+  },
+  "prompt_echo_observed": true,
+  "vmhwm_mb": 622.9296875,
+  "perf_control": {
+    "command": [
+      "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+      "record",
+      "-e",
+      "cycles:u",
+      "-F",
+      "999",
+      "-k",
+      "CLOCK_MONOTONIC",
+      "--no-buildid-cache",
+      "--delay=-1",
+      "--control=fd:6,9",
+      "-p",
+      "3692491",
+      "-o",
+      "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/profile.data"
+    ],
+    "exit": -2,
+    "handshakes": [
+      {
+        "command": "enable",
+        "ack": "ack",
+        "ack_hex": "61636b0a00",
+        "monotonic_ns": 1229560336435050
+      },
+      {
+        "command": "disable",
+        "ack": "ack",
+        "ack_hex": "61636b0a00",
+        "monotonic_ns": 1229566169048163
+      }
+    ],
+    "cleanup": {
+      "exit": -2,
+      "ownership_checks": [
+        {
+          "pid": 3692492,
+          "start_ticks": 122956013,
+          "exe": "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+          "cwd": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911",
+          "argv": [
+            "/usr/lib/linux-hwe-6.17-tools-6.17.0-23/perf",
+            "record",
+            "-e",
+            "cycles:u",
+            "-F",
+            "999",
+            "-k",
+            "CLOCK_MONOTONIC",
+            "--no-buildid-cache",
+            "--delay=-1",
+            "--control=fd:6,9",
+            "-p",
+            "3692491",
+            "-o",
+            "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/profile.data"
+          ]
+        }
+      ]
+    },
+    "errors": [],
+    "constructor_error": null
+  },
+  "mock_evidence": [
+    {
+      "request_ordinal": 1,
+      "tool_result_blocks": 0,
+      "package_seen": false,
+      "source_seen": false,
+      "any_tool_error": false
+    },
+    {
+      "request_ordinal": 2,
+      "tool_result_blocks": 1,
+      "package_seen": true,
+      "source_seen": false,
+      "any_tool_error": false
+    },
+    {
+      "request_ordinal": 3,
+      "tool_result_blocks": 2,
+      "package_seen": true,
+      "source_seen": true,
+      "any_tool_error": false
+    }
+  ],
+  "app_cleanup": {
+    "process_before_stop": {
+      "pid": 3692491,
+      "start_ticks": 122956013,
+      "exe": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+      "cwd": "/tmp/tt_proj_9831",
+      "argv": [
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    },
+    "wait_status": 9
+  },
+  "mock_cleanup": {
+    "exit": -15,
+    "ownership_checks": [
+      {
+        "pid": 3692490,
+        "start_ticks": 122955933,
+        "exe": "/usr/bin/python3.12",
+        "cwd": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911",
+        "argv": [
+          "python3",
+          "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/observed_mock.py",
+          "10552",
+          "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-2/mock-script.json"
+        ]
+      }
+    ]
+  },
+  "cleanup_errors": []
+}

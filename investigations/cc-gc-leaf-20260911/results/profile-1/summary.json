@@ -1,0 +1,896 @@
+{
+  "schema": 1,
+  "status": "complete-actual-ip-self-census",
+  "format": "pid-tid-time-period-event-ip-symoff-dso-v1",
+  "format_validation": "validated-installed-perf6.17-three-profile-v4-exports",
+  "analyzer_sha256": "59ba8cd9429b46645fe03717d40cbeebd1ae6ab55e6a926c896fcf054f6edb81",
+  "inputs": {
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-1/samples-v2.txt": "14fad5e7c8c2a3a69f75c67c289ffb8559aa18a89f19f7e925447a4e50607a88",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-1/run.json": "776f42bb7457b24d3f30e62b208efb9c88f886e261477fcafa1ea7bfb0dbeca6",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-v4-1/app-maps.json": "b32fdb1de08511e2f27bb83fe1e19af9279d8f182adc1ebf9d5238a79a6b84d7",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/helper-audit-v2.csv": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27"
+  },
+  "application": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+  "application_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "pid": 3692075,
+  "clock": "CLOCK_MONOTONIC",
+  "phase_boundary_policy": "[begin,end)",
+  "totals": {
+    "samples": 5187,
+    "period": 23751808510
+  },
+  "phases": {
+    "before_startup": {
+      "samples": 0,
+      "period": 0
+    },
+    "startup": {
+      "samples": 1242,
+      "period": 5227662674
+    },
+    "between_phases": {
+      "samples": 2695,
+      "period": 12128645839
+    },
+    "command": {
+      "samples": 1250,
+      "period": 6395499997
+    },
+    "after_command": {
+      "samples": 0,
+      "period": 0
+    }
+  },
+  "phase_scope_totals": [
+    {
+      "phase": "before_startup",
+      "scope": "main_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "before_startup",
+      "scope": "other_target_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "before_startup",
+      "scope": "foreign_pid",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "startup",
+      "scope": "main_thread",
+      "samples": 980,
+      "period": 4886891414
+    },
+    {
+      "phase": "startup",
+      "scope": "other_target_thread",
+      "samples": 36,
+      "period": 78015
+    },
+    {
+      "phase": "startup",
+      "scope": "foreign_pid",
+      "samples": 226,
+      "period": 340693245
+    },
+    {
+      "phase": "between_phases",
+      "scope": "main_thread",
+      "samples": 2259,
+      "period": 11684869688
+    },
+    {
+      "phase": "between_phases",
+      "scope": "other_target_thread",
+      "samples": 45,
+      "period": 33226
+    },
+    {
+      "phase": "between_phases",
+      "scope": "foreign_pid",
+      "samples": 391,
+      "period": 443742925
+    },
+    {
+      "phase": "command",
+      "scope": "main_thread",
+      "samples": 1249,
+      "period": 6395301558
+    },
+    {
+      "phase": "command",
+      "scope": "other_target_thread",
+      "samples": 1,
+      "period": 198439
+    },
+    {
+      "phase": "command",
+      "scope": "foreign_pid",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "after_command",
+      "scope": "main_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "after_command",
+      "scope": "other_target_thread",
+      "samples": 0,
+      "period": 0
+    },
+    {
+      "phase": "after_command",
+      "scope": "foreign_pid",
+      "samples": 0,
+      "period": 0
+    }
+  ],
+  "thread_totals": [
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692075,
+      "samples": 2259,
+      "period": 11684869688
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692077,
+      "samples": 8,
+      "period": 3497
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692106,
+      "samples": 5,
+      "period": 3704
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692134,
+      "samples": 5,
+      "period": 5907
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692136,
+      "samples": 5,
+      "period": 2996
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692153,
+      "samples": 5,
+      "period": 3331
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692155,
+      "samples": 7,
+      "period": 5632
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692075,
+      "tid": 3692157,
+      "samples": 10,
+      "period": 8159
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692109,
+      "samples": 7,
+      "period": 32798952
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692110,
+      "samples": 5,
+      "period": 7008
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692111,
+      "samples": 5,
+      "period": 3588
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692112,
+      "samples": 4,
+      "period": 12567114
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692113,
+      "samples": 5,
+      "period": 4050
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692114,
+      "samples": 9,
+      "period": 3669
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692117,
+      "samples": 5,
+      "period": 3246
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692118,
+      "samples": 5,
+      "period": 2969
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692109,
+      "tid": 3692119,
+      "samples": 5,
+      "period": 2976
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692121,
+      "tid": 3692121,
+      "samples": 5,
+      "period": 1728
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692122,
+      "tid": 3692122,
+      "samples": 4,
+      "period": 37
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692128,
+      "tid": 3692128,
+      "samples": 5,
+      "period": 1661
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692130,
+      "tid": 3692130,
+      "samples": 11,
+      "period": 237634
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692133,
+      "samples": 45,
+      "period": 158485825
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692143,
+      "samples": 5,
+      "period": 2519
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692146,
+      "samples": 11,
+      "period": 132185
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692148,
+      "samples": 11,
+      "period": 224666
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692151,
+      "samples": 19,
+      "period": 15556352
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692152,
+      "samples": 17,
+      "period": 5146185
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692162,
+      "samples": 5,
+      "period": 1888
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692163,
+      "samples": 5,
+      "period": 2672
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692164,
+      "samples": 5,
+      "period": 3690
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692133,
+      "tid": 3692165,
+      "samples": 5,
+      "period": 3859
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692135,
+      "tid": 3692135,
+      "samples": 6,
+      "period": 222339
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692138,
+      "samples": 48,
+      "period": 198878399
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692144,
+      "samples": 5,
+      "period": 2445
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692145,
+      "samples": 13,
+      "period": 6764148
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692147,
+      "samples": 22,
+      "period": 6935327
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692149,
+      "samples": 21,
+      "period": 5070203
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692150,
+      "samples": 11,
+      "period": 225643
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692161,
+      "samples": 5,
+      "period": 1732
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692167,
+      "samples": 5,
+      "period": 4898
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692168,
+      "samples": 5,
+      "period": 5727
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692169,
+      "samples": 9,
+      "period": 2385
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692138,
+      "tid": 3692170,
+      "samples": 5,
+      "period": 6731
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692154,
+      "tid": 3692154,
+      "samples": 10,
+      "period": 8784
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692158,
+      "tid": 3692158,
+      "samples": 6,
+      "period": 222643
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692159,
+      "tid": 3692159,
+      "samples": 6,
+      "period": 76800
+    },
+    {
+      "phase": "between_phases",
+      "pid": 3692160,
+      "tid": 3692160,
+      "samples": 11,
+      "period": 120248
+    },
+    {
+      "phase": "command",
+      "pid": 3692075,
+      "tid": 3692075,
+      "samples": 1249,
+      "period": 6395301558
+    },
+    {
+      "phase": "command",
+      "pid": 3692075,
+      "tid": 3692153,
+      "samples": 1,
+      "period": 198439
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692075,
+      "samples": 980,
+      "period": 4886891414
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692077,
+      "samples": 6,
+      "period": 64003
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692078,
+      "samples": 5,
+      "period": 1701
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692083,
+      "samples": 5,
+      "period": 2058
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692087,
+      "samples": 5,
+      "period": 2308
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692089,
+      "samples": 5,
+      "period": 3211
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692107,
+      "samples": 5,
+      "period": 1794
+    },
+    {
+      "phase": "startup",
+      "pid": 3692075,
+      "tid": 3692108,
+      "samples": 5,
+      "period": 2940
+    },
+    {
+      "phase": "startup",
+      "pid": 3692079,
+      "tid": 3692079,
+      "samples": 5,
+      "period": 514
+    },
+    {
+      "phase": "startup",
+      "pid": 3692080,
+      "tid": 3692080,
+      "samples": 5,
+      "period": 1047
+    },
+    {
+      "phase": "startup",
+      "pid": 3692081,
+      "tid": 3692081,
+      "samples": 5,
+      "period": 673
+    },
+    {
+      "phase": "startup",
+      "pid": 3692082,
+      "tid": 3692082,
+      "samples": 6,
+      "period": 51861
+    },
+    {
+      "phase": "startup",
+      "pid": 3692084,
+      "tid": 3692084,
+      "samples": 6,
+      "period": 19410
+    },
+    {
+      "phase": "startup",
+      "pid": 3692086,
+      "tid": 3692086,
+      "samples": 11,
+      "period": 65616
+    },
+    {
+      "phase": "startup",
+      "pid": 3692088,
+      "tid": 3692088,
+      "samples": 6,
+      "period": 118854
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692090,
+      "samples": 43,
+      "period": 162512352
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692091,
+      "samples": 5,
+      "period": 2289
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692092,
+      "samples": 8,
+      "period": 4664451
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692093,
+      "samples": 13,
+      "period": 5037207
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692094,
+      "samples": 3,
+      "period": 14164949
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692095,
+      "samples": 19,
+      "period": 995306
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692096,
+      "samples": 5,
+      "period": 2496
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692098,
+      "samples": 5,
+      "period": 829
+    },
+    {
+      "phase": "startup",
+      "pid": 3692090,
+      "tid": 3692099,
+      "samples": 10,
+      "period": 3110
+    },
+    {
+      "phase": "startup",
+      "pid": 3692101,
+      "tid": 3692101,
+      "samples": 6,
+      "period": 38634
+    },
+    {
+      "phase": "startup",
+      "pid": 3692103,
+      "tid": 3692103,
+      "samples": 6,
+      "period": 93335
+    },
+    {
+      "phase": "startup",
+      "pid": 3692109,
+      "tid": 3692109,
+      "samples": 29,
+      "period": 146050957
+    },
+    {
+      "phase": "startup",
+      "pid": 3692109,
+      "tid": 3692111,
+      "samples": 12,
+      "period": 218103
+    },
+    {
+      "phase": "startup",
+      "pid": 3692109,
+      "tid": 3692112,
+      "samples": 7,
+      "period": 2993770
+    },
+    {
+      "phase": "startup",
+      "pid": 3692109,
+      "tid": 3692114,
+      "samples": 1,
+      "period": 3652532
+    },
+    {
+      "phase": "startup",
+      "pid": 3692109,
+      "tid": 3692117,
+      "samples": 5,
+      "period": 1242
+    },
+    {
+      "phase": "startup",
+      "pid": 3692109,
+      "tid": 3692119,
+      "samples": 5,
+      "period": 3708
+    }
+  ],
+  "metadata_join_totals": [
+    {
+      "phase": "between_phases",
+      "join": "exact_start_and_symbol",
+      "samples": 205,
+      "period": 1064359266
+    },
+    {
+      "phase": "between_phases",
+      "join": "no_pgcm_function_at_start",
+      "samples": 1994,
+      "period": 10236910013
+    },
+    {
+      "phase": "between_phases",
+      "join": "not_application_dso",
+      "samples": 496,
+      "period": 827376560
+    },
+    {
+      "phase": "command",
+      "join": "exact_start_and_symbol",
+      "samples": 55,
+      "period": 289071090
+    },
+    {
+      "phase": "command",
+      "join": "no_pgcm_function_at_start",
+      "samples": 1151,
+      "period": 5892078601
+    },
+    {
+      "phase": "command",
+      "join": "not_application_dso",
+      "samples": 44,
+      "period": 214350306
+    },
+    {
+      "phase": "startup",
+      "join": "exact_start_and_symbol",
+      "samples": 8,
+      "period": 41158427
+    },
+    {
+      "phase": "startup",
+      "join": "no_pgcm_function_at_start",
+      "samples": 916,
+      "period": 4636281435
+    },
+    {
+      "phase": "startup",
+      "join": "not_application_dso",
+      "samples": 318,
+      "period": 550222812
+    }
+  ],
+  "metadata": {
+    "summary_sha256": "432ab41646e9ce1ed7d7f0e5cbb9e94a115a687754060d4085186659df6a0206",
+    "function_rows_sha256": "a212a9107b5deb3c62f8e07343e71c6467b3dbbee256103df4b513db2f250549",
+    "load_bias": "0x595e155cd000",
+    "gcmap_file_offset": "0x15359760",
+    "gcmap_linked_vma": "0x15359760",
+    "anchor_maps": [
+      {
+        "start": 98260975874048,
+        "end": 98261000048640,
+        "offset": 355672064,
+        "major": 9,
+        "minor": 0,
+        "inode": 36997294,
+        "perms": "rw-p",
+        "path": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      }
+    ],
+    "method": "same file byte: map.start + section.offset - map.offset - section.address",
+    "identity_limit": "coordinator must bind immutable app SHA to this metadata census; no binary bytes are reread"
+  },
+  "helper_audit_sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+  "callsites": {
+    "summary_sha256": "e15167fe34aac425e501df73ef186fcab19d00838f2510676fa137f9ea8454be",
+    "outputs": {
+      "post-opt-hypothesis-targets.csv": {
+        "sha256": "f04aa3652d717bd6f57e09b85f1dbbb8aeec56cab1a1dd4b2f4d2d7f806591a3",
+        "bytes": 10853730
+      },
+      "definitions.csv": {
+        "sha256": "cabbd15dbc972ffd7de4ecf1012689903b62a04e7e741263f56d0a59ec1e1f2b",
+        "bytes": 29051015
+      }
+    },
+    "limit": "source-level caller identities; accepted emission-to-final-app binding remains coordinator-owned"
+  },
+  "hypothesis_caller_self_coverage": [
+    {
+      "phase": "between_phases",
+      "scope": "main_thread",
+      "hypothesis": "direct-all-runtime-leaves",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 3,
+      "period": 14419508
+    },
+    {
+      "phase": "between_phases",
+      "scope": "main_thread",
+      "hypothesis": "direct-known-cannot-collect",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 3,
+      "period": 14419508
+    },
+    {
+      "phase": "between_phases",
+      "scope": "main_thread",
+      "hypothesis": "direct-reviewed-runtime",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 3,
+      "period": 14419508
+    },
+    {
+      "phase": "command",
+      "scope": "main_thread",
+      "hypothesis": "direct-all-runtime-leaves",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 29,
+      "period": 152810652
+    },
+    {
+      "phase": "command",
+      "scope": "main_thread",
+      "hypothesis": "direct-known-cannot-collect",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 27,
+      "period": 142156006
+    },
+    {
+      "phase": "command",
+      "scope": "main_thread",
+      "hypothesis": "direct-reviewed-runtime",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 23,
+      "period": 121159433
+    },
+    {
+      "phase": "startup",
+      "scope": "main_thread",
+      "hypothesis": "direct-all-runtime-leaves",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 3,
+      "period": 15520897
+    },
+    {
+      "phase": "startup",
+      "scope": "main_thread",
+      "hypothesis": "direct-known-cannot-collect",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 3,
+      "period": 15520897
+    },
+    {
+      "phase": "startup",
+      "scope": "main_thread",
+      "hypothesis": "direct-reviewed-runtime",
+      "binding": "exact_symbol_unique_emission_unit_coverage",
+      "samples": 2,
+      "period": 10228095
+    }
+  ],
+  "first_sample_ns": 1229473952456578,
+  "last_sample_ns": 1229479266303765,
+  "reconciliation": "integer samples and summed periods reconcile across phases, scopes, self rows and IP rows",
+  "limitations": [
+    "Installed perf6.17 exports and independent self reports are bound separately in measurement receipts.",
+    "Samples are actual IP self only. No caller ancestry or callee subtraction is used.",
+    "Captured maps are a startup-end snapshot; only its exact application mappings support PC joins.",
+    "Symbol prefixes identify naming families, not source-proved GC effects.",
+    "Static map counts are not executed spills. Affected caller self is coverage, never saved time.",
+    "A valid syntax cannot prove an exporter did not omit rows; independently reconcile perf self totals and bind exporter exit0."
+  ],
+  "outputs": {
+    "self.csv": {
+      "sha256": "08338edaf257c5b849d78d3b6dc14105024ed620cae727335c6fa3d697702a3e",
+      "bytes": 266596
+    },
+    "by-ip.csv.gz": {
+      "sha256": "9d8c18df088b1ae2bd689bbe01dbedede7b0d9c121542c7935d1c56737b7b9c0",
+      "bytes": 92947
+    },
+    "self-with-static-metadata.jsonl.gz": {
+      "sha256": "44bc0ffb6e887d7fca3c828c53dfbd71dbfc10bc12f65d51dddfc04da8964cf6",
+      "bytes": 45915
+    }
+  }
+}

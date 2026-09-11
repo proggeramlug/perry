@@ -1,0 +1,1875 @@
+{
+  "status": "complete-conservative-native-statepoint-window-census",
+  "totals": {
+    "functions_seen": 100864,
+    "outside_native_strategy_functions": 23042,
+    "native_strategy_functions": 77822,
+    "analyzed_functions": 19101,
+    "explicit_heap_barrier_sites": 194616,
+    "fresh_with_no_intervening_statepoint": 64511,
+    "unresolved_parent_sites": 130105,
+    "native_functions_without_heap_barrier_reference": 58721
+  },
+  "units": [
+    {
+      "attempt": "pid-3681178-attempt-0",
+      "counts": {
+        "functions_seen": 1,
+        "outside_native_strategy_functions": 1
+      },
+      "excluded": [],
+      "source_sha256": "b2973045778a455cce0f85997052ee7dd84af75606285423111dbf4b42e0965f",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-0/post-rs4gc.ll",
+      "rows_sha256": "ad5e7abc0dfbaff72ce31ad942525dd81cf8ab6816eb487ae09cb66ddeb5de88"
+    },
+    {
+      "attempt": "pid-3681178-attempt-10",
+      "counts": {
+        "functions_seen": 929,
+        "outside_native_strategy_functions": 213,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 164,
+        "explicit_heap_barrier_sites": 1476,
+        "fresh_with_no_intervening_statepoint": 572,
+        "unresolved_parent_sites": 904,
+        "native_functions_without_heap_barrier_reference": 552
+      },
+      "excluded": [],
+      "source_sha256": "3a66f301a2749736619ab5c782fde3d2059522d865d3c44da99967fbca0e6058",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-10/post-rs4gc.ll",
+      "rows_sha256": "1f9059ef54cb33b24c34a1855fa3ada4c8418fcca95d961045587ce3305b7b47"
+    },
+    {
+      "attempt": "pid-3681178-attempt-100",
+      "counts": {
+        "functions_seen": 934,
+        "outside_native_strategy_functions": 212,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 176,
+        "explicit_heap_barrier_sites": 1751,
+        "fresh_with_no_intervening_statepoint": 583,
+        "unresolved_parent_sites": 1168,
+        "native_functions_without_heap_barrier_reference": 546
+      },
+      "excluded": [],
+      "source_sha256": "5dc80b26fb3019c7cddde8507db762907530d7335c960110e65acee54dd51377",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-100/post-rs4gc.ll",
+      "rows_sha256": "3d4b6bdc6417b6a7cf6909a15115925f96b761c64a82a0ffc9fc00886aa46858"
+    },
+    {
+      "attempt": "pid-3681178-attempt-101",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 177,
+        "explicit_heap_barrier_sites": 1490,
+        "fresh_with_no_intervening_statepoint": 309,
+        "unresolved_parent_sites": 1181,
+        "outside_native_strategy_functions": 216,
+        "native_functions_without_heap_barrier_reference": 541
+      },
+      "excluded": [],
+      "source_sha256": "ed9af24666ba887a04d9404dbd8203ee75a7787ed1e8ee0c1281f86105a2a672",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-101/post-rs4gc.ll",
+      "rows_sha256": "8e648c2278c7585f48c01355a20531b37ccf527a5f98aa8c19bfa31c1a87c4b1"
+    },
+    {
+      "attempt": "pid-3681178-attempt-102",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 1940,
+        "fresh_with_no_intervening_statepoint": 591,
+        "unresolved_parent_sites": 1349,
+        "outside_native_strategy_functions": 212,
+        "native_functions_without_heap_barrier_reference": 543
+      },
+      "excluded": [],
+      "source_sha256": "fadae0034ed1026d612fd2697e52e08d97e25d22514f272e1c33e7b379485b3d",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-102/post-rs4gc.ll",
+      "rows_sha256": "6026eec7037d56f740a99ab5977ed6881d5fa70585bdc873df7a706196a7c8c4"
+    },
+    {
+      "attempt": "pid-3681178-attempt-103",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 178,
+        "explicit_heap_barrier_sites": 1430,
+        "fresh_with_no_intervening_statepoint": 477,
+        "unresolved_parent_sites": 953,
+        "native_functions_without_heap_barrier_reference": 542,
+        "outside_native_strategy_functions": 215
+      },
+      "excluded": [],
+      "source_sha256": "031f33009242bf5eb0219cde3be2d72811807771e693e591d1f7b47f7583bc0c",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-103/post-rs4gc.ll",
+      "rows_sha256": "e2cd10ae1b2d963f779047ccc6a6fbe43b4f1211831807ec09fdfa1a1780c99c"
+    },
+    {
+      "attempt": "pid-3681178-attempt-104",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 177,
+        "explicit_heap_barrier_sites": 2579,
+        "fresh_with_no_intervening_statepoint": 1038,
+        "unresolved_parent_sites": 1541,
+        "native_functions_without_heap_barrier_reference": 545,
+        "outside_native_strategy_functions": 213
+      },
+      "excluded": [],
+      "source_sha256": "712431893fb06a04165c4e14f69a8d4602ceb0a568b8e56554d8a92b1cecd001",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-104/post-rs4gc.ll",
+      "rows_sha256": "4002603e5e48b2d82057821b7e83d4a91ddd0ce8c1cbcbd5530949c82f4014d3"
+    },
+    {
+      "attempt": "pid-3681178-attempt-105",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 719,
+        "analyzed_functions": 176,
+        "explicit_heap_barrier_sites": 1859,
+        "fresh_with_no_intervening_statepoint": 479,
+        "unresolved_parent_sites": 1380,
+        "native_functions_without_heap_barrier_reference": 543,
+        "outside_native_strategy_functions": 215
+      },
+      "excluded": [],
+      "source_sha256": "680865f4db975e3e658c14440e1f2591f2d7639c2266aa5e73700a2547a4c452",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-105/post-rs4gc.ll",
+      "rows_sha256": "8dbaeb8f16ee7b4427500aedbaa0819a883ef24541a885e22f725020283b541e"
+    },
+    {
+      "attempt": "pid-3681178-attempt-106",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 187,
+        "explicit_heap_barrier_sites": 1840,
+        "fresh_with_no_intervening_statepoint": 727,
+        "unresolved_parent_sites": 1113,
+        "native_functions_without_heap_barrier_reference": 535,
+        "outside_native_strategy_functions": 212
+      },
+      "excluded": [],
+      "source_sha256": "f76524e989a6f160a55022cd76fa3278217cb3b9edeaabf32a8a2be2a453be4d",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-106/post-rs4gc.ll",
+      "rows_sha256": "6ddbe5463a0726cb2e0e4a848aff42cb265770cac323f252b5ca9b51470ee84c"
+    },
+    {
+      "attempt": "pid-3681178-attempt-107",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 170,
+        "explicit_heap_barrier_sites": 1744,
+        "fresh_with_no_intervening_statepoint": 427,
+        "unresolved_parent_sites": 1317,
+        "native_functions_without_heap_barrier_reference": 547,
+        "outside_native_strategy_functions": 217
+      },
+      "excluded": [],
+      "source_sha256": "ffb359b30c3f603986b8cf002626171a50aced688ef1ddff52990f564c07cf13",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-107/post-rs4gc.ll",
+      "rows_sha256": "a3d789d9dbb3e3908f69f2d11356469cac67bbf8c17568f10db033b5f9276e3f"
+    },
+    {
+      "attempt": "pid-3681178-attempt-108",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 178,
+        "explicit_heap_barrier_sites": 1565,
+        "fresh_with_no_intervening_statepoint": 552,
+        "unresolved_parent_sites": 1013,
+        "native_functions_without_heap_barrier_reference": 539,
+        "outside_native_strategy_functions": 217
+      },
+      "excluded": [],
+      "source_sha256": "e51aaa154542c3258198f482ed0be60a89cdfe5981fcfaa3aa6291dba0226c80",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-108/post-rs4gc.ll",
+      "rows_sha256": "7100e5066a3598a100100caa597429528c4d44465d68eca52a25bef107676d04"
+    },
+    {
+      "attempt": "pid-3681178-attempt-109",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 1362,
+        "fresh_with_no_intervening_statepoint": 488,
+        "unresolved_parent_sites": 874,
+        "native_functions_without_heap_barrier_reference": 545,
+        "outside_native_strategy_functions": 210
+      },
+      "excluded": [],
+      "source_sha256": "3bb0373f57518843c94fe5828cb796d12269d1734744cf94aa2893f1a270bafe",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-109/post-rs4gc.ll",
+      "rows_sha256": "41ea6c044cd7e1d3826c997d91097930dc5333643dd70fe41db8e0540635ac29"
+    },
+    {
+      "attempt": "pid-3681178-attempt-11",
+      "counts": {
+        "functions_seen": 930,
+        "outside_native_strategy_functions": 213,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 167,
+        "explicit_heap_barrier_sites": 1262,
+        "fresh_with_no_intervening_statepoint": 271,
+        "unresolved_parent_sites": 991,
+        "native_functions_without_heap_barrier_reference": 550
+      },
+      "excluded": [],
+      "source_sha256": "390dee96c4cac8d6a0f8dc1e7626874427873c9585a52738f3b374c51b062fc1",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-11/post-rs4gc.ll",
+      "rows_sha256": "2584eea8b613cdc0901ad6433e8cfb773c73853700a6bedac054897ebdff1e3c"
+    },
+    {
+      "attempt": "pid-3681178-attempt-110",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 714,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1847,
+        "fresh_with_no_intervening_statepoint": 469,
+        "unresolved_parent_sites": 1378,
+        "outside_native_strategy_functions": 220,
+        "native_functions_without_heap_barrier_reference": 533
+      },
+      "excluded": [],
+      "source_sha256": "33e81d393e007af63b0f3489e3bd207c772b2c4324fe4c07e100954b951f5502",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-110/post-rs4gc.ll",
+      "rows_sha256": "19d28ad354c590ee49efb5fb1040ee0ac7546fd134377f3f6532a725f488aad5"
+    },
+    {
+      "attempt": "pid-3681178-attempt-111",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 1810,
+        "fresh_with_no_intervening_statepoint": 630,
+        "unresolved_parent_sites": 1180,
+        "native_functions_without_heap_barrier_reference": 538,
+        "outside_native_strategy_functions": 218
+      },
+      "excluded": [],
+      "source_sha256": "590573a87e94b82378ebc9a6c89c27c3f2b6d9e398af6c362a97c38a550b5d20",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-111/post-rs4gc.ll",
+      "rows_sha256": "6080600fba22143d7ffcb6cbc5a48db44641a85efe83ea070a4fd4c8622bc7fb"
+    },
+    {
+      "attempt": "pid-3681178-attempt-112",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 723,
+        "analyzed_functions": 190,
+        "explicit_heap_barrier_sites": 2338,
+        "fresh_with_no_intervening_statepoint": 1143,
+        "unresolved_parent_sites": 1195,
+        "native_functions_without_heap_barrier_reference": 533,
+        "outside_native_strategy_functions": 211
+      },
+      "excluded": [],
+      "source_sha256": "1f43eb9992eab835a935627466589b6a5caf917b4fc43f7ebcdc9a5de0cf0805",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-112/post-rs4gc.ll",
+      "rows_sha256": "b85584e2166c69f37a7c4f4567619bdd1b51604576ad55fd7f9b888c181ef5eb"
+    },
+    {
+      "attempt": "pid-3681178-attempt-113",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 169,
+        "explicit_heap_barrier_sites": 1949,
+        "fresh_with_no_intervening_statepoint": 766,
+        "unresolved_parent_sites": 1183,
+        "outside_native_strategy_functions": 213,
+        "native_functions_without_heap_barrier_reference": 552
+      },
+      "excluded": [],
+      "source_sha256": "4e57a551b94e7e48f633f40b6bb35a661eb07385f0f16f5b9a2ee5779d79f1ae",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-113/post-rs4gc.ll",
+      "rows_sha256": "5812f2a5f4d27e70250ae7bf72c8ecb70adc744d348a9f953a6a387c8b0dbaa3"
+    },
+    {
+      "attempt": "pid-3681178-attempt-114",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 192,
+        "explicit_heap_barrier_sites": 2054,
+        "fresh_with_no_intervening_statepoint": 898,
+        "unresolved_parent_sites": 1156,
+        "native_functions_without_heap_barrier_reference": 526,
+        "outside_native_strategy_functions": 216
+      },
+      "excluded": [],
+      "source_sha256": "277df7a3561a0d72a4e3e9f2ba50ca7abbaf2eb4b62a3b756d2907de840e8ffe",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-114/post-rs4gc.ll",
+      "rows_sha256": "4f07d7cf1f645b2108a5edff467cf0b6f4dde267b6b88a23cf1e408643746892"
+    },
+    {
+      "attempt": "pid-3681178-attempt-12",
+      "counts": {
+        "functions_seen": 932,
+        "outside_native_strategy_functions": 211,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 163,
+        "explicit_heap_barrier_sites": 1303,
+        "fresh_with_no_intervening_statepoint": 288,
+        "unresolved_parent_sites": 1015,
+        "native_functions_without_heap_barrier_reference": 558
+      },
+      "excluded": [],
+      "source_sha256": "30185d53113b05ab6416551b365d88efafa57eb1f98d7b96a628222ddf5df7a9",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-12/post-rs4gc.ll",
+      "rows_sha256": "73325bdfe7908fa4b7e8b9324ce44b4c4835e353277d237c35ee7ac1760c16a5"
+    },
+    {
+      "attempt": "pid-3681178-attempt-13",
+      "counts": {
+        "functions_seen": 933,
+        "outside_native_strategy_functions": 209,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 175,
+        "explicit_heap_barrier_sites": 1609,
+        "fresh_with_no_intervening_statepoint": 402,
+        "unresolved_parent_sites": 1207,
+        "native_functions_without_heap_barrier_reference": 549
+      },
+      "excluded": [],
+      "source_sha256": "b186057707b00d4ca1f6011e0137314eeec38e3945abb2a74fb384ac5f09fa61",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-13/post-rs4gc.ll",
+      "rows_sha256": "ac8fdced3147cf2c65cd7c066840ded7b498274b0307da8911dd72c563680a16"
+    },
+    {
+      "attempt": "pid-3681178-attempt-14",
+      "counts": {
+        "functions_seen": 933,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 168,
+        "explicit_heap_barrier_sites": 1960,
+        "fresh_with_no_intervening_statepoint": 942,
+        "unresolved_parent_sites": 1018,
+        "outside_native_strategy_functions": 209,
+        "native_functions_without_heap_barrier_reference": 556
+      },
+      "excluded": [],
+      "source_sha256": "41584d18df7a7775bd06c5be111a7f5ccbe182de062e105e196d99f2630c6f7a",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-14/post-rs4gc.ll",
+      "rows_sha256": "f93d04f6992f8050b0c624b2ddf25417037d6569950d1ca70f98456cb4aa24d5"
+    },
+    {
+      "attempt": "pid-3681178-attempt-15",
+      "counts": {
+        "functions_seen": 933,
+        "outside_native_strategy_functions": 209,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 191,
+        "explicit_heap_barrier_sites": 1475,
+        "fresh_with_no_intervening_statepoint": 363,
+        "unresolved_parent_sites": 1112,
+        "native_functions_without_heap_barrier_reference": 533
+      },
+      "excluded": [],
+      "source_sha256": "65add85fb1cc5fdfae39ffb075f9a1ab95c20bc92dec8adef0ee1e7efc9209d8",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-15/post-rs4gc.ll",
+      "rows_sha256": "f196c597817cc9cf370a21df44f0160e678fb4045e02709f1c9aa4289d6e4e78"
+    },
+    {
+      "attempt": "pid-3681178-attempt-16",
+      "counts": {
+        "functions_seen": 933,
+        "outside_native_strategy_functions": 213,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 177,
+        "explicit_heap_barrier_sites": 1579,
+        "fresh_with_no_intervening_statepoint": 634,
+        "unresolved_parent_sites": 945,
+        "native_functions_without_heap_barrier_reference": 543
+      },
+      "excluded": [],
+      "source_sha256": "a36fe1ab2bd11ff56fd30e98b2cfa0098a415676365f37c82495aff3e34f84aa",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-16/post-rs4gc.ll",
+      "rows_sha256": "9477d131bbe8f7dd359041fddfe63bd21629303ccb553cadb8f7091d92f448e6"
+    },
+    {
+      "attempt": "pid-3681178-attempt-17",
+      "counts": {
+        "functions_seen": 933,
+        "native_strategy_functions": 728,
+        "analyzed_functions": 177,
+        "explicit_heap_barrier_sites": 1615,
+        "fresh_with_no_intervening_statepoint": 301,
+        "unresolved_parent_sites": 1314,
+        "native_functions_without_heap_barrier_reference": 551,
+        "outside_native_strategy_functions": 205
+      },
+      "excluded": [],
+      "source_sha256": "9f194c4fd84a1132e39d53e45fbeaa4f1792abd95eab89856eef0a1bb0d446c5",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-17/post-rs4gc.ll",
+      "rows_sha256": "a02f90b91a580551e66551d0b2e8ba902fbe7840c00c0479835eb18816a4fe12"
+    },
+    {
+      "attempt": "pid-3681178-attempt-18",
+      "counts": {
+        "functions_seen": 933,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 178,
+        "explicit_heap_barrier_sites": 1849,
+        "fresh_with_no_intervening_statepoint": 870,
+        "unresolved_parent_sites": 979,
+        "outside_native_strategy_functions": 211,
+        "native_functions_without_heap_barrier_reference": 544
+      },
+      "excluded": [],
+      "source_sha256": "a0a9e6cdaf6f6249038801b9d37078d565d8677989718a977ba2ad6a17067a37",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-18/post-rs4gc.ll",
+      "rows_sha256": "092fcbfa0226c157dadaac85a560344db63fe1d1ee97bfe6a138f08d04602612"
+    },
+    {
+      "attempt": "pid-3681178-attempt-19",
+      "counts": {
+        "functions_seen": 933,
+        "outside_native_strategy_functions": 209,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1644,
+        "fresh_with_no_intervening_statepoint": 533,
+        "unresolved_parent_sites": 1111,
+        "native_functions_without_heap_barrier_reference": 551
+      },
+      "excluded": [],
+      "source_sha256": "cb46f171f0c8b274e1d8d7b5386acf1a7db98a6f4ef078c6d219d3ff84c86473",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-19/post-rs4gc.ll",
+      "rows_sha256": "dedfcf5dafc4dc6f1f365f333b7fddb9f4f2eadebd92e068653e1f39d5e47e73"
+    },
+    {
+      "attempt": "pid-3681178-attempt-20",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 168,
+        "explicit_heap_barrier_sites": 1859,
+        "fresh_with_no_intervening_statepoint": 617,
+        "unresolved_parent_sites": 1242,
+        "outside_native_strategy_functions": 214,
+        "native_functions_without_heap_barrier_reference": 552
+      },
+      "excluded": [],
+      "source_sha256": "626484a182594029977642d9b742f751a3a3cdd844211808497f5363c4899ca6",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-20/post-rs4gc.ll",
+      "rows_sha256": "405a545a4a69c0d3cc41d5257f6196b59fc15a745d785d0be4127589b4017eca"
+    },
+    {
+      "attempt": "pid-3681178-attempt-21",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 723,
+        "analyzed_functions": 166,
+        "explicit_heap_barrier_sites": 2093,
+        "fresh_with_no_intervening_statepoint": 516,
+        "unresolved_parent_sites": 1577,
+        "native_functions_without_heap_barrier_reference": 557,
+        "outside_native_strategy_functions": 211
+      },
+      "excluded": [],
+      "source_sha256": "2df9331fc36d83a8be785c9841d69d268abd02b81e03c9dca8bc1556f5d57274",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-21/post-rs4gc.ll",
+      "rows_sha256": "2744067d6b4aea2ec002b7f4cbfba2418d4a1317e521e84cc87f2b878ef68d30"
+    },
+    {
+      "attempt": "pid-3681178-attempt-22",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 174,
+        "explicit_heap_barrier_sites": 1638,
+        "fresh_with_no_intervening_statepoint": 607,
+        "unresolved_parent_sites": 1031,
+        "native_functions_without_heap_barrier_reference": 547,
+        "outside_native_strategy_functions": 213
+      },
+      "excluded": [],
+      "source_sha256": "64bb822a92d762956ce5f1ddae71135515e1dccbeadfa525f6a3a7afa907193e",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-22/post-rs4gc.ll",
+      "rows_sha256": "55e60a0d337ebf4f4248eaaf45193465d6c008ef5c938d710a4bbc937030b9c8"
+    },
+    {
+      "attempt": "pid-3681178-attempt-23",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 187,
+        "explicit_heap_barrier_sites": 1989,
+        "fresh_with_no_intervening_statepoint": 498,
+        "unresolved_parent_sites": 1491,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 529
+      },
+      "excluded": [],
+      "source_sha256": "40b8540fd95ab2c1e8c6fa3433bdd107282136fa9581dbc3349743dd7c1a7264",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-23/post-rs4gc.ll",
+      "rows_sha256": "00eed3443a421f81333860db11d4bda5636713c145e5697675ff2b163a208d8f"
+    },
+    {
+      "attempt": "pid-3681178-attempt-24",
+      "counts": {
+        "functions_seen": 933,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 162,
+        "explicit_heap_barrier_sites": 3860,
+        "fresh_with_no_intervening_statepoint": 2770,
+        "unresolved_parent_sites": 1090,
+        "native_functions_without_heap_barrier_reference": 563,
+        "outside_native_strategy_functions": 208
+      },
+      "excluded": [],
+      "source_sha256": "00fa1db4deaec4b6bb05ba2ff451fa14017e3d65993465050ee85e02b1d56702",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-24/post-rs4gc.ll",
+      "rows_sha256": "a3a0aa729e606b6e2dcb706940aea32801571e8b00abb1df75b19493af503ac3"
+    },
+    {
+      "attempt": "pid-3681178-attempt-25",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 171,
+        "explicit_heap_barrier_sites": 1516,
+        "fresh_with_no_intervening_statepoint": 436,
+        "unresolved_parent_sites": 1080,
+        "outside_native_strategy_functions": 212,
+        "native_functions_without_heap_barrier_reference": 551
+      },
+      "excluded": [],
+      "source_sha256": "e29a38058f11c70c7a6e4fc5b205c6580bf8fce91821bdfaacb21e0248d46f6e",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-25/post-rs4gc.ll",
+      "rows_sha256": "0f44dd590dda161b94d87aabaf39fd82ad2651c760eb1a16677d3a53bcbcd265"
+    },
+    {
+      "attempt": "pid-3681178-attempt-26",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 719,
+        "analyzed_functions": 162,
+        "explicit_heap_barrier_sites": 2650,
+        "fresh_with_no_intervening_statepoint": 758,
+        "unresolved_parent_sites": 1892,
+        "outside_native_strategy_functions": 215,
+        "native_functions_without_heap_barrier_reference": 557
+      },
+      "excluded": [],
+      "source_sha256": "476b4cee4d763bbd509ba453efc243f030b737519a215f0741249e51e4287ef9",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-26/post-rs4gc.ll",
+      "rows_sha256": "05ff1805a48d2b3c41db3d8ff14d0b25b085a90d4b5978d4c7524beadadf0ea8"
+    },
+    {
+      "attempt": "pid-3681178-attempt-27",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 174,
+        "explicit_heap_barrier_sites": 2211,
+        "fresh_with_no_intervening_statepoint": 483,
+        "unresolved_parent_sites": 1728,
+        "outside_native_strategy_functions": 214,
+        "native_functions_without_heap_barrier_reference": 546
+      },
+      "excluded": [],
+      "source_sha256": "0a425685f9b14606342ad27a1235b2f0e42ae14aa5f9724becfd0f7a701e450b",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-27/post-rs4gc.ll",
+      "rows_sha256": "506ffcf8cc300272b9a113163999cb1cab74bf58cbcbd488f1602405885d835a"
+    },
+    {
+      "attempt": "pid-3681178-attempt-28",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 167,
+        "explicit_heap_barrier_sites": 1465,
+        "fresh_with_no_intervening_statepoint": 525,
+        "unresolved_parent_sites": 940,
+        "outside_native_strategy_functions": 213,
+        "native_functions_without_heap_barrier_reference": 554
+      },
+      "excluded": [],
+      "source_sha256": "a6279602567c5f9bcd237de16eb0d946ea1a947a3f148f79197395e575dc4c14",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-28/post-rs4gc.ll",
+      "rows_sha256": "127e6797c9c2c5e82a2592728bf68405cbde0bbeea3a699ab9130558aa5f3ee0"
+    },
+    {
+      "attempt": "pid-3681178-attempt-29",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 2109,
+        "fresh_with_no_intervening_statepoint": 590,
+        "unresolved_parent_sites": 1519,
+        "outside_native_strategy_functions": 216,
+        "native_functions_without_heap_barrier_reference": 545
+      },
+      "excluded": [],
+      "source_sha256": "56d7853548c0f04e13856e6f380f6a02786d4278d6692a8ce3928bc0a40f80cb",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-29/post-rs4gc.ll",
+      "rows_sha256": "b153b8d85c26318e5b2477a75ba23a5fbf75c48367d1e805d404e127eb5c80dc"
+    },
+    {
+      "attempt": "pid-3681178-attempt-3",
+      "counts": {
+        "functions_seen": 929,
+        "native_strategy_functions": 711,
+        "analyzed_functions": 172,
+        "explicit_heap_barrier_sites": 2421,
+        "fresh_with_no_intervening_statepoint": 379,
+        "unresolved_parent_sites": 2042,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 539
+      },
+      "excluded": [],
+      "source_sha256": "26df0096dec01e1afa987581e2f08273b6b88cd336ae9e596a52bcaaff1585c4",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-3/post-rs4gc.ll",
+      "rows_sha256": "6ce96b5e003bdf0a02108e3918911edad502099fb7934edde56178203aef1d35"
+    },
+    {
+      "attempt": "pid-3681178-attempt-30",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 184,
+        "explicit_heap_barrier_sites": 1797,
+        "fresh_with_no_intervening_statepoint": 428,
+        "unresolved_parent_sites": 1369,
+        "outside_native_strategy_functions": 217,
+        "native_functions_without_heap_barrier_reference": 533
+      },
+      "excluded": [],
+      "source_sha256": "a1a4a82a37df52aa8ecc42b4eb86364223d1e14c90a29f1fbecc3d4f95ada1b0",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-30/post-rs4gc.ll",
+      "rows_sha256": "f697b8fd120029a99099a502f93dd91e94a10e727313928284dace6a3222243c"
+    },
+    {
+      "attempt": "pid-3681178-attempt-31",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 2097,
+        "fresh_with_no_intervening_statepoint": 998,
+        "unresolved_parent_sites": 1099,
+        "outside_native_strategy_functions": 209,
+        "native_functions_without_heap_barrier_reference": 546
+      },
+      "excluded": [],
+      "source_sha256": "54da226c0440c733c493ecf0674e43cf29ffef9bd2b12d54958da8413eb12f0d",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-31/post-rs4gc.ll",
+      "rows_sha256": "dc81a5dd9d6d93b21372d08ab6bf78e69079c20da165b96673ed1a4d4307cbf2"
+    },
+    {
+      "attempt": "pid-3681178-attempt-32",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 186,
+        "explicit_heap_barrier_sites": 1606,
+        "fresh_with_no_intervening_statepoint": 551,
+        "unresolved_parent_sites": 1055,
+        "native_functions_without_heap_barrier_reference": 538,
+        "outside_native_strategy_functions": 210
+      },
+      "excluded": [],
+      "source_sha256": "22bebf52fe9a70e0c604dd1d8c16ca96500b8286a5e4a57edac45edbab573712",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-32/post-rs4gc.ll",
+      "rows_sha256": "71f4e2343fa57cf30564c4242f1a0aaf0064ce0716ae94bf7ad125c02815cc40"
+    },
+    {
+      "attempt": "pid-3681178-attempt-33",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 727,
+        "analyzed_functions": 165,
+        "explicit_heap_barrier_sites": 2567,
+        "fresh_with_no_intervening_statepoint": 1291,
+        "unresolved_parent_sites": 1276,
+        "native_functions_without_heap_barrier_reference": 562,
+        "outside_native_strategy_functions": 207
+      },
+      "excluded": [],
+      "source_sha256": "90143c3cb082de9930f18168562ddfbefa3a446267e5295ebd3195fafba1b191",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-33/post-rs4gc.ll",
+      "rows_sha256": "9da6fa373a1d69283fab215b98c0aaa76a83c7d5c3c49c4dcc3cea535e066038"
+    },
+    {
+      "attempt": "pid-3681178-attempt-34",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1525,
+        "fresh_with_no_intervening_statepoint": 388,
+        "unresolved_parent_sites": 1137,
+        "outside_native_strategy_functions": 214,
+        "native_functions_without_heap_barrier_reference": 539
+      },
+      "excluded": [],
+      "source_sha256": "3b604bfc7a5893bf8d1d547cf724e6d899a7d56b532edd0aceaa01c35aea6ff3",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-34/post-rs4gc.ll",
+      "rows_sha256": "1e45df9f74495a598436ef014b49df70e8ce7cc76ae93375a331d11ea2650707"
+    },
+    {
+      "attempt": "pid-3681178-attempt-35",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 719,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1576,
+        "fresh_with_no_intervening_statepoint": 501,
+        "unresolved_parent_sites": 1075,
+        "outside_native_strategy_functions": 215,
+        "native_functions_without_heap_barrier_reference": 538
+      },
+      "excluded": [],
+      "source_sha256": "7c42c14854479db8b65f5cef1f900890c9a565438cfd78dda2f07a9d5a0079c6",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-35/post-rs4gc.ll",
+      "rows_sha256": "6ff058fb0371654ec7109db8eb8fa76409691d0d39d21e9c3056caf37ca882ba"
+    },
+    {
+      "attempt": "pid-3681178-attempt-36",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 165,
+        "explicit_heap_barrier_sites": 1734,
+        "fresh_with_no_intervening_statepoint": 700,
+        "unresolved_parent_sites": 1034,
+        "native_functions_without_heap_barrier_reference": 552,
+        "outside_native_strategy_functions": 217
+      },
+      "excluded": [],
+      "source_sha256": "7958fd5930c410505d4e68d36081ef073317475455cba343e6093fbaa7998e24",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-36/post-rs4gc.ll",
+      "rows_sha256": "ff0baa36ceabc567b9f080c1a33e25acd02bc969b9a8a5fbef08694977316154"
+    },
+    {
+      "attempt": "pid-3681178-attempt-37",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 192,
+        "explicit_heap_barrier_sites": 1919,
+        "fresh_with_no_intervening_statepoint": 559,
+        "unresolved_parent_sites": 1360,
+        "outside_native_strategy_functions": 216,
+        "native_functions_without_heap_barrier_reference": 526
+      },
+      "excluded": [],
+      "source_sha256": "846d225ef36201eaf2fb41254708f43e3f4b76acb2df1a40b5d17c2e1d0a4a5c",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-37/post-rs4gc.ll",
+      "rows_sha256": "98adc28abe4dbbf83154d2a7d0afca5abf7950d6b497ed841bdd09b849288991"
+    },
+    {
+      "attempt": "pid-3681178-attempt-38",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1622,
+        "fresh_with_no_intervening_statepoint": 526,
+        "unresolved_parent_sites": 1096,
+        "outside_native_strategy_functions": 209,
+        "native_functions_without_heap_barrier_reference": 544
+      },
+      "excluded": [],
+      "source_sha256": "5f2dc3a5f9bd3f46d19959871ff71545939a69b32fb60922e1291f24077b7c6f",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-38/post-rs4gc.ll",
+      "rows_sha256": "226187728aebf69067a2e68c87e7b3c3fb16216ee5b1b920804a7e2ca442bc5f"
+    },
+    {
+      "attempt": "pid-3681178-attempt-39",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 726,
+        "analyzed_functions": 175,
+        "explicit_heap_barrier_sites": 1629,
+        "fresh_with_no_intervening_statepoint": 403,
+        "unresolved_parent_sites": 1226,
+        "native_functions_without_heap_barrier_reference": 551,
+        "outside_native_strategy_functions": 208
+      },
+      "excluded": [],
+      "source_sha256": "7fa4927f66eed5134d6c4ce1791762a1913c68dc3e10e7e01c583c1e26ce26e8",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-39/post-rs4gc.ll",
+      "rows_sha256": "0c7c80d51a8e450902bdab43ff7498df7035e7d8cf95f7d106d371af7de98029"
+    },
+    {
+      "attempt": "pid-3681178-attempt-4",
+      "counts": {
+        "functions_seen": 930,
+        "native_strategy_functions": 712,
+        "analyzed_functions": 177,
+        "explicit_heap_barrier_sites": 1514,
+        "fresh_with_no_intervening_statepoint": 578,
+        "unresolved_parent_sites": 936,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 535
+      },
+      "excluded": [],
+      "source_sha256": "8ee75d5e2365cfdfe4a9a0da289914b5e9390452dc84d48ea0255b3331e53f4b",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-4/post-rs4gc.ll",
+      "rows_sha256": "bd7a2ea68174a24003572bf93afc878d0ec44efdf03e29bce481fbb2fe8bb957"
+    },
+    {
+      "attempt": "pid-3681178-attempt-40",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 164,
+        "explicit_heap_barrier_sites": 1232,
+        "fresh_with_no_intervening_statepoint": 401,
+        "unresolved_parent_sites": 831,
+        "native_functions_without_heap_barrier_reference": 558,
+        "outside_native_strategy_functions": 212
+      },
+      "excluded": [],
+      "source_sha256": "5baa0659432eec9835dcd9afb67fb8f9fa0d7ed63dd2679ce6df0aa73f99b2d5",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-40/post-rs4gc.ll",
+      "rows_sha256": "0384a37f4c8607e6f41756c56df379c64edd519694ffdba71528982243cc691b"
+    },
+    {
+      "attempt": "pid-3681178-attempt-41",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 178,
+        "explicit_heap_barrier_sites": 1877,
+        "fresh_with_no_intervening_statepoint": 586,
+        "unresolved_parent_sites": 1291,
+        "native_functions_without_heap_barrier_reference": 546,
+        "outside_native_strategy_functions": 210
+      },
+      "excluded": [],
+      "source_sha256": "254c2e228425f0318f828bfcb38ee992e23fb5c63a7b09883dcabc2e2900b631",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-41/post-rs4gc.ll",
+      "rows_sha256": "323ad05e848838be0140e0fcd88d69523bd5294e17745e6e9cfd27fd2a4c72f9"
+    },
+    {
+      "attempt": "pid-3681178-attempt-42",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 186,
+        "explicit_heap_barrier_sites": 1805,
+        "fresh_with_no_intervening_statepoint": 515,
+        "unresolved_parent_sites": 1290,
+        "outside_native_strategy_functions": 214,
+        "native_functions_without_heap_barrier_reference": 534
+      },
+      "excluded": [],
+      "source_sha256": "fa5989a05a91f320ce602062bf06d093c1009a119020454e4dcd77c529ae5aeb",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-42/post-rs4gc.ll",
+      "rows_sha256": "dbb52924070d398c49ffce710c26485e970e5dd11adda3135dda714d49a93217"
+    },
+    {
+      "attempt": "pid-3681178-attempt-43",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1371,
+        "fresh_with_no_intervening_statepoint": 427,
+        "unresolved_parent_sites": 944,
+        "outside_native_strategy_functions": 214,
+        "native_functions_without_heap_barrier_reference": 548
+      },
+      "excluded": [],
+      "source_sha256": "18b13c1f30a6a0a7fef89a1678de8d86cb6c508848870b7a802cc68e176637a2",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-43/post-rs4gc.ll",
+      "rows_sha256": "6090554aaf5828fa9726653c5a32479f81d5b362fdee8c36a79fe05256238746"
+    },
+    {
+      "attempt": "pid-3681178-attempt-45",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 719,
+        "analyzed_functions": 161,
+        "explicit_heap_barrier_sites": 1614,
+        "fresh_with_no_intervening_statepoint": 442,
+        "unresolved_parent_sites": 1172,
+        "outside_native_strategy_functions": 216,
+        "native_functions_without_heap_barrier_reference": 558
+      },
+      "excluded": [],
+      "source_sha256": "ccbfbb1cc5992cbf82420ac004e5072eff3584bc8fb3f03b014de196f2bee97d",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-45/post-rs4gc.ll",
+      "rows_sha256": "39b5bc4ee2c5252941cb99cfddc79e727d8d05db66fe921ac306a2de303a0c43"
+    },
+    {
+      "attempt": "pid-3681178-attempt-46",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 174,
+        "explicit_heap_barrier_sites": 1752,
+        "fresh_with_no_intervening_statepoint": 496,
+        "unresolved_parent_sites": 1256,
+        "outside_native_strategy_functions": 210,
+        "native_functions_without_heap_barrier_reference": 551
+      },
+      "excluded": [],
+      "source_sha256": "0d4f395f82566dc82de68a7a8e75958f5dff3fb3772b74419739ef5fca5f3723",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-46/post-rs4gc.ll",
+      "rows_sha256": "1c6b4601587eb50c22cc578290cb136f4c461e9397f2b703f1e94af5b0d7cca4"
+    },
+    {
+      "attempt": "pid-3681178-attempt-47",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 184,
+        "explicit_heap_barrier_sites": 2063,
+        "fresh_with_no_intervening_statepoint": 883,
+        "unresolved_parent_sites": 1180,
+        "outside_native_strategy_functions": 215,
+        "native_functions_without_heap_barrier_reference": 536
+      },
+      "excluded": [],
+      "source_sha256": "d29448f09046feeec32a6a3fff5bb5488b7de070041093a2fb030ccbd7cfad6b",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-47/post-rs4gc.ll",
+      "rows_sha256": "248085bed9f86d1c991598591ae7b45037b0e22d665bea81d2d6ad2f23b0fd20"
+    },
+    {
+      "attempt": "pid-3681178-attempt-48",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 188,
+        "explicit_heap_barrier_sites": 1976,
+        "fresh_with_no_intervening_statepoint": 772,
+        "unresolved_parent_sites": 1204,
+        "native_functions_without_heap_barrier_reference": 537,
+        "outside_native_strategy_functions": 210
+      },
+      "excluded": [],
+      "source_sha256": "6bc3488f882d938246bb456cb81c79372fa64c42a9241ac4cb747d09e8cbcf3f",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-48/post-rs4gc.ll",
+      "rows_sha256": "ade81864180d3e10203b433d6104f9632f5bc499528dab2442fe8005125d81d1"
+    },
+    {
+      "attempt": "pid-3681178-attempt-49",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 727,
+        "analyzed_functions": 188,
+        "explicit_heap_barrier_sites": 2148,
+        "fresh_with_no_intervening_statepoint": 382,
+        "unresolved_parent_sites": 1766,
+        "native_functions_without_heap_barrier_reference": 539,
+        "outside_native_strategy_functions": 208
+      },
+      "excluded": [],
+      "source_sha256": "7854e69848d6306de3dac4d3e9b37848ef65476eb3c9bb6340e079fef9901666",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-49/post-rs4gc.ll",
+      "rows_sha256": "676aa0bf402e4a900b615913263521d75414b1c9529b393c719acad803ebb0f6"
+    },
+    {
+      "attempt": "pid-3681178-attempt-50",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 715,
+        "analyzed_functions": 190,
+        "explicit_heap_barrier_sites": 1796,
+        "fresh_with_no_intervening_statepoint": 533,
+        "unresolved_parent_sites": 1263,
+        "outside_native_strategy_functions": 220,
+        "native_functions_without_heap_barrier_reference": 525
+      },
+      "excluded": [],
+      "source_sha256": "5cf7bcf78b6870112d0cb093e49aaa6b02c4d9123f5437904ca497366e09bc3d",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-50/post-rs4gc.ll",
+      "rows_sha256": "9cc4011a7b53128deab7347626740f3ef0cf734f9be2598d52d03da3928c4f42"
+    },
+    {
+      "attempt": "pid-3681178-attempt-51",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 723,
+        "analyzed_functions": 186,
+        "explicit_heap_barrier_sites": 2744,
+        "fresh_with_no_intervening_statepoint": 1334,
+        "unresolved_parent_sites": 1410,
+        "native_functions_without_heap_barrier_reference": 537,
+        "outside_native_strategy_functions": 212
+      },
+      "excluded": [],
+      "source_sha256": "141e0c2689d037571dba1bdc6060fab3f73d98b02e61723f0a69c9e4ad03ce54",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-51/post-rs4gc.ll",
+      "rows_sha256": "7fcba36d70811ecd5adaff8e4190a76d4c9d13317fe99e2c3ed9a94532042c09"
+    },
+    {
+      "attempt": "pid-3681178-attempt-52",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 726,
+        "analyzed_functions": 164,
+        "explicit_heap_barrier_sites": 1841,
+        "fresh_with_no_intervening_statepoint": 421,
+        "unresolved_parent_sites": 1420,
+        "outside_native_strategy_functions": 209,
+        "native_functions_without_heap_barrier_reference": 562
+      },
+      "excluded": [],
+      "source_sha256": "84d5f48a3c8f295906dca91d744bc90df11c9daca6755bea042309e79a3d6021",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-52/post-rs4gc.ll",
+      "rows_sha256": "21ef704eaffce088686a85eaa10e70fc3da357d2a24fe2be6831ff1155e107d3"
+    },
+    {
+      "attempt": "pid-3681178-attempt-53",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 1521,
+        "fresh_with_no_intervening_statepoint": 527,
+        "unresolved_parent_sites": 994,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 538
+      },
+      "excluded": [],
+      "source_sha256": "32bcbd997b1a0260387926145e78c7b2152e91e16c226508fab682521a8e4983",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-53/post-rs4gc.ll",
+      "rows_sha256": "a716e086b9e7d143d6ee995267022ecb922ee3f1c52181fa7209d54edc6e28d9"
+    },
+    {
+      "attempt": "pid-3681178-attempt-54",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 176,
+        "explicit_heap_barrier_sites": 1962,
+        "fresh_with_no_intervening_statepoint": 899,
+        "unresolved_parent_sites": 1063,
+        "outside_native_strategy_functions": 210,
+        "native_functions_without_heap_barrier_reference": 549
+      },
+      "excluded": [],
+      "source_sha256": "003644dacf4928d439d787ebba36c0329e19c603bc3cd19ce0bf6ff94b3083d1",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-54/post-rs4gc.ll",
+      "rows_sha256": "dd6a8ac7439902548575cdaf49b04f3b85088c9f17082e36359c764803434c07"
+    },
+    {
+      "attempt": "pid-3681178-attempt-55",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 727,
+        "analyzed_functions": 182,
+        "explicit_heap_barrier_sites": 1482,
+        "fresh_with_no_intervening_statepoint": 586,
+        "unresolved_parent_sites": 896,
+        "native_functions_without_heap_barrier_reference": 545,
+        "outside_native_strategy_functions": 208
+      },
+      "excluded": [],
+      "source_sha256": "a5bf33ed7ce5d2ab65a95814411d53887920d6fe8ea13ca2cab2a14e4193f9d6",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-55/post-rs4gc.ll",
+      "rows_sha256": "240b84be962d346c6a797e0fc70a57f719175f31706c0851ff2d4fdae5cba3d7"
+    },
+    {
+      "attempt": "pid-3681178-attempt-56",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 728,
+        "analyzed_functions": 185,
+        "explicit_heap_barrier_sites": 1949,
+        "fresh_with_no_intervening_statepoint": 624,
+        "unresolved_parent_sites": 1325,
+        "native_functions_without_heap_barrier_reference": 543,
+        "outside_native_strategy_functions": 207
+      },
+      "excluded": [],
+      "source_sha256": "c16c796f08d2529812e8ba33503cdd5570aafca22de5984e0243ae52c6f99340",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-56/post-rs4gc.ll",
+      "rows_sha256": "dcedf7fb445056f605cffe6257b27116618e3eb1a61c25954ec68beb037386a4"
+    },
+    {
+      "attempt": "pid-3681178-attempt-57",
+      "counts": {
+        "functions_seen": 935,
+        "outside_native_strategy_functions": 213,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1920,
+        "fresh_with_no_intervening_statepoint": 407,
+        "unresolved_parent_sites": 1513,
+        "native_functions_without_heap_barrier_reference": 541
+      },
+      "excluded": [],
+      "source_sha256": "e3a0d8ff906e05ab17cb5cfda17d0b5ba317fc20470c4debe9dda4fd5fed6a23",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-57/post-rs4gc.ll",
+      "rows_sha256": "424acd1a18c8b8c08b8fa07b3d23f4ae26723643ac0fda9875f857441baf664a"
+    },
+    {
+      "attempt": "pid-3681178-attempt-58",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1486,
+        "fresh_with_no_intervening_statepoint": 513,
+        "unresolved_parent_sites": 973,
+        "native_functions_without_heap_barrier_reference": 551,
+        "outside_native_strategy_functions": 211
+      },
+      "excluded": [],
+      "source_sha256": "26a015c4d51f6d6152eb6b1368474733a8ad3711e745dc81a00dac7d9f789812",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-58/post-rs4gc.ll",
+      "rows_sha256": "f6858ba09aebe8757c69c085ac6f92c0c1173cf62a0570db35f2451399a5070e"
+    },
+    {
+      "attempt": "pid-3681178-attempt-59",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 726,
+        "analyzed_functions": 168,
+        "explicit_heap_barrier_sites": 1517,
+        "fresh_with_no_intervening_statepoint": 494,
+        "unresolved_parent_sites": 1023,
+        "outside_native_strategy_functions": 209,
+        "native_functions_without_heap_barrier_reference": 558
+      },
+      "excluded": [],
+      "source_sha256": "7d2328cb1fa3fb5d83f9613e4f60777e9e411f331bc7652c89b454ce45c55fea",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-59/post-rs4gc.ll",
+      "rows_sha256": "84caed28f9dc571223e66ee7b15693201acf7b3db8f53ad21d9c0003fd57d6d1"
+    },
+    {
+      "attempt": "pid-3681178-attempt-60",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 192,
+        "explicit_heap_barrier_sites": 2028,
+        "fresh_with_no_intervening_statepoint": 598,
+        "unresolved_parent_sites": 1430,
+        "outside_native_strategy_functions": 213,
+        "native_functions_without_heap_barrier_reference": 530
+      },
+      "excluded": [],
+      "source_sha256": "2bb4fc52d6c37594b31cba7846d6999820a72c79c7f0588e3190102cd801f946",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-60/post-rs4gc.ll",
+      "rows_sha256": "9b1a33fb9ef51259d524a41742c5990c89c2da27cd232ebe56eb0be261434679"
+    },
+    {
+      "attempt": "pid-3681178-attempt-61",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 731,
+        "analyzed_functions": 169,
+        "explicit_heap_barrier_sites": 2020,
+        "fresh_with_no_intervening_statepoint": 562,
+        "unresolved_parent_sites": 1458,
+        "outside_native_strategy_functions": 204,
+        "native_functions_without_heap_barrier_reference": 562
+      },
+      "excluded": [],
+      "source_sha256": "0607d324c9fc8af549de577515099f8f5ec92434a633af4ef8880cfebb7c2134",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-61/post-rs4gc.ll",
+      "rows_sha256": "36e0708e1cac1a5060e4975961eec1bd682ecfcf8e43e83bb672d3692508bb70"
+    },
+    {
+      "attempt": "pid-3681178-attempt-62",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 190,
+        "explicit_heap_barrier_sites": 1853,
+        "fresh_with_no_intervening_statepoint": 570,
+        "unresolved_parent_sites": 1283,
+        "native_functions_without_heap_barrier_reference": 532,
+        "outside_native_strategy_functions": 213
+      },
+      "excluded": [],
+      "source_sha256": "f8e977d7593359f999bc73e790a2b7207c2c4b28e67b43dad3dbb89cbe80af6f",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-62/post-rs4gc.ll",
+      "rows_sha256": "8180070538d9596277b4c2967ed2e8a5a985ae184370f0b19f031068874059cc"
+    },
+    {
+      "attempt": "pid-3681178-attempt-63",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 727,
+        "analyzed_functions": 178,
+        "explicit_heap_barrier_sites": 1772,
+        "fresh_with_no_intervening_statepoint": 494,
+        "unresolved_parent_sites": 1278,
+        "native_functions_without_heap_barrier_reference": 549,
+        "outside_native_strategy_functions": 208
+      },
+      "excluded": [],
+      "source_sha256": "5460826a19da7c34f0370669551165fca3477166c6fc2ce6c501619b8246ebfb",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-63/post-rs4gc.ll",
+      "rows_sha256": "25a387ad35ff959a053153a70942db0ffd5248a44898726f13c1df20b69d481f"
+    },
+    {
+      "attempt": "pid-3681178-attempt-64",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 730,
+        "native_functions_without_heap_barrier_reference": 550,
+        "analyzed_functions": 180,
+        "explicit_heap_barrier_sites": 1824,
+        "fresh_with_no_intervening_statepoint": 361,
+        "unresolved_parent_sites": 1463,
+        "outside_native_strategy_functions": 204
+      },
+      "excluded": [],
+      "source_sha256": "a36bb96f9e47fed218557e40bfec5d560dacedf033f3144641618e181aee204a",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-64/post-rs4gc.ll",
+      "rows_sha256": "528a59d54c38ea4e89f2d579de0b626e3b5cc89e7b49fad1e24f9ae21ba0c420"
+    },
+    {
+      "attempt": "pid-3681178-attempt-65",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 725,
+        "analyzed_functions": 166,
+        "explicit_heap_barrier_sites": 1491,
+        "fresh_with_no_intervening_statepoint": 657,
+        "unresolved_parent_sites": 834,
+        "native_functions_without_heap_barrier_reference": 559,
+        "outside_native_strategy_functions": 209
+      },
+      "excluded": [],
+      "source_sha256": "2fd72098aca2e3b553e464626c3f4151ef0750203cc2c9f97952b4b1f74d5cb4",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-65/post-rs4gc.ll",
+      "rows_sha256": "86cea11f326dd1094a541bdb3dc68cfa3877c4c50652c6935745de66bfa575bd"
+    },
+    {
+      "attempt": "pid-3681178-attempt-66",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 721,
+        "native_functions_without_heap_barrier_reference": 535,
+        "analyzed_functions": 186,
+        "explicit_heap_barrier_sites": 1625,
+        "fresh_with_no_intervening_statepoint": 489,
+        "unresolved_parent_sites": 1136,
+        "outside_native_strategy_functions": 214
+      },
+      "excluded": [],
+      "source_sha256": "74e8615576d2e68857cb17ea59336fe302ff3c479f6d3df8466a8287bfadbcc1",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-66/post-rs4gc.ll",
+      "rows_sha256": "f5e6a5930819a785f24e6609a599675f2cf2952ddbde46c1f14c326d1a1491e0"
+    },
+    {
+      "attempt": "pid-3681178-attempt-67",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 165,
+        "explicit_heap_barrier_sites": 2214,
+        "fresh_with_no_intervening_statepoint": 256,
+        "unresolved_parent_sites": 1958,
+        "native_functions_without_heap_barrier_reference": 556,
+        "outside_native_strategy_functions": 214
+      },
+      "excluded": [],
+      "source_sha256": "772d730e0ec1a0ee9deea0a75ec1395e0ec51f90bae8537e13770689481a400f",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-67/post-rs4gc.ll",
+      "rows_sha256": "3435d3d4e9c8028dcae0b22dc4f381aff0277c5149ee9d29d93f8d45e30c23c7"
+    },
+    {
+      "attempt": "pid-3681178-attempt-68",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1844,
+        "fresh_with_no_intervening_statepoint": 693,
+        "unresolved_parent_sites": 1151,
+        "outside_native_strategy_functions": 213,
+        "native_functions_without_heap_barrier_reference": 549
+      },
+      "excluded": [],
+      "source_sha256": "766f1ef1ecc10bae2de4cb95ce99c91bdfd45942acdb0322cfc40c596bcfeda1",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-68/post-rs4gc.ll",
+      "rows_sha256": "9d6ce95e4181ab3211184302becd368827a027c9bc02de42f865c03e22f853df"
+    },
+    {
+      "attempt": "pid-3681178-attempt-69",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 726,
+        "analyzed_functions": 177,
+        "explicit_heap_barrier_sites": 1858,
+        "fresh_with_no_intervening_statepoint": 608,
+        "unresolved_parent_sites": 1250,
+        "outside_native_strategy_functions": 209,
+        "native_functions_without_heap_barrier_reference": 549
+      },
+      "excluded": [],
+      "source_sha256": "d62159471011181622b9795f597b4c32df0ea0c58f7a4c6ce788bf55b6bbfe9a",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-69/post-rs4gc.ll",
+      "rows_sha256": "6631a7de2214362a9cdf632f9dc7bda09f44e05769c478b72fb04d43b1ee5222"
+    },
+    {
+      "attempt": "pid-3681178-attempt-70",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 182,
+        "explicit_heap_barrier_sites": 2001,
+        "fresh_with_no_intervening_statepoint": 1018,
+        "unresolved_parent_sites": 983,
+        "native_functions_without_heap_barrier_reference": 540,
+        "outside_native_strategy_functions": 213
+      },
+      "excluded": [],
+      "source_sha256": "1e50f46a866886fa2abfd34475d13a5a781b3db59af208cd491fbf5f92616a45",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-70/post-rs4gc.ll",
+      "rows_sha256": "71105cfa0ab4f4021284df413c51eecb422af5e275704d50a0591a1e4a7dfcfd"
+    },
+    {
+      "attempt": "pid-3681178-attempt-71",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 727,
+        "analyzed_functions": 185,
+        "explicit_heap_barrier_sites": 1703,
+        "fresh_with_no_intervening_statepoint": 536,
+        "unresolved_parent_sites": 1167,
+        "outside_native_strategy_functions": 208,
+        "native_functions_without_heap_barrier_reference": 542
+      },
+      "excluded": [],
+      "source_sha256": "b2c2d6738ff0020de3f1c1fc4df5c8c2a957da8b4f8bd7a25f5ffa51074cbfe4",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-71/post-rs4gc.ll",
+      "rows_sha256": "d8399ed8cd122c60f51ee6c5ab3e0c1c3445ec2f42d586b8ca5a846a9b248784"
+    },
+    {
+      "attempt": "pid-3681178-attempt-72",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 194,
+        "explicit_heap_barrier_sites": 1712,
+        "fresh_with_no_intervening_statepoint": 729,
+        "unresolved_parent_sites": 983,
+        "outside_native_strategy_functions": 211,
+        "native_functions_without_heap_barrier_reference": 530
+      },
+      "excluded": [],
+      "source_sha256": "6f46d05d08dac7bbbca8a1190ccbe52c65956bb0b646f6c302cce3537866fcdf",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-72/post-rs4gc.ll",
+      "rows_sha256": "e7f67c6e47b13716dfbe28fea1c5f086c15031dd986b207a00015ba0246d5305"
+    },
+    {
+      "attempt": "pid-3681178-attempt-73",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 727,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1658,
+        "fresh_with_no_intervening_statepoint": 589,
+        "unresolved_parent_sites": 1069,
+        "native_functions_without_heap_barrier_reference": 554,
+        "outside_native_strategy_functions": 208
+      },
+      "excluded": [],
+      "source_sha256": "312c0b311782ce574047a722edd3f41f2b1d0d1cd0044208ea2b13a93434db58",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-73/post-rs4gc.ll",
+      "rows_sha256": "1bfc7968ba4b8aeff2a011070244086fe3fcbdcf84cd8cd183a4aad274d44631"
+    },
+    {
+      "attempt": "pid-3681178-attempt-74",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 180,
+        "explicit_heap_barrier_sites": 1971,
+        "fresh_with_no_intervening_statepoint": 671,
+        "unresolved_parent_sites": 1300,
+        "native_functions_without_heap_barrier_reference": 536,
+        "outside_native_strategy_functions": 219
+      },
+      "excluded": [],
+      "source_sha256": "73a5addb6583d225187e66be81829a8416fee15a28a593ed7a7894e299f6e976",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-74/post-rs4gc.ll",
+      "rows_sha256": "5261ea5edb001835e58eb3dcff8b1639e27f5914c07778c50bb78b88d0e976ea"
+    },
+    {
+      "attempt": "pid-3681178-attempt-75",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 184,
+        "explicit_heap_barrier_sites": 1845,
+        "fresh_with_no_intervening_statepoint": 674,
+        "unresolved_parent_sites": 1171,
+        "outside_native_strategy_functions": 215,
+        "native_functions_without_heap_barrier_reference": 536
+      },
+      "excluded": [],
+      "source_sha256": "1de8d28173a6c200ad42a1b0a73403c78878f6d38ffa910613815e9d8af3b04e",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-75/post-rs4gc.ll",
+      "rows_sha256": "6578c6f166d7affaf448bbc3f0b514da62a28ed335cd42be32d1fbce7f5d5992"
+    },
+    {
+      "attempt": "pid-3681178-attempt-76",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 183,
+        "explicit_heap_barrier_sites": 1867,
+        "fresh_with_no_intervening_statepoint": 484,
+        "unresolved_parent_sites": 1383,
+        "outside_native_strategy_functions": 219,
+        "native_functions_without_heap_barrier_reference": 533
+      },
+      "excluded": [],
+      "source_sha256": "cf69bc361ccd6d0083b37eeeb2d1c5dca748301edd01c8a4a47dc9846d7ff7c4",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-76/post-rs4gc.ll",
+      "rows_sha256": "a0e14cf464518198be5c2a32f3c114b5f02ef729978662119df2a7e4f332bad1"
+    },
+    {
+      "attempt": "pid-3681178-attempt-77",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 183,
+        "explicit_heap_barrier_sites": 1851,
+        "fresh_with_no_intervening_statepoint": 592,
+        "unresolved_parent_sites": 1259,
+        "native_functions_without_heap_barrier_reference": 537,
+        "outside_native_strategy_functions": 215
+      },
+      "excluded": [],
+      "source_sha256": "b27b6aba1e1a2ebc00e7486b1cdcbd18a9930737006ee9b1140c5b085b2d8e77",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-77/post-rs4gc.ll",
+      "rows_sha256": "21d7aa94874d0c55400a7740006ebb00c3f6ca99d62b220e4688d7097e3f3d41"
+    },
+    {
+      "attempt": "pid-3681178-attempt-78",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 172,
+        "explicit_heap_barrier_sites": 2243,
+        "fresh_with_no_intervening_statepoint": 830,
+        "unresolved_parent_sites": 1413,
+        "outside_native_strategy_functions": 217,
+        "native_functions_without_heap_barrier_reference": 546
+      },
+      "excluded": [],
+      "source_sha256": "80afd6745d39494d22d598960d99551947ca1870d838047e60592eefea649876",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-78/post-rs4gc.ll",
+      "rows_sha256": "e94801117bfc06fb2b5d8fec154d58861b992177b7ddc785786ce673109019df"
+    },
+    {
+      "attempt": "pid-3681178-attempt-79",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 174,
+        "explicit_heap_barrier_sites": 2120,
+        "fresh_with_no_intervening_statepoint": 881,
+        "unresolved_parent_sites": 1239,
+        "outside_native_strategy_functions": 217,
+        "native_functions_without_heap_barrier_reference": 544
+      },
+      "excluded": [],
+      "source_sha256": "99b2ee29c972ed1ff55ec34adbd381df078b2ae8bc4177567a67ef9eff116107",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-79/post-rs4gc.ll",
+      "rows_sha256": "f2e2d27977e47b535287e8997ee60c59174c40b14091f3b25b5fb8fc3338546d"
+    },
+    {
+      "attempt": "pid-3681178-attempt-8",
+      "counts": {
+        "functions_seen": 915,
+        "outside_native_strategy_functions": 216,
+        "native_strategy_functions": 699,
+        "analyzed_functions": 145,
+        "explicit_heap_barrier_sites": 968,
+        "fresh_with_no_intervening_statepoint": 346,
+        "unresolved_parent_sites": 622,
+        "native_functions_without_heap_barrier_reference": 554
+      },
+      "excluded": [],
+      "source_sha256": "5d120a4fa65001e12c9aad418c925c62d51fbe3b9f882a6a8b0ef2bed0cff248",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-8/post-rs4gc.ll",
+      "rows_sha256": "644778c8710552231255db56016d5c03a38ccedc0e19248a1d0a3169dfc1132c"
+    },
+    {
+      "attempt": "pid-3681178-attempt-80",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 718,
+        "native_functions_without_heap_barrier_reference": 535,
+        "analyzed_functions": 183,
+        "explicit_heap_barrier_sites": 1734,
+        "fresh_with_no_intervening_statepoint": 485,
+        "unresolved_parent_sites": 1249,
+        "outside_native_strategy_functions": 217
+      },
+      "excluded": [],
+      "source_sha256": "c4079b2b161c102b19d246ff6426961e485fabd2c425634daf00355f16964734",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-80/post-rs4gc.ll",
+      "rows_sha256": "f2203c1a773e2ee6f4ae2f3539e4eda676614359a623a33eab8f28c464178a03"
+    },
+    {
+      "attempt": "pid-3681178-attempt-81",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 713,
+        "analyzed_functions": 165,
+        "explicit_heap_barrier_sites": 1886,
+        "fresh_with_no_intervening_statepoint": 481,
+        "unresolved_parent_sites": 1405,
+        "native_functions_without_heap_barrier_reference": 548,
+        "outside_native_strategy_functions": 221
+      },
+      "excluded": [],
+      "source_sha256": "3d8ff3c8f31e3c5bce1be4e3e904ce4b9a7c91a9ac08faed05c135671e08c666",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-81/post-rs4gc.ll",
+      "rows_sha256": "e9f63e62ffbba29ff74d0e6c2886c33ebeb0867f64ef5bde0916845fc821e359"
+    },
+    {
+      "attempt": "pid-3681178-attempt-82",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 715,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1654,
+        "fresh_with_no_intervening_statepoint": 597,
+        "unresolved_parent_sites": 1057,
+        "outside_native_strategy_functions": 219,
+        "native_functions_without_heap_barrier_reference": 534
+      },
+      "excluded": [],
+      "source_sha256": "aa95759bceb483a3f25ae72f32446a51c3a146f30cda8561b131e56314ffa673",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-82/post-rs4gc.ll",
+      "rows_sha256": "f96a13eed443b223c6b490c3623fa24835b684dbe7c3c7762e9416788e701788"
+    },
+    {
+      "attempt": "pid-3681178-attempt-83",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 719,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 1814,
+        "fresh_with_no_intervening_statepoint": 527,
+        "unresolved_parent_sites": 1287,
+        "outside_native_strategy_functions": 216,
+        "native_functions_without_heap_barrier_reference": 540
+      },
+      "excluded": [],
+      "source_sha256": "7aeb4a24eea92760ec4358b43d7ba7187bd7011aa31a31d66f21c4350b5a1335",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-83/post-rs4gc.ll",
+      "rows_sha256": "0a8379e29e0bc417a0184b2948e4b5badfcbef476d3f68f65afd59ac8f6749aa"
+    },
+    {
+      "attempt": "pid-3681178-attempt-84",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 715,
+        "native_functions_without_heap_barrier_reference": 554,
+        "outside_native_strategy_functions": 219,
+        "analyzed_functions": 161,
+        "explicit_heap_barrier_sites": 1755,
+        "fresh_with_no_intervening_statepoint": 525,
+        "unresolved_parent_sites": 1230
+      },
+      "excluded": [],
+      "source_sha256": "99fa9ee6cecf899237e7d703d808bad706ccafca68803a90a86e6bcebe9db0b2",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-84/post-rs4gc.ll",
+      "rows_sha256": "1a3ac9a941ed092051b0a767412d049eb1334eb0e833ff1602840a6c1d384ad9"
+    },
+    {
+      "attempt": "pid-3681178-attempt-85",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 180,
+        "explicit_heap_barrier_sites": 1928,
+        "fresh_with_no_intervening_statepoint": 442,
+        "unresolved_parent_sites": 1486,
+        "outside_native_strategy_functions": 219,
+        "native_functions_without_heap_barrier_reference": 536
+      },
+      "excluded": [],
+      "source_sha256": "e7993c9ed1080dfc35866db90d7d94d0c05438d5f22506f40edefedb7118da72",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-85/post-rs4gc.ll",
+      "rows_sha256": "a1b8591b65f17303eb2f3f1b08c7e8032f93d98f05ea3eeff2bb7cc03844cacf"
+    },
+    {
+      "attempt": "pid-3681178-attempt-86",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 722,
+        "analyzed_functions": 163,
+        "explicit_heap_barrier_sites": 1481,
+        "fresh_with_no_intervening_statepoint": 453,
+        "unresolved_parent_sites": 1028,
+        "outside_native_strategy_functions": 213,
+        "native_functions_without_heap_barrier_reference": 559
+      },
+      "excluded": [],
+      "source_sha256": "7aa51286dcdf7674cc87076ef452ecc833321f75dfcaacd8ada9f696a1fe8546",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-86/post-rs4gc.ll",
+      "rows_sha256": "6a92854391226947d412a1d63382ee2f4d01f5f14711061c28b80accf2750fb4"
+    },
+    {
+      "attempt": "pid-3681178-attempt-87",
+      "counts": {
+        "functions_seen": 935,
+        "outside_native_strategy_functions": 221,
+        "native_strategy_functions": 714,
+        "analyzed_functions": 182,
+        "explicit_heap_barrier_sites": 1818,
+        "fresh_with_no_intervening_statepoint": 456,
+        "unresolved_parent_sites": 1362,
+        "native_functions_without_heap_barrier_reference": 532
+      },
+      "excluded": [],
+      "source_sha256": "29b4b99e4eec9ff205b4e3a6e8f630a6a9308d3be3a110fd68f609569dce613b",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-87/post-rs4gc.ll",
+      "rows_sha256": "5d8ad0d267c0b7d97d92d69f7006df2865a5679a7b5e1b39325cbb782a051181"
+    },
+    {
+      "attempt": "pid-3681178-attempt-88",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 721,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1605,
+        "fresh_with_no_intervening_statepoint": 598,
+        "unresolved_parent_sites": 1007,
+        "outside_native_strategy_functions": 213,
+        "native_functions_without_heap_barrier_reference": 548
+      },
+      "excluded": [],
+      "source_sha256": "6c0588c0112e3eddac27d02de03ecdb2c773cea1c2770914cc888ac8d0872bf8",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-88/post-rs4gc.ll",
+      "rows_sha256": "6b2fca394e90486b2dd9f6a285a58e5f5eb9fa601ebce0b3f0b937fcd8fc1914"
+    },
+    {
+      "attempt": "pid-3681178-attempt-89",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 186,
+        "explicit_heap_barrier_sites": 1460,
+        "fresh_with_no_intervening_statepoint": 441,
+        "unresolved_parent_sites": 1019,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 531
+      },
+      "excluded": [],
+      "source_sha256": "73eb1460ce67869a138837a0802ce8a3432f38889c1515189f2f4a65b37d07c8",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-89/post-rs4gc.ll",
+      "rows_sha256": "b0ddcdfbd78c99c126c8f3f04f5bcc10d73450f8784a0256bb2fa8de3eada7e6"
+    },
+    {
+      "attempt": "pid-3681178-attempt-9",
+      "counts": {
+        "functions_seen": 926,
+        "outside_native_strategy_functions": 216,
+        "native_strategy_functions": 710,
+        "analyzed_functions": 185,
+        "explicit_heap_barrier_sites": 1300,
+        "fresh_with_no_intervening_statepoint": 352,
+        "unresolved_parent_sites": 948,
+        "native_functions_without_heap_barrier_reference": 525
+      },
+      "excluded": [],
+      "source_sha256": "199075d3272908619500f8ab79a27273689ab8aca33d2cc6c92f3cc6ac16203c",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-9/post-rs4gc.ll",
+      "rows_sha256": "99d3d0a5fad70ca524e3a9453cddf806f704bcf041c1dd4d5413ff2287f54733"
+    },
+    {
+      "attempt": "pid-3681178-attempt-90",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 190,
+        "explicit_heap_barrier_sites": 1603,
+        "fresh_with_no_intervening_statepoint": 515,
+        "unresolved_parent_sites": 1088,
+        "outside_native_strategy_functions": 215,
+        "native_functions_without_heap_barrier_reference": 530
+      },
+      "excluded": [],
+      "source_sha256": "a6507130ef83781c05556223ab12a366ebd34e35617360f172ebd7884efc81d1",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-90/post-rs4gc.ll",
+      "rows_sha256": "581910ac3dac0af603b394d5d2a41167b7b0b1e6f666aed5c839d6f7e61fd14f"
+    },
+    {
+      "attempt": "pid-3681178-attempt-91",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 179,
+        "explicit_heap_barrier_sites": 1391,
+        "fresh_with_no_intervening_statepoint": 408,
+        "unresolved_parent_sites": 983,
+        "outside_native_strategy_functions": 217,
+        "native_functions_without_heap_barrier_reference": 538
+      },
+      "excluded": [],
+      "source_sha256": "c6577ceb279cfb2e1d7ef6d2aad9fcc6e8ccf07d1148b8c6c6cb57e5c229f158",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-91/post-rs4gc.ll",
+      "rows_sha256": "66e002c23a92a39d93a5c87b1a8a77f6fd9ed53d328e9db70b00a21edccf5eff"
+    },
+    {
+      "attempt": "pid-3681178-attempt-92",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 173,
+        "explicit_heap_barrier_sites": 1920,
+        "fresh_with_no_intervening_statepoint": 432,
+        "unresolved_parent_sites": 1488,
+        "outside_native_strategy_functions": 211,
+        "native_functions_without_heap_barrier_reference": 551
+      },
+      "excluded": [],
+      "source_sha256": "dbc114c1bcee1ee130fe2cd95e6678fa34da4d6cf0dbbaf3a8001437fbf95e60",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-92/post-rs4gc.ll",
+      "rows_sha256": "09e308e4ac96c93a07c6977150ea336270c223d127ebba37b339fb38a0a9871a"
+    },
+    {
+      "attempt": "pid-3681178-attempt-93",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 165,
+        "explicit_heap_barrier_sites": 1786,
+        "fresh_with_no_intervening_statepoint": 572,
+        "unresolved_parent_sites": 1214,
+        "outside_native_strategy_functions": 216,
+        "native_functions_without_heap_barrier_reference": 553
+      },
+      "excluded": [],
+      "source_sha256": "a37dd5f0bac91d7094eb37d7d38c956cc66adb1b2c984bdf795fe7a76a6c5108",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-93/post-rs4gc.ll",
+      "rows_sha256": "90acf4ba41133cd0d10b60a746a4564c2fdf44fe60896f5a68aa0953c4161aed"
+    },
+    {
+      "attempt": "pid-3681178-attempt-94",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 717,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1664,
+        "fresh_with_no_intervening_statepoint": 380,
+        "unresolved_parent_sites": 1284,
+        "outside_native_strategy_functions": 217,
+        "native_functions_without_heap_barrier_reference": 536
+      },
+      "excluded": [],
+      "source_sha256": "94e18fe9c0278fffec18041198ce02e5294d097801bb03ff47f501e2f88e48d7",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-94/post-rs4gc.ll",
+      "rows_sha256": "92c2df0b910c84906a4c3e3756e6751eb5175479671da4884e7bbada1b58a835"
+    },
+    {
+      "attempt": "pid-3681178-attempt-95",
+      "counts": {
+        "functions_seen": 935,
+        "native_strategy_functions": 718,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 1385,
+        "fresh_with_no_intervening_statepoint": 347,
+        "unresolved_parent_sites": 1038,
+        "outside_native_strategy_functions": 217,
+        "native_functions_without_heap_barrier_reference": 537
+      },
+      "excluded": [],
+      "source_sha256": "7f171e80277386d2e125b3b7a4f6c0e0f710fc8da24d264a3c2e6af49f509782",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-95/post-rs4gc.ll",
+      "rows_sha256": "b7b6d708095f6f97e2f033eedcec5db99c34166e85d6287b606d48dbd5f71591"
+    },
+    {
+      "attempt": "pid-3681178-attempt-96",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 181,
+        "explicit_heap_barrier_sites": 2030,
+        "fresh_with_no_intervening_statepoint": 1090,
+        "unresolved_parent_sites": 940,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 535
+      },
+      "excluded": [],
+      "source_sha256": "db1bcdb853278dc2305b6f400128677ae0f330b9c5521821069435529c9c6512",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-96/post-rs4gc.ll",
+      "rows_sha256": "fa2ba196c5fa7e4be3cad2bdbb8b5785cc4aab12c74234512fa5dd0b6855df92"
+    },
+    {
+      "attempt": "pid-3681178-attempt-97",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 720,
+        "analyzed_functions": 187,
+        "explicit_heap_barrier_sites": 1517,
+        "fresh_with_no_intervening_statepoint": 509,
+        "unresolved_parent_sites": 1008,
+        "outside_native_strategy_functions": 214,
+        "native_functions_without_heap_barrier_reference": 533
+      },
+      "excluded": [],
+      "source_sha256": "9697ace20e1e01d5275d3b6873655b0379e652b3b43b4ae380aa9454078fcf7c",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-97/post-rs4gc.ll",
+      "rows_sha256": "cb42e7d4e4b6a49a0b8f829336aca74f86112c2e22e5c0d7ce1fc08887313087"
+    },
+    {
+      "attempt": "pid-3681178-attempt-98",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 716,
+        "analyzed_functions": 183,
+        "explicit_heap_barrier_sites": 1918,
+        "fresh_with_no_intervening_statepoint": 821,
+        "unresolved_parent_sites": 1097,
+        "outside_native_strategy_functions": 218,
+        "native_functions_without_heap_barrier_reference": 533
+      },
+      "excluded": [],
+      "source_sha256": "633d3ebd122aa220396913338f2235232291f40b92ee3ff0c164fd4112aa3dc8",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-98/post-rs4gc.ll",
+      "rows_sha256": "5f97a06772722140c14a95329825104484989e6e59a62522d1a1ae28c9298680"
+    },
+    {
+      "attempt": "pid-3681178-attempt-99",
+      "counts": {
+        "functions_seen": 934,
+        "native_strategy_functions": 724,
+        "analyzed_functions": 169,
+        "explicit_heap_barrier_sites": 1716,
+        "fresh_with_no_intervening_statepoint": 345,
+        "unresolved_parent_sites": 1371,
+        "outside_native_strategy_functions": 210,
+        "native_functions_without_heap_barrier_reference": 555
+      },
+      "excluded": [],
+      "source_sha256": "b35cbf1009f6d7167a11fbc1620981ecfa2332bedd805c98a24b93ecd5d6d791",
+      "source": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/cc-ir-text-v1/pid-3681178-attempt-99/post-rs4gc.ll",
+      "rows_sha256": "a1424322b7aa095ef51fbd3ca7d00362f7dcf73c01e524dc2a713f80a35156a2"
+    }
+  ],
+  "primary_summary_sha256": "8e00414d90541d5236390ed602051dea6cd5da3069db938f27e5c1e12976ce2f",
+  "analyzers": {
+    "post_statepoint_barriers_v1.py": "c334ac2987bac913339261f571624f574494a2a9b3e250ad32482cf578be394c",
+    "fresh_barrier_post_core_v1.py": "ef01f9fac845d2266b27367bc5cc0a29a369a72e38036f20c2d3dbf5ef54d83c",
+    "callsite_census.py": "e0f69e82b5f854df5cbde93289b799c63fd48d8e7076c529463df10ae0377dd8"
+  },
+  "limits": [
+    "Native GC-strategy functions only; shadow fallback is separate.",
+    "Post-RS4GC, before final optimization; all actual statepoints kill facts, including redundant leaf-helper points.",
+    "Only audited direct-call allocator tokens survive through gc.result; invoke allocator results and phi/select/relocate aliases remain unresolved.",
+    "Fresh origins are a conservative lower bound, not proven young objects or justified barrier removals.",
+    "Normalized dataflow views are never compiled or executed."
+  ]
+}

@@ -1,0 +1,1803 @@
+{
+  "status": "complete-bounded-machine-region-coverage",
+  "application": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+  "application_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "selected_hottest_candidate_callers": [
+    "perry_fn_cli_2_1_112_js__u_N_24_6",
+    "perry_fn_cli_2_1_112_js__GW7",
+    "perry_closure_cli_2_1_112_js__37648",
+    "perry_fn_cli_2_1_112_js__yx_",
+    "perry_fn_cli_2_1_112_js__m_A",
+    "perry_fn_cli_2_1_112_js__Wa6.__arena",
+    "perry_closure_cli_2_1_112_js__36650",
+    "perry_fn_cli_2_1_112_js__nz4",
+    "perry_closure_cli_2_1_112_js__37358",
+    "perry_closure_cli_2_1_112_js__37188",
+    "perry_fn_cli_2_1_112_js__TM",
+    "perry_fn_cli_2_1_112_js__mv5",
+    "perry_closure_cli_2_1_112_js__10699",
+    "perry_method_cli_2_1_112_js__u_P_24_8__emit",
+    "perry_fn_cli_2_1_112_js__Hu1",
+    "perry_closure_cli_2_1_112_js__13439",
+    "perry_method_cli_2_1_112_js__Os6__onRender",
+    "perry_fn_cli_2_1_112_js__hE8.__arena",
+    "perry_fn_cli_2_1_112_js__nR_",
+    "perry_closure_cli_2_1_112_js__82335"
+  ],
+  "all_candidate_caller_periods": {
+    "perry_fn_cli_2_1_112_js__u_N_24_6": 177072592,
+    "perry_fn_cli_2_1_112_js__yx_": 26196452,
+    "perry_fn_cli_2_1_112_js__nz4": 5344587,
+    "perry_closure_cli_2_1_112_js__37358": 5318619,
+    "perry_closure_cli_2_1_112_js__37188": 5312116,
+    "perry_fn_cli_2_1_112_js__m_A": 25890374,
+    "perry_fn_cli_2_1_112_js__mv5": 5296174,
+    "perry_closure_cli_2_1_112_js__10699": 5292802,
+    "perry_closure_cli_2_1_112_js__37648": 31243918,
+    "perry_fn_cli_2_1_112_js__GW7": 72685688,
+    "perry_fn_cli_2_1_112_js__Wa6.__arena": 21166594,
+    "perry_fn_cli_2_1_112_js__nR_": 5228610,
+    "perry_closure_cli_2_1_112_js__82335": 5220025,
+    "perry_closure_cli_2_1_112_js__36650": 15811277,
+    "perry_fn_cli_2_1_112_js__TM": 5298846,
+    "perry_method_cli_2_1_112_js__Os6__onRender": 5239430,
+    "perry_fn_cli_2_1_112_js__SS_": 5196066,
+    "perry_fn_cli_2_1_112_js__E": 5188054,
+    "perry_closure_cli_2_1_112_js__86815": 5179765,
+    "perry_method_cli_2_1_112_js__iE8__class_expr_6712___readdirp": 5057852,
+    "perry_fn_cli_2_1_112_js__Ox_": 5054894,
+    "perry_method_cli_2_1_112_js__u_P_24_8__emit": 5279611,
+    "perry_fn_cli_2_1_112_js__Hu1": 5242431,
+    "perry_closure_cli_2_1_112_js__13439": 5241425,
+    "perry_fn_cli_2_1_112_js__hE8.__arena": 5232041,
+    "perry_fn_cli_2_1_112_js__Fv5": 5195084
+  },
+  "phase_target_totals": {
+    "command": {
+      "samples": 3683,
+      "period": 18920915610
+    },
+    "startup": {
+      "samples": 3071,
+      "period": 14788892043
+    }
+  },
+  "phase_region_coverage": {
+    "command": {
+      "caller_period": 213986412,
+      "caller_samples": 41,
+      "candidate_loop_period": 177108869,
+      "candidate_loop_samples": 34,
+      "candidate_block_period": 10495510,
+      "candidate_block_samples": 2
+    },
+    "startup": {
+      "caller_period": 10483856,
+      "caller_samples": 2,
+      "candidate_loop_period": 5242431,
+      "candidate_loop_samples": 1
+    }
+  },
+  "functions": [
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__u_N_24_6",
+      "function_id": "60:41",
+      "address": "0xa3dab90",
+      "size": 9051,
+      "gc_record_count": 97,
+      "calls": [
+        {
+          "address": 171817192,
+          "return_pc": 171817197,
+          "callee": "js_string_code_point_at",
+          "in_cyclic_region": true,
+          "basic_block": 171817160
+        },
+        {
+          "address": 171821241,
+          "return_pc": 171821246,
+          "callee": "js_object_get_own_field_or_undef",
+          "in_cyclic_region": true,
+          "basic_block": 171821183
+        },
+        {
+          "address": 171821313,
+          "return_pc": 171821318,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 171821308
+        },
+        {
+          "address": 171821395,
+          "return_pc": 171821400,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 171821352
+        },
+        {
+          "address": 171821502,
+          "return_pc": 171821507,
+          "callee": "js_object_get_own_field_or_undef",
+          "in_cyclic_region": true,
+          "basic_block": 171821474
+        },
+        {
+          "address": 171821629,
+          "return_pc": 171821634,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 171821624
+        },
+        {
+          "address": 171821703,
+          "return_pc": 171821708,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 171821668
+        },
+        {
+          "address": 171821741,
+          "return_pc": 171821746,
+          "callee": "js_object_get_own_field_or_undef",
+          "in_cyclic_region": true,
+          "basic_block": 171821713
+        },
+        {
+          "address": 171821817,
+          "return_pc": 171821822,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 171821812
+        },
+        {
+          "address": 171821899,
+          "return_pc": 171821904,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 171821856
+        }
+      ],
+      "post_opt_candidate_statepoints": 18,
+      "cyclic_regions_with_candidate": 1,
+      "reachable_instructions": 1878,
+      "phases": {
+        "command": {
+          "caller_period": 177072592,
+          "caller_samples": 34,
+          "candidate_loop_period": 166640829,
+          "candidate_loop_samples": 32,
+          "candidate_block_period": 5199336,
+          "candidate_block_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_fn_cli_2_1_112_js__u_N_24_6",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-00.asm",
+      "disassembly_sha256": "ec40318e5c8ad803411b2cb87baead8968a922800aebf2b732428535e0369d4e"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__37358",
+      "function_id": "58:7",
+      "address": "0x9fb8790",
+      "size": 36304,
+      "gc_record_count": 478,
+      "calls": [
+        {
+          "address": 167492924,
+          "return_pc": 167492929,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 167492886
+        },
+        {
+          "address": 167493021,
+          "return_pc": 167493026,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 167492963
+        },
+        {
+          "address": 167499435,
+          "return_pc": 167499440,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 167499384
+        },
+        {
+          "address": 167499533,
+          "return_pc": 167499538,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 167499488
+        },
+        {
+          "address": 167500789,
+          "return_pc": 167500794,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 167500731
+        },
+        {
+          "address": 167500899,
+          "return_pc": 167500904,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 167500848
+        },
+        {
+          "address": 167511081,
+          "return_pc": 167511086,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 167511041
+        },
+        {
+          "address": 167511169,
+          "return_pc": 167511174,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 167511120
+        }
+      ],
+      "post_opt_candidate_statepoints": 21,
+      "cyclic_regions_with_candidate": 1,
+      "reachable_instructions": 7434,
+      "phases": {
+        "command": {
+          "caller_period": 5318619,
+          "caller_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_closure_cli_2_1_112_js__37358",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-08.asm",
+      "disassembly_sha256": "b7762da2e7608d2ace1733a8a56f42ce508d998cba5fbddc61672123eaa5d43c"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__37188",
+      "function_id": "52:82",
+      "address": "0x919d010",
+      "size": 4462,
+      "gc_record_count": 34,
+      "calls": [
+        {
+          "address": 152687311,
+          "return_pc": 152687316,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 152687272
+        },
+        {
+          "address": 152687395,
+          "return_pc": 152687400,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 152687364
+        }
+      ],
+      "post_opt_candidate_statepoints": 3,
+      "cyclic_regions_with_candidate": 0,
+      "reachable_instructions": 1013,
+      "phases": {
+        "command": {
+          "caller_period": 5312116,
+          "caller_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_closure_cli_2_1_112_js__37188",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-09.asm",
+      "disassembly_sha256": "bd13fc1e107d6b4d6bbe0dea2c6084cb38e0502c0431d74eaf9bdf5a8085837f"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__TM",
+      "function_id": "27:33",
+      "address": "0x5c31300",
+      "size": 33931,
+      "gc_record_count": 137,
+      "calls": [
+        {
+          "address": 96676574,
+          "return_pc": 96676579,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 96676520
+        },
+        {
+          "address": 96679942,
+          "return_pc": 96679947,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 96679902
+        },
+        {
+          "address": 96683362,
+          "return_pc": 96683367,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 96683308
+        },
+        {
+          "address": 96687237,
+          "return_pc": 96687242,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 96687197
+        },
+        {
+          "address": 96690903,
+          "return_pc": 96690908,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 96690849
+        }
+      ],
+      "post_opt_candidate_statepoints": 25,
+      "cyclic_regions_with_candidate": 0,
+      "reachable_instructions": 5159,
+      "phases": {
+        "command": {
+          "caller_period": 5298846,
+          "caller_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_fn_cli_2_1_112_js__TM",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-10.asm",
+      "disassembly_sha256": "f698358ee7327ebad295c1d1b31a36d95a967e0a383f309b4d237af225f406fb"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__mv5",
+      "function_id": "84:404",
+      "address": "0xe002ee0",
+      "size": 346,
+      "gc_record_count": 8,
+      "calls": [
+        {
+          "address": 234893055,
+          "return_pc": 234893060,
+          "callee": "js_number_is_safe_integer",
+          "in_cyclic_region": false,
+          "basic_block": 234893024
+        }
+      ],
+      "post_opt_candidate_statepoints": 1,
+      "cyclic_regions_with_candidate": 0,
+      "reachable_instructions": 78,
+      "phases": {
+        "command": {
+          "caller_period": 5296174,
+          "caller_samples": 1,
+          "candidate_block_period": 5296174,
+          "candidate_block_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_fn_cli_2_1_112_js__mv5",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-11.asm",
+      "disassembly_sha256": "963eeda551b283747bc7001178f5ba4baa6cdf6f3262fc957a80e350e788d2f5"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__Hu1",
+      "function_id": "33:40",
+      "address": "0x68a9e10",
+      "size": 9055,
+      "gc_record_count": 107,
+      "calls": [
+        {
+          "address": 109748900,
+          "return_pc": 109748905,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109748891
+        },
+        {
+          "address": 109749188,
+          "return_pc": 109749193,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109749179
+        },
+        {
+          "address": 109749346,
+          "return_pc": 109749351,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109749337
+        },
+        {
+          "address": 109750512,
+          "return_pc": 109750517,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109750500
+        },
+        {
+          "address": 109750627,
+          "return_pc": 109750632,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109750615
+        },
+        {
+          "address": 109750836,
+          "return_pc": 109750841,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 109750829
+        },
+        {
+          "address": 109750932,
+          "return_pc": 109750937,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109750920
+        },
+        {
+          "address": 109751047,
+          "return_pc": 109751052,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109751035
+        },
+        {
+          "address": 109751502,
+          "return_pc": 109751507,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109751490
+        },
+        {
+          "address": 109751644,
+          "return_pc": 109751649,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109751608
+        },
+        {
+          "address": 109752051,
+          "return_pc": 109752056,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109752015
+        },
+        {
+          "address": 109752885,
+          "return_pc": 109752890,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 109752875
+        },
+        {
+          "address": 109752998,
+          "return_pc": 109753003,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 109752977
+        },
+        {
+          "address": 109753221,
+          "return_pc": 109753226,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109753185
+        },
+        {
+          "address": 109753767,
+          "return_pc": 109753772,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 109753760
+        },
+        {
+          "address": 109753992,
+          "return_pc": 109753997,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 109753968
+        },
+        {
+          "address": 109754240,
+          "return_pc": 109754245,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 109754236
+        },
+        {
+          "address": 109754385,
+          "return_pc": 109754390,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 109754364
+        },
+        {
+          "address": 109754619,
+          "return_pc": 109754624,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 109754615
+        },
+        {
+          "address": 109754850,
+          "return_pc": 109754855,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109754821
+        },
+        {
+          "address": 109754979,
+          "return_pc": 109754984,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109754950
+        },
+        {
+          "address": 109755209,
+          "return_pc": 109755214,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109755184
+        },
+        {
+          "address": 109755325,
+          "return_pc": 109755330,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 109755304
+        },
+        {
+          "address": 109755592,
+          "return_pc": 109755597,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 109755576
+        },
+        {
+          "address": 109755621,
+          "return_pc": 109755626,
+          "callee": "js_array_note_numeric_write",
+          "in_cyclic_region": true,
+          "basic_block": 109755576
+        },
+        {
+          "address": 109755676,
+          "return_pc": 109755681,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 109755656
+        }
+      ],
+      "post_opt_candidate_statepoints": 44,
+      "cyclic_regions_with_candidate": 1,
+      "reachable_instructions": 1898,
+      "phases": {
+        "startup": {
+          "caller_period": 5242431,
+          "caller_samples": 1,
+          "candidate_loop_period": 5242431,
+          "candidate_loop_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_fn_cli_2_1_112_js__Hu1",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-14.asm",
+      "disassembly_sha256": "e070876b54d997bda967806b9f69db4ae8a5756918f864adcf3c0de95f98b56a"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__13439",
+      "function_id": "103:33",
+      "address": "0x102831d0",
+      "size": 11104,
+      "gc_record_count": 160,
+      "calls": [
+        {
+          "address": 271077739,
+          "return_pc": 271077744,
+          "callee": "js_string_equals",
+          "in_cyclic_region": false,
+          "basic_block": 271077729
+        }
+      ],
+      "post_opt_candidate_statepoints": 19,
+      "cyclic_regions_with_candidate": 0,
+      "reachable_instructions": 2232,
+      "phases": {
+        "startup": {
+          "caller_period": 5241425,
+          "caller_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_closure_cli_2_1_112_js__13439",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-15.asm",
+      "disassembly_sha256": "5333a7108feaa2869b91e363a7057a6400d54829f588c6cd71bfba07c596d43f"
+    },
+    {
+      "symbol": "perry_method_cli_2_1_112_js__Os6__onRender",
+      "function_id": "16:5",
+      "address": "0x42dc040",
+      "size": 44973,
+      "gc_record_count": 405,
+      "calls": [
+        {
+          "address": 70112896,
+          "return_pc": 70112901,
+          "callee": "js_string_equals",
+          "in_cyclic_region": false,
+          "basic_block": 70112896
+        },
+        {
+          "address": 70125461,
+          "return_pc": 70125466,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 70125453
+        },
+        {
+          "address": 70126997,
+          "return_pc": 70127002,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 70126977
+        },
+        {
+          "address": 70127270,
+          "return_pc": 70127275,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 70127250
+        },
+        {
+          "address": 70127720,
+          "return_pc": 70127725,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 70127551
+        },
+        {
+          "address": 70128555,
+          "return_pc": 70128560,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 70128395
+        },
+        {
+          "address": 70128611,
+          "return_pc": 70128616,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 70128590
+        },
+        {
+          "address": 70130783,
+          "return_pc": 70130788,
+          "callee": "js_object_get_own_field_or_undef",
+          "in_cyclic_region": true,
+          "basic_block": 70130739
+        },
+        {
+          "address": 70130857,
+          "return_pc": 70130862,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 70130849
+        },
+        {
+          "address": 70130954,
+          "return_pc": 70130959,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": true,
+          "basic_block": 70130902
+        },
+        {
+          "address": 70131617,
+          "return_pc": 70131622,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 70131597
+        },
+        {
+          "address": 70148282,
+          "return_pc": 70148287,
+          "callee": "js_string_equals",
+          "in_cyclic_region": false,
+          "basic_block": 70148275
+        }
+      ],
+      "post_opt_candidate_statepoints": 30,
+      "cyclic_regions_with_candidate": 1,
+      "reachable_instructions": 9238,
+      "phases": {
+        "command": {
+          "caller_period": 5239430,
+          "caller_samples": 1,
+          "candidate_loop_period": 5239430,
+          "candidate_loop_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_method_cli_2_1_112_js__Os6__onRender",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-16.asm",
+      "disassembly_sha256": "c497da2a0895e042e14bebe48cf8cc64717bdd4123761de357b4e1d6227a30c7"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__nR_",
+      "function_id": "84:16",
+      "address": "0xdf13210",
+      "size": 19200,
+      "gc_record_count": 300,
+      "calls": [
+        {
+          "address": 233912143,
+          "return_pc": 233912148,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 233912135
+        },
+        {
+          "address": 233912426,
+          "return_pc": 233912431,
+          "callee": "js_string_char_code_at",
+          "in_cyclic_region": true,
+          "basic_block": 233912396
+        },
+        {
+          "address": 233913393,
+          "return_pc": 233913398,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233913393
+        },
+        {
+          "address": 233913918,
+          "return_pc": 233913923,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 233913913
+        },
+        {
+          "address": 233914173,
+          "return_pc": 233914178,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233914173
+        },
+        {
+          "address": 233914202,
+          "return_pc": 233914207,
+          "callee": "js_array_note_numeric_write",
+          "in_cyclic_region": true,
+          "basic_block": 233914173
+        },
+        {
+          "address": 233914241,
+          "return_pc": 233914246,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233914233
+        },
+        {
+          "address": 233914719,
+          "return_pc": 233914724,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233914714
+        },
+        {
+          "address": 233914941,
+          "return_pc": 233914946,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233914941
+        },
+        {
+          "address": 233915114,
+          "return_pc": 233915119,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233915109
+        },
+        {
+          "address": 233915397,
+          "return_pc": 233915402,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233915397
+        },
+        {
+          "address": 233915502,
+          "return_pc": 233915507,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233915497
+        },
+        {
+          "address": 233915920,
+          "return_pc": 233915925,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233915911
+        },
+        {
+          "address": 233916676,
+          "return_pc": 233916681,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233916643
+        },
+        {
+          "address": 233916819,
+          "return_pc": 233916824,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233916786
+        },
+        {
+          "address": 233916974,
+          "return_pc": 233916979,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233916946
+        },
+        {
+          "address": 233917306,
+          "return_pc": 233917311,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233917291
+        },
+        {
+          "address": 233917336,
+          "return_pc": 233917341,
+          "callee": "js_array_note_numeric_write",
+          "in_cyclic_region": true,
+          "basic_block": 233917291
+        },
+        {
+          "address": 233917404,
+          "return_pc": 233917409,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233917377
+        },
+        {
+          "address": 233918437,
+          "return_pc": 233918442,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233918430
+        },
+        {
+          "address": 233918555,
+          "return_pc": 233918560,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233918542
+        },
+        {
+          "address": 233918908,
+          "return_pc": 233918913,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233918892
+        },
+        {
+          "address": 233918933,
+          "return_pc": 233918938,
+          "callee": "js_array_note_numeric_write",
+          "in_cyclic_region": true,
+          "basic_block": 233918892
+        },
+        {
+          "address": 233918995,
+          "return_pc": 233919000,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233918968
+        },
+        {
+          "address": 233920496,
+          "return_pc": 233920501,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 233920486
+        },
+        {
+          "address": 233920645,
+          "return_pc": 233920650,
+          "callee": "js_string_char_code_at",
+          "in_cyclic_region": true,
+          "basic_block": 233920615
+        },
+        {
+          "address": 233921445,
+          "return_pc": 233921450,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233921438
+        },
+        {
+          "address": 233921553,
+          "return_pc": 233921558,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233921540
+        },
+        {
+          "address": 233921902,
+          "return_pc": 233921907,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233921886
+        },
+        {
+          "address": 233921927,
+          "return_pc": 233921932,
+          "callee": "js_array_note_numeric_write",
+          "in_cyclic_region": true,
+          "basic_block": 233921886
+        },
+        {
+          "address": 233921989,
+          "return_pc": 233921994,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233921962
+        },
+        {
+          "address": 233923951,
+          "return_pc": 233923956,
+          "callee": "js_string_equals",
+          "in_cyclic_region": true,
+          "basic_block": 233923944
+        },
+        {
+          "address": 233924208,
+          "return_pc": 233924213,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 233924208
+        },
+        {
+          "address": 233924237,
+          "return_pc": 233924242,
+          "callee": "js_array_note_numeric_write",
+          "in_cyclic_region": true,
+          "basic_block": 233924208
+        },
+        {
+          "address": 233924276,
+          "return_pc": 233924281,
+          "callee": "js_write_barrier_slot_validated_parent",
+          "in_cyclic_region": true,
+          "basic_block": 233924268
+        }
+      ],
+      "post_opt_candidate_statepoints": 77,
+      "cyclic_regions_with_candidate": 2,
+      "reachable_instructions": 3760,
+      "phases": {
+        "command": {
+          "caller_period": 5228610,
+          "caller_samples": 1,
+          "candidate_loop_period": 5228610,
+          "candidate_loop_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_fn_cli_2_1_112_js__nR_",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-18.asm",
+      "disassembly_sha256": "538bfb0ebee9079a5479d93c52ad73e896da42943f4bd8f890e665cab4de1236"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__82335",
+      "function_id": "68:41",
+      "address": "0xb7370e0",
+      "size": 7661,
+      "gc_record_count": 195,
+      "calls": [
+        {
+          "address": 192115239,
+          "return_pc": 192115244,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 192115234
+        },
+        {
+          "address": 192115260,
+          "return_pc": 192115265,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192115248
+        },
+        {
+          "address": 192115275,
+          "return_pc": 192115280,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192115248
+        },
+        {
+          "address": 192115339,
+          "return_pc": 192115344,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": false,
+          "basic_block": 192115336
+        },
+        {
+          "address": 192115360,
+          "return_pc": 192115365,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192115348
+        },
+        {
+          "address": 192115384,
+          "return_pc": 192115389,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192115379
+        },
+        {
+          "address": 192115510,
+          "return_pc": 192115515,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192115505
+        },
+        {
+          "address": 192115565,
+          "return_pc": 192115570,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115555
+        },
+        {
+          "address": 192115612,
+          "return_pc": 192115617,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115595
+        },
+        {
+          "address": 192115636,
+          "return_pc": 192115641,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115622
+        },
+        {
+          "address": 192115664,
+          "return_pc": 192115669,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115659
+        },
+        {
+          "address": 192115720,
+          "return_pc": 192115725,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115696
+        },
+        {
+          "address": 192115747,
+          "return_pc": 192115752,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115696
+        },
+        {
+          "address": 192115775,
+          "return_pc": 192115780,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192115769
+        },
+        {
+          "address": 192115818,
+          "return_pc": 192115823,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115780
+        },
+        {
+          "address": 192115842,
+          "return_pc": 192115847,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115780
+        },
+        {
+          "address": 192115902,
+          "return_pc": 192115907,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192115896
+        },
+        {
+          "address": 192115921,
+          "return_pc": 192115926,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115911
+        },
+        {
+          "address": 192115939,
+          "return_pc": 192115944,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115911
+        },
+        {
+          "address": 192115958,
+          "return_pc": 192115963,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115911
+        },
+        {
+          "address": 192115973,
+          "return_pc": 192115978,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115968
+        },
+        {
+          "address": 192116001,
+          "return_pc": 192116006,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192115996
+        },
+        {
+          "address": 192116069,
+          "return_pc": 192116074,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 192116064
+        },
+        {
+          "address": 192116088,
+          "return_pc": 192116093,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116074
+        },
+        {
+          "address": 192116102,
+          "return_pc": 192116107,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116074
+        },
+        {
+          "address": 192116162,
+          "return_pc": 192116167,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192116156
+        },
+        {
+          "address": 192116221,
+          "return_pc": 192116226,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 192116216
+        },
+        {
+          "address": 192116240,
+          "return_pc": 192116245,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116226
+        },
+        {
+          "address": 192116254,
+          "return_pc": 192116259,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116226
+        },
+        {
+          "address": 192116314,
+          "return_pc": 192116319,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192116308
+        },
+        {
+          "address": 192116450,
+          "return_pc": 192116455,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116445
+        },
+        {
+          "address": 192116511,
+          "return_pc": 192116516,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116473
+        },
+        {
+          "address": 192116535,
+          "return_pc": 192116540,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116473
+        },
+        {
+          "address": 192116596,
+          "return_pc": 192116601,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192116590
+        },
+        {
+          "address": 192116664,
+          "return_pc": 192116669,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116659
+        },
+        {
+          "address": 192116690,
+          "return_pc": 192116695,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116685
+        },
+        {
+          "address": 192116718,
+          "return_pc": 192116723,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116713
+        },
+        {
+          "address": 192116746,
+          "return_pc": 192116751,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192116741
+        },
+        {
+          "address": 192117182,
+          "return_pc": 192117187,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117172
+        },
+        {
+          "address": 192117208,
+          "return_pc": 192117213,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117203
+        },
+        {
+          "address": 192117232,
+          "return_pc": 192117237,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117227
+        },
+        {
+          "address": 192117247,
+          "return_pc": 192117252,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117242
+        },
+        {
+          "address": 192117273,
+          "return_pc": 192117278,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117268
+        },
+        {
+          "address": 192117530,
+          "return_pc": 192117535,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117520
+        },
+        {
+          "address": 192117544,
+          "return_pc": 192117549,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117520
+        },
+        {
+          "address": 192117604,
+          "return_pc": 192117609,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192117598
+        },
+        {
+          "address": 192117652,
+          "return_pc": 192117657,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117642
+        },
+        {
+          "address": 192117667,
+          "return_pc": 192117672,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117662
+        },
+        {
+          "address": 192117695,
+          "return_pc": 192117700,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117690
+        },
+        {
+          "address": 192117723,
+          "return_pc": 192117728,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117718
+        },
+        {
+          "address": 192117751,
+          "return_pc": 192117756,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192117746
+        },
+        {
+          "address": 192118252,
+          "return_pc": 192118257,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192118247
+        },
+        {
+          "address": 192118280,
+          "return_pc": 192118285,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192118275
+        },
+        {
+          "address": 192119382,
+          "return_pc": 192119387,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": true,
+          "basic_block": 192119377
+        },
+        {
+          "address": 192119401,
+          "return_pc": 192119406,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119387
+        },
+        {
+          "address": 192119416,
+          "return_pc": 192119421,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119387
+        },
+        {
+          "address": 192119480,
+          "return_pc": 192119485,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": true,
+          "basic_block": 192119477
+        },
+        {
+          "address": 192119499,
+          "return_pc": 192119504,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119489
+        },
+        {
+          "address": 192119517,
+          "return_pc": 192119522,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119489
+        },
+        {
+          "address": 192119536,
+          "return_pc": 192119541,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119489
+        },
+        {
+          "address": 192119657,
+          "return_pc": 192119662,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119652
+        },
+        {
+          "address": 192119683,
+          "return_pc": 192119688,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": true,
+          "basic_block": 192119678
+        },
+        {
+          "address": 192119735,
+          "return_pc": 192119740,
+          "callee": "js_object_get_own_field_or_undef",
+          "in_cyclic_region": false,
+          "basic_block": 192119704
+        },
+        {
+          "address": 192119807,
+          "return_pc": 192119812,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 192119802
+        },
+        {
+          "address": 192119878,
+          "return_pc": 192119883,
+          "callee": "js_implicit_this_set",
+          "in_cyclic_region": false,
+          "basic_block": 192119846
+        },
+        {
+          "address": 192119899,
+          "return_pc": 192119904,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192119883
+        },
+        {
+          "address": 192119923,
+          "return_pc": 192119928,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192119883
+        },
+        {
+          "address": 192119983,
+          "return_pc": 192119988,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": false,
+          "basic_block": 192119977
+        },
+        {
+          "address": 192120004,
+          "return_pc": 192120009,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192119992
+        },
+        {
+          "address": 192120029,
+          "return_pc": 192120034,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192119992
+        },
+        {
+          "address": 192120306,
+          "return_pc": 192120311,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 192120301
+        },
+        {
+          "address": 192120327,
+          "return_pc": 192120332,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120311
+        },
+        {
+          "address": 192120341,
+          "return_pc": 192120346,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120311
+        },
+        {
+          "address": 192120401,
+          "return_pc": 192120406,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": false,
+          "basic_block": 192120395
+        },
+        {
+          "address": 192120422,
+          "return_pc": 192120427,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120410
+        },
+        {
+          "address": 192120447,
+          "return_pc": 192120452,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120410
+        },
+        {
+          "address": 192120661,
+          "return_pc": 192120666,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120649
+        },
+        {
+          "address": 192120675,
+          "return_pc": 192120680,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120649
+        },
+        {
+          "address": 192120735,
+          "return_pc": 192120740,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": false,
+          "basic_block": 192120729
+        },
+        {
+          "address": 192120756,
+          "return_pc": 192120761,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120744
+        },
+        {
+          "address": 192120781,
+          "return_pc": 192120786,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120744
+        },
+        {
+          "address": 192120844,
+          "return_pc": 192120849,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120839
+        },
+        {
+          "address": 192120871,
+          "return_pc": 192120876,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120839
+        },
+        {
+          "address": 192120972,
+          "return_pc": 192120977,
+          "callee": "js_string_addref_if_heap_string",
+          "in_cyclic_region": false,
+          "basic_block": 192120967
+        },
+        {
+          "address": 192120993,
+          "return_pc": 192120998,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120977
+        },
+        {
+          "address": 192121007,
+          "return_pc": 192121012,
+          "callee": "js_box_set_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192120977
+        },
+        {
+          "address": 192121067,
+          "return_pc": 192121072,
+          "callee": "js_write_barrier",
+          "in_cyclic_region": false,
+          "basic_block": 192121061
+        },
+        {
+          "address": 192121088,
+          "return_pc": 192121093,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121076
+        },
+        {
+          "address": 192121113,
+          "return_pc": 192121118,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121076
+        },
+        {
+          "address": 192121252,
+          "return_pc": 192121257,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121247
+        },
+        {
+          "address": 192121282,
+          "return_pc": 192121287,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121277
+        },
+        {
+          "address": 192121306,
+          "return_pc": 192121311,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121277
+        },
+        {
+          "address": 192121432,
+          "return_pc": 192121437,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121427
+        },
+        {
+          "address": 192121456,
+          "return_pc": 192121461,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121427
+        },
+        {
+          "address": 192121590,
+          "return_pc": 192121595,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121577
+        },
+        {
+          "address": 192121612,
+          "return_pc": 192121617,
+          "callee": "js_closure_get_capture_bits",
+          "in_cyclic_region": false,
+          "basic_block": 192121577
+        }
+      ],
+      "post_opt_candidate_statepoints": 104,
+      "cyclic_regions_with_candidate": 1,
+      "reachable_instructions": 1577,
+      "phases": {
+        "command": {
+          "caller_period": 5220025,
+          "caller_samples": 1
+        }
+      },
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--disassemble=perry_closure_cli_2_1_112_js__82335",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ],
+      "disassembly": "function-19.asm",
+      "disassembly_sha256": "0e63135676b21ce890b45e003bc23e7e16fbd7dbecdf4548ff2344f139b7de86"
+    }
+  ],
+  "rejected_functions": [
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__GW7",
+      "reason": "indirect/undecoded branch at 0x200cff0",
+      "disassembly": "function-01.asm"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__37648",
+      "reason": "indirect/undecoded branch at 0xf186253",
+      "disassembly": "function-02.asm"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__yx_",
+      "reason": "indirect/undecoded branch at 0x1ce9898",
+      "disassembly": "function-03.asm"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__m_A",
+      "reason": "indirect/undecoded branch at 0xba3ebd4",
+      "disassembly": "function-04.asm"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__Wa6.__arena",
+      "reason": "indirect/undecoded branch at 0x95ad8ca",
+      "disassembly": "function-05.asm"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__36650",
+      "reason": "indirect/undecoded branch at 0xfeabc0f",
+      "disassembly": "function-06.asm"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__nz4",
+      "reason": "indirect/undecoded branch at 0x8fafab9",
+      "disassembly": "function-07.asm"
+    },
+    {
+      "symbol": "perry_closure_cli_2_1_112_js__10699",
+      "reason": "indirect/undecoded branch at 0x1190d0c",
+      "disassembly": "function-12.asm"
+    },
+    {
+      "symbol": "perry_method_cli_2_1_112_js__u_P_24_8__emit",
+      "reason": "indirect/undecoded branch at 0xd3d261a",
+      "disassembly": "function-13.asm"
+    },
+    {
+      "symbol": "perry_fn_cli_2_1_112_js__hE8.__arena",
+      "reason": "indirect/undecoded branch at 0x5e24c46",
+      "disassembly": "function-17.asm"
+    }
+  ],
+  "inputs": {
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/COMPILE_COMPLETE.json": "5dc8f0483949c20e9f93f751455646584970c20c903b1faf63cfd77d15170169",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-analysis-v4-1/by-ip.csv.gz": "9d8c18df088b1ae2bd689bbe01dbedede7b0d9c121542c7935d1c56737b7b9c0",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-analysis-v4-2/by-ip.csv.gz": "70c74e553aade01fc50699025972018873bdeb1f37fe892bc4e80848c960b694",
+    "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/profile-analysis-v4-3/by-ip.csv.gz": "17bf3409ac820b702187f10cdc0935ea7efeacc976ec38e70bb7a14adb10b164"
+  },
+  "limitations": [
+    "Only20 hottest unique existing-plus-new runtime leaf candidate callers, exact PGCM symbol joins.",
+    "Normal intraprocedural machine CFG; exception/unwind transfers are not modeled.",
+    "Any undecoded/indirect branch excludes the function, never zero opportunity.",
+    "Cyclic regions are SCCs, which can contain nested or irreducible loops.",
+    "Loop/block/call samples overlap; never sum them. They are caller coverage, not savings.",
+    "No callee work is removed; no spill/reload cost or dynamic call counts inferred."
+  ]
+}

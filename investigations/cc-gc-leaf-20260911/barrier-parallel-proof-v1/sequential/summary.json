@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "status": "complete-static-barrier-census",
+  "measurement": "reachable explicit barrier sites in admitted functions; not executions or valid elisions",
+  "totals": {
+    "functions_encountered": 36,
+    "functions_admitted": 36,
+    "strict_barrier_sites": 10,
+    "strict_fresh_origin_sites": 4,
+    "extra_leaf_fresh_origin_sites": 0,
+    "strict_unresolved_parent_sites": 6,
+    "narrow_strict_fresh_origin_sites": 0,
+    "narrow_extra_leaf_fresh_origin_sites": 0,
+    "join_kill_strict_fresh_origin_sites": 0,
+    "join_kill_extra_leaf_fresh_origin_sites": 0,
+    "functions_excluded": 0
+  },
+  "completed_attempts": 2,
+  "unresolved_parent_reasons": {
+    "no_proven_allocation_origin": 6
+  },
+  "unresolved_parent_definition_opcodes": {
+    "bitcast": 6
+  },
+  "incomplete_attempts_excluded": [],
+  "units": [
+    {
+      "attempt": "pid-3681148-attempt-0",
+      "stage": "pre-rs4gc",
+      "bitcode_sha256": "052c2b434eb39c8c5b4a8bc16acae91cf393bda6293377dc83a04b81f29482b4",
+      "attempt_sha256": "319b911e8ed52c6b1df39c63682f9a02eed4f4336703d782b8fcc51378a6923c",
+      "complete_sha256": "12883eaab940a814064943c07c8e04d04fee42a4dee10932eaa040ca2b28ec90",
+      "counts": {
+        "functions_encountered": 18,
+        "functions_admitted": 18,
+        "strict_barrier_sites": 5,
+        "strict_fresh_origin_sites": 2,
+        "extra_leaf_fresh_origin_sites": 0,
+        "strict_unresolved_parent_sites": 3,
+        "narrow_strict_fresh_origin_sites": 0,
+        "narrow_extra_leaf_fresh_origin_sites": 0,
+        "join_kill_strict_fresh_origin_sites": 0,
+        "join_kill_extra_leaf_fresh_origin_sites": 0,
+        "functions_excluded": 0
+      },
+      "errors": [],
+      "decoded_text_sha256": "1fb2ecc2ba6d144083603618176d9e065deef945d7bdd7030dbd54bcc00ecb3e",
+      "complete_text_consumed": true,
+      "mirror_path": "barrier-parallel-proof-v1/text/pid-3681148-attempt-0/pre-rs4gc.ll"
+    },
+    {
+      "attempt": "pid-3681148-attempt-1",
+      "stage": "pre-rs4gc",
+      "bitcode_sha256": "052c2b434eb39c8c5b4a8bc16acae91cf393bda6293377dc83a04b81f29482b4",
+      "attempt_sha256": "48209d5e3efc966a507485c15bee9fc45c03e02aed0b2e5164695615d6566a99",
+      "complete_sha256": "12883eaab940a814064943c07c8e04d04fee42a4dee10932eaa040ca2b28ec90",
+      "counts": {
+        "functions_encountered": 18,
+        "functions_admitted": 18,
+        "strict_barrier_sites": 5,
+        "strict_fresh_origin_sites": 2,
+        "extra_leaf_fresh_origin_sites": 0,
+        "strict_unresolved_parent_sites": 3,
+        "narrow_strict_fresh_origin_sites": 0,
+        "narrow_extra_leaf_fresh_origin_sites": 0,
+        "join_kill_strict_fresh_origin_sites": 0,
+        "join_kill_extra_leaf_fresh_origin_sites": 0,
+        "functions_excluded": 0
+      },
+      "errors": [],
+      "decoded_text_sha256": "1fb2ecc2ba6d144083603618176d9e065deef945d7bdd7030dbd54bcc00ecb3e",
+      "complete_text_consumed": true,
+      "mirror_path": "barrier-parallel-proof-v1/text/pid-3681148-attempt-1/pre-rs4gc.ll"
+    }
+  ],
+  "cannot_collect_summary_count": 80,
+  "extra_hypothesis_summary_count": 48,
+  "helper_audit_sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+  "analyzers": {
+    "fresh_barrier_batch_v4.py": "704760083ed620be09fd7713df91dd902b189d08ea68e88fdda1b3890ee5f92d",
+    "fresh_barrier_census_v4.py": "7b56e80eed169048a668571f4e767ac42449c35346df48310d5efb81afb8bba8",
+    "callsite_census.py": "e8e1db299146218d430ecc8d57d9190aed4796928d74de74da80f63004772df5"
+  },
+  "llvm_dis": null,
+  "files": {
+    "functions.jsonl.gz": {
+      "sha256": "c356ae98ad3c62be13cd79efa50d3733ba60ceec6c09318497189f1add3adc2d",
+      "bytes": 1819
+    },
+    "cannot-collect.json": {
+      "sha256": "c10a37ca73a2bc498c8dddf2fd403ef008b4335e9a4f6b40aa99a4566560d3ba",
+      "bytes": 2567
+    },
+    "extra-48.json": {
+      "sha256": "9eae9322adf6cbb4664df43fb60c428b78faf64429cf5310080ca2d8a328440e",
+      "bytes": 1083
+    }
+  },
+  "limits": [
+    "generation and publication of fresh allocator returns remain unknown",
+    "joins retain only identical origins across every reachable predecessor; possibly collecting calls kill freshness",
+    "layout, incremental barriers and string sharing are not claimed removable",
+    "excluded functions/units are unavailable, not zero-barrier observations",
+    "admitted counts in a failed unit remain partial; do not infer its full denominator",
+    "only explicit direct barrier ABIs; hidden helper stores and already omitted barriers are outside this denominator",
+    "root must bind successful full compile and accepted emitted units to exact application"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "scope": "two explicitly synthetic attempt identities containing the same real emitted fixture; not whole-cc observations",
+  "same_totals": true,
+  "same_decoded_function_rows": true,
+  "missing_shard_detected": true,
+  "expected_barriers": 10,
+  "expected_fresh_sites": 4,
+  "core_sha256": "704760083ed620be09fd7713df91dd902b189d08ea68e88fdda1b3890ee5f92d",
+  "parallel_sha256": "d18687678766bc336234b9f14980918b0257e9192b12b4f849fcd7c5feb77b03"
+}

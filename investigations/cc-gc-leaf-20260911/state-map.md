@@ -1,5 +1,7 @@
 # Existing GC call treatment and observational census
 
+> Source map prepared before measurement. Subsequent compiler validation and measured counts are in the [final report](REPORT.md) and [measurement notes](MEASUREMENT_NOTES.md); prospective statements below describe the original lane scope.
+
 Source: private branch `diag/cc-gc-leaf-census-20260911`, base `f09f7db0fc684553dd4c0f736765d29328441dcc`, with the retained app-testdispatch25 overlay restored by the coordinator. The diagnostic delta changes no call-effect classification, root choice, LLVM pass, write barrier, runtime policy, or emitted-program decision. This is a source audit, not a performance result. No Cargo, build, runtime execution, or box job was run by this lane.
 
 ## What already exists

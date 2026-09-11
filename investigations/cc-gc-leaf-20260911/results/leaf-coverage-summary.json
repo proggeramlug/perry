@@ -1,0 +1,38 @@
+{
+  "status": "complete-derived-leaf-coverage",
+  "source_primary_summary_sha256": "8e00414d90541d5236390ed602051dea6cd5da3069db938f27e5c1e12976ce2f",
+  "source_by_block_sha256": "643a28d39eb44f8ea07d5985db0b22bd3de6f94cd74c9ca0b02cc6f1ebcae92d",
+  "source_by_callee_sha256": "5f90bdc4ea155900b99456240b7903f6016d3cf4db582a30316e15bee3483d2d",
+  "helper_audit_sha256": "b933c0702c5dc2fe2d266c2e0f99f47c8323a108ae5ac11144f4f4000d35af27",
+  "analyzer_sha256": "a28f0abd682b230ff5a5691b076c9145bf04a87976542bc9adb3a44a1c9eeff8",
+  "hypotheses": {
+    "direct-known-cannot-collect": {
+      "statepoints": 453009,
+      "gc_live_operands": 1869942
+    },
+    "direct-all-runtime-leaves": {
+      "statepoints": 469456,
+      "gc_live_operands": 1944315
+    }
+  },
+  "zero_live_points_in_zero_sum_blocks_lower_bound": {
+    "direct-all-runtime-leaves": 3196,
+    "direct-known-cannot-collect": 1422
+  },
+  "outputs": {
+    "definitions.csv": {
+      "sha256": "cabbd15dbc972ffd7de4ecf1012689903b62a04e7e741263f56d0a59ec1e1f2b",
+      "bytes": 29051015
+    },
+    "post-opt-hypothesis-targets.csv": {
+      "sha256": "f04aa3652d717bd6f57e09b85f1dbbb8aeec56cab1a1dd4b2f4d2d7f806591a3",
+      "bytes": 10853730
+    }
+  },
+  "limits": [
+    "Derived static coverage view; no new compilation or GC classification.",
+    "Existing CannotCollect is the compiler contract, not an independent proof of every runtime body.",
+    "Combined and separate hypotheses overlap; do not sum their CPU coverage.",
+    "Zero-live block-group total is a lower bound on zero-live statepoints."
+  ]
+}

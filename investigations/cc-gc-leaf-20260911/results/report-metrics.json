@@ -1,0 +1,518 @@
+{
+  "baseline_runs": [
+    {
+      "row": 1,
+      "startup_s": 0.97,
+      "command_s": 1.31,
+      "vmhwm_mib": 634.8984375
+    },
+    {
+      "row": 2,
+      "startup_s": 1.13,
+      "command_s": 1.27,
+      "vmhwm_mib": 622.9296875
+    },
+    {
+      "row": 3,
+      "startup_s": 0.95,
+      "command_s": 1.2299999999999995,
+      "vmhwm_mib": 633.953125
+    }
+  ],
+  "phase_target_totals": {
+    "startup": {
+      "samples": 3071,
+      "period": 14788892043
+    },
+    "command": {
+      "samples": 3683,
+      "period": 18920915610
+    }
+  },
+  "coverage": [
+    {
+      "phase": "command",
+      "hypothesis": "direct-all-runtime-leaves",
+      "samples": 80,
+      "period": 417480959,
+      "sampled_cycle_percent": 2.206452201390057
+    },
+    {
+      "phase": "command",
+      "hypothesis": "direct-known-cannot-collect",
+      "samples": 69,
+      "period": 359990942,
+      "sampled_cycle_percent": 1.9026084647285206
+    },
+    {
+      "phase": "command",
+      "hypothesis": "direct-reviewed-runtime",
+      "samples": 67,
+      "period": 349326604,
+      "sampled_cycle_percent": 1.8462457694984666
+    },
+    {
+      "phase": "startup",
+      "hypothesis": "direct-all-runtime-leaves",
+      "samples": 10,
+      "period": 52004368,
+      "sampled_cycle_percent": 0.35164478751209177
+    },
+    {
+      "phase": "startup",
+      "hypothesis": "direct-known-cannot-collect",
+      "samples": 8,
+      "period": 41693616,
+      "sampled_cycle_percent": 0.28192521710735435
+    },
+    {
+      "phase": "startup",
+      "hypothesis": "direct-reviewed-runtime",
+      "samples": 8,
+      "period": 41305803,
+      "sampled_cycle_percent": 0.2793028908446945
+    }
+  ],
+  "machine_loop_coverage": {
+    "command": {
+      "caller_period": 213986412,
+      "caller_samples": 41,
+      "candidate_loop_period": 177108869,
+      "candidate_loop_samples": 34,
+      "candidate_block_period": 10495510,
+      "candidate_block_samples": 2,
+      "caller_percent": 1.1309516749121,
+      "loop_percent": 0.9360480890596816,
+      "block_percent": 0.05547041282956179,
+      "call_instruction_percent": 0.0
+    },
+    "startup": {
+      "caller_period": 10483856,
+      "caller_samples": 2,
+      "candidate_loop_period": 5242431,
+      "candidate_loop_samples": 1,
+      "caller_percent": 0.07089007053075558,
+      "loop_percent": 0.03544843646675608,
+      "block_percent": 0.0,
+      "call_instruction_percent": 0.0
+    }
+  },
+  "machine_functions_admitted": 10,
+  "machine_functions_unresolved": 10,
+  "compiled_prefix_self_percent": {
+    "command": 4.408685627027116,
+    "startup": 0.847706303051549
+  },
+  "named_map_self_percent": {
+    "command": 0.08355476196746274,
+    "startup": 0.13211763899005696
+  },
+  "runtime_helper_count": 895,
+  "runtime_allocation_classes": {
+    "unclear": 829,
+    "may allocate": 51,
+    "never allocates": 15
+  },
+  "runtime_review_status": {
+    "unreviewed": 823,
+    "reviewed": 72
+  },
+  "remaining_leaf_candidates": 38,
+  "top20_by_gc_points": [
+    {
+      "helper": "js_closure_get_capture_bits",
+      "post_opt_call_sites": "277331",
+      "post_opt_gc_points": "149470",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "445475"
+    },
+    {
+      "helper": "js_write_barrier_root_nanbox",
+      "post_opt_call_sites": "532333",
+      "post_opt_gc_points": "97323",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "656652"
+    },
+    {
+      "helper": "js_box_set_bits",
+      "post_opt_call_sites": "85284",
+      "post_opt_gc_points": "51564",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "168500"
+    },
+    {
+      "helper": "js_write_barrier",
+      "post_opt_call_sites": "63527",
+      "post_opt_gc_points": "45824",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "144729"
+    },
+    {
+      "helper": "js_implicit_this_set",
+      "post_opt_call_sites": "180455",
+      "post_opt_gc_points": "32405",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "104618"
+    },
+    {
+      "helper": "js_string_addref_if_heap_string",
+      "post_opt_call_sites": "87154",
+      "post_opt_gc_points": "29221",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "163471"
+    },
+    {
+      "helper": "js_write_barrier_slot_validated_parent",
+      "post_opt_call_sites": "92848",
+      "post_opt_gc_points": "19909",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "91712"
+    },
+    {
+      "helper": "js_string_equals",
+      "post_opt_call_sites": "13230",
+      "post_opt_gc_points": "12940",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "61536"
+    },
+    {
+      "helper": "js_object_get_own_field_or_undef",
+      "post_opt_call_sites": "42375",
+      "post_opt_gc_points": "11890",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "35644"
+    },
+    {
+      "helper": "js_closure_set_box_capture_ptr",
+      "post_opt_call_sites": "60229",
+      "post_opt_gc_points": "4600",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "16295"
+    },
+    {
+      "helper": "js_closure_set_capture_bits",
+      "post_opt_call_sites": "70878",
+      "post_opt_gc_points": "4506",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "16241"
+    },
+    {
+      "helper": "js_write_barrier_slot",
+      "post_opt_call_sites": "42607",
+      "post_opt_gc_points": "3043",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "12283"
+    },
+    {
+      "helper": "js_string_index_of_from",
+      "post_opt_call_sites": "1767",
+      "post_opt_gc_points": "1746",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "6071"
+    },
+    {
+      "helper": "js_transition_ic_spill_append",
+      "post_opt_call_sites": "23282",
+      "post_opt_gc_points": "1635",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "6574"
+    },
+    {
+      "helper": "js_box_alloc_bits",
+      "post_opt_call_sites": "56618",
+      "post_opt_gc_points": "558",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1788"
+    },
+    {
+      "helper": "js_array_note_numeric_write",
+      "post_opt_call_sites": "2238",
+      "post_opt_gc_points": "550",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "3814"
+    },
+    {
+      "helper": "js_string_index_of",
+      "post_opt_call_sites": "511",
+      "post_opt_gc_points": "511",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1810"
+    },
+    {
+      "helper": "js_string_char_code_at",
+      "post_opt_call_sites": "413",
+      "post_opt_gc_points": "413",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1455"
+    },
+    {
+      "helper": "js_string_compare",
+      "post_opt_call_sites": "431",
+      "post_opt_gc_points": "411",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1366"
+    },
+    {
+      "helper": "js_typed_feedback_closure_direct_call_guard",
+      "post_opt_call_sites": "1661",
+      "post_opt_gc_points": "335",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "1576"
+    }
+  ],
+  "top20_by_all_call_sites": [
+    {
+      "helper": "js_write_barrier_root_nanbox",
+      "post_opt_call_sites": "532333",
+      "post_opt_gc_points": "97323",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "656652"
+    },
+    {
+      "helper": "js_closure_get_capture_bits",
+      "post_opt_call_sites": "277331",
+      "post_opt_gc_points": "149470",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "445475"
+    },
+    {
+      "helper": "js_implicit_this_set",
+      "post_opt_call_sites": "180455",
+      "post_opt_gc_points": "32405",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "104618"
+    },
+    {
+      "helper": "js_write_barrier_slot_validated_parent",
+      "post_opt_call_sites": "92848",
+      "post_opt_gc_points": "19909",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "91712"
+    },
+    {
+      "helper": "js_string_addref_if_heap_string",
+      "post_opt_call_sites": "87154",
+      "post_opt_gc_points": "29221",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "163471"
+    },
+    {
+      "helper": "js_box_set_bits",
+      "post_opt_call_sites": "85284",
+      "post_opt_gc_points": "51564",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "168500"
+    },
+    {
+      "helper": "js_closure_set_capture_bits",
+      "post_opt_call_sites": "70878",
+      "post_opt_gc_points": "4506",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "16241"
+    },
+    {
+      "helper": "js_write_barrier",
+      "post_opt_call_sites": "63527",
+      "post_opt_gc_points": "45824",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "144729"
+    },
+    {
+      "helper": "js_closure_set_box_capture_ptr",
+      "post_opt_call_sites": "60229",
+      "post_opt_gc_points": "4600",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "16295"
+    },
+    {
+      "helper": "js_box_alloc_bits",
+      "post_opt_call_sites": "56618",
+      "post_opt_gc_points": "558",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1788"
+    },
+    {
+      "helper": "js_write_barrier_slot",
+      "post_opt_call_sites": "42607",
+      "post_opt_gc_points": "3043",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "12283"
+    },
+    {
+      "helper": "js_object_get_own_field_or_undef",
+      "post_opt_call_sites": "42375",
+      "post_opt_gc_points": "11890",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "35644"
+    },
+    {
+      "helper": "js_transition_ic_spill_append",
+      "post_opt_call_sites": "23282",
+      "post_opt_gc_points": "1635",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "6574"
+    },
+    {
+      "helper": "js_implicit_this_get",
+      "post_opt_call_sites": "13951",
+      "post_opt_gc_points": "147",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "may allocate",
+      "audit_status": "reviewed",
+      "gc_live_operands": "450"
+    },
+    {
+      "helper": "js_string_equals",
+      "post_opt_call_sites": "13230",
+      "post_opt_gc_points": "12940",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "61536"
+    },
+    {
+      "helper": "js_array_note_numeric_write",
+      "post_opt_call_sites": "2238",
+      "post_opt_gc_points": "550",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "3814"
+    },
+    {
+      "helper": "js_string_index_of_from",
+      "post_opt_call_sites": "1767",
+      "post_opt_gc_points": "1746",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "6071"
+    },
+    {
+      "helper": "js_typed_feedback_closure_direct_call_guard",
+      "post_opt_call_sites": "1661",
+      "post_opt_gc_points": "335",
+      "basis": "Existing CannotCollect",
+      "allocation_class": "unclear",
+      "audit_status": "unreviewed",
+      "gc_live_operands": "1576"
+    },
+    {
+      "helper": "js_string_index_of",
+      "post_opt_call_sites": "511",
+      "post_opt_gc_points": "511",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1810"
+    },
+    {
+      "helper": "js_string_compare",
+      "post_opt_call_sites": "431",
+      "post_opt_gc_points": "411",
+      "basis": "New reviewed candidate",
+      "allocation_class": "never allocates",
+      "audit_status": "reviewed",
+      "gc_live_operands": "1366"
+    }
+  ],
+  "pre_known_cannot_collect_invokes": 485506,
+  "post_opt_gc_points": 2041090,
+  "leaf_point_hypotheses": {
+    "direct-known-cannot-collect": {
+      "statepoints": 453009,
+      "gc_live_operands": 1869942,
+      "gc_point_percent": 22.194464722280742
+    },
+    "direct-all-runtime-leaves": {
+      "statepoints": 469456,
+      "gc_live_operands": 1944315,
+      "gc_point_percent": 23.0002596651789
+    }
+  },
+  "statepoint_window_barriers": {
+    "functions_seen": 100864,
+    "outside_native_strategy_functions": 23042,
+    "native_strategy_functions": 77822,
+    "analyzed_functions": 19101,
+    "explicit_heap_barrier_sites": 194616,
+    "fresh_with_no_intervening_statepoint": 64511,
+    "unresolved_parent_sites": 130105,
+    "native_functions_without_heap_barrier_reference": 58721
+  },
+  "fresh_barrier_site_percent": 33.14783984872775,
+  "source_inputs": {
+    "results/emission-summary.json": "8e00414d90541d5236390ed602051dea6cd5da3069db938f27e5c1e12976ce2f",
+    "results/leaf-coverage-summary.json": "e15167fe34aac425e501df73ef186fcab19d00838f2510676fa137f9ea8454be",
+    "results/fresh-statepoint-windows.json": "d907add77c2237a2bafdd8a1b5fe2c17461c88ae6a9fbe91283def2eb6d1ca72",
+    "results/machine-loop-coverage.json": "484dd6f1a1e9005cdd9e9dd097c37422638a9562ab25974a20ff96d65db8172b",
+    "results/runtime-helpers.csv": "79ba203c1b4bf5f4f9a8769645f574070ca4f44a0ec8cf263738dc7b12605354",
+    "results/leaf-candidates-ranked.csv": "a2f5714a48f258d3571f752a8285c8a81070938db260faf7cad35e4ee77dfce8"
+  }
+}
