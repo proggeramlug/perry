@@ -1,0 +1,26 @@
+[
+  {
+    "file": "profile_workload_v4.py",
+    "source": "/Users/amlug/projects/perry/agent-trees/cc-gc-leaf-census-0911/investigations/cc-gc-leaf-20260911/profile_workload_v4.py",
+    "sha256": "84b743f9f51e48d243a8079a8a53d6d893bf917ef694fe2fea9b19e11a4ca01d",
+    "modified": false
+  },
+  {
+    "file": "profile_samples_v3.py",
+    "source": "/Users/amlug/projects/perry/agent-trees/cc-gc-leaf-census-0911/investigations/cc-gc-leaf-20260911/profile_samples_v3.py",
+    "sha256": "59ba8cd9429b46645fe03717d40cbeebd1ae6ab55e6a926c896fcf054f6edb81",
+    "modified": false
+  },
+  {
+    "file": "perf_self_reconcile.py",
+    "source": "/Users/amlug/projects/perry/agent-trees/cc-gc-leaf-census-0911/investigations/cc-gc-leaf-20260911/perf_self_reconcile.py",
+    "sha256": "2f0e30679b0f349801ad54e06e6f4bdeeb3f39c718aed6dd397f2e7040f211e6",
+    "modified": false
+  },
+  {
+    "file": "metadata_census.py",
+    "source": "/Users/amlug/projects/perry/agent-trees/cc-gc-leaf-census-0911/investigations/cc-gc-leaf-20260911/metadata_census.py",
+    "sha256": "90772894d3e4be182a98382a67ba7c3ec0a4f355be544cbaa56737c1d5c5e09b",
+    "modified": false
+  }
+]
