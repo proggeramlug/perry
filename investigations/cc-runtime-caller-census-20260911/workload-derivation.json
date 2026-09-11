@@ -1,0 +1,6 @@
+{
+  "parent_path": "investigations/cc-gc-leaf-20260911/profile_workload_v4.py",
+  "parent_sha256": "84b743f9f51e48d243a8079a8a53d6d893bf917ef694fe2fea9b19e11a4ca01d",
+  "derived_sha256": "db548e0fa355a7378816bd75a20bee37d4924fa8cc443fa9123ec5cbabceddb0",
+  "scope": "same fixture, prompt, mock, HOME isolation and process cleanup; substitute BPF census and explicit phase markers; relabel instrumented CPU"
+}

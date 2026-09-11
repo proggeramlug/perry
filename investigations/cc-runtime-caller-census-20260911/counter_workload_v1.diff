@@ -1,0 +1,70 @@
+--- profile_workload_v4.py
++++ counter_workload_v1.py
+@@ -4,6 +4,7 @@
+ The caller must hold the campaign lock. CPU samples have no callchains.
+ """
+ import argparse
++from probe_census_v2 import BpfCensus
+ import fcntl
+ import hashlib
+ import importlib.util
+@@ -311,8 +312,8 @@
+     receipt = {
+         "label": label, "application": str(app), "application_sha256": sha(app),
+         "fixture_sha256": fixtures, "command": PROMPT,
+-        "answer_characters": len(ANSWER), "sampling": "cycles:u,999Hz,CLOCK_MONOTONIC,no callchains",
+-        "phases": {}, "cpu": {}, "pass": False,
++        "answer_characters": len(ANSWER), "instrumentation": "bpf entry/return census; instrumented timing is not ordinary CPU",
++        "phases": {}, "instrumented_cpu": {}, "pass": False,
+     }
+     cleanup_errors = []
+     try:
+@@ -354,14 +355,16 @@
+         receipt["pre_exec_process"] = pre_exec
+         fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 200, 0, 0))
+         drv.pid, drv.fd, drv.buf, drv.log = pid, fd, b"", (out / "terminal.log").open("wb")
+-        perf = Perf(pid, out)
++        perf = BpfCensus(pid, out, app)
+         require_identity(process_snapshot(pid), pre_exec)
++        perf.phase(1)
+         receipt["phases"]["startup_begin_ns"] = time.monotonic_ns()
+         os.kill(pid, signal.SIGCONT)
+         duration = drv.wait_for(r"for shortcuts", 120)
+         assert duration is not None, "startup timeout"
+         receipt["phases"]["startup_end_ns"] = time.monotonic_ns()
+-        receipt["cpu"]["startup_s"] = driver.cpu_of(pid)
++        perf.phase(2)
++        receipt["instrumented_cpu"]["startup_s"] = driver.cpu_of(pid)
+         receipt["process"] = check_process(pid, app, cwd=PROJ, argv=[str(app)],
+                                            start_ticks=pre_exec["start_ticks"])
+         save(out / "app-maps.json", {"maps": Path(f"/proc/{pid}/maps").read_text()})
+@@ -373,6 +376,7 @@
+         receipt["prompt_echo_observed"] = True
+         drv.drain(0.5)
+         cpu_before, since = driver.cpu_of(pid), len(drv.buf)
++        perf.phase(3)
+         receipt["phases"]["command_begin_ns"] = time.monotonic_ns()
+         drv.send("\r")
+         duration = drv.wait_for(r"GCLEAF_DONE_0911", 400, since=since)
+@@ -380,9 +384,10 @@
+         receipt["phases"]["marker_ns"] = time.monotonic_ns()
+         drv.drain(0.5)
+         receipt["phases"]["command_end_ns"] = time.monotonic_ns()
+-        receipt["cpu"]["command_s"] = driver.cpu_of(pid) - cpu_before
++        perf.phase(4)
++        receipt["instrumented_cpu"]["command_s"] = driver.cpu_of(pid) - cpu_before
+         receipt["vmhwm_mb"] = driver.peak_mb(pid)
+-        receipt["perf_control"] = perf.stop()
++        receipt["counter_control"] = perf.stop()
+         perf = None
+         evidence = [json.loads(line) for line in (out / "mock-evidence.jsonl").read_text().splitlines()]
+         receipt["mock_evidence"] = evidence
+@@ -394,7 +399,7 @@
+     finally:
+         if perf is not None:
+             try:
+-                receipt["perf_control"] = perf.stop()
++                receipt["counter_control"] = perf.stop()
+             except BaseException as error:
+                 cleanup_errors.append({"perf": repr(error)})
+         if pid is not None:

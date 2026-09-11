@@ -1,0 +1,358 @@
+{
+  "status": "complete-runtime-caller-census-analysis",
+  "binary_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "per_row": [
+    {
+      "row": 1,
+      "phases": {
+        "1": {
+          "entries": 65587,
+          "true": 1064,
+          "false": 64523,
+          "same_address_as_previous_at_site": 32483
+        },
+        "3": {
+          "entries": 18127286,
+          "true": 25455,
+          "false": 18101831,
+          "same_address_as_previous_at_site": 9672599
+        }
+      },
+      "max_depth": 1,
+      "instrumented_cpu": {
+        "startup_s": 1.25,
+        "command_s": 39.59
+      }
+    },
+    {
+      "row": 2,
+      "phases": {
+        "1": {
+          "entries": 66927,
+          "true": 1067,
+          "false": 65860,
+          "same_address_as_previous_at_site": 33698
+        },
+        "3": {
+          "entries": 16582740,
+          "true": 25416,
+          "false": 16557324,
+          "same_address_as_previous_at_site": 9081327
+        }
+      },
+      "max_depth": 1,
+      "instrumented_cpu": {
+        "startup_s": 1.21,
+        "command_s": 36.410000000000004
+      }
+    },
+    {
+      "row": 3,
+      "phases": {
+        "1": {
+          "entries": 68039,
+          "true": 1040,
+          "false": 66999,
+          "same_address_as_previous_at_site": 35064
+        },
+        "3": {
+          "entries": 14855785,
+          "true": 26352,
+          "false": 14829433,
+          "same_address_as_previous_at_site": 6535079
+        }
+      },
+      "max_depth": 1,
+      "instrumented_cpu": {
+        "startup_s": 1.14,
+        "command_s": 32.75
+      }
+    }
+  ],
+  "phase_totals": {
+    "1": {
+      "entries": 200553,
+      "true": 3171,
+      "false": 197382,
+      "same_address_as_previous_at_site": 101245
+    },
+    "3": {
+      "entries": 49565811,
+      "true": 77223,
+      "false": 49488588,
+      "same_address_as_previous_at_site": 25289005
+    }
+  },
+  "call_binding_entries": {
+    "other-call-or-tail-continuation": 41354,
+    "relative-GOT-call-to-counted-helper": 49725010
+  },
+  "top20_command": [
+    {
+      "phase": 3,
+      "caller_body": "js_object_get_field_by_name",
+      "entries": 10133074,
+      "true": 504,
+      "false": 10132570,
+      "same_address_as_previous_at_site": 4686706,
+      "entry_share_percent": 20.443676388145853,
+      "negative_percent": 99.99502618849917
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::closure::dynamic_props::is_closure_ptr",
+      "entries": 7002050,
+      "true": 315,
+      "false": 7001735,
+      "same_address_as_previous_at_site": 5089648,
+      "entry_share_percent": 14.126773795752076,
+      "negative_percent": 99.99550131747131
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::object::object_ops::extract_obj_ptr",
+      "entries": 6664009,
+      "true": 138,
+      "false": 6663871,
+      "same_address_as_previous_at_site": 978138,
+      "entry_share_percent": 13.444769419792204,
+      "negative_percent": 99.9979291744654
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::typed_feedback::normalize_raw_object_addr",
+      "entries": 4192338,
+      "true": 507,
+      "false": 4191831,
+      "same_address_as_previous_at_site": 2296173,
+      "entry_share_percent": 8.458124492303778,
+      "negative_percent": 99.98790650944652
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::gc::trace::classifier_valid_object_start",
+      "entries": 3028217,
+      "true": 21161,
+      "false": 3007056,
+      "same_address_as_previous_at_site": 64146,
+      "entry_share_percent": 6.109487444884136,
+      "negative_percent": 99.30120595716886
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::object::iterator_prototypes::prototype_next_is_canonical",
+      "entries": 2768524,
+      "true": 0,
+      "false": 2768524,
+      "same_address_as_previous_at_site": 2761007,
+      "entry_share_percent": 5.585551702160185,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::native_handle::canonical::is_canonical_handle_addr",
+      "entries": 1941076,
+      "true": 1743,
+      "false": 1939333,
+      "same_address_as_previous_at_site": 817871,
+      "entry_share_percent": 3.9161590637546513,
+      "negative_percent": 99.91020444330876
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_native_call_value",
+      "entries": 1673057,
+      "true": 0,
+      "false": 1673057,
+      "same_address_as_previous_at_site": 1568481,
+      "entry_share_percent": 3.375425452031845,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_closure_call0",
+      "entries": 1614096,
+      "true": 0,
+      "false": 1614096,
+      "same_address_as_previous_at_site": 1545103,
+      "entry_share_percent": 3.256470473165465,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_native_call_method",
+      "entries": 1268887,
+      "true": 3789,
+      "false": 1265098,
+      "same_address_as_previous_at_site": 644532,
+      "entry_share_percent": 2.56000451601609,
+      "negative_percent": 99.70139184970766
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_is_symbol",
+      "entries": 1264446,
+      "true": 24,
+      "false": 1264422,
+      "same_address_as_previous_at_site": 833013,
+      "entry_share_percent": 2.5510447110408423,
+      "negative_percent": 99.99810193555122
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::object::field_get_set::get_field_by_name_tail::get_field_by_name_object_tail",
+      "entries": 1118486,
+      "true": 63,
+      "false": 1118423,
+      "same_address_as_previous_at_site": 507972,
+      "entry_share_percent": 2.256567536038097,
+      "negative_percent": 99.99436738591274
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_object_get_field_ic_miss",
+      "entries": 1115745,
+      "true": 585,
+      "false": 1115160,
+      "same_address_as_previous_at_site": 482947,
+      "entry_share_percent": 2.2510375145480825,
+      "negative_percent": 99.94756866488311
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::object::keys_lookup::keys_find_slot_by_key_ptr",
+      "entries": 951995,
+      "true": 0,
+      "false": 951995,
+      "same_address_as_previous_at_site": 502020,
+      "entry_share_percent": 1.9206686641322182,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::object::native_call_method::primitive_methods::dispatch_primitive",
+      "entries": 594072,
+      "true": 747,
+      "false": 593325,
+      "same_address_as_previous_at_site": 154639,
+      "entry_share_percent": 1.198551961552692,
+      "negative_percent": 99.87425766573749
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_object_set_field_by_name",
+      "entries": 570324,
+      "true": 0,
+      "false": 570324,
+      "same_address_as_previous_at_site": 318647,
+      "entry_share_percent": 1.1506399037836785,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::map::is_registered_map",
+      "entries": 560652,
+      "true": 0,
+      "false": 560652,
+      "same_address_as_previous_at_site": 288634,
+      "entry_share_percent": 1.1311264532723977,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::set::is_registered_set",
+      "entries": 447460,
+      "true": 0,
+      "false": 447460,
+      "same_address_as_previous_at_site": 282221,
+      "entry_share_percent": 0.9027593637073749,
+      "negative_percent": 100.0
+    },
+    {
+      "phase": 3,
+      "caller_body": "perry_runtime::object::native_call_method::handle_methods::dispatch_handle",
+      "entries": 384498,
+      "true": 711,
+      "false": 383787,
+      "same_address_as_previous_at_site": 206611,
+      "entry_share_percent": 0.7757322885325129,
+      "negative_percent": 99.81508356350358
+    },
+    {
+      "phase": 3,
+      "caller_body": "js_for_of_next",
+      "entries": 316537,
+      "true": 0,
+      "false": 316537,
+      "same_address_as_previous_at_site": 261341,
+      "entry_share_percent": 0.6386196323913675,
+      "negative_percent": 100.0
+    }
+  ],
+  "filter_rows_without_BPF": [
+    {
+      "row": 1,
+      "bits_set_by_phase": [
+        null,
+        181,
+        847,
+        904
+      ],
+      "capacity_bits": 1024,
+      "observed_cpu": {
+        "startup_s": 1.02,
+        "command_s": 1.2199999999999998
+      }
+    },
+    {
+      "row": 2,
+      "bits_set_by_phase": [
+        null,
+        177,
+        876,
+        931
+      ],
+      "capacity_bits": 1024,
+      "observed_cpu": {
+        "startup_s": 0.96,
+        "command_s": 1.2099999999999995
+      }
+    },
+    {
+      "row": 3,
+      "bits_set_by_phase": [
+        null,
+        169,
+        806,
+        878
+      ],
+      "capacity_bits": 1024,
+      "observed_cpu": {
+        "startup_s": 0.96,
+        "command_s": 1.21
+      }
+    }
+  ],
+  "source_inputs": {
+    "cc-row-v1-1/run.json": "c028babd5f98916a2930abe4a045849e729ff15b1b7e0213016447209f45dfc3",
+    "cc-row-v1-1/counts.json": "f79cf79a2158b0767b6ce5711ae5a04e52625f95df366ffed430ef92eca7267b",
+    "symbols-v2-1/summary.json": "d14af78ddd9fb3cd0b706bff4bbbc29e37801afceb89dc87660119458fddf134",
+    "cc-row-v1-2/run.json": "13da92a04a98892b8b371d7db497eb98cd77c674c37dba816462d4067ec6facc",
+    "cc-row-v1-2/counts.json": "d7c39e868fe3f35578b1eeb06bcb39df37abde2c3450fa79c4fe33007a1ff4f2",
+    "symbols-v2-2/summary.json": "c7794783ab0f23936bc8f043b9c412b60f9ee969a0215bcb1d66bfda1b64c5fe",
+    "cc-row-v1-3/run.json": "c606411a2c278dafec8d54ba5eff32ae9a8cd6909ada0968363fd74a5eba464c",
+    "cc-row-v1-3/counts.json": "39260df61f161e3297b4b5d6ab8d4b05a602de036252f59ddbcaa6ec731e4a8d",
+    "symbols-v2-3/summary.json": "f01a51fee73194899d6a3aa2117bbdabf90ed2949bd94b2db61c05dfeb20e151",
+    "filter-row-v1-1/run.json": "a9e26ee7a9336e528ae4b19c9bf2bd9b925ffb8e1958e2bff6d7d73aecbb3c08",
+    "filter-row-v1-1/filter-snapshots.json": "3de35c185d0f57f4897919d8990ad1cc6efd09ee524ce7e348b85095d78a6dc2",
+    "filter-row-v1-2/run.json": "9aeb32eb43211603122bc0b0ee5b063df0e305c2f12d5f94125f20cb8eb84a14",
+    "filter-row-v1-2/filter-snapshots.json": "c6c106bbf362ace926587938bdcd388ae6bdd2ae2fe2d86c0c60ca97caab77d4",
+    "filter-row-v1-3/run.json": "1e414e1a58ad1d4126142ddaed64f311c10e6dc7597cc7c077846aca7239b17e",
+    "filter-row-v1-3/filter-snapshots.json": "5e93af3f999b8bc295471014935806493533a4442edd135804eb864ec2448ea8"
+  },
+  "analyzer_sha256": "781f3f9349762d111dc5ae3a75fec8413598bbb1587c61f82de1a6dd5f806383",
+  "outputs": {
+    "caller-ranking.csv": "cb8e69f6259b2da8f33a36653549f21ac2dc66927ba0a218c9aed7cac65c08f1",
+    "property-getter-sites.csv": "2c3bf892f0c2e008a63997640f906750c289b3f7717929affc77cd2c212d38ce"
+  }
+}

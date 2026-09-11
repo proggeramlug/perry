@@ -1,0 +1,16 @@
+{
+  "parent_commit": "4e9e24a80d84a51e303e1e624347d82ecc723260",
+  "scope": "unchanged source inspection; no implementation or GC point elision",
+  "files": {
+    "crates/perry-runtime/src/value/addr_class.rs": "f3b2634e00a1620d1f74cdf2f341f435f25b2e04d14994632e314012a8407905",
+    "crates/perry-runtime/src/native_handle/canonical.rs": "59f9f5938ad465718ecf80e958b9f2dffa5a13633a0d18b1d7016b7370f7b9b1",
+    "crates/perry-runtime/src/native_handle.rs": "436f20e29884a3c064dc10c4dee5d5b5e51beda1eacb2237b1fc270820567eab",
+    "crates/perry-runtime/src/registry_latch.rs": "3262b524ac5c072a4ce8394e1f92a1708ffd1ecaa7732c160004a779c6460622",
+    "crates/perry-runtime/src/gc/malloc.rs": "f7564f7c1c13ae9cc52c6fabd1ca151eb602bcf2dfe8b1a84424014b1c18c53a",
+    "crates/perry-runtime/src/gc/trace.rs": "f5f00fcbd717299e0ae8a45c476817f609baad05d44df0ab0544a7c3e733560e",
+    "crates/perry-runtime/src/object/field_get_set/get_field_by_name.rs": "f4038fcd8e8f12f06d9520bf6969e3e296a073280e8acb1398dc867b302a0114",
+    "crates/perry-runtime/src/closure/dynamic_props.rs": "9476599e189a3f08288897af35cb0a3a629bc12ee9e5a702adc41511b96b0015",
+    "crates/perry-runtime/src/object/object_ops.rs": "3bbabc75095cd97d75311bc6b4b0a344c76a47cdd67a29b257f54c5d5b0a169b",
+    "crates/perry-runtime/src/typed_feedback.rs": "df5aabad15802a700e3ada434220e386bd7ba275b44cdb2a6c26cb286c7a2b69"
+  }
+}

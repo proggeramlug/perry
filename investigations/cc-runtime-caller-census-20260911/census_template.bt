@@ -1,0 +1,55 @@
+BEGIN { @phase = 0; }
+
+tracepoint:syscalls:sys_enter_write
+/pid == CONTROLLER_PID && args->fd == CONTROL_FD/
+{
+    @phase = args->count;
+    @markers[args->count] = count();
+}
+
+uprobe:SUBJECT_BINARY:SUBJECT_SYMBOL
+/pid == SUBJECT_PID && (@phase == 1 || @phase == 3)/
+{
+    $p = @phase;
+    $caller = *(uint64 *)uptr(reg("sp"));
+    $depth = @depth[tid] + 1;
+    @depth[tid] = $depth;
+    @entry_phase[tid, $depth] = $p;
+    @return_pc[tid, $depth] = $caller;
+    @entries[$p, $caller] = count();
+    @total_entries[$p] = count();
+    @max_depth = max($depth);
+    if ($caller == 0) { @bad_return_pc = count(); }
+    if (@seen[$p, tid, $caller] && @last_arg[$p, tid, $caller] == arg0) {
+        @same_address[$p, $caller] = count();
+    }
+    @seen[$p, tid, $caller] = 1;
+    @last_arg[$p, tid, $caller] = arg0;
+}
+
+uretprobe:SUBJECT_BINARY:SUBJECT_SYMBOL
+/pid == SUBJECT_PID/
+{
+    $depth = @depth[tid];
+    if ($depth > 0) {
+        $p = @entry_phase[tid, $depth];
+        $caller = @return_pc[tid, $depth];
+        $answer = retval & 255;
+        if ($answer > 1) { @bad_boolean = count(); }
+        @returns[$p, $caller, $answer] = count();
+        @total_returns[$p] = count();
+        delete(@entry_phase[tid, $depth]);
+        delete(@return_pc[tid, $depth]);
+        if ($depth == 1) { delete(@depth[tid]); }
+        else { @depth[tid] = $depth - 1; }
+    }
+}
+
+END
+{
+    clear(@phase);
+    clear(@entry_phase);
+    clear(@return_pc);
+    clear(@last_arg);
+    clear(@seen);
+}
