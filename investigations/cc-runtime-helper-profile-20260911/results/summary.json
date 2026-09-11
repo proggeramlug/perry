@@ -1,0 +1,570 @@
+{
+  "status": "complete-derived-runtime-self-analysis",
+  "prior_goal_turn": "progress",
+  "scope": "existing profile samples and exact disassembly; no new workload or source optimization",
+  "binary_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "phase_totals": {
+    "command": {
+      "samples": 3683,
+      "period": 18920915610
+    },
+    "startup": {
+      "samples": 3071,
+      "period": 14788892043
+    }
+  },
+  "per_row": [
+    {
+      "row": 1,
+      "phase_totals": {
+        "command": {
+          "samples": 1250,
+          "period": 6395499997
+        },
+        "startup": {
+          "samples": 1016,
+          "period": 4886969429
+        }
+      },
+      "focus": {
+        "command": {
+          "samples": 71,
+          "period": 371033872,
+          "phase_percent": 5.80148342074966
+        },
+        "startup": {
+          "samples": 2,
+          "period": 16220308,
+          "phase_percent": 0.3319093404543579
+        }
+      },
+      "exact_self_ip_reconciliation": "PASS",
+      "one_period_deletion_rejected": true
+    },
+    {
+      "row": 2,
+      "phase_totals": {
+        "command": {
+          "samples": 1239,
+          "period": 6379414190
+        },
+        "startup": {
+          "samples": 1055,
+          "period": 5018866854
+        }
+      },
+      "focus": {
+        "command": {
+          "samples": 65,
+          "period": 337074889,
+          "phase_percent": 5.283790626549677
+        }
+      },
+      "exact_self_ip_reconciliation": "PASS",
+      "one_period_deletion_rejected": true
+    },
+    {
+      "row": 3,
+      "phase_totals": {
+        "command": {
+          "samples": 1194,
+          "period": 6146001423
+        },
+        "startup": {
+          "samples": 1000,
+          "period": 4883055760
+        }
+      },
+      "focus": {
+        "command": {
+          "samples": 42,
+          "period": 219470644,
+          "phase_percent": 3.570950100640743
+        }
+      },
+      "exact_self_ip_reconciliation": "PASS",
+      "one_period_deletion_rejected": true
+    }
+  ],
+  "top20": {
+    "command": [
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::gc::malloc::gc_malloc_header_is_tracked",
+        "samples": 178,
+        "period": 927579405,
+        "phase_percent": 4.902402315613943
+      },
+      {
+        "phase": "command",
+        "symbol": "js_native_call_method",
+        "samples": 115,
+        "period": 594107551,
+        "phase_percent": 3.139951381031502
+      },
+      {
+        "phase": "command",
+        "symbol": "js_regexp_test",
+        "samples": 77,
+        "period": 396571512,
+        "phase_percent": 2.0959425018015816
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::regex::js_regexp_new_impl",
+        "samples": 76,
+        "period": 386437521,
+        "phase_percent": 2.0423827734624096
+      },
+      {
+        "phase": "command",
+        "symbol": "__memmove_avx512_unaligned_erms",
+        "samples": 70,
+        "period": 366227817,
+        "phase_percent": 1.9355713251341964
+      },
+      {
+        "phase": "command",
+        "symbol": "js_object_get_field_by_name",
+        "samples": 58,
+        "period": 303473666,
+        "phase_percent": 1.603905816479671
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::exception::try_push_with_kind",
+        "samples": 60,
+        "period": 302355127,
+        "phase_percent": 1.597994162820538
+      },
+      {
+        "phase": "command",
+        "symbol": "<unicode_segmentation::grapheme::GraphemeCursor>::next_boundary",
+        "samples": 58,
+        "period": 292991128,
+        "phase_percent": 1.5485039627001433
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::buffer::header::is_registered_buffer_slow",
+        "samples": 50,
+        "period": 256886049,
+        "phase_percent": 1.3576829699733544
+      },
+      {
+        "phase": "command",
+        "symbol": "<regex::regex::string::Regex>::find_at",
+        "samples": 50,
+        "period": 253912370,
+        "phase_percent": 1.3419666110967872
+      },
+      {
+        "phase": "command",
+        "symbol": "<perry_runtime::arena::walk::ArenaObjectCursor>::next_budgeted",
+        "samples": 44,
+        "period": 228224416,
+        "phase_percent": 1.2062017542078134
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::closure::dynamic_props::is_closure_ptr",
+        "samples": 44,
+        "period": 224186231,
+        "phase_percent": 1.1848593145329291
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::object::regex_proto_thunks::regexp_prototype_test_is_canonical",
+        "samples": 45,
+        "period": 222636823,
+        "phase_percent": 1.1766704507805794
+      },
+      {
+        "phase": "command",
+        "symbol": "js_object_get_own_field_or_undef",
+        "samples": 42,
+        "period": 220430458,
+        "phase_percent": 1.1650094664736999
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::object::shapes::scan_shape_table_rekey_mut",
+        "samples": 40,
+        "period": 207104549,
+        "phase_percent": 1.0945799519899662
+      },
+      {
+        "phase": "command",
+        "symbol": "__memcmp_evex_movbe",
+        "samples": 40,
+        "period": 206920289,
+        "phase_percent": 1.0936061090544655
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::gc::layout_tables::layout_forget_object",
+        "samples": 38,
+        "period": 194634936,
+        "phase_percent": 1.0286760958710286
+      },
+      {
+        "phase": "command",
+        "symbol": "js_array_get_f64",
+        "samples": 37,
+        "period": 194244736,
+        "phase_percent": 1.0266138278072474
+      },
+      {
+        "phase": "command",
+        "symbol": "perry_runtime::object::descriptor_state::get_accessor_descriptor",
+        "samples": 36,
+        "period": 186666962,
+        "phase_percent": 0.9865641063445344
+      },
+      {
+        "phase": "command",
+        "symbol": "js_object_get_field",
+        "samples": 36,
+        "period": 184058530,
+        "phase_percent": 0.9727781350217649
+      }
+    ],
+    "startup": [
+      {
+        "phase": "startup",
+        "symbol": "__memmove_avx512_unaligned_erms",
+        "samples": 111,
+        "period": 548756152,
+        "phase_percent": 3.710596780370317
+      },
+      {
+        "phase": "startup",
+        "symbol": "<perry_runtime::gc::copying::CopyingNurseryCollector>::mark_addr",
+        "samples": 79,
+        "period": 389226276,
+        "phase_percent": 2.6318825972107343
+      },
+      {
+        "phase": "startup",
+        "symbol": "<perry_runtime::gc::copying::CopyingNurseryCollector>::visit_slot_with_parent",
+        "samples": 60,
+        "period": 307629706,
+        "phase_percent": 2.080140318189758
+      },
+      {
+        "phase": "startup",
+        "symbol": "js_object_get_field_by_name",
+        "samples": 54,
+        "period": 297632047,
+        "phase_percent": 2.0125378299781262
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::class_meta_registry::get_parent_class_id",
+        "samples": 51,
+        "period": 281864960,
+        "phase_percent": 1.9059234402445628
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::descriptor_state::get_accessor_descriptor",
+        "samples": 53,
+        "period": 271203607,
+        "phase_percent": 1.833833164860841
+      },
+      {
+        "phase": "startup",
+        "symbol": "<perry_runtime::gc::copying_pointer_set::CopyingPointerSet>::classify_arena",
+        "samples": 49,
+        "period": 243869526,
+        "phase_percent": 1.6490047076611822
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::gc::layout_tables::layout_forget_object",
+        "samples": 46,
+        "period": 226063032,
+        "phase_percent": 1.5286001908912576
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::shapes::scan_shape_table_rekey_mut",
+        "samples": 39,
+        "period": 195391320,
+        "phase_percent": 1.3212032343726805
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::class_registry::parent_static::is_class_object_ptr",
+        "samples": 38,
+        "period": 188834860,
+        "phase_percent": 1.2768695548723061
+      },
+      {
+        "phase": "startup",
+        "symbol": "__memcmp_evex_movbe",
+        "samples": 37,
+        "period": 185593760,
+        "phase_percent": 1.2549537819355898
+      },
+      {
+        "phase": "startup",
+        "symbol": "core::str::converts::from_utf8",
+        "samples": 36,
+        "period": 177118799,
+        "phase_percent": 1.1976475214303517
+      },
+      {
+        "phase": "startup",
+        "symbol": "<perry_runtime::gc::layout::HeapChildSlotIterator as core::iter::traits::iterator::Iterator>::next",
+        "samples": 34,
+        "period": 175173791,
+        "phase_percent": 1.1844957045508673
+      },
+      {
+        "phase": "startup",
+        "symbol": "<perry_runtime::object::shapes::shapes_store::ShapeSlab>::insert",
+        "samples": 32,
+        "period": 165873596,
+        "phase_percent": 1.1216093505700628
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::descriptor_state::gc_scan::scan_descriptor_roots_mut",
+        "samples": 29,
+        "period": 142151676,
+        "phase_percent": 0.9612057183640366
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::field_get_set::get_field_by_name_tail::get_field_by_name_object_tail",
+        "samples": 27,
+        "period": 139774094,
+        "phase_percent": 0.9451289088702154
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::shapes::shape_descriptor_ensure_with_holes",
+        "samples": 27,
+        "period": 137832171,
+        "phase_percent": 0.931997952241729
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::object::shapes::shape_slot_lookup_verdict",
+        "samples": 26,
+        "period": 133960265,
+        "phase_percent": 0.9058167752560421
+      },
+      {
+        "phase": "startup",
+        "symbol": "perry_runtime::gc::barrier::remembered_child_needs_tracking",
+        "samples": 25,
+        "period": 130204290,
+        "phase_percent": 0.880419504188817
+      },
+      {
+        "phase": "startup",
+        "symbol": "_mi_page_malloc_zero",
+        "samples": 26,
+        "period": 129963746,
+        "phase_percent": 0.8787929861285011
+      }
+    ]
+  },
+  "selected_helpers": [
+    {
+      "phase": "command",
+      "symbol": "perry_runtime::gc::malloc::gc_malloc_header_is_tracked",
+      "samples": 178,
+      "period": 927579405,
+      "phase_percent": 4.902402315613943
+    },
+    {
+      "phase": "command",
+      "symbol": "js_native_call_method",
+      "samples": 115,
+      "period": 594107551,
+      "phase_percent": 3.139951381031502
+    },
+    {
+      "phase": "command",
+      "symbol": "js_object_get_field_by_name",
+      "samples": 58,
+      "period": 303473666,
+      "phase_percent": 1.603905816479671
+    },
+    {
+      "phase": "command",
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer_slow",
+      "samples": 50,
+      "period": 256886049,
+      "phase_percent": 1.3576829699733544
+    },
+    {
+      "phase": "command",
+      "symbol": "perry_runtime::closure::dynamic_props::is_closure_ptr",
+      "samples": 44,
+      "period": 224186231,
+      "phase_percent": 1.1848593145329291
+    },
+    {
+      "phase": "command",
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer",
+      "samples": 32,
+      "period": 167917891,
+      "phase_percent": 0.8874723320009564
+    },
+    {
+      "phase": "startup",
+      "symbol": "js_object_get_field_by_name",
+      "samples": 54,
+      "period": 297632047,
+      "phase_percent": 2.0125378299781262
+    },
+    {
+      "phase": "startup",
+      "symbol": "js_native_call_method",
+      "samples": 17,
+      "period": 116782905,
+      "phase_percent": 0.7896663567523752
+    },
+    {
+      "phase": "startup",
+      "symbol": "perry_runtime::closure::dynamic_props::is_closure_ptr",
+      "samples": 22,
+      "period": 113070454,
+      "phase_percent": 0.7645633876509325
+    },
+    {
+      "phase": "startup",
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer",
+      "samples": 21,
+      "period": 106645836,
+      "phase_percent": 0.7211212015742483
+    },
+    {
+      "phase": "startup",
+      "symbol": "perry_runtime::gc::malloc::gc_malloc_header_is_tracked",
+      "samples": 2,
+      "period": 16220308,
+      "phase_percent": 0.10967899388837266
+    }
+  ],
+  "focus_region_ranges": {
+    "entry_return": [
+      [
+        0,
+        22
+      ],
+      [
+        283,
+        296
+      ]
+    ],
+    "tls_resolution": [
+      [
+        22,
+        86
+      ],
+      [
+        296,
+        344
+      ]
+    ],
+    "borrow_and_ensure_dispatch": [
+      [
+        86,
+        112
+      ],
+      [
+        278,
+        283
+      ],
+      [
+        344,
+        367
+      ]
+    ],
+    "hash_lookup": [
+      [
+        112,
+        278
+      ]
+    ]
+  },
+  "focus_regions": [
+    {
+      "phase": "command",
+      "region": "borrow_and_ensure_dispatch",
+      "samples": 40,
+      "period": 210118620,
+      "phase_percent": 1.1105097889076203,
+      "focus_percent": 22.65235934167814
+    },
+    {
+      "phase": "command",
+      "region": "entry_return",
+      "samples": 41,
+      "period": 212004394,
+      "phase_percent": 1.1204763996090779,
+      "focus_percent": 22.855659888222725
+    },
+    {
+      "phase": "command",
+      "region": "hash_lookup",
+      "samples": 68,
+      "period": 354290301,
+      "phase_percent": 1.8724796849300043,
+      "focus_percent": 38.19514524473514
+    },
+    {
+      "phase": "command",
+      "region": "tls_resolution",
+      "samples": 29,
+      "period": 151166090,
+      "phase_percent": 0.7989364421672404,
+      "focus_percent": 16.296835525364
+    },
+    {
+      "phase": "startup",
+      "region": "borrow_and_ensure_dispatch",
+      "samples": 1,
+      "period": 10892506,
+      "phase_percent": 0.07365329308192313,
+      "focus_percent": 67.15350904557422
+    },
+    {
+      "phase": "startup",
+      "region": "hash_lookup",
+      "samples": 1,
+      "period": 5327802,
+      "phase_percent": 0.03602570080644952,
+      "focus_percent": 32.846490954425775
+    }
+  ],
+  "ambiguous_region_control": "rejected",
+  "inputs": {
+    "cc-gc-leaf-20260911/results/profile-1/self.csv": "08338edaf257c5b849d78d3b6dc14105024ed620cae727335c6fa3d697702a3e",
+    "cc-gc-leaf-20260911/results/profile-1/by-ip.csv.gz": "9d8c18df088b1ae2bd689bbe01dbedede7b0d9c121542c7935d1c56737b7b9c0",
+    "cc-gc-leaf-20260911/results/profile-1/summary.json": "6b76c3de7741ffbb02aae1463a9cac1ba6a3a58cddeb58ba97fd4c13426ca05b",
+    "cc-gc-leaf-20260911/results/profile-1/perf-self-reconciliation.json": "812cc0a92c8bf183f7c2720c14f8bf294686080bc97e460ae90a6bbaa820fd20",
+    "cc-gc-leaf-20260911/results/profile-1/run.json": "776f42bb7457b24d3f30e62b208efb9c88f886e261477fcafa1ea7bfb0dbeca6",
+    "cc-gc-leaf-20260911/results/profile-2/self.csv": "e35b75ba8a80996fdb6b569fa0819e403e9945c411ff41ea31d2b9c59c670951",
+    "cc-gc-leaf-20260911/results/profile-2/by-ip.csv.gz": "70c74e553aade01fc50699025972018873bdeb1f37fe892bc4e80848c960b694",
+    "cc-gc-leaf-20260911/results/profile-2/summary.json": "541e2cdb47a05cc696c7ca5af067cb183f9d8586dc1e3f87e22714b3e78dae44",
+    "cc-gc-leaf-20260911/results/profile-2/perf-self-reconciliation.json": "d002dc938a5ed686e0c3459f1d38714e671cd5c576c9f90dddac73a76a583141",
+    "cc-gc-leaf-20260911/results/profile-2/run.json": "91863b341d862154135a436134d94919310646df1d967fc572312d85576d36ad",
+    "cc-gc-leaf-20260911/results/profile-3/self.csv": "f61c2435d7f1a8f5bc06be486ec89c6d65ecc740c5e8d1d5d48155656a0b9240",
+    "cc-gc-leaf-20260911/results/profile-3/by-ip.csv.gz": "17bf3409ac820b702187f10cdc0935ea7efeacc976ec38e70bb7a14adb10b164",
+    "cc-gc-leaf-20260911/results/profile-3/summary.json": "7afbd714ce24654dde021fc520ed950ac04313478d5998b0052db4d5acb1d2c8",
+    "cc-gc-leaf-20260911/results/profile-3/perf-self-reconciliation.json": "88c3093b5eb830c129834871ccfaef1530777df88009bb2ce173933a5844bda6",
+    "cc-gc-leaf-20260911/results/profile-3/run.json": "4e95a10011af43aaf1aba6a4edbb75b367834814f42a2bb5906b8a49605699b0"
+  },
+  "analyzer_sha256": "8ad6d4c3a4bc70a25129b5e061a7674c854d6e16d616fb6bd12819d1d34964f6",
+  "disassembly_receipt_sha256": "04c10dfdd5107f1ae9c5c630b1d8ee2a4873f214b3830d85ab04d263a4fadd15",
+  "outputs": {
+    "self-ranked.csv": "4ec8a4a09510e891683a5e882713ee527a5e4f33082bc60c153064734c42e44c",
+    "selected-instructions.csv": "4a7b135b2cf10c1c1896e45098c043dbe4f976d534cfa26c1921c56450252a0f"
+  }
+}

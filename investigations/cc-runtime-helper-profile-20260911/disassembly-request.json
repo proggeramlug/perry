@@ -1,0 +1,36 @@
+{
+  "status": "exact-profile-symbol-starts",
+  "binary": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+  "binary_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "functions": [
+    {
+      "symbol": "perry_runtime::gc::malloc::gc_malloc_header_is_tracked",
+      "start": 289201072
+    },
+    {
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer",
+      "start": 290516432
+    },
+    {
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer_slow",
+      "start": 290519344
+    },
+    {
+      "symbol": "perry_runtime::closure::dynamic_props::is_closure_ptr",
+      "start": 291058624
+    },
+    {
+      "symbol": "js_native_call_method",
+      "start": 293962288
+    },
+    {
+      "symbol": "js_object_get_field_by_name",
+      "start": 294170144
+    }
+  ],
+  "profile_inputs": {
+    "investigations/cc-gc-leaf-20260911/results/profile-1/by-ip.csv.gz": "9d8c18df088b1ae2bd689bbe01dbedede7b0d9c121542c7935d1c56737b7b9c0",
+    "investigations/cc-gc-leaf-20260911/results/profile-2/by-ip.csv.gz": "70c74e553aade01fc50699025972018873bdeb1f37fe892bc4e80848c960b694",
+    "investigations/cc-gc-leaf-20260911/results/profile-3/by-ip.csv.gz": "17bf3409ac820b702187f10cdc0935ea7efeacc976ec38e70bb7a14adb10b164"
+  }
+}

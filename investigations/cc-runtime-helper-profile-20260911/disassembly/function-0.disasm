@@ -1,0 +1,99 @@
+
+/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000113cdbb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked>:
+    113cdbb0:	push   %rbp
+    113cdbb1:	mov    %rsp,%rbp
+    113cdbb4:	push   %r15
+    113cdbb6:	push   %r14
+    113cdbb8:	push   %rbx
+    113cdbb9:	push   %rax
+    113cdbba:	test   %rdi,%rdi
+    113cdbbd:	je     113cdccb <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x11b>
+    113cdbc3:	mov    %rdi,%rbx
+    113cdbc6:	mov    0x3f83463(%rip),%r14d        # 15351030 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc12MALLOC_STATE4SLOT.llvm.4573768808118376784+0x10>
+    113cdbcd:	cmp    $0x300,%r14d
+    113cdbd4:	jae    113cdcf8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x148>
+    113cdbda:	mov    %fs:0x0,%rax
+    113cdbe3:	lea    -0x3e1a8(%rax),%rax
+    113cdbea:	cmpq   $0x0,0x78(%rax)
+    113cdbef:	je     113cdcd8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x128>
+    113cdbf5:	mov    0x1e8(%rax,%r14,8),%r14
+    113cdbfd:	test   %r14,%r14
+    113cdc00:	je     113cdcf8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x148>
+    113cdc06:	cmpq   $0x0,(%r14)
+    113cdc0a:	jne    113cdd12 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x162>
+    113cdc10:	movq   $0xffffffffffffffff,(%r14)
+    113cdc17:	lea    0x8(%r14),%rdi
+    113cdc1b:	call   113cda60 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc16ensure_set_built.llvm.4573768808118376784>
+    113cdc20:	cmpq   $0x0,0x38(%r14)
+    113cdc25:	je     113cdcc4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x114>
+    113cdc2b:	movabs $0x9e3779b97f4a7c15,%rax
+    113cdc35:	imul   %rbx,%rax
+    113cdc39:	mov    %rax,%rcx
+    113cdc3c:	shr    $0x20,%rcx
+    113cdc40:	xor    %rax,%rcx
+    113cdc43:	shr    $0x39,%rax
+    113cdc47:	mov    0x20(%r14),%rdx
+    113cdc4b:	mov    0x28(%r14),%rsi
+    113cdc4f:	movd   %eax,%xmm0
+    113cdc53:	punpcklbw %xmm0,%xmm0
+    113cdc57:	pshuflw $0x0,%xmm0,%xmm0
+    113cdc5c:	pshufd $0x44,%xmm0,%xmm0
+    113cdc61:	xor    %edi,%edi
+    113cdc63:	pcmpeqd %xmm1,%xmm1
+    113cdc67:	and    %rsi,%rcx
+    113cdc6a:	movdqu (%rdx,%rcx,1),%xmm2
+    113cdc6f:	movdqa %xmm2,%xmm3
+    113cdc73:	pcmpeqb %xmm0,%xmm3
+    113cdc77:	pmovmskb %xmm3,%r8d
+    113cdc7c:	test   %r8d,%r8d
+    113cdc7f:	je     113cdcab <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0xfb>
+    113cdc81:	tzcnt  %r8d,%eax
+    113cdc86:	add    %rcx,%rax
+    113cdc89:	and    %rsi,%rax
+    113cdc8c:	shl    $0x3,%rax
+    113cdc90:	mov    %rdx,%r9
+    113cdc93:	sub    %rax,%r9
+    113cdc96:	mov    $0x1,%al
+    113cdc98:	cmp    %rbx,-0x8(%r9)
+    113cdc9c:	je     113cdcc6 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x116>
+    113cdc9e:	lea    -0x1(%r8),%eax
+    113cdca2:	and    %r8w,%ax
+    113cdca6:	mov    %eax,%r8d
+    113cdca9:	jne    113cdc81 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0xd1>
+    113cdcab:	pcmpeqb %xmm1,%xmm2
+    113cdcaf:	pmovmskb %xmm2,%eax
+    113cdcb3:	test   %eax,%eax
+    113cdcb5:	jne    113cdcc4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x114>
+    113cdcb7:	add    %rdi,%rcx
+    113cdcba:	add    $0x10,%rcx
+    113cdcbe:	add    $0x10,%rdi
+    113cdcc2:	jmp    113cdc67 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0xb7>
+    113cdcc4:	xor    %eax,%eax
+    113cdcc6:	incq   (%r14)
+    113cdcc9:	jmp    113cdccd <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x11d>
+    113cdccb:	xor    %eax,%eax
+    113cdccd:	add    $0x8,%rsp
+    113cdcd1:	pop    %rbx
+    113cdcd2:	pop    %r14
+    113cdcd4:	pop    %r15
+    113cdcd6:	pop    %rbp
+    113cdcd7:	ret
+    113cdcd8:	mov    %rax,%rdi
+    113cdcdb:	mov    %rax,%r15
+    113cdcde:	call   *0x3f55734(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    113cdce4:	mov    %r15,%rax
+    113cdce7:	mov    0x1e8(%rax,%r14,8),%r14
+    113cdcef:	test   %r14,%r14
+    113cdcf2:	jne    113cdc06 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x56>
+    113cdcf8:	lea    0x3e657f1(%rip),%rdi        # 152334f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc12MALLOC_STATE.llvm.4573768808118376784>
+    113cdcff:	call   *0x3f5edb3(%rip)        # 1532cab8 <_GLOBAL_OFFSET_TABLE_+0x15a38>
+    113cdd05:	mov    %rax,%r14
+    113cdd08:	cmpq   $0x0,(%r14)
+    113cdd0c:	je     113cdc10 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked+0x60>
+    113cdd12:	lea    0x3e56127(%rip),%rdi        # 15223e40 <anon.b37f594bd5826585f7e5082f302a037e.2108.llvm.4573768808118376784>
+    113cdd19:	call   *0x3f5d6d1(%rip)        # 1532b3f0 <_GLOBAL_OFFSET_TABLE_+0x14370>

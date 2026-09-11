@@ -1,0 +1,16 @@
+{
+  "source_base_commit": "c16614181c060aa1a2576de41066b2af902f6482",
+  "files": {
+    "crates/perry-runtime/src/gc/malloc.rs": "f7564f7c1c13ae9cc52c6fabd1ca151eb602bcf2dfe8b1a84424014b1c18c53a",
+    "crates/perry-runtime/src/tls_hot.rs": "82cb7fb1d4517de4a8c6a71afe18f575fa86e1e0bcc925e39f1b2e6036cf2de3",
+    "crates/perry-runtime/src/gc/trace.rs": "f5f00fcbd717299e0ae8a45c476817f609baad05d44df0ab0544a7c3e733560e",
+    "crates/perry-runtime/src/gc/barrier/mod.rs": "ec2ebdfdb14137509f52b336f1ad64ade01e9cc11a37bbd5ebc0c5f6837d9b99",
+    "crates/perry-runtime/src/native_handle.rs": "436f20e29884a3c064dc10c4dee5d5b5e51beda1eacb2237b1fc270820567eab",
+    "crates/perry-runtime/src/value/addr_class.rs": "f3b2634e00a1620d1f74cdf2f341f435f25b2e04d14994632e314012a8407905",
+    "crates/perry-runtime/src/value/dyn_index.rs": "c28a13ae9c8a839fb44596217742ee1b8f175cbc82761a38eda43f67cf77663f",
+    "crates/perry-runtime/src/buffer/header.rs": "811ca5ad0cbe9442a6d4db6a9994ce8c6d87be08ffd5991d3a49640478082f48",
+    "crates/perry-runtime/src/closure/dynamic_props.rs": "9476599e189a3f08288897af35cb0a3a629bc12ee9e5a702adc41511b96b0015",
+    "crates/perry-runtime/src/json/stringify.rs": "61ac39b564306be378ad4834ab450c7da150c02bac172a442f1bda03b3258a75"
+  },
+  "scope": "source inspection only; no behavior edits"
+}

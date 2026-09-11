@@ -1,0 +1,3524 @@
+
+/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000001188ae20 <js_object_get_field_by_name>:
+    1188ae20:	push   %rbp
+    1188ae21:	mov    %rsp,%rbp
+    1188ae24:	push   %r15
+    1188ae26:	push   %r14
+    1188ae28:	push   %r13
+    1188ae2a:	push   %r12
+    1188ae2c:	push   %rbx
+    1188ae2d:	sub    $0xd8,%rsp
+    1188ae34:	mov    %rsi,%r12
+    1188ae37:	mov    %rdi,%r14
+    1188ae3a:	movabs $0x9e3779b97f4a7c15,%r15
+    1188ae44:	movabs $0x7ffd000000000000,%r13
+    1188ae4e:	movabs $0xffffffffffff,%rbx
+    1188ae58:	lea    0x14(%rsi),%rax
+    1188ae5c:	mov    %rax,-0x78(%rbp)
+    1188ae60:	data16 data16 data16 mov %fs:0x0,%rax
+    1188ae6c:	lea    -0x35910(%rax),%rax
+    1188ae73:	mov    %rax,-0xa8(%rbp)
+    1188ae7a:	mov    %fs:0x0,%rax
+    1188ae83:	lea    -0x3e1a8(%rax),%rax
+    1188ae8a:	mov    %rax,-0x88(%rbp)
+    1188ae91:	mov    %r12,%rax
+    1188ae94:	shr    $0x3,%rax
+    1188ae98:	imul   %r15,%rax
+    1188ae9c:	mov    %rax,%rdx
+    1188ae9f:	shr    $0x22,%rdx
+    1188aea3:	mov    %rax,%rcx
+    1188aea6:	shr    $0x36,%rcx
+    1188aeaa:	mov    %rax,%rsi
+    1188aead:	shr    $0x3c,%rsi
+    1188aeb1:	mov    %rsi,-0xf8(%rbp)
+    1188aeb8:	mov    $0x1,%esi
+    1188aebd:	shl    %cl,%rsi
+    1188aec0:	mov    %rsi,-0xf0(%rbp)
+    1188aec7:	mov    %rax,%rcx
+    1188aeca:	shr    $0x2c,%rcx
+    1188aece:	mov    %rax,%rsi
+    1188aed1:	mov    $0x1,%edi
+    1188aed6:	shl    %cl,%rdi
+    1188aed9:	mov    %rdi,-0xe0(%rbp)
+    1188aee0:	shr    $0x32,%rsi
+    1188aee4:	and    $0xf,%esi
+    1188aee7:	mov    %rsi,-0xe8(%rbp)
+    1188aeee:	shr    $0x28,%rax
+    1188aef2:	and    $0xf,%eax
+    1188aef5:	mov    %rax,-0xd8(%rbp)
+    1188aefc:	and    $0x3f,%edx
+    1188aeff:	mov    %rdx,-0xd0(%rbp)
+    1188af06:	lea    -0x1000(%r12),%rax
+    1188af0e:	mov    %rax,-0xc8(%rbp)
+    1188af15:	movabs $0x800000000000,%rax
+    1188af1f:	add    $0xfffffffffffff000,%rax
+    1188af25:	mov    %rax,-0xc0(%rbp)
+    1188af2c:	lea    -0x8(%r12),%rax
+    1188af31:	mov    %rax,-0xb8(%rbp)
+    1188af38:	mov    %fs:0x0,%rax
+    1188af41:	lea    -0x3c030(%rax),%rax
+    1188af48:	mov    %rax,-0x90(%rbp)
+    1188af4f:	lea    0x2a74bdd(%rip),%rax        # 142ffb33 <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x653>
+    1188af56:	mov    %rax,-0xa0(%rbp)
+    1188af5d:	mov    %r12,-0x30(%rbp)
+    1188af61:	test   %r12,%r12
+    1188af64:	je     1188af90 <js_object_get_field_by_name+0x170>
+    1188af66:	cmpl   $0x18,0x4(%r12)
+    1188af6c:	jb     1188af90 <js_object_get_field_by_name+0x170>
+    1188af6e:	lea    0x14(%r12),%rax
+    1188af73:	cmpb   $0x23,(%rax)
+    1188af76:	jne    1188af90 <js_object_get_field_by_name+0x170>
+    1188af78:	mov    %r14,%rdi
+    1188af7b:	mov    %r12,%rsi
+    1188af7e:	call   116b6a00 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set7ic_miss26private_member_get_by_name>
+    1188af83:	test   $0x1,%al
+    1188af85:	jne    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188af8b:	nopl   0x0(%rax,%rax,1)
+    1188af90:	mov    %r14,%rax
+    1188af93:	movabs $0xffff000000000000,%rcx
+    1188af9d:	and    %rcx,%rax
+    1188afa0:	mov    %r13,%rcx
+    1188afa3:	mov    %r14,%r13
+    1188afa6:	and    %rbx,%r13
+    1188afa9:	cmp    %rcx,%rax
+    1188afac:	mov    %r14,%rbx
+    1188afaf:	cmove  %r13,%rbx
+    1188afb3:	cmp    $0x100000,%rbx
+    1188afba:	jb     1188b030 <js_object_get_field_by_name+0x210>
+    1188afbc:	movabs $0x800000000000,%rax
+    1188afc6:	cmp    %rax,%rbx
+    1188afc9:	jae    1188b030 <js_object_get_field_by_name+0x210>
+    1188afcb:	cmpb   $0x2,-0x8(%rbx)
+    1188afcf:	jne    1188b030 <js_object_get_field_by_name+0x210>
+    1188afd1:	cmpb   $0x0,-0x7(%rbx)
+    1188afd5:	js     1188b030 <js_object_get_field_by_name+0x210>
+    1188afd7:	mov    0x8(%rbx),%rax
+    1188afdb:	test   %rax,%rax
+    1188afde:	je     1188b030 <js_object_get_field_by_name+0x210>
+    1188afe0:	mov    0x60(%rax),%r15
+    1188afe4:	test   %r15,%r15
+    1188afe7:	je     1188b030 <js_object_get_field_by_name+0x210>
+    1188afe9:	test   %r12,%r12
+    1188afec:	je     1188e184 <js_object_get_field_by_name+0x3364>
+    1188aff2:	mov    0x4(%r12),%edx
+    1188aff7:	lea    -0xb(%rdx),%eax
+    1188affa:	cmp    $0xfffffff6,%eax
+    1188affd:	jb     1188b039 <js_object_get_field_by_name+0x219>
+    1188afff:	lea    0x14(%r12),%rax
+    1188b004:	movzbl (%rax),%eax
+    1188b007:	lea    -0x30(%rax),%ecx
+    1188b00a:	cmp    $0xa,%cl
+    1188b00d:	setae  %cl
+    1188b010:	cmp    $0x6c,%al
+    1188b012:	setne  %al
+    1188b015:	test   %cl,%al
+    1188b017:	jne    1188b039 <js_object_get_field_by_name+0x219>
+    1188b019:	cmp    %edx,(%r12)
+    1188b01d:	jne    1188be3b <js_object_get_field_by_name+0x101b>
+    1188b023:	lea    0x14(%r12),%rdi
+    1188b028:	jmp    1188be5c <js_object_get_field_by_name+0x103c>
+    1188b02d:	nopl   (%rax)
+    1188b030:	test   %r12,%r12
+    1188b033:	je     1188e184 <js_object_get_field_by_name+0x3364>
+    1188b039:	mov    -0xa8(%rbp),%rax
+    1188b040:	movsd  (%rax),%xmm0
+    1188b044:	xorpd  %xmm1,%xmm1
+    1188b048:	ucomisd %xmm1,%xmm0
+    1188b04c:	jne    1188b050 <js_object_get_field_by_name+0x230>
+    1188b04e:	jnp    1188b0a0 <js_object_get_field_by_name+0x280>
+    1188b050:	movq   %xmm0,%rax
+    1188b055:	mov    %rax,%rcx
+    1188b058:	shr    $0x30,%rcx
+    1188b05c:	add    $0xffff8006,%ecx
+    1188b062:	cmp    $0x5,%ecx
+    1188b065:	ja     1188b4de <js_object_get_field_by_name+0x6be>
+    1188b06b:	lea    0x2a70796(%rip),%rdx        # 142fb808 <anon.b37f594bd5826585f7e5082f302a037e.11885.llvm.4573768808118376784+0x101ec>
+    1188b072:	movslq (%rdx,%rcx,4),%rcx
+    1188b076:	add    %rdx,%rcx
+    1188b079:	jmp    *%rcx
+    1188b07b:	movabs $0xffffffffffff,%rcx
+    1188b085:	and    %rcx,%rax
+    1188b088:	cmp    %rbx,%rax
+    1188b08b:	jne    1188b0a0 <js_object_get_field_by_name+0x280>
+    1188b08d:	mov    %r12,%rdi
+    1188b090:	call   *0x3a97212(%rip)        # 153222a8 <_GLOBAL_OFFSET_TABLE_+0xb228>
+    1188b096:	test   %rax,%rax
+    1188b099:	jne    1188ddb5 <js_object_get_field_by_name+0x2f95>
+    1188b09f:	nop
+    1188b0a0:	mov    %r14,%r12
+    1188b0a3:	shr    $0x30,%r12
+    1188b0a7:	cmp    $0x7ffd,%r12
+    1188b0ae:	mov    %r14,%rax
+    1188b0b1:	cmove  %r13,%rax
+    1188b0b5:	and    $0xffffffffffff0000,%rax
+    1188b0bb:	cmp    $0xf0000,%rax
+    1188b0c1:	jne    1188b0e9 <js_object_get_field_by_name+0x2c9>
+    1188b0c3:	movabs $0x7ffd000000000000,%rax
+    1188b0cd:	add    %r13,%rax
+    1188b0d0:	movq   %rax,%xmm0
+    1188b0d5:	movq   %xmm0,-0x40(%rbp)
+    1188b0da:	call   11290eb0 <_RNvNtCscI5nJwKNRh4_13perry_runtime5proxy6lookup.llvm.4573768808118376784>
+    1188b0df:	cmp    $0x1,%rax
+    1188b0e3:	je     1188da39 <js_object_get_field_by_name+0x2c19>
+    1188b0e9:	cmpq   $0x1000,-0x30(%rbp)
+    1188b0f1:	jb     1188b105 <js_object_get_field_by_name+0x2e5>
+    1188b0f3:	mov    -0x30(%rbp),%rax
+    1188b0f7:	mov    0x4(%rax),%r15d
+    1188b0fb:	cmp    $0x5,%r15
+    1188b0ff:	jbe    1188b340 <js_object_get_field_by_name+0x520>
+    1188b105:	cmp    $0x100000,%r14
+    1188b10c:	setae  %bl
+    1188b10f:	test   %r12,%r12
+    1188b112:	je     1188b130 <js_object_get_field_by_name+0x310>
+    1188b114:	cmp    $0x7ffd,%r12d
+    1188b11b:	jne    1188b620 <js_object_get_field_by_name+0x800>
+    1188b121:	cmp    $0x100000,%r13
+    1188b128:	jae    1188b140 <js_object_get_field_by_name+0x320>
+    1188b12a:	jmp    1188b620 <js_object_get_field_by_name+0x800>
+    1188b12f:	nop
+    1188b130:	mov    %r14,%r13
+    1188b133:	cmp    $0x100000,%r13
+    1188b13a:	jb     1188b620 <js_object_get_field_by_name+0x800>
+    1188b140:	mov    %r13,%rax
+    1188b143:	shr    $0x3,%rax
+    1188b147:	movabs $0x9e3779b97f4a7c15,%rcx
+    1188b151:	imul   %rcx,%rax
+    1188b155:	mov    %rax,%rcx
+    1188b158:	shr    $0x36,%rcx
+    1188b15c:	mov    %rax,%rdx
+    1188b15f:	shr    $0x3c,%rdx
+    1188b163:	lea    0x54e9536(%rip),%rsi        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b16a:	mov    (%rsi,%rdx,8),%rdx
+    1188b16e:	bt     %rcx,%rdx
+    1188b172:	jae    1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b178:	mov    %rax,%rcx
+    1188b17b:	shr    $0x2c,%rcx
+    1188b17f:	mov    %rax,%rdx
+    1188b182:	shr    $0x32,%rdx
+    1188b186:	and    $0xf,%edx
+    1188b189:	lea    0x54e9510(%rip),%rsi        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b190:	mov    (%rsi,%rdx,8),%rdx
+    1188b194:	bt     %rcx,%rdx
+    1188b198:	jae    1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b19a:	mov    %rax,%rcx
+    1188b19d:	shr    $0x22,%rcx
+    1188b1a1:	shr    $0x28,%rax
+    1188b1a5:	and    $0xf,%eax
+    1188b1a8:	lea    0x54e94f1(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b1af:	mov    (%rdx,%rax,8),%rax
+    1188b1b3:	bt     %rcx,%rax
+    1188b1b7:	jae    1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b1b9:	movabs $0x800000000000,%rax
+    1188b1c3:	dec    %rax
+    1188b1c6:	cmp    %rax,%r13
+    1188b1c9:	ja     1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b1cb:	lea    -0x8(%r13),%r15
+    1188b1cf:	mov    %r15,%rdi
+    1188b1d2:	call   *0x3a90e18(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188b1d8:	test   %al,%al
+    1188b1da:	je     1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b1dc:	cmpb   $0xf,(%r15)
+    1188b1e0:	jne    1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b1e2:	movabs $0x5045525259484e44,%rax
+    1188b1ec:	cmp    %rax,0x0(%r13)
+    1188b1f0:	jne    1188b200 <js_object_get_field_by_name+0x3e0>
+    1188b1f2:	testb  $0x1,0x1c(%r13)
+    1188b1f7:	jne    1188bea4 <js_object_get_field_by_name+0x1084>
+    1188b1fd:	nopl   (%rax)
+    1188b200:	cmpq   $0x100000,-0x30(%rbp)
+    1188b208:	jb     1188b620 <js_object_get_field_by_name+0x800>
+    1188b20e:	cmp    $0x200000,%r13
+    1188b215:	jb     1188b620 <js_object_get_field_by_name+0x800>
+    1188b21b:	mov    -0xf8(%rbp),%rax
+    1188b222:	lea    0x54e9477(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b229:	mov    (%rcx,%rax,8),%rax
+    1188b22d:	test   %rax,-0xf0(%rbp)
+    1188b234:	je     1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b23a:	mov    -0xe8(%rbp),%rax
+    1188b241:	lea    0x54e9458(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b248:	mov    (%rcx,%rax,8),%rax
+    1188b24c:	test   %rax,-0xe0(%rbp)
+    1188b253:	je     1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b255:	mov    -0xd8(%rbp),%rax
+    1188b25c:	lea    0x54e943d(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b263:	mov    (%rcx,%rax,8),%rax
+    1188b267:	mov    -0xd0(%rbp),%rcx
+    1188b26e:	shr    %cl,%rax
+    1188b271:	mov    -0xc0(%rbp),%rcx
+    1188b278:	cmp    %rcx,-0xc8(%rbp)
+    1188b27f:	jae    1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b281:	test   $0x1,%al
+    1188b283:	je     1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b285:	mov    -0xb8(%rbp),%rdi
+    1188b28c:	call   *0x3a90d5e(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188b292:	test   %al,%al
+    1188b294:	je     1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b296:	mov    -0xb8(%rbp),%rax
+    1188b29d:	cmpb   $0xf,(%rax)
+    1188b2a0:	jne    1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b2a2:	mov    -0x30(%rbp),%rax
+    1188b2a6:	movabs $0x5045525259484e44,%rcx
+    1188b2b0:	cmp    %rcx,(%rax)
+    1188b2b3:	jne    1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b2b5:	mov    -0x30(%rbp),%rax
+    1188b2b9:	testb  $0x1,0x1c(%rax)
+    1188b2bd:	je     1188b2cd <js_object_get_field_by_name+0x4ad>
+    1188b2bf:	mov    -0x30(%rbp),%rax
+    1188b2c3:	cmpb   $0x0,0x1b(%rax)
+    1188b2c7:	je     1188b620 <js_object_get_field_by_name+0x800>
+    1188b2cd:	mov    -0x30(%rbp),%rax
+    1188b2d1:	testb  $0x10,-0x7(%rax)
+    1188b2d5:	je     1188b620 <js_object_get_field_by_name+0x800>
+    1188b2db:	mov    -0x88(%rbp),%rdi
+    1188b2e2:	cmpq   $0x0,0x78(%rdi)
+    1188b2e7:	je     1188d2ab <js_object_get_field_by_name+0x248b>
+    1188b2ed:	mov    %r13,%rsi
+    1188b2f0:	shr    $0x14,%rsi
+    1188b2f4:	mov    0x10(%rdi),%rax
+    1188b2f8:	cmpb   $0x2,(%rax)
+    1188b2fb:	jne    1188b506 <js_object_get_field_by_name+0x6e6>
+    1188b301:	cmpb   $0x0,0x88(%rax)
+    1188b308:	je     1188b552 <js_object_get_field_by_name+0x732>
+    1188b30e:	cmp    %rsi,0x80(%rax)
+    1188b315:	jne    1188b552 <js_object_get_field_by_name+0x732>
+    1188b31b:	cmp    0x60(%rax),%r13
+    1188b31f:	jb     1188b552 <js_object_get_field_by_name+0x732>
+    1188b325:	cmp    0x68(%rax),%r13
+    1188b329:	jae    1188b552 <js_object_get_field_by_name+0x732>
+    1188b32f:	lea    0x60(%rax),%rcx
+    1188b333:	jmp    1188b5d7 <js_object_get_field_by_name+0x7b7>
+    1188b338:	nopl   0x0(%rax,%rax,1)
+    1188b340:	test   %r15,%r15
+    1188b343:	je     1188b3dc <js_object_get_field_by_name+0x5bc>
+    1188b349:	mov    -0x30(%rbp),%rax
+    1188b34d:	add    $0x14,%rax
+    1188b351:	movsbq (%rax),%rsi
+    1188b355:	test   %rsi,%rsi
+    1188b358:	js     1188b105 <js_object_get_field_by_name+0x2e5>
+    1188b35e:	cmp    $0x1,%r15d
+    1188b362:	je     1188b3de <js_object_get_field_by_name+0x5be>
+    1188b364:	mov    -0x30(%rbp),%rax
+    1188b368:	movsbq 0x15(%rax),%rax
+    1188b36d:	test   %rax,%rax
+    1188b370:	js     1188b105 <js_object_get_field_by_name+0x2e5>
+    1188b376:	shl    $0x8,%rax
+    1188b37a:	or     %rax,%rsi
+    1188b37d:	cmp    $0x2,%r15d
+    1188b381:	je     1188b3de <js_object_get_field_by_name+0x5be>
+    1188b383:	mov    -0x30(%rbp),%rax
+    1188b387:	movsbq 0x16(%rax),%rax
+    1188b38c:	test   %rax,%rax
+    1188b38f:	js     1188b105 <js_object_get_field_by_name+0x2e5>
+    1188b395:	shl    $0x10,%rax
+    1188b399:	or     %rax,%rsi
+    1188b39c:	cmp    $0x3,%r15d
+    1188b3a0:	je     1188b3de <js_object_get_field_by_name+0x5be>
+    1188b3a2:	mov    -0x30(%rbp),%rax
+    1188b3a6:	movsbq 0x17(%rax),%rax
+    1188b3ab:	test   %rax,%rax
+    1188b3ae:	js     1188b105 <js_object_get_field_by_name+0x2e5>
+    1188b3b4:	shl    $0x18,%rax
+    1188b3b8:	or     %rax,%rsi
+    1188b3bb:	cmp    $0x4,%r15d
+    1188b3bf:	je     1188b3de <js_object_get_field_by_name+0x5be>
+    1188b3c1:	mov    -0x30(%rbp),%rax
+    1188b3c5:	movsbq 0x18(%rax),%rax
+    1188b3ca:	test   %rax,%rax
+    1188b3cd:	js     1188b105 <js_object_get_field_by_name+0x2e5>
+    1188b3d3:	shl    $0x20,%rax
+    1188b3d7:	or     %rax,%rsi
+    1188b3da:	jmp    1188b3de <js_object_get_field_by_name+0x5be>
+    1188b3dc:	xor    %esi,%esi
+    1188b3de:	cmp    $0xfffff,%r14
+    1188b3e5:	jbe    1188b4d7 <js_object_get_field_by_name+0x6b7>
+    1188b3eb:	mov    $0x1,%bl
+    1188b3ed:	movabs $0x800000000000,%rax
+    1188b3f7:	cmp    %rax,%r14
+    1188b3fa:	jae    1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b400:	cmpb   $0x2,-0x8(%r14)
+    1188b405:	jne    1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b40b:	cmpb   $0x0,-0x7(%r14)
+    1188b410:	js     1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b416:	testb  $0x9,-0x5(%r14)
+    1188b41b:	jne    1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b421:	mov    (%r14),%eax
+    1188b424:	cmp    $0xfffffffe,%eax
+    1188b427:	je     1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b42d:	test   %eax,%eax
+    1188b42f:	je     1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b435:	mov    0x4(%r14),%edi
+    1188b439:	cmp    $0xbfffffff,%edi
+    1188b43f:	jg     1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b445:	mov    0x3ac6c1d(%rip),%ecx        # 15352068 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6object9read_stub9READ_STUB4SLOT+0x10>
+    1188b44b:	cmp    $0x300,%ecx
+    1188b451:	mov    -0x88(%rbp),%rax
+    1188b458:	jae    1188d336 <js_object_get_field_by_name+0x2516>
+    1188b45e:	cmpq   $0x0,0x78(%rax)
+    1188b463:	je     1188d2fd <js_object_get_field_by_name+0x24dd>
+    1188b469:	mov    0x1e8(%rax,%rcx,8),%rdx
+    1188b471:	test   %rdx,%rdx
+    1188b474:	je     1188d336 <js_object_get_field_by_name+0x2516>
+    1188b47a:	shl    $0x28,%r15
+    1188b47e:	movabs $0x7ff8ffffffffffff,%rax
+    1188b488:	inc    %rax
+    1188b48b:	or     %rax,%rsi
+    1188b48e:	or     %r15,%rsi
+    1188b491:	movabs $0x4000000000000000,%rax
+    1188b49b:	or     %rax,%rdi
+    1188b49e:	call   11143960 <_RNCNvNtNtCscI5nJwKNRh4_13perry_runtime6object9read_stub15read_stub_probe0B7_>
+    1188b4a3:	cmp    $0x1,%eax
+    1188b4a6:	jne    1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b4ac:	test   $0x40000000,%edx
+    1188b4b2:	jne    1188d193 <js_object_get_field_by_name+0x2373>
+    1188b4b8:	mov    %edx,%eax
+    1188b4ba:	mov    0x10(%r14,%rax,8),%rax
+    1188b4bf:	movabs $0x7ffc000000000010,%rcx
+    1188b4c9:	cmp    %rcx,%rax
+    1188b4cc:	je     1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b4d2:	jmp    1188e9ac <js_object_get_field_by_name+0x3b8c>
+    1188b4d7:	xor    %ebx,%ebx
+    1188b4d9:	jmp    1188b10f <js_object_get_field_by_name+0x2ef>
+    1188b4de:	lea    -0x1(%rax),%rcx
+    1188b4e2:	movabs $0xffffffffffff,%rdx
+    1188b4ec:	cmp    %rdx,%rcx
+    1188b4ef:	mov    $0x0,%ecx
+    1188b4f4:	cmovae %rcx,%rax
+    1188b4f8:	cmp    %rbx,%rax
+    1188b4fb:	je     1188b08d <js_object_get_field_by_name+0x26d>
+    1188b501:	jmp    1188b0a0 <js_object_get_field_by_name+0x280>
+    1188b506:	mov    %rsi,%rcx
+    1188b509:	sub    0x8(%rax),%rcx
+    1188b50d:	cmp    0x28(%rax),%rcx
+    1188b511:	jae    1188b5ec <js_object_get_field_by_name+0x7cc>
+    1188b517:	mov    0x20(%rax),%rdx
+    1188b51b:	lea    (%rcx,%rcx,4),%rcx
+    1188b51f:	mov    (%rdx,%rcx,8),%rdi
+    1188b523:	cmp    0x10(%rax),%rdi
+    1188b527:	jne    1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b52d:	lea    (%rdx,%rcx,8),%rcx
+    1188b531:	cmp    0x8(%rcx),%r13
+    1188b535:	jb     1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b53b:	cmp    0x10(%rcx),%r13
+    1188b53f:	jae    1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b545:	incq   0x30(%rax)
+    1188b549:	add    $0x21,%rcx
+    1188b54d:	jmp    1188b5df <js_object_get_field_by_name+0x7bf>
+    1188b552:	cmpb   $0x1,0xb8(%rax)
+    1188b559:	jne    1188b57f <js_object_get_field_by_name+0x75f>
+    1188b55b:	cmp    %rsi,0xb0(%rax)
+    1188b562:	jne    1188b57f <js_object_get_field_by_name+0x75f>
+    1188b564:	cmp    0x90(%rax),%r13
+    1188b56b:	jb     1188b57f <js_object_get_field_by_name+0x75f>
+    1188b56d:	cmp    0x98(%rax),%r13
+    1188b574:	jae    1188b57f <js_object_get_field_by_name+0x75f>
+    1188b576:	lea    0x90(%rax),%rcx
+    1188b57d:	jmp    1188b5d7 <js_object_get_field_by_name+0x7b7>
+    1188b57f:	cmpb   $0x1,0xe8(%rax)
+    1188b586:	jne    1188b5ac <js_object_get_field_by_name+0x78c>
+    1188b588:	cmp    %rsi,0xe0(%rax)
+    1188b58f:	jne    1188b5ac <js_object_get_field_by_name+0x78c>
+    1188b591:	cmp    0xc0(%rax),%r13
+    1188b598:	jb     1188b5ac <js_object_get_field_by_name+0x78c>
+    1188b59a:	cmp    0xc8(%rax),%r13
+    1188b5a1:	jae    1188b5ac <js_object_get_field_by_name+0x78c>
+    1188b5a3:	lea    0xc0(%rax),%rcx
+    1188b5aa:	jmp    1188b5d7 <js_object_get_field_by_name+0x7b7>
+    1188b5ac:	cmpb   $0x1,0x118(%rax)
+    1188b5b3:	jne    1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b5b5:	cmp    %rsi,0x110(%rax)
+    1188b5bc:	jne    1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b5be:	cmp    0xf0(%rax),%r13
+    1188b5c5:	jb     1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b5c7:	cmp    0xf8(%rax),%r13
+    1188b5ce:	jae    1188b5f0 <js_object_get_field_by_name+0x7d0>
+    1188b5d0:	lea    0xf0(%rax),%rcx
+    1188b5d7:	incq   0x30(%rax)
+    1188b5db:	add    $0x19,%rcx
+    1188b5df:	movzbl (%rcx),%eax
+    1188b5e2:	cmp    $0xff,%al
+    1188b5e4:	je     1188b5f4 <js_object_get_field_by_name+0x7d4>
+    1188b5e6:	test   %al,%al
+    1188b5e8:	jne    1188b601 <js_object_get_field_by_name+0x7e1>
+    1188b5ea:	jmp    1188b620 <js_object_get_field_by_name+0x800>
+    1188b5ec:	incq   0x58(%rax)
+    1188b5f0:	incq   0x38(%rax)
+    1188b5f4:	mov    %r13,%rdi
+    1188b5f7:	call   *0x3a8dd7b(%rip)        # 15319378 <_GLOBAL_OFFSET_TABLE_+0x22f8>
+    1188b5fd:	test   %al,%al
+    1188b5ff:	je     1188b620 <js_object_get_field_by_name+0x800>
+    1188b601:	cmpb   $0x2,-0x8(%r13)
+    1188b606:	jne    1188b620 <js_object_get_field_by_name+0x800>
+    1188b608:	testb  $0x9,-0x5(%r13)
+    1188b60d:	je     1188bc21 <js_object_get_field_by_name+0xe01>
+    1188b613:	data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    1188b620:	test   %r12,%r12
+    1188b623:	sete   %al
+    1188b626:	test   %bl,%al
+    1188b628:	je     1188ba70 <js_object_get_field_by_name+0xc50>
+    1188b62e:	mov    %r14,%r12
+    1188b631:	shr    $0x3,%r12
+    1188b635:	movabs $0x9e3779b97f4a7c15,%rax
+    1188b63f:	imul   %rax,%r12
+    1188b643:	mov    %r12,%rbx
+    1188b646:	shr    $0x22,%rbx
+    1188b64a:	mov    %r12,%rcx
+    1188b64d:	shr    $0x36,%rcx
+    1188b651:	mov    %r12,%r13
+    1188b654:	shr    $0x3c,%r13
+    1188b658:	lea    0x54e9041(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b65f:	mov    (%rax,%r13,8),%rax
+    1188b663:	mov    $0x1,%r15d
+    1188b669:	shl    %cl,%r15
+    1188b66c:	bt     %rcx,%rax
+    1188b670:	jae    1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b676:	mov    %r12,%rax
+    1188b679:	shr    $0x2c,%rax
+    1188b67d:	mov    %r12,%rcx
+    1188b680:	shr    $0x32,%rcx
+    1188b684:	and    $0xf,%ecx
+    1188b687:	lea    0x54e9012(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b68e:	mov    (%rdx,%rcx,8),%rcx
+    1188b692:	bt     %rax,%rcx
+    1188b696:	jae    1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b698:	mov    %r12,%rax
+    1188b69b:	shr    $0x28,%rax
+    1188b69f:	and    $0xf,%eax
+    1188b6a2:	lea    0x54e8ff7(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b6a9:	mov    (%rcx,%rax,8),%rax
+    1188b6ad:	mov    %ebx,%ecx
+    1188b6af:	shr    %cl,%rax
+    1188b6b2:	lea    -0x1000(%r14),%rcx
+    1188b6b9:	cmp    -0xc0(%rbp),%rcx
+    1188b6c0:	jae    1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b6c2:	test   $0x1,%al
+    1188b6c4:	je     1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b6c6:	lea    -0x8(%r14),%rdi
+    1188b6ca:	call   *0x3a90920(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188b6d0:	test   %al,%al
+    1188b6d2:	je     1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b6d4:	lea    -0x8(%r14),%rax
+    1188b6d8:	cmpb   $0xf,(%rax)
+    1188b6db:	jne    1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b6dd:	movabs $0x5045525259484e44,%rax
+    1188b6e7:	cmp    %rax,(%r14)
+    1188b6ea:	jne    1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b6ec:	testb  $0x1,0x1c(%r14)
+    1188b6f1:	je     1188b700 <js_object_get_field_by_name+0x8e0>
+    1188b6f3:	cmpb   $0x0,0x1b(%r14)
+    1188b6f8:	je     1188b720 <js_object_get_field_by_name+0x900>
+    1188b6fa:	nopw   0x0(%rax,%rax,1)
+    1188b700:	cmp    $0x1000,%r14
+    1188b707:	jb     1188e184 <js_object_get_field_by_name+0x3364>
+    1188b70d:	movabs $0x800000000000,%rax
+    1188b717:	cmp    %rax,%r14
+    1188b71a:	jae    1188e184 <js_object_get_field_by_name+0x3364>
+    1188b720:	lea    0x54e8f79(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b727:	mov    (%rax,%r13,8),%rax
+    1188b72b:	test   %r15,%rax
+    1188b72e:	je     1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b734:	mov    %r12,%rax
+    1188b737:	shr    $0x2c,%rax
+    1188b73b:	mov    %r12,%rcx
+    1188b73e:	shr    $0x32,%rcx
+    1188b742:	and    $0xf,%ecx
+    1188b745:	lea    0x54e8f54(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b74c:	mov    (%rdx,%rcx,8),%rcx
+    1188b750:	bt     %rax,%rcx
+    1188b754:	jae    1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b756:	shr    $0x28,%r12
+    1188b75a:	and    $0xf,%r12d
+    1188b75e:	lea    0x54e8f3b(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188b765:	mov    (%rax,%r12,8),%rax
+    1188b769:	bt     %rbx,%rax
+    1188b76d:	jae    1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b76f:	lea    -0x8(%r14),%rbx
+    1188b773:	mov    %rbx,%rdi
+    1188b776:	call   *0x3a90874(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188b77c:	test   %al,%al
+    1188b77e:	je     1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b780:	cmpb   $0xf,(%rbx)
+    1188b783:	jne    1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b785:	movabs $0x5045525259484e44,%rax
+    1188b78f:	cmp    %rax,(%r14)
+    1188b792:	jne    1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b794:	testb  $0x1,0x1c(%r14)
+    1188b799:	je     1188b7b0 <js_object_get_field_by_name+0x990>
+    1188b79b:	cmpb   $0x0,0x1b(%r14)
+    1188b7a0:	je     1188ba70 <js_object_get_field_by_name+0xc50>
+    1188b7a6:	cs nopw 0x0(%rax,%rax,1)
+    1188b7b0:	mov    -0x30(%rbp),%rax
+    1188b7b4:	cmpl   $0x4,0x4(%rax)
+    1188b7b8:	jne    1188ba70 <js_object_get_field_by_name+0xc50>
+    1188b7be:	add    $0x14,%rax
+    1188b7c2:	cmpl   $0x657a6973,(%rax)
+    1188b7c8:	jne    1188ba70 <js_object_get_field_by_name+0xc50>
+    1188b7ce:	mov    -0x90(%rbp),%r15
+    1188b7d5:	movzbl 0x20(%r15),%eax
+    1188b7da:	test   %eax,%eax
+    1188b7dc:	movabs $0x7ffd000000000000,%rbx
+    1188b7e6:	jne    1188d2bd <js_object_get_field_by_name+0x249d>
+    1188b7ec:	mov    (%r15),%rax
+    1188b7ef:	movabs $0x7fffffffffffffff,%rcx
+    1188b7f9:	cmp    %rcx,%rax
+    1188b7fc:	jae    1188e662 <js_object_get_field_by_name+0x3842>
+    1188b802:	mov    0x18(%r15),%r12
+    1188b806:	test   %r14,%r14
+    1188b809:	je     1188b82c <js_object_get_field_by_name+0xa0c>
+    1188b80b:	lea    0x54e7eaa(%rip),%rcx        # 16d736bc <PERRY_INCREMENTAL_MARK_BARRIER_ACTIVE_COUNT>
+    1188b812:	mov    (%rcx),%ecx
+    1188b814:	test   %ecx,%ecx
+    1188b816:	je     1188b82c <js_object_get_field_by_name+0xa0c>
+    1188b818:	lea    (%r14,%rbx,1),%rdi
+    1188b81c:	call   *0x3a9e426(%rip)        # 15329c48 <_GLOBAL_OFFSET_TABLE_+0x12bc8>
+    1188b822:	mov    -0x90(%rbp),%rax
+    1188b829:	mov    (%rax),%rax
+    1188b82c:	test   %rax,%rax
+    1188b82f:	jne    1188e66f <js_object_get_field_by_name+0x384f>
+    1188b835:	mov    -0x90(%rbp),%rbx
+    1188b83c:	movq   $0xffffffffffffffff,(%rbx)
+    1188b843:	mov    0x18(%rbx),%r15
+    1188b847:	cmp    0x8(%rbx),%r15
+    1188b84b:	je     1188bdb7 <js_object_get_field_by_name+0xf97>
+    1188b851:	mov    0x10(%rbx),%rax
+    1188b855:	lea    (%r15,%r15,2),%r13
+    1188b859:	movq   $0x1,(%rax,%r13,8)
+    1188b861:	mov    %r14,0x8(%rax,%r13,8)
+    1188b866:	movabs $0x7ffd000000000000,%rcx
+    1188b870:	mov    %rcx,0x10(%rax,%r13,8)
+    1188b875:	lea    0x1(%r15),%rax
+    1188b879:	mov    %rax,0x18(%rbx)
+    1188b87d:	incq   (%rbx)
+    1188b880:	mov    %r14,%rdi
+    1188b883:	mov    -0x30(%rbp),%rsi
+    1188b887:	call   1167f9a0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object10object_ops10keys_array15own_key_present>
+    1188b88c:	mov    (%rbx),%rcx
+    1188b88f:	movabs $0x7fffffffffffffff,%rdx
+    1188b899:	cmp    %rdx,%rcx
+    1188b89c:	jae    1188e49e <js_object_get_field_by_name+0x367e>
+    1188b8a2:	lea    0x1(%rcx),%rsi
+    1188b8a6:	mov    %rsi,(%rbx)
+    1188b8a9:	mov    0x18(%rbx),%rdx
+    1188b8ad:	cmp    %rdx,%r15
+    1188b8b0:	jae    1188e4ab <js_object_get_field_by_name+0x368b>
+    1188b8b6:	mov    0x10(%rbx),%rdi
+    1188b8ba:	cmpq   $0x1,(%rdi,%r13,8)
+    1188b8bf:	jne    1188e4b1 <js_object_get_field_by_name+0x3691>
+    1188b8c5:	lea    (%rdi,%r13,8),%rdi
+    1188b8c9:	mov    0x8(%rdi),%rdi
+    1188b8cd:	mov    %rcx,(%rbx)
+    1188b8d0:	test   %al,%al
+    1188b8d2:	jne    1188ba2d <js_object_get_field_by_name+0xc0d>
+    1188b8d8:	call   *0x3a9e13a(%rip)        # 15329a18 <_GLOBAL_OFFSET_TABLE_+0x12998>
+    1188b8de:	test   %eax,%eax
+    1188b8e0:	je     1188b8fd <js_object_get_field_by_name+0xadd>
+    1188b8e2:	mov    $0x4,%edx
+    1188b8e7:	mov    %eax,%edi
+    1188b8e9:	lea    0x2a5fbcc(%rip),%rsi        # 142eb4bc <anon.b37f594bd5826585f7e5082f302a037e.6575.llvm.4573768808118376784+0x84>
+    1188b8f0:	call   11520d20 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13native_module25class_instance_has_member>
+    1188b8f5:	test   %al,%al
+    1188b8f7:	jne    1188ba08 <js_object_get_field_by_name+0xbe8>
+    1188b8fd:	mov    -0x90(%rbp),%rbx
+    1188b904:	mov    (%rbx),%rcx
+    1188b907:	movabs $0x7fffffffffffffff,%rax
+    1188b911:	cmp    %rax,%rcx
+    1188b914:	jae    1188e49e <js_object_get_field_by_name+0x367e>
+    1188b91a:	lea    0x1(%rcx),%rsi
+    1188b91e:	mov    %rsi,(%rbx)
+    1188b921:	mov    0x18(%rbx),%rdx
+    1188b925:	cmp    %rdx,%r15
+    1188b928:	jae    1188e4ab <js_object_get_field_by_name+0x368b>
+    1188b92e:	mov    0x10(%rbx),%rax
+    1188b932:	cmpq   $0x1,(%rax,%r13,8)
+    1188b937:	jne    1188e4b1 <js_object_get_field_by_name+0x3691>
+    1188b93d:	lea    (%rax,%r13,8),%rax
+    1188b941:	mov    0x8(%rax),%rax
+    1188b945:	mov    %rcx,(%rbx)
+    1188b948:	movzbl 0x5569601(%rip),%edi        # 16df4f50 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object16map_set_subclass21MAP_SET_SUBCLASS_EVER.0.llvm.4573768808118376784>
+    1188b94f:	test   %dil,%dil
+    1188b952:	je     1188ba2d <js_object_get_field_by_name+0xc0d>
+    1188b958:	movabs $0xffffffffffff,%rcx
+    1188b962:	and    %rcx,%rax
+    1188b965:	movabs $0x7ffd000000000000,%rcx
+    1188b96f:	or     %rcx,%rax
+    1188b972:	movq   %rax,%xmm0
+    1188b977:	call   11543720 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object16map_set_subclass19instance_object_ptr.llvm.4573768808118376784>
+    1188b97c:	cmp    $0x1,%rax
+    1188b980:	jne    1188ba08 <js_object_get_field_by_name+0xbe8>
+    1188b986:	mov    %rdx,%rbx
+    1188b989:	lea    0x2ab3611(%rip),%rdi        # 1433efa1 <anon.b37f594bd5826585f7e5082f302a037e.10935.llvm.4573768808118376784>
+    1188b990:	mov    $0x1c,%esi
+    1188b995:	mov    $0x1c,%edx
+    1188b99a:	call   *0x3a90908(%rip)        # 1531c2a8 <_GLOBAL_OFFSET_TABLE_+0x5228>
+    1188b9a0:	mov    %rbx,%rdi
+    1188b9a3:	mov    %rax,%rsi
+    1188b9a6:	call   *0x3aa5534(%rip)        # 15330ee0 <_GLOBAL_OFFSET_TABLE_+0x19e60>
+    1188b9ac:	movq   %xmm0,%rbx
+    1188b9b1:	mov    %rbx,%rax
+    1188b9b4:	movabs $0xffff000000000000,%rcx
+    1188b9be:	and    %rcx,%rax
+    1188b9c1:	movabs $0x7ffd000000000000,%rcx
+    1188b9cb:	cmp    %rcx,%rax
+    1188b9ce:	jne    1188ba08 <js_object_get_field_by_name+0xbe8>
+    1188b9d0:	movabs $0xffffffffffff,%rax
+    1188b9da:	and    %rax,%rbx
+    1188b9dd:	cmp    $0x1008,%rbx
+    1188b9e4:	jb     1188ba08 <js_object_get_field_by_name+0xbe8>
+    1188b9e6:	mov    %rbx,%rdi
+    1188b9e9:	call   *0x3a9d1e1(%rip)        # 15328bd0 <_GLOBAL_OFFSET_TABLE_+0x11b50>
+    1188b9ef:	test   %al,%al
+    1188b9f1:	jne    1188e5ce <js_object_get_field_by_name+0x37ae>
+    1188b9f7:	mov    %rbx,%rdi
+    1188b9fa:	call   *0x3a8ca10(%rip)        # 15318410 <_GLOBAL_OFFSET_TABLE_+0x1390>
+    1188ba00:	test   %al,%al
+    1188ba02:	jne    1188e5d9 <js_object_get_field_by_name+0x37b9>
+    1188ba08:	mov    -0x90(%rbp),%rbx
+    1188ba0f:	mov    (%rbx),%rcx
+    1188ba12:	movabs $0x7fffffffffffffff,%rax
+    1188ba1c:	cmp    %rax,%rcx
+    1188ba1f:	jae    1188e49e <js_object_get_field_by_name+0x367e>
+    1188ba25:	mov    0x18(%rbx),%rdx
+    1188ba29:	lea    0x1(%rcx),%rsi
+    1188ba2d:	mov    %rsi,(%rbx)
+    1188ba30:	cmp    %rdx,%r15
+    1188ba33:	jae    1188e4ab <js_object_get_field_by_name+0x368b>
+    1188ba39:	mov    0x10(%rbx),%rax
+    1188ba3d:	cmpq   $0x1,(%rax,%r13,8)
+    1188ba42:	jne    1188e4b1 <js_object_get_field_by_name+0x3691>
+    1188ba48:	lea    (%rax,%r13,8),%rax
+    1188ba4c:	mov    0x8(%rax),%r14
+    1188ba50:	mov    %rcx,(%rbx)
+    1188ba53:	test   %rcx,%rcx
+    1188ba56:	jne    1188e67c <js_object_get_field_by_name+0x385c>
+    1188ba5c:	cmp    %rdx,%r12
+    1188ba5f:	ja     1188ba70 <js_object_get_field_by_name+0xc50>
+    1188ba61:	mov    %r12,0x18(%rbx)
+    1188ba65:	data16 cs nopw 0x0(%rax,%rax,1)
+    1188ba70:	mov    %r14,%rax
+    1188ba73:	shr    $0x30,%rax
+    1188ba77:	mov    %rax,-0x40(%rbp)
+    1188ba7b:	cmp    $0x100000,%r14
+    1188ba82:	jb     1188c401 <js_object_get_field_by_name+0x15e1>
+    1188ba88:	cmpq   $0x0,-0x40(%rbp)
+    1188ba8d:	jne    1188c401 <js_object_get_field_by_name+0x15e1>
+    1188ba93:	mov    %r14,%r12
+    1188ba96:	shr    $0x3,%r12
+    1188ba9a:	movabs $0x9e3779b97f4a7c15,%rax
+    1188baa4:	imul   %rax,%r12
+    1188baa8:	mov    %r12,%rax
+    1188baab:	shr    $0x22,%rax
+    1188baaf:	mov    %rax,-0x80(%rbp)
+    1188bab3:	mov    %r12,%rcx
+    1188bab6:	shr    $0x36,%rcx
+    1188baba:	mov    %r12,%r13
+    1188babd:	shr    $0x3c,%r13
+    1188bac1:	lea    0x54e8bd8(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188bac8:	mov    (%rax,%r13,8),%rax
+    1188bacc:	mov    $0x1,%edx
+    1188bad1:	shl    %cl,%rdx
+    1188bad4:	mov    %rdx,-0x70(%rbp)
+    1188bad8:	bt     %rcx,%rax
+    1188badc:	jae    1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bae2:	mov    %r12,%rax
+    1188bae5:	shr    $0x2c,%rax
+    1188bae9:	mov    %r12,%rcx
+    1188baec:	shr    $0x32,%rcx
+    1188baf0:	and    $0xf,%ecx
+    1188baf3:	lea    0x54e8ba6(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188bafa:	mov    (%rdx,%rcx,8),%rcx
+    1188bafe:	bt     %rax,%rcx
+    1188bb02:	jae    1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb04:	mov    %r12,%rax
+    1188bb07:	shr    $0x28,%rax
+    1188bb0b:	and    $0xf,%eax
+    1188bb0e:	lea    0x54e8b8b(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188bb15:	mov    (%rcx,%rax,8),%rax
+    1188bb19:	mov    -0x80(%rbp),%rcx
+    1188bb1d:	shr    %cl,%rax
+    1188bb20:	test   %r14,%r14
+    1188bb23:	je     1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb25:	test   $0x1,%al
+    1188bb27:	je     1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb29:	movabs $0xffff800000000000,%rcx
+    1188bb33:	lea    (%r14,%rcx,1),%rax
+    1188bb37:	add    $0x1000,%rcx
+    1188bb3e:	cmp    %rcx,%rax
+    1188bb41:	jb     1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb43:	lea    -0x8(%r14),%rbx
+    1188bb47:	mov    %rbx,%rdi
+    1188bb4a:	call   *0x3a904a0(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188bb50:	test   %al,%al
+    1188bb52:	je     1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb54:	cmpb   $0xf,(%rbx)
+    1188bb57:	jne    1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb59:	movabs $0x5045525259484e44,%rax
+    1188bb63:	cmp    %rax,(%r14)
+    1188bb66:	jne    1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb68:	testb  $0x1,0x1c(%r14)
+    1188bb6d:	je     1188bb80 <js_object_get_field_by_name+0xd60>
+    1188bb6f:	cmpb   $0x0,0x1b(%r14)
+    1188bb74:	je     1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bb7a:	nopw   0x0(%rax,%rax,1)
+    1188bb80:	mov    %r14,%rax
+    1188bb83:	movabs $0xffffffffffff,%rcx
+    1188bb8d:	and    %rcx,%rax
+    1188bb90:	cmp    $0x100000,%rax
+    1188bb96:	jb     1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bb9c:	movabs $0x800000000000,%rcx
+    1188bba6:	cmp    %rcx,%rax
+    1188bba9:	jae    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bbaf:	cmpb   $0x2,-0x8(%rax)
+    1188bbb3:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bbb9:	mov    (%rax),%edx
+    1188bbbb:	lea    0xffd9(%rdx),%eax
+    1188bbc1:	cmp    $0x4,%eax
+    1188bbc4:	jae    1188bbeb <js_object_get_field_by_name+0xdcb>
+    1188bbc6:	cmp    $0xffff0028,%edx
+    1188bbcc:	ja     1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bbd2:	mov    -0x30(%rbp),%rax
+    1188bbd6:	mov    0x4(%rax),%r15d
+    1188bbda:	cmp    $0xffff0027,%edx
+    1188bbe0:	je     1188bcdb <js_object_get_field_by_name+0xebb>
+    1188bbe6:	jmp    1188bd4d <js_object_get_field_by_name+0xf2d>
+    1188bbeb:	mov    $0x40,%ebx
+    1188bbf0:	mov    %edx,%edi
+    1188bbf2:	call   115528f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object19class_meta_registry19get_parent_class_id.llvm.4573768808118376784>
+    1188bbf7:	cmp    $0x1,%eax
+    1188bbfa:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bc00:	cmp    $0xffff002c,%edx
+    1188bc06:	je     1188bcd3 <js_object_get_field_by_name+0xeb3>
+    1188bc0c:	cmp    $0xffff002d,%edx
+    1188bc12:	je     1188bd45 <js_object_get_field_by_name+0xf25>
+    1188bc18:	dec    %ebx
+    1188bc1a:	jne    1188bbf0 <js_object_get_field_by_name+0xdd0>
+    1188bc1c:	jmp    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bc21:	mov    0x0(%r13),%eax
+    1188bc25:	cmp    $0xfffffffe,%eax
+    1188bc28:	je     1188b620 <js_object_get_field_by_name+0x800>
+    1188bc2e:	test   %eax,%eax
+    1188bc30:	je     1188b620 <js_object_get_field_by_name+0x800>
+    1188bc36:	mov    %r13,%rdi
+    1188bc39:	call   1129fdd0 <_RNvNtCscI5nJwKNRh4_13perry_runtime6object17object_keys_array>
+    1188bc3e:	mov    %rax,%r15
+    1188bc41:	movabs $0xffffffffffff,%rax
+    1188bc4b:	inc    %rax
+    1188bc4e:	cmp    %rax,%r15
+    1188bc51:	setae  %al
+    1188bc54:	cmp    $0x100000,%r15
+    1188bc5b:	setb   %cl
+    1188bc5e:	or     %al,%cl
+    1188bc60:	jne    1188b620 <js_object_get_field_by_name+0x800>
+    1188bc66:	mov    %r15,%rdi
+    1188bc69:	call   *0x3a97241(%rip)        # 15322eb0 <_GLOBAL_OFFSET_TABLE_+0xbe30>
+    1188bc6f:	test   %al,%al
+    1188bc71:	jne    1188b620 <js_object_get_field_by_name+0x800>
+    1188bc77:	mov    %r13,%rdi
+    1188bc7a:	call   115168e0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object10live_slots22object_live_slot_count>
+    1188bc7f:	mov    %eax,-0x40(%rbp)
+    1188bc82:	mov    %r15,%rdi
+    1188bc85:	mov    -0x30(%rbp),%rsi
+    1188bc89:	call   115792a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object9prop_plan16read_plan_lookup>
+    1188bc8e:	cmp    $0x1,%eax
+    1188bc91:	je     1188e816 <js_object_get_field_by_name+0x39f6>
+    1188bc97:	cmpb   $0x1,-0x8(%r15)
+    1188bc9c:	jne    1188b620 <js_object_get_field_by_name+0x800>
+    1188bca2:	mov    %r15,%rdi
+    1188bca5:	call   *0x3a9ea7d(%rip)        # 1532a728 <_GLOBAL_OFFSET_TABLE_+0x136a8>
+    1188bcab:	cmp    $0x1000,%rax
+    1188bcb1:	ja     1188b620 <js_object_get_field_by_name+0x800>
+    1188bcb7:	mov    %r15,%rdi
+    1188bcba:	mov    %eax,%esi
+    1188bcbc:	mov    -0x30(%rbp),%rdx
+    1188bcc0:	call   1151d2c0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object11keys_lookup25keys_find_slot_by_key_ptr>
+    1188bcc5:	cmp    $0x1,%eax
+    1188bcc8:	jne    1188b620 <js_object_get_field_by_name+0x800>
+    1188bcce:	jmp    1188e9dd <js_object_get_field_by_name+0x3bbd>
+    1188bcd3:	mov    -0x30(%rbp),%rax
+    1188bcd7:	mov    0x4(%rax),%r15d
+    1188bcdb:	cmp    $0x3,%r15d
+    1188bcdf:	je     1188bdc6 <js_object_get_field_by_name+0xfa6>
+    1188bce5:	cmp    $0x6,%r15d
+    1188bce9:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bcef:	mov    -0x30(%rbp),%rax
+    1188bcf3:	add    $0x14,%rax
+    1188bcf7:	cmpb   $0x64,(%rax)
+    1188bcfa:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd00:	mov    -0x30(%rbp),%rax
+    1188bd04:	cmpb   $0x65,0x15(%rax)
+    1188bd08:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd0e:	mov    -0x30(%rbp),%rax
+    1188bd12:	cmpb   $0x6c,0x16(%rax)
+    1188bd16:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd1c:	mov    -0x30(%rbp),%rax
+    1188bd20:	cmpb   $0x65,0x17(%rax)
+    1188bd24:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd2a:	mov    -0x30(%rbp),%rax
+    1188bd2e:	cmpb   $0x74,0x18(%rax)
+    1188bd32:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd38:	mov    -0x30(%rbp),%rax
+    1188bd3c:	cmpb   $0x65,0x19(%rax)
+    1188bd40:	jmp    1188bf02 <js_object_get_field_by_name+0x10e2>
+    1188bd45:	mov    -0x30(%rbp),%rax
+    1188bd49:	mov    0x4(%rax),%r15d
+    1188bd4d:	cmp    $0x3,%r15d
+    1188bd51:	je     1188be03 <js_object_get_field_by_name+0xfe3>
+    1188bd57:	cmp    $0x6,%r15d
+    1188bd5b:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd61:	mov    -0x30(%rbp),%rax
+    1188bd65:	add    $0x14,%rax
+    1188bd69:	cmpb   $0x64,(%rax)
+    1188bd6c:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd72:	mov    -0x30(%rbp),%rax
+    1188bd76:	cmpb   $0x65,0x15(%rax)
+    1188bd7a:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd80:	mov    -0x30(%rbp),%rax
+    1188bd84:	cmpb   $0x6c,0x16(%rax)
+    1188bd88:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd8e:	mov    -0x30(%rbp),%rax
+    1188bd92:	cmpb   $0x65,0x17(%rax)
+    1188bd96:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bd9c:	mov    -0x30(%rbp),%rax
+    1188bda0:	cmpb   $0x74,0x18(%rax)
+    1188bda4:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bdaa:	mov    -0x30(%rbp),%rax
+    1188bdae:	cmpb   $0x65,0x19(%rax)
+    1188bdb2:	jmp    1188bee5 <js_object_get_field_by_name+0x10c5>
+    1188bdb7:	lea    0x8(%rbx),%rdi
+    1188bdbb:	call   *0x3a9095f(%rip)        # 1531c720 <_GLOBAL_OFFSET_TABLE_+0x56a0>
+    1188bdc1:	jmp    1188b851 <js_object_get_field_by_name+0xa31>
+    1188bdc6:	mov    -0x30(%rbp),%rax
+    1188bdca:	add    $0x14,%rax
+    1188bdce:	movzbl (%rax),%eax
+    1188bdd1:	cmp    $0x67,%eax
+    1188bdd4:	je     1188bde8 <js_object_get_field_by_name+0xfc8>
+    1188bdd6:	cmp    $0x68,%eax
+    1188bdd9:	je     1188bef0 <js_object_get_field_by_name+0x10d0>
+    1188bddf:	cmp    $0x73,%eax
+    1188bde2:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bde8:	mov    -0x30(%rbp),%rax
+    1188bdec:	cmpb   $0x65,0x15(%rax)
+    1188bdf0:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bdf6:	mov    -0x30(%rbp),%rax
+    1188bdfa:	cmpb   $0x74,0x16(%rax)
+    1188bdfe:	jmp    1188bf02 <js_object_get_field_by_name+0x10e2>
+    1188be03:	mov    -0x30(%rbp),%rax
+    1188be07:	add    $0x14,%rax
+    1188be0b:	movzbl (%rax),%eax
+    1188be0e:	cmp    $0x68,%eax
+    1188be11:	je     1188becf <js_object_get_field_by_name+0x10af>
+    1188be17:	cmp    $0x61,%eax
+    1188be1a:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188be20:	mov    -0x30(%rbp),%rax
+    1188be24:	cmpb   $0x64,0x15(%rax)
+    1188be28:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188be2e:	mov    -0x30(%rbp),%rax
+    1188be32:	cmpb   $0x64,0x16(%rax)
+    1188be36:	jmp    1188bee5 <js_object_get_field_by_name+0x10c5>
+    1188be3b:	lea    -0x58(%rbp),%rdi
+    1188be3f:	lea    0x14(%r12),%rsi
+    1188be44:	call   *0x3a91a26(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188be4a:	cmpb   $0x0,-0x58(%rbp)
+    1188be4e:	jne    1188b039 <js_object_get_field_by_name+0x219>
+    1188be54:	mov    -0x50(%rbp),%rdi
+    1188be58:	mov    -0x48(%rbp),%rdx
+    1188be5c:	mov    %rdx,%rsi
+    1188be5f:	call   114aa600 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime5array17subclass_elements10key_of_str>
+    1188be64:	cmp    $0x2,%eax
+    1188be67:	je     1188b039 <js_object_get_field_by_name+0x219>
+    1188be6d:	mov    (%r15),%ecx
+    1188be70:	cmp    $0x1,%eax
+    1188be73:	je     1188e615 <js_object_get_field_by_name+0x37f5>
+    1188be79:	cmp    %ecx,%edx
+    1188be7b:	jae    1188b039 <js_object_get_field_by_name+0x219>
+    1188be81:	mov    %edx,%eax
+    1188be83:	mov    0x8(%r15,%rax,8),%r15
+    1188be88:	movabs $0x7ffc000000000001,%rax
+    1188be92:	add    $0xf,%rax
+    1188be96:	cmp    %rax,%r15
+    1188be99:	je     1188b039 <js_object_get_field_by_name+0x219>
+    1188be9f:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188bea4:	cmpq   $0x100000,-0x30(%rbp)
+    1188beac:	jb     1188b620 <js_object_get_field_by_name+0x800>
+    1188beb2:	cmp    $0x200000,%r13
+    1188beb9:	jb     1188b620 <js_object_get_field_by_name+0x800>
+    1188bebf:	cmpb   $0x0,0x1b(%r13)
+    1188bec4:	jne    1188b21b <js_object_get_field_by_name+0x3fb>
+    1188beca:	jmp    1188b620 <js_object_get_field_by_name+0x800>
+    1188becf:	mov    -0x30(%rbp),%rax
+    1188bed3:	cmpb   $0x61,0x15(%rax)
+    1188bed7:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bedd:	mov    -0x30(%rbp),%rax
+    1188bee1:	cmpb   $0x73,0x16(%rax)
+    1188bee5:	lea    0x2a73c40(%rip),%rbx        # 142ffb2c <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x64c>
+    1188beec:	je     1188bf0b <js_object_get_field_by_name+0x10eb>
+    1188beee:	jmp    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bef0:	mov    -0x30(%rbp),%rax
+    1188bef4:	cmpb   $0x61,0x15(%rax)
+    1188bef8:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188befa:	mov    -0x30(%rbp),%rax
+    1188befe:	cmpb   $0x73,0x16(%rax)
+    1188bf02:	lea    0x2a73c1c(%rip),%rbx        # 142ffb25 <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x645>
+    1188bf09:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bf0b:	mov    %r14,%rdi
+    1188bf0e:	mov    -0x30(%rbp),%rsi
+    1188bf12:	call   1167f9a0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object10object_ops10keys_array15own_key_present>
+    1188bf17:	test   %al,%al
+    1188bf19:	jne    1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bf1b:	lea    -0x58(%rbp),%rdi
+    1188bf1f:	mov    -0x30(%rbp),%rax
+    1188bf23:	lea    0x14(%rax),%rsi
+    1188bf27:	mov    %r15,%rdx
+    1188bf2a:	call   *0x3a91940(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188bf30:	cmpl   $0x1,-0x58(%rbp)
+    1188bf34:	je     1188bf60 <js_object_get_field_by_name+0x1140>
+    1188bf36:	mov    -0x50(%rbp),%rdx
+    1188bf3a:	mov    -0x48(%rbp),%rcx
+    1188bf3e:	mov    $0x7,%esi
+    1188bf43:	mov    %rbx,%rdi
+    1188bf46:	call   11560950 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object23collection_proto_thunks29collection_proto_method_value>
+    1188bf4b:	cmp    $0x1,%rax
+    1188bf4f:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188bf55:	data16 cs nopw 0x0(%rax,%rax,1)
+    1188bf60:	lea    0x54e8739(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188bf67:	mov    (%rax,%r13,8),%rax
+    1188bf6b:	test   %rax,-0x70(%rbp)
+    1188bf6f:	je     1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bf75:	mov    %r12,%rax
+    1188bf78:	shr    $0x2c,%rax
+    1188bf7c:	mov    %r12,%rcx
+    1188bf7f:	shr    $0x32,%rcx
+    1188bf83:	and    $0xf,%ecx
+    1188bf86:	lea    0x54e8713(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188bf8d:	mov    (%rdx,%rcx,8),%rcx
+    1188bf91:	bt     %rax,%rcx
+    1188bf95:	jae    1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bf97:	mov    %r12,%rax
+    1188bf9a:	shr    $0x28,%rax
+    1188bf9e:	and    $0xf,%eax
+    1188bfa1:	lea    0x54e86f8(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188bfa8:	mov    (%rcx,%rax,8),%rax
+    1188bfac:	mov    -0x80(%rbp),%rcx
+    1188bfb0:	shr    %cl,%rax
+    1188bfb3:	test   %r14,%r14
+    1188bfb6:	je     1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bfb8:	test   $0x1,%al
+    1188bfba:	je     1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bfbc:	movabs $0xffff800000000000,%rcx
+    1188bfc6:	lea    (%r14,%rcx,1),%rax
+    1188bfca:	add    $0x1000,%rcx
+    1188bfd1:	cmp    %rcx,%rax
+    1188bfd4:	jb     1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bfd6:	lea    -0x8(%r14),%rbx
+    1188bfda:	mov    %rbx,%rdi
+    1188bfdd:	call   *0x3a9000d(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188bfe3:	test   %al,%al
+    1188bfe5:	je     1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bfe7:	cmpb   $0xf,(%rbx)
+    1188bfea:	jne    1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bfec:	movabs $0x5045525259484e44,%rax
+    1188bff6:	cmp    %rax,(%r14)
+    1188bff9:	jne    1188c010 <js_object_get_field_by_name+0x11f0>
+    1188bffb:	testb  $0x1,0x1c(%r14)
+    1188c000:	je     1188c010 <js_object_get_field_by_name+0x11f0>
+    1188c002:	cmpb   $0x0,0x1b(%r14)
+    1188c007:	je     1188c120 <js_object_get_field_by_name+0x1300>
+    1188c00d:	nopl   (%rax)
+    1188c010:	mov    %r14,%rax
+    1188c013:	movabs $0xffffffffffff,%rcx
+    1188c01d:	and    %rcx,%rax
+    1188c020:	cmp    $0x100000,%rax
+    1188c026:	jb     1188c120 <js_object_get_field_by_name+0x1300>
+    1188c02c:	movabs $0x800000000000,%rcx
+    1188c036:	cmp    %rcx,%rax
+    1188c039:	jae    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c03f:	cmpb   $0x2,-0x8(%rax)
+    1188c043:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c049:	mov    (%rax),%r15d
+    1188c04c:	lea    0xffd9(%r15),%eax
+    1188c053:	cmp    $0x4,%eax
+    1188c056:	jae    1188c0e6 <js_object_get_field_by_name+0x12c6>
+    1188c05c:	mov    -0x30(%rbp),%rax
+    1188c060:	mov    0x4(%rax),%edx
+    1188c063:	lea    -0x58(%rbp),%rdi
+    1188c067:	lea    0x14(%rax),%rsi
+    1188c06b:	call   *0x3a917ff(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188c071:	cmpl   $0x1,-0x58(%rbp)
+    1188c075:	je     1188c120 <js_object_get_field_by_name+0x1300>
+    1188c07b:	mov    -0x50(%rbp),%rax
+    1188c07f:	mov    %rax,-0x98(%rbp)
+    1188c086:	mov    -0x48(%rbp),%rbx
+    1188c08a:	mov    %r14,%rdi
+    1188c08d:	mov    -0x30(%rbp),%rsi
+    1188c091:	call   1167f9a0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object10object_ops10keys_array15own_key_present>
+    1188c096:	test   %al,%al
+    1188c098:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c09e:	cmp    $0xffff002a,%r15d
+    1188c0a5:	je     1188cb4c <js_object_get_field_by_name+0x1d2c>
+    1188c0ab:	cmp    $0xffff0029,%r15d
+    1188c0b2:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c0b4:	cmp    $0x5,%rbx
+    1188c0b8:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c0ba:	mov    -0x98(%rbp),%rdx
+    1188c0c1:	mov    (%rdx),%eax
+    1188c0c3:	mov    $0x65726564,%ecx
+    1188c0c8:	xor    %ecx,%eax
+    1188c0ca:	movzbl 0x4(%rdx),%ecx
+    1188c0ce:	xor    $0x66,%ecx
+    1188c0d1:	or     %eax,%ecx
+    1188c0d3:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c0d5:	mov    $0x7,%esi
+    1188c0da:	lea    0x2ab3274(%rip),%rdi        # 1433f355 <anon.b37f594bd5826585f7e5082f302a037e.10935.llvm.4573768808118376784+0x3b4>
+    1188c0e1:	jmp    1188d0ae <js_object_get_field_by_name+0x228e>
+    1188c0e6:	mov    $0x40,%ebx
+    1188c0eb:	nopl   0x0(%rax,%rax,1)
+    1188c0f0:	mov    %r15d,%edi
+    1188c0f3:	call   115528f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object19class_meta_registry19get_parent_class_id.llvm.4573768808118376784>
+    1188c0f8:	cmp    $0x1,%eax
+    1188c0fb:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188c0fd:	mov    %edx,%r15d
+    1188c100:	cmp    $0xffff002d,%edx
+    1188c106:	je     1188c94d <js_object_get_field_by_name+0x1b2d>
+    1188c10c:	cmp    $0xffff002c,%r15d
+    1188c113:	je     1188c958 <js_object_get_field_by_name+0x1b38>
+    1188c119:	dec    %ebx
+    1188c11b:	jne    1188c0f0 <js_object_get_field_by_name+0x12d0>
+    1188c11d:	nopl   (%rax)
+    1188c120:	lea    0x54e8579(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188c127:	mov    (%rax,%r13,8),%rax
+    1188c12b:	test   %rax,-0x70(%rbp)
+    1188c12f:	je     1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c135:	mov    %r12,%rax
+    1188c138:	shr    $0x2c,%rax
+    1188c13c:	mov    %r12,%rcx
+    1188c13f:	shr    $0x32,%rcx
+    1188c143:	and    $0xf,%ecx
+    1188c146:	lea    0x54e8553(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188c14d:	mov    (%rdx,%rcx,8),%rcx
+    1188c151:	bt     %rax,%rcx
+    1188c155:	jae    1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c157:	mov    %r12,%rax
+    1188c15a:	shr    $0x28,%rax
+    1188c15e:	and    $0xf,%eax
+    1188c161:	lea    0x54e8538(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188c168:	mov    (%rcx,%rax,8),%rax
+    1188c16c:	mov    -0x80(%rbp),%rcx
+    1188c170:	shr    %cl,%rax
+    1188c173:	test   %r14,%r14
+    1188c176:	je     1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c178:	test   $0x1,%al
+    1188c17a:	je     1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c17c:	movabs $0xffff800000000000,%rcx
+    1188c186:	lea    (%r14,%rcx,1),%rax
+    1188c18a:	add    $0x1000,%rcx
+    1188c191:	cmp    %rcx,%rax
+    1188c194:	jb     1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c196:	lea    -0x8(%r14),%rbx
+    1188c19a:	mov    %rbx,%rdi
+    1188c19d:	call   *0x3a8fe4d(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188c1a3:	test   %al,%al
+    1188c1a5:	je     1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c1a7:	cmpb   $0xf,(%rbx)
+    1188c1aa:	jne    1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c1ac:	movabs $0x5045525259484e44,%rax
+    1188c1b6:	cmp    %rax,(%r14)
+    1188c1b9:	jne    1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c1bb:	testb  $0x1,0x1c(%r14)
+    1188c1c0:	je     1188c1d0 <js_object_get_field_by_name+0x13b0>
+    1188c1c2:	cmpb   $0x0,0x1b(%r14)
+    1188c1c7:	je     1188c340 <js_object_get_field_by_name+0x1520>
+    1188c1cd:	nopl   (%rax)
+    1188c1d0:	mov    -0x30(%rbp),%rax
+    1188c1d4:	mov    0x4(%rax),%edx
+    1188c1d7:	lea    -0x58(%rbp),%rdi
+    1188c1db:	lea    0x14(%rax),%rsi
+    1188c1df:	call   *0x3a9168b(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188c1e5:	cmpb   $0x0,-0x58(%rbp)
+    1188c1e9:	mov    -0x50(%rbp),%rbx
+    1188c1ed:	mov    $0x1,%eax
+    1188c1f2:	cmovne %rax,%rbx
+    1188c1f6:	mov    -0x48(%rbp),%r15
+    1188c1fa:	mov    $0x0,%eax
+    1188c1ff:	cmovne %rax,%r15
+    1188c203:	cmp    $0x7,%r15
+    1188c207:	je     1188c241 <js_object_get_field_by_name+0x1421>
+    1188c209:	cmp    $0x5,%r15
+    1188c20d:	je     1188c227 <js_object_get_field_by_name+0x1407>
+    1188c20f:	cmp    $0x4,%r15
+    1188c213:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c219:	cmpl   $0x6e656874,(%rbx)
+    1188c21f:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c225:	jmp    1188c25c <js_object_get_field_by_name+0x143c>
+    1188c227:	mov    (%rbx),%eax
+    1188c229:	mov    $0x63746163,%ecx
+    1188c22e:	xor    %ecx,%eax
+    1188c230:	movzbl 0x4(%rbx),%ecx
+    1188c234:	xor    $0x68,%ecx
+    1188c237:	or     %eax,%ecx
+    1188c239:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c23f:	jmp    1188c25c <js_object_get_field_by_name+0x143c>
+    1188c241:	mov    (%rbx),%eax
+    1188c243:	mov    $0x616e6966,%ecx
+    1188c248:	xor    %ecx,%eax
+    1188c24a:	mov    0x3(%rbx),%ecx
+    1188c24d:	mov    $0x796c6c61,%edx
+    1188c252:	xor    %edx,%ecx
+    1188c254:	or     %eax,%ecx
+    1188c256:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c25c:	mov    %r14,%rdi
+    1188c25f:	mov    -0x30(%rbp),%rsi
+    1188c263:	call   1167f9a0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object10object_ops10keys_array15own_key_present>
+    1188c268:	test   %al,%al
+    1188c26a:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c270:	movzbl 0x55691d1(%rip),%eax        # 16df5448 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7promise8subclass21PROMISE_SUBCLASS_EVER.0>
+    1188c277:	test   %al,%al
+    1188c279:	je     1188c340 <js_object_get_field_by_name+0x1520>
+    1188c27f:	mov    %r14,%rax
+    1188c282:	movabs $0xffffffffffff,%rcx
+    1188c28c:	and    %rcx,%rax
+    1188c28f:	movabs $0x7ffd000000000000,%rcx
+    1188c299:	or     %rcx,%rax
+    1188c29c:	movq   %rax,%xmm0
+    1188c2a1:	call   11543720 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object16map_set_subclass19instance_object_ptr.llvm.4573768808118376784>
+    1188c2a6:	cmp    $0x1,%rax
+    1188c2aa:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c2b0:	lea    0x2ab61f0(%rip),%rdi        # 143424a7 <anon.b37f594bd5826585f7e5082f302a037e.11886.llvm.4573768808118376784+0x478>
+    1188c2b7:	mov    $0x19,%esi
+    1188c2bc:	mov    %rdx,-0x98(%rbp)
+    1188c2c3:	mov    $0x19,%edx
+    1188c2c8:	call   *0x3a8ffda(%rip)        # 1531c2a8 <_GLOBAL_OFFSET_TABLE_+0x5228>
+    1188c2ce:	mov    -0x98(%rbp),%rdi
+    1188c2d5:	mov    %rax,%rsi
+    1188c2d8:	call   *0x3aa4c02(%rip)        # 15330ee0 <_GLOBAL_OFFSET_TABLE_+0x19e60>
+    1188c2de:	movq   %xmm0,%rax
+    1188c2e3:	mov    %rax,%rcx
+    1188c2e6:	movabs $0xffff000000000000,%rdx
+    1188c2f0:	and    %rdx,%rcx
+    1188c2f3:	movabs $0x7ffd000000000000,%rdx
+    1188c2fd:	cmp    %rdx,%rcx
+    1188c300:	jne    1188c340 <js_object_get_field_by_name+0x1520>
+    1188c302:	movabs $0xffffffffffff,%rcx
+    1188c30c:	add    $0xfffffffffffffff9,%rcx
+    1188c310:	and    %rcx,%rax
+    1188c313:	cmp    $0x1008,%rax
+    1188c319:	jb     1188c340 <js_object_get_field_by_name+0x1520>
+    1188c31b:	call   *0x3a93fa7(%rip)        # 153202c8 <_GLOBAL_OFFSET_TABLE_+0x9248>
+    1188c321:	test   %eax,%eax
+    1188c323:	je     1188c340 <js_object_get_field_by_name+0x1520>
+    1188c325:	mov    %rbx,%rsi
+    1188c328:	mov    %r15,%rdx
+    1188c32b:	call   *0x3a951b7(%rip)        # 153214e8 <_GLOBAL_OFFSET_TABLE_+0xa468>
+    1188c331:	cmp    $0x1,%rax
+    1188c335:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188c33b:	nopl   0x0(%rax,%rax,1)
+    1188c340:	lea    0x54e8359(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188c347:	mov    (%rax,%r13,8),%rax
+    1188c34b:	test   %rax,-0x70(%rbp)
+    1188c34f:	je     1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c355:	mov    %r12,%rax
+    1188c358:	shr    $0x2c,%rax
+    1188c35c:	mov    %r12,%rcx
+    1188c35f:	shr    $0x32,%rcx
+    1188c363:	and    $0xf,%ecx
+    1188c366:	lea    0x54e8333(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188c36d:	mov    (%rdx,%rcx,8),%rcx
+    1188c371:	bt     %rax,%rcx
+    1188c375:	jae    1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c377:	shr    $0x28,%r12
+    1188c37b:	and    $0xf,%r12d
+    1188c37f:	lea    0x54e831a(%rip),%rax        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188c386:	mov    (%rax,%r12,8),%rax
+    1188c38a:	mov    -0x80(%rbp),%rcx
+    1188c38e:	shr    %cl,%rax
+    1188c391:	test   %r14,%r14
+    1188c394:	je     1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c396:	test   $0x1,%al
+    1188c398:	je     1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c39a:	movabs $0xffff800000000000,%rcx
+    1188c3a4:	lea    (%r14,%rcx,1),%rax
+    1188c3a8:	add    $0x1000,%rcx
+    1188c3af:	cmp    %rcx,%rax
+    1188c3b2:	jb     1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c3b4:	lea    -0x8(%r14),%rbx
+    1188c3b8:	mov    %rbx,%rdi
+    1188c3bb:	call   *0x3a8fc2f(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188c3c1:	test   %al,%al
+    1188c3c3:	je     1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c3c5:	cmpb   $0xf,(%rbx)
+    1188c3c8:	jne    1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c3ca:	movabs $0x5045525259484e44,%rax
+    1188c3d4:	cmp    %rax,(%r14)
+    1188c3d7:	jne    1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c3d9:	testb  $0x1,0x1c(%r14)
+    1188c3de:	je     1188c3f0 <js_object_get_field_by_name+0x15d0>
+    1188c3e0:	cmpb   $0x0,0x1b(%r14)
+    1188c3e5:	je     1188c401 <js_object_get_field_by_name+0x15e1>
+    1188c3e7:	nopw   0x0(%rax,%rax,1)
+    1188c3f0:	mov    %r14,%rdi
+    1188c3f3:	call   *0x3a8f5bf(%rip)        # 1531b9b8 <_GLOBAL_OFFSET_TABLE_+0x4938>
+    1188c3f9:	test   %al,%al
+    1188c3fb:	jne    1188da6f <js_object_get_field_by_name+0x2c4f>
+    1188c401:	movq   %r14,%xmm0
+    1188c406:	movdqa %xmm0,-0x70(%rbp)
+    1188c40b:	call   1122d8d0 <_RNvNtCscI5nJwKNRh4_13perry_runtime16typedarray_props27typed_array_addr_from_value>
+    1188c410:	test   $0x1,%al
+    1188c412:	mov    -0x30(%rbp),%r12
+    1188c416:	je     1188ccdb <js_object_get_field_by_name+0x1ebb>
+    1188c41c:	mov    %rdx,%r13
+    1188c41f:	mov    0x4(%r12),%ebx
+    1188c424:	mov    %rdx,%rdi
+    1188c427:	lea    0x14(%r12),%rsi
+    1188c42c:	mov    %rbx,%rdx
+    1188c42f:	call   116a69c0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set10crypto_key25crypto_key_property_value>
+    1188c434:	test   $0x1,%al
+    1188c436:	jne    1188da0b <js_object_get_field_by_name+0x2beb>
+    1188c43c:	cmp    $0x10000,%r12
+    1188c443:	jb     1188c540 <js_object_get_field_by_name+0x1720>
+    1188c449:	test   %r13,%r13
+    1188c44c:	je     1188c540 <js_object_get_field_by_name+0x1720>
+    1188c452:	mov    0x4(%r12),%r15d
+    1188c457:	cmp    %r15d,(%r12)
+    1188c45b:	jne    1188c472 <js_object_get_field_by_name+0x1652>
+    1188c45d:	lea    0x14(%r12),%rdx
+    1188c462:	lea    0x54e7af7(%rip),%rax        # 16d73f60 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray27TYPED_ARRAY_EVER_REGISTERED>
+    1188c469:	movzbl (%rax),%eax
+    1188c46c:	test   %al,%al
+    1188c46e:	jne    1188c4a4 <js_object_get_field_by_name+0x1684>
+    1188c470:	jmp    1188c4dc <js_object_get_field_by_name+0x16bc>
+    1188c472:	lea    -0x58(%rbp),%rdi
+    1188c476:	lea    0x14(%r12),%rsi
+    1188c47b:	mov    %r15,%rdx
+    1188c47e:	call   *0x3a913ec(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188c484:	cmpb   $0x0,-0x58(%rbp)
+    1188c488:	jne    1188c540 <js_object_get_field_by_name+0x1720>
+    1188c48e:	mov    -0x50(%rbp),%rdx
+    1188c492:	mov    -0x48(%rbp),%r15
+    1188c496:	lea    0x54e7ac3(%rip),%rax        # 16d73f60 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray27TYPED_ARRAY_EVER_REGISTERED>
+    1188c49d:	movzbl (%rax),%eax
+    1188c4a0:	test   %al,%al
+    1188c4a2:	je     1188c4dc <js_object_get_field_by_name+0x16bc>
+    1188c4a4:	lea    0x3ac2b1d(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188c4ab:	mov    (%rax),%rax
+    1188c4ae:	cmp    %rax,%r13
+    1188c4b1:	jb     1188c4dc <js_object_get_field_by_name+0x16bc>
+    1188c4b3:	lea    0x3ac2b0e(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188c4ba:	mov    0x8(%rax),%rax
+    1188c4be:	cmp    %rax,%r13
+    1188c4c1:	ja     1188c4dc <js_object_get_field_by_name+0x16bc>
+    1188c4c3:	mov    %r13,%rdi
+    1188c4c6:	mov    %rdx,-0x80(%rbp)
+    1188c4ca:	call   *0x3aa2780(%rip)        # 1532ec50 <_GLOBAL_OFFSET_TABLE_+0x17bd0>
+    1188c4d0:	mov    -0x80(%rbp),%rdx
+    1188c4d4:	test   $0x1,%al
+    1188c4d6:	je     1188c4dc <js_object_get_field_by_name+0x16bc>
+    1188c4d8:	xor    %ecx,%ecx
+    1188c4da:	jmp    1188c520 <js_object_get_field_by_name+0x1700>
+    1188c4dc:	lea    0x55687b8(%rip),%rax        # 16df4c9b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header22UINT8ARRAY_EVER_MARKED>
+    1188c4e3:	movzbl (%rax),%eax
+    1188c4e6:	test   %al,%al
+    1188c4e8:	je     1188c540 <js_object_get_field_by_name+0x1720>
+    1188c4ea:	lea    0x3ac35df(%rip),%rax        # 1534fad0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header22UINT8ARRAY_ADDR_WINDOW>
+    1188c4f1:	mov    (%rax),%rax
+    1188c4f4:	cmp    %rax,%r13
+    1188c4f7:	jb     1188c540 <js_object_get_field_by_name+0x1720>
+    1188c4f9:	lea    0x3ac35d0(%rip),%rax        # 1534fad0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header22UINT8ARRAY_ADDR_WINDOW>
+    1188c500:	mov    0x8(%rax),%rax
+    1188c504:	cmp    %rax,%r13
+    1188c507:	ja     1188c540 <js_object_get_field_by_name+0x1720>
+    1188c509:	mov    %r13,%rdi
+    1188c50c:	mov    %rdx,-0x80(%rbp)
+    1188c510:	call   *0x3a9515a(%rip)        # 15321670 <_GLOBAL_OFFSET_TABLE_+0xa5f0>
+    1188c516:	mov    -0x80(%rbp),%rdx
+    1188c51a:	mov    $0x1,%cl
+    1188c51c:	test   %al,%al
+    1188c51e:	je     1188c540 <js_object_get_field_by_name+0x1720>
+    1188c520:	movzbl %cl,%esi
+    1188c523:	mov    %r13,%rdi
+    1188c526:	mov    %r15,%rcx
+    1188c529:	call   11232130 <_RNvNtCscI5nJwKNRh4_13perry_runtime16typedarray_props42typed_array_get_property_value_by_name_for>
+    1188c52e:	cmp    $0x1,%rax
+    1188c532:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188c538:	nopl   0x0(%rax,%rax,1)
+    1188c540:	lea    0x54e7a19(%rip),%rax        # 16d73f60 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray27TYPED_ARRAY_EVER_REGISTERED>
+    1188c547:	movzbl (%rax),%eax
+    1188c54a:	test   %al,%al
+    1188c54c:	je     1188c620 <js_object_get_field_by_name+0x1800>
+    1188c552:	lea    0x3ac2a6f(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188c559:	mov    (%rax),%rax
+    1188c55c:	cmp    %rax,%r13
+    1188c55f:	jb     1188c620 <js_object_get_field_by_name+0x1800>
+    1188c565:	lea    0x3ac2a5c(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188c56c:	mov    0x8(%rax),%rax
+    1188c570:	cmp    %rax,%r13
+    1188c573:	ja     1188c620 <js_object_get_field_by_name+0x1800>
+    1188c579:	mov    %r13,%rdi
+    1188c57c:	call   *0x3aa26ce(%rip)        # 1532ec50 <_GLOBAL_OFFSET_TABLE_+0x17bd0>
+    1188c582:	test   $0x1,%al
+    1188c584:	je     1188c620 <js_object_get_field_by_name+0x1800>
+    1188c58a:	mov    $0x8,%r15d
+    1188c590:	cmp    $0xb,%dl
+    1188c593:	ja     1188c5a4 <js_object_get_field_by_name+0x1784>
+    1188c595:	movzbl %dl,%eax
+    1188c598:	lea    0x2ac7769(%rip),%rcx        # 14353d08 <anon.b37f594bd5826585f7e5082f302a037e.16456.llvm.4573768808118376784+0x833>
+    1188c59f:	movzbl (%rax,%rcx,1),%r15d
+    1188c5a4:	mov    %dl,-0x80(%rbp)
+    1188c5a7:	add    $0xfffffffa,%ebx
+    1188c5aa:	cmp    $0xb,%ebx
+    1188c5ad:	ja     1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c5b3:	lea    0x2a6f266(%rip),%rcx        # 142fb820 <anon.b37f594bd5826585f7e5082f302a037e.11885.llvm.4573768808118376784+0x10204>
+    1188c5ba:	movslq (%rcx,%rbx,4),%rax
+    1188c5be:	add    %rcx,%rax
+    1188c5c1:	jmp    *%rax
+    1188c5c3:	lea    0x14(%r12),%rax
+    1188c5c8:	movzbl (%rax),%eax
+    1188c5cb:	cmp    $0x62,%eax
+    1188c5ce:	je     1188cb90 <js_object_get_field_by_name+0x1d70>
+    1188c5d4:	cmp    $0x6c,%eax
+    1188c5d7:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c5dd:	cmpb   $0x65,0x15(%r12)
+    1188c5e3:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c5e9:	cmpb   $0x6e,0x16(%r12)
+    1188c5ef:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c5f5:	cmpb   $0x67,0x17(%r12)
+    1188c5fb:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c601:	cmpb   $0x74,0x18(%r12)
+    1188c607:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c60d:	cmpb   $0x68,0x19(%r12)
+    1188c613:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c619:	jmp    1188ea2d <js_object_get_field_by_name+0x3c0d>
+    1188c61e:	xchg   %ax,%ax
+    1188c620:	add    $0xfffffffa,%ebx
+    1188c623:	cmp    $0xb,%ebx
+    1188c626:	ja     1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c62c:	lea    0x2a6f21d(%rip),%rcx        # 142fb850 <anon.b37f594bd5826585f7e5082f302a037e.11885.llvm.4573768808118376784+0x10234>
+    1188c633:	movslq (%rcx,%rbx,4),%rax
+    1188c637:	add    %rcx,%rax
+    1188c63a:	jmp    *%rax
+    1188c63c:	lea    0x14(%r12),%rax
+    1188c641:	movzbl (%rax),%eax
+    1188c644:	add    $0xffffff9e,%eax
+    1188c647:	cmp    $0xe,%eax
+    1188c64a:	ja     1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c650:	lea    0x2a6f229(%rip),%rcx        # 142fb880 <anon.b37f594bd5826585f7e5082f302a037e.11885.llvm.4573768808118376784+0x10264>
+    1188c657:	movslq (%rcx,%rax,4),%rax
+    1188c65b:	add    %rcx,%rax
+    1188c65e:	jmp    *%rax
+    1188c660:	cmpb   $0x75,0x15(%r12)
+    1188c666:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c66c:	cmpb   $0x66,0x16(%r12)
+    1188c672:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c678:	cmpb   $0x66,0x17(%r12)
+    1188c67e:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c684:	cmpb   $0x65,0x18(%r12)
+    1188c68a:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c690:	cmpb   $0x72,0x19(%r12)
+    1188c696:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c69c:	jmp    1188e624 <js_object_get_field_by_name+0x3804>
+    1188c6a1:	lea    0x14(%r12),%rax
+    1188c6a6:	cmpb   $0x63,(%rax)
+    1188c6a9:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6af:	cmpb   $0x6f,0x15(%r12)
+    1188c6b5:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6bb:	cmpb   $0x6e,0x16(%r12)
+    1188c6c1:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6c7:	cmpb   $0x73,0x17(%r12)
+    1188c6cd:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6d3:	cmpb   $0x74,0x18(%r12)
+    1188c6d9:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6df:	cmpb   $0x72,0x19(%r12)
+    1188c6e5:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6eb:	cmpb   $0x75,0x1a(%r12)
+    1188c6f1:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c6f7:	cmpb   $0x63,0x1b(%r12)
+    1188c6fd:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c703:	cmpb   $0x74,0x1c(%r12)
+    1188c709:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c70f:	cmpb   $0x6f,0x1d(%r12)
+    1188c715:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c71b:	cmpb   $0x72,0x1e(%r12)
+    1188c721:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c727:	jmp    1188ea8e <js_object_get_field_by_name+0x3c6e>
+    1188c72c:	lea    0x14(%r12),%rax
+    1188c731:	cmpb   $0x62,(%rax)
+    1188c734:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c73a:	cmpb   $0x79,0x15(%r12)
+    1188c740:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c746:	cmpb   $0x74,0x16(%r12)
+    1188c74c:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c752:	cmpb   $0x65,0x17(%r12)
+    1188c758:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c75e:	movzbl 0x18(%r12),%eax
+    1188c764:	cmp    $0x4f,%eax
+    1188c767:	je     1188cbd1 <js_object_get_field_by_name+0x1db1>
+    1188c76d:	cmp    $0x4c,%eax
+    1188c770:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c776:	cmpb   $0x65,0x19(%r12)
+    1188c77c:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c782:	cmpb   $0x6e,0x1a(%r12)
+    1188c788:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c78e:	cmpb   $0x67,0x1b(%r12)
+    1188c794:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c79a:	cmpb   $0x74,0x1c(%r12)
+    1188c7a0:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7a6:	cmpb   $0x68,0x1d(%r12)
+    1188c7ac:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7b2:	jmp    1188e7e4 <js_object_get_field_by_name+0x39c4>
+    1188c7b7:	lea    0x14(%r12),%rax
+    1188c7bc:	cmpb   $0x42,(%rax)
+    1188c7bf:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7c5:	cmpb   $0x59,0x15(%r12)
+    1188c7cb:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7d1:	cmpb   $0x54,0x16(%r12)
+    1188c7d7:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7dd:	cmpb   $0x45,0x17(%r12)
+    1188c7e3:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7e9:	cmpb   $0x53,0x18(%r12)
+    1188c7ef:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c7f5:	cmpb   $0x5f,0x19(%r12)
+    1188c7fb:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c801:	cmpb   $0x50,0x1a(%r12)
+    1188c807:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c80d:	cmpb   $0x45,0x1b(%r12)
+    1188c813:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c819:	cmpb   $0x52,0x1c(%r12)
+    1188c81f:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c825:	cmpb   $0x5f,0x1d(%r12)
+    1188c82b:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c831:	cmpb   $0x45,0x1e(%r12)
+    1188c837:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c83d:	cmpb   $0x4c,0x1f(%r12)
+    1188c843:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c849:	cmpb   $0x45,0x20(%r12)
+    1188c84f:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c855:	cmpb   $0x4d,0x21(%r12)
+    1188c85b:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c861:	cmpb   $0x45,0x22(%r12)
+    1188c867:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c86d:	cmpb   $0x4e,0x23(%r12)
+    1188c873:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c879:	cmpb   $0x54,0x24(%r12)
+    1188c87f:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c885:	jmp    1188ebfc <js_object_get_field_by_name+0x3ddc>
+    1188c88a:	cmpb   $0x66,0x15(%r12)
+    1188c890:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c896:	cmpb   $0x66,0x16(%r12)
+    1188c89c:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8a2:	cmpb   $0x73,0x17(%r12)
+    1188c8a8:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8ae:	cmpb   $0x65,0x18(%r12)
+    1188c8b4:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8ba:	cmpb   $0x74,0x19(%r12)
+    1188c8c0:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8c6:	jmp    1188e7b2 <js_object_get_field_by_name+0x3992>
+    1188c8cb:	cmpb   $0x65,0x15(%r12)
+    1188c8d1:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8d7:	cmpb   $0x6e,0x16(%r12)
+    1188c8dd:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8e3:	cmpb   $0x67,0x17(%r12)
+    1188c8e9:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8ef:	cmpb   $0x74,0x18(%r12)
+    1188c8f5:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c8fb:	cmpb   $0x68,0x19(%r12)
+    1188c901:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c907:	jmp    1188e7ca <js_object_get_field_by_name+0x39aa>
+    1188c90c:	cmpb   $0x61,0x15(%r12)
+    1188c912:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c918:	cmpb   $0x72,0x16(%r12)
+    1188c91e:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c924:	cmpb   $0x65,0x17(%r12)
+    1188c92a:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c930:	cmpb   $0x6e,0x18(%r12)
+    1188c936:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c93c:	cmpb   $0x74,0x19(%r12)
+    1188c942:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188c948:	jmp    1188e624 <js_object_get_field_by_name+0x3804>
+    1188c94d:	mov    $0xffff0028,%r15d
+    1188c953:	jmp    1188c05c <js_object_get_field_by_name+0x123c>
+    1188c958:	mov    $0xffff0027,%r15d
+    1188c95e:	jmp    1188c05c <js_object_get_field_by_name+0x123c>
+    1188c963:	lea    0x14(%r12),%rax
+    1188c968:	cmpb   $0x63,(%rax)
+    1188c96b:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c971:	cmpb   $0x6f,0x15(%r12)
+    1188c977:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c97d:	cmpb   $0x6e,0x16(%r12)
+    1188c983:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c989:	cmpb   $0x73,0x17(%r12)
+    1188c98f:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c995:	cmpb   $0x74,0x18(%r12)
+    1188c99b:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9a1:	cmpb   $0x72,0x19(%r12)
+    1188c9a7:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9ad:	cmpb   $0x75,0x1a(%r12)
+    1188c9b3:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9b9:	cmpb   $0x63,0x1b(%r12)
+    1188c9bf:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9c5:	cmpb   $0x74,0x1c(%r12)
+    1188c9cb:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9d1:	cmpb   $0x6f,0x1d(%r12)
+    1188c9d7:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9dd:	cmpb   $0x72,0x1e(%r12)
+    1188c9e3:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9e9:	jmp    1188eb9f <js_object_get_field_by_name+0x3d7f>
+    1188c9ee:	lea    0x14(%r12),%rax
+    1188c9f3:	cmpb   $0x62,(%rax)
+    1188c9f6:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188c9fc:	cmpb   $0x79,0x15(%r12)
+    1188ca02:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca08:	cmpb   $0x74,0x16(%r12)
+    1188ca0e:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca14:	cmpb   $0x65,0x17(%r12)
+    1188ca1a:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca20:	movzbl 0x18(%r12),%eax
+    1188ca26:	cmp    $0x4f,%eax
+    1188ca29:	je     1188d1c5 <js_object_get_field_by_name+0x23a5>
+    1188ca2f:	cmp    $0x4c,%eax
+    1188ca32:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca38:	cmpb   $0x65,0x19(%r12)
+    1188ca3e:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca44:	cmpb   $0x6e,0x1a(%r12)
+    1188ca4a:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca50:	cmpb   $0x67,0x1b(%r12)
+    1188ca56:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca5c:	cmpb   $0x74,0x1c(%r12)
+    1188ca62:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca68:	cmpb   $0x68,0x1d(%r12)
+    1188ca6e:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca74:	jmp    1188eb57 <js_object_get_field_by_name+0x3d37>
+    1188ca79:	lea    0x14(%r12),%rax
+    1188ca7e:	cmpb   $0x42,(%rax)
+    1188ca81:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca87:	cmpb   $0x59,0x15(%r12)
+    1188ca8d:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca93:	cmpb   $0x54,0x16(%r12)
+    1188ca99:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188ca9f:	cmpb   $0x45,0x17(%r12)
+    1188caa5:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188caab:	cmpb   $0x53,0x18(%r12)
+    1188cab1:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cab7:	cmpb   $0x5f,0x19(%r12)
+    1188cabd:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cac3:	cmpb   $0x50,0x1a(%r12)
+    1188cac9:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cacf:	cmpb   $0x45,0x1b(%r12)
+    1188cad5:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cadb:	cmpb   $0x52,0x1c(%r12)
+    1188cae1:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cae7:	cmpb   $0x5f,0x1d(%r12)
+    1188caed:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188caf3:	cmpb   $0x45,0x1e(%r12)
+    1188caf9:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188caff:	cmpb   $0x4c,0x1f(%r12)
+    1188cb05:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb0b:	cmpb   $0x45,0x20(%r12)
+    1188cb11:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb17:	cmpb   $0x4d,0x21(%r12)
+    1188cb1d:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb23:	cmpb   $0x45,0x22(%r12)
+    1188cb29:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb2f:	cmpb   $0x4e,0x23(%r12)
+    1188cb35:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb3b:	cmpb   $0x54,0x24(%r12)
+    1188cb41:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb47:	jmp    1188ec0b <js_object_get_field_by_name+0x3deb>
+    1188cb4c:	cmp    $0x8,%rbx
+    1188cb50:	je     1188d088 <js_object_get_field_by_name+0x2268>
+    1188cb56:	cmp    $0xa,%rbx
+    1188cb5a:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188cb60:	mov    -0x98(%rbp),%rdx
+    1188cb67:	mov    (%rdx),%rax
+    1188cb6a:	movabs $0x7473696765726e75,%rcx
+    1188cb74:	xor    %rcx,%rax
+    1188cb77:	movzwl 0x8(%rdx),%ecx
+    1188cb7b:	xor    $0x7265,%rcx
+    1188cb82:	or     %rax,%rcx
+    1188cb85:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188cb8b:	jmp    1188d0a2 <js_object_get_field_by_name+0x2282>
+    1188cb90:	cmpb   $0x75,0x15(%r12)
+    1188cb96:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cb9c:	cmpb   $0x66,0x16(%r12)
+    1188cba2:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cba8:	cmpb   $0x66,0x17(%r12)
+    1188cbae:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cbb4:	cmpb   $0x65,0x18(%r12)
+    1188cbba:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cbc0:	cmpb   $0x72,0x19(%r12)
+    1188cbc6:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188cbcc:	jmp    1188ea42 <js_object_get_field_by_name+0x3c22>
+    1188cbd1:	cmpb   $0x66,0x19(%r12)
+    1188cbd7:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188cbd9:	cmpb   $0x66,0x1a(%r12)
+    1188cbdf:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188cbe1:	cmpb   $0x73,0x1b(%r12)
+    1188cbe7:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188cbe9:	cmpb   $0x65,0x1c(%r12)
+    1188cbef:	jne    1188cc00 <js_object_get_field_by_name+0x1de0>
+    1188cbf1:	cmpb   $0x74,0x1d(%r12)
+    1188cbf7:	je     1188e7b2 <js_object_get_field_by_name+0x3992>
+    1188cbfd:	nopl   (%rax)
+    1188cc00:	mov    %r13,%rdi
+    1188cc03:	call   11537fb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain23object_static_prototype>
+    1188cc08:	test   $0x1,%al
+    1188cc0a:	je     1188cc50 <js_object_get_field_by_name+0x1e30>
+    1188cc0c:	movabs $0x7ffc000000000001,%rax
+    1188cc16:	inc    %rax
+    1188cc19:	cmp    %rax,%rdx
+    1188cc1c:	je     1188cccb <js_object_get_field_by_name+0x1eab>
+    1188cc22:	mov    %r13,%rdi
+    1188cc25:	call   11537fb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain23object_static_prototype>
+    1188cc2a:	cmp    $0x1,%rax
+    1188cc2e:	jne    1188cccb <js_object_get_field_by_name+0x1eab>
+    1188cc34:	mov    %r13,%rdi
+    1188cc37:	mov    %rdx,%rsi
+    1188cc3a:	mov    %r12,%rdx
+    1188cc3d:	call   11539180 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain38resolve_inherited_field_from_prototype>
+    1188cc42:	test   $0x1,%al
+    1188cc44:	je     1188cccb <js_object_get_field_by_name+0x1eab>
+    1188cc4a:	jmp    1188da0b <js_object_get_field_by_name+0x2beb>
+    1188cc4f:	nop
+    1188cc50:	mov    $0xa,%esi
+    1188cc55:	lea    0x2a72ed7(%rip),%rdi        # 142ffb33 <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x653>
+    1188cc5c:	call   *0x3a8aa2e(%rip)        # 15317690 <_GLOBAL_OFFSET_TABLE_+0x610>
+    1188cc62:	movq   %xmm0,%rdi
+    1188cc67:	mov    %rdi,%rax
+    1188cc6a:	movabs $0xffff000000000000,%rcx
+    1188cc74:	and    %rcx,%rax
+    1188cc77:	movabs $0x7ffc000000000001,%rsi
+    1188cc81:	movabs $0x7ffd000000000000,%rcx
+    1188cc8b:	cmp    %rcx,%rax
+    1188cc8e:	jne    1188ccb6 <js_object_get_field_by_name+0x1e96>
+    1188cc90:	movabs $0xffffffffffff,%rax
+    1188cc9a:	and    %rax,%rdi
+    1188cc9d:	je     1188ccb6 <js_object_get_field_by_name+0x1e96>
+    1188cc9f:	mov    $0x9,%edx
+    1188cca4:	lea    0x2a70f55(%rip),%rsi        # 142fdc00 <anon.b37f594bd5826585f7e5082f302a037e.837.llvm.4573768808118376784+0x21>
+    1188ccab:	call   *0x3a8c2cf(%rip)        # 15318f80 <_GLOBAL_OFFSET_TABLE_+0x1f00>
+    1188ccb1:	movq   %xmm0,%rsi
+    1188ccb6:	mov    %r13,%rdi
+    1188ccb9:	mov    %r12,%rdx
+    1188ccbc:	call   11539180 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain38resolve_inherited_field_from_prototype>
+    1188ccc1:	cmp    $0x1,%rax
+    1188ccc5:	je     1188da0b <js_object_get_field_by_name+0x2beb>
+    1188cccb:	mov    %r13,%rdi
+    1188ccce:	call   1150dba0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header13is_secret_key>
+    1188ccd3:	test   %al,%al
+    1188ccd5:	je     1188e184 <js_object_get_field_by_name+0x3364>
+    1188ccdb:	cmpq   $0x0,-0x40(%rbp)
+    1188cce0:	je     1188cd10 <js_object_get_field_by_name+0x1ef0>
+    1188cce2:	movabs $0x7ff8ffffffffffff,%rax
+    1188ccec:	cmp    %rax,%r14
+    1188ccef:	movabs $0xffffffffffff,%r15
+    1188ccf9:	movdqa -0x70(%rbp),%xmm0
+    1188ccfe:	jg     1188cd28 <js_object_get_field_by_name+0x1f08>
+    1188cd00:	jmp    1188d62f <js_object_get_field_by_name+0x280f>
+    1188cd05:	data16 cs nopw 0x0(%rax,%rax,1)
+    1188cd10:	test   %r14,%r14
+    1188cd13:	movabs $0xffffffffffff,%r15
+    1188cd1d:	movdqa -0x70(%rbp),%xmm0
+    1188cd22:	je     1188d62f <js_object_get_field_by_name+0x280f>
+    1188cd28:	mov    %r14,%rax
+    1188cd2b:	movabs $0xffff000000000000,%rcx
+    1188cd35:	and    %rcx,%rax
+    1188cd38:	movabs $0x7ff9000000000000,%rcx
+    1188cd42:	cmp    %rcx,%rax
+    1188cd45:	je     1188d4ed <js_object_get_field_by_name+0x26cd>
+    1188cd4b:	movabs $0x7fff000000000000,%rcx
+    1188cd55:	cmp    %rcx,%rax
+    1188cd58:	je     1188d4ed <js_object_get_field_by_name+0x26cd>
+    1188cd5e:	mov    %r14,%r13
+    1188cd61:	cmpq   $0x0,-0x40(%rbp)
+    1188cd66:	je     1188cd77 <js_object_get_field_by_name+0x1f57>
+    1188cd68:	cmpl   $0x7ffd,-0x40(%rbp)
+    1188cd6f:	jne    1188cdd0 <js_object_get_field_by_name+0x1fb0>
+    1188cd71:	mov    %r14,%r13
+    1188cd74:	and    %r15,%r13
+    1188cd77:	test   %r13,%r13
+    1188cd7a:	je     1188cdd0 <js_object_get_field_by_name+0x1fb0>
+    1188cd7c:	mov    0x4(%r12),%edx
+    1188cd81:	lea    -0x58(%rbp),%rdi
+    1188cd85:	lea    0x14(%r12),%rsi
+    1188cd8a:	call   *0x3a90ae0(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188cd90:	cmpb   $0x0,-0x58(%rbp)
+    1188cd94:	jne    1188cdb1 <js_object_get_field_by_name+0x1f91>
+    1188cd96:	mov    -0x50(%rbp),%rsi
+    1188cd9a:	mov    -0x48(%rbp),%rdx
+    1188cd9e:	mov    %r13,%rdi
+    1188cda1:	call   *0x3a9def1(%rip)        # 1532ac98 <_GLOBAL_OFFSET_TABLE_+0x13c18>
+    1188cda7:	cmp    $0x1,%rax
+    1188cdab:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188cdb1:	cmp    $0x100000,%r13
+    1188cdb8:	movdqa -0x70(%rbp),%xmm0
+    1188cdbd:	jae    1188cdd3 <js_object_get_field_by_name+0x1fb3>
+    1188cdbf:	jmp    1188dace <js_object_get_field_by_name+0x2cae>
+    1188cdc4:	data16 data16 cs nopw 0x0(%rax,%rax,1)
+    1188cdd0:	xor    %r13d,%r13d
+    1188cdd3:	mov    %r13,%rax
+    1188cdd6:	shr    $0x3,%rax
+    1188cdda:	movabs $0x9e3779b97f4a7c15,%rcx
+    1188cde4:	imul   %rcx,%rax
+    1188cde8:	mov    %rax,%rcx
+    1188cdeb:	shr    $0x36,%rcx
+    1188cdef:	mov    %rax,%rdx
+    1188cdf2:	shr    $0x3c,%rdx
+    1188cdf6:	lea    0x54e78a3(%rip),%rsi        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188cdfd:	mov    (%rsi,%rdx,8),%rdx
+    1188ce01:	bt     %rcx,%rdx
+    1188ce05:	jae    1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce0b:	mov    %rax,%rcx
+    1188ce0e:	shr    $0x2c,%rcx
+    1188ce12:	mov    %rax,%rdx
+    1188ce15:	shr    $0x32,%rdx
+    1188ce19:	and    $0xf,%edx
+    1188ce1c:	lea    0x54e787d(%rip),%rsi        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188ce23:	mov    (%rsi,%rdx,8),%rdx
+    1188ce27:	bt     %rcx,%rdx
+    1188ce2b:	jae    1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce31:	mov    %rax,%rcx
+    1188ce34:	shr    $0x22,%rcx
+    1188ce38:	shr    $0x28,%rax
+    1188ce3c:	and    $0xf,%eax
+    1188ce3f:	lea    0x54e785a(%rip),%rdx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    1188ce46:	mov    (%rdx,%rax,8),%rax
+    1188ce4a:	shr    %cl,%rax
+    1188ce4d:	test   %r13,%r13
+    1188ce50:	je     1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce52:	test   $0x1,%al
+    1188ce54:	je     1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce56:	movabs $0x800000000000,%rax
+    1188ce60:	dec    %rax
+    1188ce63:	cmp    %rax,%r13
+    1188ce66:	ja     1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce68:	lea    -0x8(%r13),%rbx
+    1188ce6c:	mov    %rbx,%rdi
+    1188ce6f:	call   *0x3a8f17b(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188ce75:	movdqa -0x70(%rbp),%xmm0
+    1188ce7a:	test   %al,%al
+    1188ce7c:	je     1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce7e:	cmpb   $0xf,(%rbx)
+    1188ce81:	jne    1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce83:	movabs $0x5045525259484e44,%rax
+    1188ce8d:	cmp    %rax,0x0(%r13)
+    1188ce91:	jne    1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce93:	testb  $0x1,0x1c(%r13)
+    1188ce98:	je     1188ceb0 <js_object_get_field_by_name+0x2090>
+    1188ce9a:	cmpb   $0x0,0x1b(%r13)
+    1188ce9f:	je     1188dace <js_object_get_field_by_name+0x2cae>
+    1188cea5:	data16 cs nopw 0x0(%rax,%rax,1)
+    1188ceb0:	movzwl -0x40(%rbp),%r12d
+    1188ceb5:	cmp    $0x7ffc,%r12d
+    1188cebc:	jg     1188cee0 <js_object_get_field_by_name+0x20c0>
+    1188cebe:	mov    %r14,%rbx
+    1188cec1:	test   %r12d,%r12d
+    1188cec4:	movabs $0x7ffd000000000000,%r13
+    1188cece:	jne    1188d855 <js_object_get_field_by_name+0x2a35>
+    1188ced4:	test   %rbx,%rbx
+    1188ced7:	jne    1188cf06 <js_object_get_field_by_name+0x20e6>
+    1188ced9:	jmp    1188d35b <js_object_get_field_by_name+0x253b>
+    1188cede:	xchg   %ax,%ax
+    1188cee0:	cmp    $0x7ffd,%r12d
+    1188cee7:	movabs $0x7ffd000000000000,%r13
+    1188cef1:	jne    1188d73d <js_object_get_field_by_name+0x291d>
+    1188cef7:	mov    %r14,%rbx
+    1188cefa:	and    %r15,%rbx
+    1188cefd:	test   %rbx,%rbx
+    1188cf00:	je     1188d35b <js_object_get_field_by_name+0x253b>
+    1188cf06:	lea    0x54e7053(%rip),%rax        # 16d73f60 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray27TYPED_ARRAY_EVER_REGISTERED>
+    1188cf0d:	movzbl (%rax),%eax
+    1188cf10:	test   %al,%al
+    1188cf12:	je     1188cf50 <js_object_get_field_by_name+0x2130>
+    1188cf14:	lea    0x3ac20ad(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188cf1b:	mov    (%rax),%rax
+    1188cf1e:	cmp    %rax,%rbx
+    1188cf21:	jb     1188cf50 <js_object_get_field_by_name+0x2130>
+    1188cf23:	lea    0x3ac209e(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188cf2a:	mov    0x8(%rax),%rax
+    1188cf2e:	cmp    %rax,%rbx
+    1188cf31:	ja     1188cf50 <js_object_get_field_by_name+0x2130>
+    1188cf33:	mov    %rbx,%rdi
+    1188cf36:	call   *0x3aa1d14(%rip)        # 1532ec50 <_GLOBAL_OFFSET_TABLE_+0x17bd0>
+    1188cf3c:	test   $0x1,%al
+    1188cf3e:	jne    1188d35b <js_object_get_field_by_name+0x253b>
+    1188cf44:	data16 data16 cs nopw 0x0(%rax,%rax,1)
+    1188cf50:	mov    %rbx,%rdi
+    1188cf53:	call   1150edd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784>
+    1188cf58:	movabs $0xffff800000000000,%rdx
+    1188cf62:	lea    (%rbx,%rdx,1),%rcx
+    1188cf66:	add    $0x100000,%rdx
+    1188cf6d:	cmp    %rdx,%rcx
+    1188cf70:	jb     1188d35b <js_object_get_field_by_name+0x253b>
+    1188cf76:	test   %al,%al
+    1188cf78:	jne    1188d35b <js_object_get_field_by_name+0x253b>
+    1188cf7e:	cmpb   $0x11,-0x8(%rbx)
+    1188cf82:	jne    1188d35b <js_object_get_field_by_name+0x253b>
+    1188cf88:	mov    %rbx,%rdi
+    1188cf8b:	call   1150edd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784>
+    1188cf90:	test   %al,%al
+    1188cf92:	jne    1188d35b <js_object_get_field_by_name+0x253b>
+    1188cf98:	mov    -0x30(%rbp),%r12
+    1188cf9c:	mov    0x4(%r12),%r15d
+    1188cfa1:	lea    -0x58(%rbp),%rdi
+    1188cfa5:	lea    0x14(%r12),%rsi
+    1188cfaa:	mov    %r15,%rdx
+    1188cfad:	call   *0x3a908bd(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188cfb3:	cmpb   $0x0,-0x58(%rbp)
+    1188cfb7:	jne    1188cfde <js_object_get_field_by_name+0x21be>
+    1188cfb9:	mov    -0x50(%rbp),%rdx
+    1188cfbd:	mov    -0x48(%rbp),%rcx
+    1188cfc1:	lea    (%rbx,%r13,1),%rax
+    1188cfc5:	movq   %rax,%xmm0
+    1188cfca:	mov    %rbx,%rdi
+    1188cfcd:	xor    %esi,%esi
+    1188cfcf:	call   1152a580 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object14exotic_expando23exotic_get_own_property>
+    1188cfd4:	cmp    $0x1,%rax
+    1188cfd8:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188cfde:	cmp    $0xb,%r15d
+    1188cfe2:	jne    1188d017 <js_object_get_field_by_name+0x21f7>
+    1188cfe4:	lea    0x14(%r12),%rdx
+    1188cfe9:	movzwl 0x8(%rdx),%eax
+    1188cfed:	movzbl 0xa(%rdx),%ecx
+    1188cff1:	shl    $0x10,%ecx
+    1188cff4:	or     %rax,%rcx
+    1188cff7:	mov    (%rdx),%rax
+    1188cffa:	movabs $0x63757274736e6f63,%rdx
+    1188d004:	xor    %rdx,%rax
+    1188d007:	xor    $0x726f74,%rcx
+    1188d00e:	or     %rax,%rcx
+    1188d011:	je     1188dbe3 <js_object_get_field_by_name+0x2dc3>
+    1188d017:	mov    $0x4,%esi
+    1188d01c:	lea    0x2a5e375(%rip),%rdi        # 142eb398 <anon.b37f594bd5826585f7e5082f302a037e.5290.llvm.4573768808118376784+0x1c>
+    1188d023:	call   *0x3a8a667(%rip)        # 15317690 <_GLOBAL_OFFSET_TABLE_+0x610>
+    1188d029:	movq   %xmm0,%rdi
+    1188d02e:	mov    %rdi,%rax
+    1188d031:	movabs $0xffff000000000000,%r15
+    1188d03b:	and    %r15,%rax
+    1188d03e:	cmp    %r13,%rax
+    1188d041:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d047:	movabs $0xffffffffffff,%rbx
+    1188d051:	and    %rbx,%rdi
+    1188d054:	mov    $0x9,%edx
+    1188d059:	lea    0x2a70ba0(%rip),%rsi        # 142fdc00 <anon.b37f594bd5826585f7e5082f302a037e.837.llvm.4573768808118376784+0x21>
+    1188d060:	call   *0x3a8bf1a(%rip)        # 15318f80 <_GLOBAL_OFFSET_TABLE_+0x1f00>
+    1188d066:	movq   %xmm0,%r14
+    1188d06b:	mov    %r14,%rax
+    1188d06e:	and    %r15,%rax
+    1188d071:	cmp    %r13,%rax
+    1188d074:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d07a:	and    %rbx,%r14
+    1188d07d:	jne    1188af61 <js_object_get_field_by_name+0x141>
+    1188d083:	jmp    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d088:	movabs $0x7265747369676572,%rax
+    1188d092:	mov    -0x98(%rbp),%rcx
+    1188d099:	cmp    %rax,(%rcx)
+    1188d09c:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188d0a2:	mov    $0x14,%esi
+    1188d0a7:	lea    0x2ab22b7(%rip),%rdi        # 1433f365 <anon.b37f594bd5826585f7e5082f302a037e.10935.llvm.4573768808118376784+0x3c4>
+    1188d0ae:	call   *0x3a8a5dc(%rip)        # 15317690 <_GLOBAL_OFFSET_TABLE_+0x610>
+    1188d0b4:	movq   %xmm0,%rdi
+    1188d0b9:	mov    %rdi,%rax
+    1188d0bc:	movabs $0xffff000000000000,%rcx
+    1188d0c6:	and    %rcx,%rax
+    1188d0c9:	movabs $0x7ffd000000000000,%rcx
+    1188d0d3:	cmp    %rcx,%rax
+    1188d0d6:	setne  %al
+    1188d0d9:	movabs $0xffffffffffff,%rcx
+    1188d0e3:	and    %rcx,%rdi
+    1188d0e6:	sete   %cl
+    1188d0e9:	or     %al,%cl
+    1188d0eb:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188d0f1:	mov    $0x9,%edx
+    1188d0f6:	lea    0x2a70b03(%rip),%rsi        # 142fdc00 <anon.b37f594bd5826585f7e5082f302a037e.837.llvm.4573768808118376784+0x21>
+    1188d0fd:	call   *0x3a8be7d(%rip)        # 15318f80 <_GLOBAL_OFFSET_TABLE_+0x1f00>
+    1188d103:	movq   %xmm0,%r15
+    1188d108:	movabs $0x7ffc000000000001,%rax
+    1188d112:	cmp    %rax,%r15
+    1188d115:	je     1188c120 <js_object_get_field_by_name+0x1300>
+    1188d11b:	mov    %r15,%rax
+    1188d11e:	shr    $0x30,%rax
+    1188d122:	add    $0xffff8006,%eax
+    1188d127:	cmp    $0x5,%eax
+    1188d12a:	ja     1188d28f <js_object_get_field_by_name+0x246f>
+    1188d130:	mov    $0x2b,%ecx
+    1188d135:	bt     %eax,%ecx
+    1188d138:	jae    1188d28f <js_object_get_field_by_name+0x246f>
+    1188d13e:	movabs $0xffffffffffff,%rax
+    1188d148:	and    %rax,%r15
+    1188d14b:	je     1188c120 <js_object_get_field_by_name+0x1300>
+    1188d151:	mov    -0x98(%rbp),%rdi
+    1188d158:	mov    %ebx,%esi
+    1188d15a:	mov    %ebx,%edx
+    1188d15c:	call   *0x3a8f146(%rip)        # 1531c2a8 <_GLOBAL_OFFSET_TABLE_+0x5228>
+    1188d162:	mov    %r15,%rdi
+    1188d165:	mov    %rax,%rsi
+    1188d168:	call   116ba1b0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set9accessors22own_data_field_by_name>
+    1188d16d:	cmp    $0x1,%rax
+    1188d171:	jne    1188d27e <js_object_get_field_by_name+0x245e>
+    1188d177:	movq   %rdx,%xmm0
+    1188d17c:	xor    %eax,%eax
+    1188d17e:	movabs $0x7ffc000000000001,%rcx
+    1188d188:	cmp    %rcx,%rdx
+    1188d18b:	setne  %al
+    1188d18e:	jmp    1188d280 <js_object_get_field_by_name+0x2460>
+    1188d193:	and    $0xbfffffff,%edx
+    1188d199:	mov    %r14,%rdi
+    1188d19c:	mov    %rdx,%rsi
+    1188d19f:	call   115691f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object5spill12overflow_get>
+    1188d1a4:	movabs $0x7ffc000000000001,%rcx
+    1188d1ae:	add    $0xf,%rcx
+    1188d1b2:	cmp    %rcx,%rdx
+    1188d1b5:	setne  %cl
+    1188d1b8:	test   %cl,%al
+    1188d1ba:	je     1188b10f <js_object_get_field_by_name+0x2ef>
+    1188d1c0:	jmp    1188da0b <js_object_get_field_by_name+0x2beb>
+    1188d1c5:	cmpb   $0x66,0x19(%r12)
+    1188d1cb:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188d1cd:	cmpb   $0x66,0x1a(%r12)
+    1188d1d3:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188d1d5:	cmpb   $0x73,0x1b(%r12)
+    1188d1db:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188d1dd:	cmpb   $0x65,0x1c(%r12)
+    1188d1e3:	jne    1188d1f1 <js_object_get_field_by_name+0x23d1>
+    1188d1e5:	cmpb   $0x74,0x1d(%r12)
+    1188d1eb:	je     1188eb91 <js_object_get_field_by_name+0x3d71>
+    1188d1f1:	mov    %r13,%rdi
+    1188d1f4:	call   11537fb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain23object_static_prototype>
+    1188d1f9:	test   $0x1,%al
+    1188d1fb:	jne    1188cc0c <js_object_get_field_by_name+0x1dec>
+    1188d201:	mov    $0xa,%esi
+    1188d206:	lea    0x2a79fce(%rip),%rdi        # 143071db <anon.b37f594bd5826585f7e5082f302a037e.4211.llvm.4573768808118376784+0x5c70>
+    1188d20d:	movzbl -0x80(%rbp),%eax
+    1188d211:	cmp    $0xb,%al
+    1188d213:	movabs $0xffffffffffff,%rbx
+    1188d21d:	movabs $0xffff000000000000,%r15
+    1188d227:	ja     1188d242 <js_object_get_field_by_name+0x2422>
+    1188d229:	movzbl %al,%eax
+    1188d22c:	lea    0x2ac6a65(%rip),%rcx        # 14353c98 <anon.b37f594bd5826585f7e5082f302a037e.16456.llvm.4573768808118376784+0x7c3>
+    1188d233:	movzbl (%rax,%rcx,1),%esi
+    1188d237:	lea    0x39caa22(%rip),%rcx        # 15257c60 <anon.b37f594bd5826585f7e5082f302a037e.16335.llvm.4573768808118376784+0x12e0>
+    1188d23e:	mov    (%rcx,%rax,8),%rdi
+    1188d242:	call   *0x3a8a448(%rip)        # 15317690 <_GLOBAL_OFFSET_TABLE_+0x610>
+    1188d248:	movq   %xmm0,%rdi
+    1188d24d:	mov    %rdi,%rax
+    1188d250:	and    %r15,%rax
+    1188d253:	movabs $0x7ffc000000000001,%rsi
+    1188d25d:	movabs $0x7ffd000000000000,%rcx
+    1188d267:	cmp    %rcx,%rax
+    1188d26a:	jne    1188ccb6 <js_object_get_field_by_name+0x1e96>
+    1188d270:	and    %rbx,%rdi
+    1188d273:	jne    1188cc9f <js_object_get_field_by_name+0x1e7f>
+    1188d279:	jmp    1188ccb6 <js_object_get_field_by_name+0x1e96>
+    1188d27e:	xor    %eax,%eax
+    1188d280:	cmp    $0x1,%rax
+    1188d284:	jne    1188c120 <js_object_get_field_by_name+0x1300>
+    1188d28a:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d28f:	lea    -0x1(%r15),%rax
+    1188d293:	movabs $0xffffffffffff,%rcx
+    1188d29d:	cmp    %rcx,%rax
+    1188d2a0:	jae    1188c120 <js_object_get_field_by_name+0x1300>
+    1188d2a6:	jmp    1188d151 <js_object_get_field_by_name+0x2331>
+    1188d2ab:	call   *0x3a96167(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    1188d2b1:	mov    -0x88(%rbp),%rdi
+    1188d2b8:	jmp    1188b2ed <js_object_get_field_by_name+0x4cd>
+    1188d2bd:	cmp    $0x1,%eax
+    1188d2c0:	jne    1188e8f6 <js_object_get_field_by_name+0x3ad6>
+    1188d2c6:	mov    -0x90(%rbp),%r15
+    1188d2cd:	mov    %r15,%rdi
+    1188d2d0:	lea    -0x787487(%rip),%rsi        # 11105e50 <_RINvNtNtNtNtCsjFfivMnupPH_3std3sys12thread_local6native5eager7destroyINtNtCs9ueeiBwVTSo_4core4cell7RefCellINtNtCscv7DEBI70Kq_5alloc3vec3VecNtNtNtCscI5nJwKNRh4_13perry_runtime2gc5roots17RuntimeHandleSlotEEEB2j_.llvm.4573768808118376784>
+    1188d2d7:	call   *0x3a9fe33(%rip)        # 1532d110 <_GLOBAL_OFFSET_TABLE_+0x16090>
+    1188d2dd:	movb   $0x0,0x20(%r15)
+    1188d2e2:	mov    (%r15),%rax
+    1188d2e5:	movabs $0x7fffffffffffffff,%rcx
+    1188d2ef:	cmp    %rcx,%rax
+    1188d2f2:	jb     1188b802 <js_object_get_field_by_name+0x9e2>
+    1188d2f8:	jmp    1188e662 <js_object_get_field_by_name+0x3842>
+    1188d2fd:	mov    %rdi,-0x40(%rbp)
+    1188d301:	mov    %rax,%rdi
+    1188d304:	mov    %rsi,-0x70(%rbp)
+    1188d308:	mov    %rcx,-0x80(%rbp)
+    1188d30c:	call   *0x3a96106(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    1188d312:	mov    -0x80(%rbp),%rcx
+    1188d316:	mov    -0x88(%rbp),%rax
+    1188d31d:	mov    -0x40(%rbp),%rdi
+    1188d321:	mov    -0x70(%rbp),%rsi
+    1188d325:	mov    0x1e8(%rax,%rcx,8),%rdx
+    1188d32d:	test   %rdx,%rdx
+    1188d330:	jne    1188b47a <js_object_get_field_by_name+0x65a>
+    1188d336:	mov    %rsi,-0x70(%rbp)
+    1188d33a:	mov    %rdi,-0x40(%rbp)
+    1188d33e:	lea    0x39ac3b3(%rip),%rdi        # 152396f8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object9read_stub9READ_STUB>
+    1188d345:	call   *0x3a9f76d(%rip)        # 1532cab8 <_GLOBAL_OFFSET_TABLE_+0x15a38>
+    1188d34b:	mov    -0x40(%rbp),%rdi
+    1188d34f:	mov    -0x70(%rbp),%rsi
+    1188d353:	mov    %rax,%rdx
+    1188d356:	jmp    1188b47a <js_object_get_field_by_name+0x65a>
+    1188d35b:	mov    %r14,%r15
+    1188d35e:	cmpw   $0x0,-0x40(%rbp)
+    1188d363:	movdqa -0x70(%rbp),%xmm0
+    1188d368:	je     1188d394 <js_object_get_field_by_name+0x2574>
+    1188d36a:	cmp    $0x7ffb,%r12d
+    1188d371:	je     1188d85e <js_object_get_field_by_name+0x2a3e>
+    1188d377:	cmp    $0x7ffd,%r12d
+    1188d37e:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d384:	mov    %r14,%r15
+    1188d387:	movabs $0xffffffffffff,%rax
+    1188d391:	and    %rax,%r15
+    1188d394:	test   %r15,%r15
+    1188d397:	je     1188d530 <js_object_get_field_by_name+0x2710>
+    1188d39d:	lea    0x54e6bbc(%rip),%rax        # 16d73f60 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray27TYPED_ARRAY_EVER_REGISTERED>
+    1188d3a4:	movzbl (%rax),%eax
+    1188d3a7:	test   %al,%al
+    1188d3a9:	je     1188d3e0 <js_object_get_field_by_name+0x25c0>
+    1188d3ab:	lea    0x3ac1c16(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188d3b2:	mov    (%rax),%rax
+    1188d3b5:	cmp    %rax,%r15
+    1188d3b8:	jb     1188d3e0 <js_object_get_field_by_name+0x25c0>
+    1188d3ba:	lea    0x3ac1c07(%rip),%rax        # 1534efc8 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23TYPED_ARRAY_ADDR_WINDOW>
+    1188d3c1:	mov    0x8(%rax),%rax
+    1188d3c5:	cmp    %rax,%r15
+    1188d3c8:	ja     1188d3e0 <js_object_get_field_by_name+0x25c0>
+    1188d3ca:	mov    %r15,%rdi
+    1188d3cd:	call   *0x3aa187d(%rip)        # 1532ec50 <_GLOBAL_OFFSET_TABLE_+0x17bd0>
+    1188d3d3:	movdqa -0x70(%rbp),%xmm0
+    1188d3d8:	test   $0x1,%al
+    1188d3da:	jne    1188d530 <js_object_get_field_by_name+0x2710>
+    1188d3e0:	mov    %r15,%rdi
+    1188d3e3:	call   1150edd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784>
+    1188d3e8:	movdqa -0x70(%rbp),%xmm0
+    1188d3ed:	movabs $0xffff800000000000,%rdx
+    1188d3f7:	lea    (%r15,%rdx,1),%rcx
+    1188d3fb:	add    $0x100000,%rdx
+    1188d402:	cmp    %rdx,%rcx
+    1188d405:	setb   %cl
+    1188d408:	or     %al,%cl
+    1188d40a:	jne    1188d530 <js_object_get_field_by_name+0x2710>
+    1188d410:	cmpb   $0x12,-0x8(%r15)
+    1188d415:	jne    1188d530 <js_object_get_field_by_name+0x2710>
+    1188d41b:	mov    -0x30(%rbp),%rax
+    1188d41f:	mov    0x4(%rax),%r14d
+    1188d423:	lea    -0x58(%rbp),%rdi
+    1188d427:	mov    -0x78(%rbp),%rsi
+    1188d42b:	mov    %r14,%rdx
+    1188d42e:	call   *0x3a94c1c(%rip)        # 15322050 <_GLOBAL_OFFSET_TABLE_+0xafd0>
+    1188d434:	or     %r15,%r13
+    1188d437:	movq   %r13,%xmm0
+    1188d43c:	mov    -0x58(%rbp),%r13
+    1188d440:	mov    -0x50(%rbp),%rbx
+    1188d444:	mov    -0x48(%rbp),%r12
+    1188d448:	mov    %r15,%rdi
+    1188d44b:	mov    $0x3,%esi
+    1188d450:	mov    %rbx,%rdx
+    1188d453:	mov    %r12,%rcx
+    1188d456:	movq   %xmm0,-0x30(%rbp)
+    1188d45b:	call   1152a580 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object14exotic_expando23exotic_get_own_property>
+    1188d460:	test   $0x1,%al
+    1188d462:	jne    1188d4cc <js_object_get_field_by_name+0x26ac>
+    1188d464:	movq   -0x30(%rbp),%xmm0
+    1188d469:	mov    %rbx,%rdi
+    1188d46c:	mov    %r12,%rsi
+    1188d46f:	call   *0x3aa405b(%rip)        # 153314d0 <_GLOBAL_OFFSET_TABLE_+0x1a450>
+    1188d475:	test   $0x1,%al
+    1188d477:	jne    1188d4cc <js_object_get_field_by_name+0x26ac>
+    1188d479:	movsd  -0x30(%rbp),%xmm0
+    1188d47e:	mov    %rbx,%rdi
+    1188d481:	mov    %r12,%rsi
+    1188d484:	call   *0x3a93cae(%rip)        # 15321138 <_GLOBAL_OFFSET_TABLE_+0xa0b8>
+    1188d48a:	test   %al,%al
+    1188d48c:	je     1188e1c6 <js_object_get_field_by_name+0x33a6>
+    1188d492:	cmp    $0x1,%r14
+    1188d496:	mov    %r14,%rdi
+    1188d499:	adc    $0x0,%rdi
+    1188d49d:	mov    $0x1,%esi
+    1188d4a2:	call   *0x3a8d468(%rip)        # 1531a910 <_GLOBAL_OFFSET_TABLE_+0x3890>
+    1188d4a8:	mov    %rax,%r15
+    1188d4ab:	mov    %rax,%rdi
+    1188d4ae:	mov    -0x78(%rbp),%rsi
+    1188d4b2:	mov    %r14,%rdx
+    1188d4b5:	call   *0x3a8f875(%rip)        # 1531cd30 <memcpy@GLIBC_2.14>
+    1188d4bb:	movq   -0x30(%rbp),%xmm0
+    1188d4c0:	mov    %r15,%rdi
+    1188d4c3:	mov    %r14,%rsi
+    1188d4c6:	call   *0x3aa36fc(%rip)        # 15330bc8 <_GLOBAL_OFFSET_TABLE_+0x19b48>
+    1188d4cc:	test   %r13,%r13
+    1188d4cf:	jle    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d4d5:	mov    %rbx,%rdi
+    1188d4d8:	movq   %xmm0,-0x30(%rbp)
+    1188d4dd:	call   *0x3aa490d(%rip)        # 15331df0 <_GLOBAL_OFFSET_TABLE_+0x1ad70>
+    1188d4e3:	movsd  -0x30(%rbp),%xmm0
+    1188d4e8:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d4ed:	test   %r12,%r12
+    1188d4f0:	jne    1188d510 <js_object_get_field_by_name+0x26f0>
+    1188d4f2:	xor    %edi,%edi
+    1188d4f4:	call   112a3ca0 <_RNvNtCscI5nJwKNRh4_13perry_runtime6string20string_storage_alloc.llvm.4573768808118376784>
+    1188d4f9:	mov    %rax,%r12
+    1188d4fc:	xorpd  %xmm0,%xmm0
+    1188d500:	movupd %xmm0,(%rax)
+    1188d504:	movapd -0x70(%rbp),%xmm0
+    1188d509:	movl   $0x0,0x10(%rax)
+    1188d510:	and    %r15,%r12
+    1188d513:	movabs $0x7fff000000000000,%rax
+    1188d51d:	or     %rax,%r12
+    1188d520:	movq   %r12,%xmm1
+    1188d525:	call   *0x3a8e24d(%rip)        # 1531b778 <_GLOBAL_OFFSET_TABLE_+0x46f8>
+    1188d52b:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d530:	mov    %r14,%r15
+    1188d533:	cmpw   $0x0,-0x40(%rbp)
+    1188d538:	je     1188d561 <js_object_get_field_by_name+0x2741>
+    1188d53a:	cmp    $0x7ffb,%r12d
+    1188d541:	je     1188d85e <js_object_get_field_by_name+0x2a3e>
+    1188d547:	cmp    $0x7ffd,%r12d
+    1188d54e:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d554:	movabs $0xffffffffffff,%r15
+    1188d55e:	and    %r14,%r15
+    1188d561:	lea    -0x100000(%r15),%rax
+    1188d568:	movabs $0x800000000000,%rcx
+    1188d572:	add    $0xfffffffffff00000,%rcx
+    1188d579:	cmp    %rcx,%rax
+    1188d57c:	jae    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d582:	cmpb   $0x5,-0x8(%r15)
+    1188d587:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d58d:	mov    %r15,%rdi
+    1188d590:	call   1150edd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784>
+    1188d595:	movdqa -0x70(%rbp),%xmm0
+    1188d59a:	test   %al,%al
+    1188d59c:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d5a2:	mov    %r15,%rdi
+    1188d5a5:	call   111d9170 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray23lookup_typed_array_kind>
+    1188d5aa:	movdqa -0x70(%rbp),%xmm0
+    1188d5af:	test   $0x1,%al
+    1188d5b1:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d5b7:	mov    -0x30(%rbp),%r14
+    1188d5bb:	mov    0x4(%r14),%ebx
+    1188d5bf:	mov    %r15,%rdi
+    1188d5c2:	mov    $0x4,%esi
+    1188d5c7:	lea    0x14(%r14),%rdx
+    1188d5cb:	mov    %rbx,%rcx
+    1188d5ce:	call   1152a580 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object14exotic_expando23exotic_get_own_property>
+    1188d5d3:	cmp    $0x1,%rax
+    1188d5d7:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d5dd:	lea    -0x4(%rbx),%eax
+    1188d5e0:	cmp    $0x7,%eax
+    1188d5e3:	ja     1188e184 <js_object_get_field_by_name+0x3364>
+    1188d5e9:	lea    0x2a6e2cc(%rip),%rcx        # 142fb8bc <anon.b37f594bd5826585f7e5082f302a037e.11885.llvm.4573768808118376784+0x102a0>
+    1188d5f0:	movslq (%rcx,%rax,4),%rax
+    1188d5f4:	add    %rcx,%rax
+    1188d5f7:	jmp    *%rax
+    1188d5f9:	lea    0x14(%r14),%rax
+    1188d5fd:	cmpb   $0x74,(%rax)
+    1188d600:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d606:	cmpb   $0x68,0x15(%r14)
+    1188d60b:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d611:	cmpb   $0x65,0x16(%r14)
+    1188d616:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d61c:	mov    -0x30(%rbp),%rax
+    1188d620:	cmpb   $0x6e,0x17(%rax)
+    1188d624:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188d62a:	jmp    1188e55e <js_object_get_field_by_name+0x373e>
+    1188d62f:	movabs $0x7fffffffffffffff,%rcx
+    1188d639:	and    %r14,%rcx
+    1188d63c:	movabs $0xfff0000000000000,%rax
+    1188d646:	add    %rcx,%rax
+    1188d649:	shr    $0x35,%rax
+    1188d64d:	cmp    $0x3ff,%eax
+    1188d652:	setae  %al
+    1188d655:	test   %r14,%r14
+    1188d658:	sets   %bl
+    1188d65b:	or     %al,%bl
+    1188d65d:	dec    %r14
+    1188d660:	movabs $0xffffffffffffe,%rax
+    1188d66a:	cmp    %rax,%r14
+    1188d66d:	seta   %r14b
+    1188d671:	call   *0x3aa05b9(%rip)        # 1532dc30 <_GLOBAL_OFFSET_TABLE_+0x16bb0>
+    1188d677:	test   %bl,%r14b
+    1188d67a:	jne    1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d680:	ucomisd -0x70(%rbp),%xmm0
+    1188d685:	jne    1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d68b:	jp     1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d691:	movapd -0x70(%rbp),%xmm1
+    1188d696:	cvttsd2si %xmm1,%rax
+    1188d69b:	mov    %rax,%rcx
+    1188d69e:	sar    $0x3f,%rcx
+    1188d6a2:	movapd %xmm1,%xmm0
+    1188d6a6:	subsd  0xde2512(%rip),%xmm0        # 1266fbc0 <perry_typed_shape_raw_f64_mask_cli_2_1_112_js____AnonShape_d5b61070a717b2b2+0x8d0>
+    1188d6ae:	cvttsd2si %xmm0,%rdx
+    1188d6b3:	and    %rcx,%rdx
+    1188d6b6:	or     %rax,%rdx
+    1188d6b9:	xor    %eax,%eax
+    1188d6bb:	xorpd  %xmm0,%xmm0
+    1188d6bf:	ucomisd %xmm0,%xmm1
+    1188d6c3:	cmovae %rdx,%rax
+    1188d6c7:	ucomisd 0xde5a01(%rip),%xmm1        # 126730d0 <perry_typed_shape_mask_cli_2_1_112_js__fP8+0x30>
+    1188d6cf:	mov    $0xffffffffffffffff,%rbx
+    1188d6d6:	cmovbe %rax,%rbx
+    1188d6da:	mov    %rbx,%rax
+    1188d6dd:	and    $0xfffffffffff00000,%rax
+    1188d6e3:	cmp    $0x100000,%rax
+    1188d6e9:	jne    1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d6eb:	lea    0x55676b6(%rip),%rax        # 16df4da8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13class_handles23STREAM_HANDLE_PROBE_PTR>
+    1188d6f2:	mov    (%rax),%rax
+    1188d6f5:	test   %rax,%rax
+    1188d6f8:	je     1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d6fa:	mov    %rbx,%rdi
+    1188d6fd:	call   *%rax
+    1188d6ff:	test   $0x1,%al
+    1188d701:	je     1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d703:	call   1151e160 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13class_handles24handle_property_dispatch>
+    1188d708:	test   %rax,%rax
+    1188d70b:	je     1188d717 <js_object_get_field_by_name+0x28f7>
+    1188d70d:	mov    0x4(%r12),%edx
+    1188d712:	jmp    1188d975 <js_object_get_field_by_name+0x2b55>
+    1188d717:	mov    0x4(%r12),%ebx
+    1188d71c:	lea    -0x58(%rbp),%rdi
+    1188d720:	lea    0x14(%r12),%rsi
+    1188d725:	mov    %rbx,%rdx
+    1188d728:	call   *0x3a90142(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188d72e:	cmpb   $0x0,-0x58(%rbp)
+    1188d732:	je     1188d9e2 <js_object_get_field_by_name+0x2bc2>
+    1188d738:	jmp    1188d9fa <js_object_get_field_by_name+0x2bda>
+    1188d73d:	cmp    $0x7ffe,%r12d
+    1188d744:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d74a:	mov    %r14d,-0x34(%rbp)
+    1188d74e:	movabs $0xffff000100000000,%rax
+    1188d758:	and    %r14,%rax
+    1188d75b:	movabs $0x7ffe000100000000,%r12
+    1188d765:	cmp    %r12,%rax
+    1188d768:	setne  %al
+    1188d76b:	test   %r14d,%r14d
+    1188d76e:	sete   %cl
+    1188d771:	or     %al,%cl
+    1188d773:	mov    $0x1,%bl
+    1188d775:	jne    1188d785 <js_object_get_field_by_name+0x2965>
+    1188d777:	mov    %r14d,%edi
+    1188d77a:	call   *0x3a8dea0(%rip)        # 1531b620 <_GLOBAL_OFFSET_TABLE_+0x45a0>
+    1188d780:	mov    %eax,%ebx
+    1188d782:	xor    $0x1,%bl
+    1188d785:	mov    -0x30(%rbp),%rax
+    1188d789:	mov    0x4(%rax),%edx
+    1188d78c:	lea    -0x58(%rbp),%rdi
+    1188d790:	lea    0x14(%rax),%rsi
+    1188d794:	mov    %rdx,-0x40(%rbp)
+    1188d798:	call   *0x3a900d2(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188d79e:	xor    %r15d,%r15d
+    1188d7a1:	cmpb   $0x0,-0x58(%rbp)
+    1188d7a5:	mov    $0x1,%r13d
+    1188d7ab:	cmove  -0x50(%rbp),%r13
+    1188d7b0:	cmove  -0x48(%rbp),%r15
+    1188d7b5:	cmp    $0xb,%r15
+    1188d7b9:	setne  %al
+    1188d7bc:	or     %bl,%al
+    1188d7be:	cmp    $0x1,%al
+    1188d7c0:	jne    1188dc79 <js_object_get_field_by_name+0x2e59>
+    1188d7c6:	cmp    $0xb,%r15
+    1188d7ca:	movdqa -0x70(%rbp),%xmm0
+    1188d7cf:	je     1188dcd9 <js_object_get_field_by_name+0x2eb9>
+    1188d7d5:	cmp    $0x9,%r15
+    1188d7d9:	jne    1188dd11 <js_object_get_field_by_name+0x2ef1>
+    1188d7df:	mov    $0x1,%dl
+    1188d7e1:	test   %r14d,%r14d
+    1188d7e4:	je     1188dd13 <js_object_get_field_by_name+0x2ef3>
+    1188d7ea:	movabs $0x7079746f746f7270,%rax
+    1188d7f4:	xor    0x0(%r13),%rax
+    1188d7f8:	movzbl 0x8(%r13),%ecx
+    1188d7fd:	xor    $0x65,%rcx
+    1188d801:	or     %rax,%rcx
+    1188d804:	jne    1188dd13 <js_object_get_field_by_name+0x2ef3>
+    1188d80a:	mov    %r14d,%edi
+    1188d80d:	call   *0x3a8de0d(%rip)        # 1531b620 <_GLOBAL_OFFSET_TABLE_+0x45a0>
+    1188d813:	mov    $0x1,%dl
+    1188d815:	movdqa -0x70(%rbp),%xmm0
+    1188d81a:	test   %al,%al
+    1188d81c:	je     1188dd13 <js_object_get_field_by_name+0x2ef3>
+    1188d822:	test   %bl,%bl
+    1188d824:	je     1188ddfe <js_object_get_field_by_name+0x2fde>
+    1188d82a:	mov    %r14d,%edi
+    1188d82d:	call   116ebb20 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state26class_decl_prototype_value>
+    1188d832:	movq   %xmm0,%r15
+    1188d837:	movabs $0x7ffc000000000001,%rax
+    1188d841:	cmp    %rax,%r15
+    1188d844:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188d84a:	mov    %r14d,%r15d
+    1188d84d:	or     %r12,%r15
+    1188d850:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188d855:	cmp    $0x7ffb,%r12d
+    1188d85c:	jne    1188d88f <js_object_get_field_by_name+0x2a6f>
+    1188d85e:	mov    0x556740b(%rip),%rax        # 16df4c70 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime5value4tags29JS_HANDLE_OBJECT_GET_PROPERTY.0>
+    1188d865:	movabs $0x7ffc000000000001,%r15
+    1188d86f:	test   %rax,%rax
+    1188d872:	mov    -0x30(%rbp),%rcx
+    1188d876:	je     1188e18e <js_object_get_field_by_name+0x336e>
+    1188d87c:	mov    0x4(%rcx),%esi
+    1188d87f:	movapd -0x70(%rbp),%xmm0
+    1188d884:	mov    -0x78(%rbp),%rdi
+    1188d888:	call   *%rax
+    1188d88a:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d88f:	movabs $0x7fffffffffffffff,%rcx
+    1188d899:	and    %r14,%rcx
+    1188d89c:	movabs $0xfff0000000000000,%rax
+    1188d8a6:	add    %rcx,%rax
+    1188d8a9:	shr    $0x35,%rax
+    1188d8ad:	cmp    $0x3ff,%eax
+    1188d8b2:	setae  %al
+    1188d8b5:	test   %r14,%r14
+    1188d8b8:	sets   %bl
+    1188d8bb:	or     %al,%bl
+    1188d8bd:	lea    -0x1(%r14),%rax
+    1188d8c1:	movabs $0xffffffffffffe,%rcx
+    1188d8cb:	cmp    %rcx,%rax
+    1188d8ce:	seta   %r15b
+    1188d8d2:	call   *0x3aa0358(%rip)        # 1532dc30 <_GLOBAL_OFFSET_TABLE_+0x16bb0>
+    1188d8d8:	test   %bl,%r15b
+    1188d8db:	jne    1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d8e1:	ucomisd -0x70(%rbp),%xmm0
+    1188d8e6:	jne    1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d8ec:	jp     1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d8f2:	movapd -0x70(%rbp),%xmm1
+    1188d8f7:	cvttsd2si %xmm1,%rax
+    1188d8fc:	mov    %rax,%rcx
+    1188d8ff:	sar    $0x3f,%rcx
+    1188d903:	movapd %xmm1,%xmm0
+    1188d907:	subsd  0xde22b1(%rip),%xmm0        # 1266fbc0 <perry_typed_shape_raw_f64_mask_cli_2_1_112_js____AnonShape_d5b61070a717b2b2+0x8d0>
+    1188d90f:	cvttsd2si %xmm0,%rdx
+    1188d914:	and    %rcx,%rdx
+    1188d917:	or     %rax,%rdx
+    1188d91a:	xor    %eax,%eax
+    1188d91c:	xorpd  %xmm0,%xmm0
+    1188d920:	ucomisd %xmm0,%xmm1
+    1188d924:	cmovae %rdx,%rax
+    1188d928:	ucomisd 0xde57a0(%rip),%xmm1        # 126730d0 <perry_typed_shape_mask_cli_2_1_112_js__fP8+0x30>
+    1188d930:	mov    $0xffffffffffffffff,%rbx
+    1188d937:	cmovbe %rax,%rbx
+    1188d93b:	mov    %rbx,%rax
+    1188d93e:	and    $0xfffffffffff00000,%rax
+    1188d944:	cmp    $0x100000,%rax
+    1188d94a:	jne    1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d94c:	lea    0x5567455(%rip),%rax        # 16df4da8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13class_handles23STREAM_HANDLE_PROBE_PTR>
+    1188d953:	mov    (%rax),%rax
+    1188d956:	test   %rax,%rax
+    1188d959:	je     1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d95b:	mov    %rbx,%rdi
+    1188d95e:	call   *%rax
+    1188d960:	test   $0x1,%al
+    1188d962:	je     1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d964:	call   1151e160 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13class_handles24handle_property_dispatch>
+    1188d969:	test   %rax,%rax
+    1188d96c:	je     1188d983 <js_object_get_field_by_name+0x2b63>
+    1188d96e:	mov    -0x30(%rbp),%rcx
+    1188d972:	mov    0x4(%rcx),%edx
+    1188d975:	mov    %rbx,%rdi
+    1188d978:	mov    -0x78(%rbp),%rsi
+    1188d97c:	call   *%rax
+    1188d97e:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188d983:	cmpq   $0x0,-0x40(%rbp)
+    1188d988:	sete   %al
+    1188d98b:	mov    %r14,%rcx
+    1188d98e:	shr    $0x34,%rcx
+    1188d992:	and    $0x7ff,%ecx
+    1188d998:	cmp    $0x7ff,%ecx
+    1188d99e:	setae  %cl
+    1188d9a1:	or     %al,%cl
+    1188d9a3:	mov    -0x30(%rbp),%r12
+    1188d9a7:	je     1188d9c5 <js_object_get_field_by_name+0x2ba5>
+    1188d9a9:	mov    %r14,%rdi
+    1188d9ac:	mov    %r12,%rsi
+    1188d9af:	add    $0xd8,%rsp
+    1188d9b6:	pop    %rbx
+    1188d9b7:	pop    %r12
+    1188d9b9:	pop    %r13
+    1188d9bb:	pop    %r14
+    1188d9bd:	pop    %r15
+    1188d9bf:	pop    %rbp
+    1188d9c0:	jmp    116b1d80 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set22get_field_by_name_tail29get_field_by_name_object_tail>
+    1188d9c5:	mov    0x4(%r12),%ebx
+    1188d9ca:	lea    -0x58(%rbp),%rdi
+    1188d9ce:	lea    0x14(%r12),%rsi
+    1188d9d3:	mov    %rbx,%rdx
+    1188d9d6:	call   *0x3a8fe94(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188d9dc:	cmpl   $0x1,-0x58(%rbp)
+    1188d9e0:	je     1188d9fa <js_object_get_field_by_name+0x2bda>
+    1188d9e2:	mov    -0x50(%rbp),%rdi
+    1188d9e6:	mov    -0x48(%rbp),%rsi
+    1188d9ea:	movapd -0x70(%rbp),%xmm0
+    1188d9ef:	call   116bb5f0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set9accessors35primitive_object_prototype_accessor>
+    1188d9f4:	cmp    $0x1,%rax
+    1188d9f8:	je     1188da0b <js_object_get_field_by_name+0x2beb>
+    1188d9fa:	mov    %r12,%rdi
+    1188d9fd:	movapd -0x70(%rbp),%xmm0
+    1188da02:	call   116bc110 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set9accessors36primitive_builtin_prototype_property>
+    1188da07:	test   $0x1,%al
+    1188da09:	je     1188da13 <js_object_get_field_by_name+0x2bf3>
+    1188da0b:	mov    %rdx,%r15
+    1188da0e:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188da13:	movapd -0x70(%rbp),%xmm0
+    1188da18:	mov    -0x78(%rbp),%rdi
+    1188da1c:	mov    %rbx,%rsi
+    1188da1f:	call   116b8cf0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set7ic_miss34bind_primitive_proto_method_static>
+    1188da24:	test   $0x1,%al
+    1188da26:	movabs $0x7ffc000000000001,%r15
+    1188da30:	cmovne %rdx,%r15
+    1188da34:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188da39:	mov    -0x30(%rbp),%rax
+    1188da3d:	movabs $0xffffffffffff,%rcx
+    1188da47:	and    %rcx,%rax
+    1188da4a:	movabs $0x7fff000000000000,%rcx
+    1188da54:	or     %rcx,%rax
+    1188da57:	movq   %rax,%xmm1
+    1188da5c:	movsd  -0x40(%rbp),%xmm0
+    1188da61:	movapd %xmm0,%xmm2
+    1188da65:	call   114de5c0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime5proxy3get23proxy_get_with_receiver>
+    1188da6a:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188da6f:	mov    -0x30(%rbp),%r12
+    1188da73:	mov    0x4(%r12),%ebx
+    1188da78:	mov    %r14,%rdi
+    1188da7b:	lea    0x14(%r12),%rsi
+    1188da80:	mov    %rbx,%rdx
+    1188da83:	call   116e1f80 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static28class_object_own_field_bytes>
+    1188da88:	cmp    $0x1,%rax
+    1188da8c:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188da92:	cmp    $0x9,%ebx
+    1188da95:	movabs $0xffffffffffff,%r15
+    1188da9f:	je     1188de7e <js_object_get_field_by_name+0x305e>
+    1188daa5:	cmp    $0x4,%ebx
+    1188daa8:	movabs $0x7ffd000000000000,%r13
+    1188dab2:	jne    1188deab <js_object_get_field_by_name+0x308b>
+    1188dab8:	lea    0x14(%r12),%rax
+    1188dabd:	cmpl   $0x656d616e,(%rax)
+    1188dac3:	jne    1188deab <js_object_get_field_by_name+0x308b>
+    1188dac9:	jmp    1188df38 <js_object_get_field_by_name+0x3118>
+    1188dace:	mov    0x4(%r12),%ebx
+    1188dad3:	cmp    $0xb,%rbx
+    1188dad7:	jne    1188db1a <js_object_get_field_by_name+0x2cfa>
+    1188dad9:	lea    0x14(%r12),%rdx
+    1188dade:	movzwl 0x8(%rdx),%eax
+    1188dae2:	movzbl 0xa(%rdx),%ecx
+    1188dae6:	shl    $0x10,%ecx
+    1188dae9:	or     %rax,%rcx
+    1188daec:	mov    (%rdx),%rax
+    1188daef:	movabs $0x63757274736e6f63,%rdx
+    1188daf9:	xor    %rdx,%rax
+    1188dafc:	xor    $0x726f74,%rcx
+    1188db03:	or     %rax,%rcx
+    1188db06:	jne    1188db1a <js_object_get_field_by_name+0x2cfa>
+    1188db08:	mov    %r13,%rdi
+    1188db0b:	call   1129dce0 <_RNvNtCscI5nJwKNRh4_13perry_runtime5timer23timer_constructor_value>
+    1188db10:	cmp    $0x1,%rax
+    1188db14:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188db1a:	lea    0x14(%r12),%rdi
+    1188db1f:	mov    %rbx,%rsi
+    1188db22:	call   116b8640 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set7ic_miss31timer_handle_method_name_static>
+    1188db27:	test   %rax,%rax
+    1188db2a:	je     1188dbff <js_object_get_field_by_name+0x2ddf>
+    1188db30:	mov    %rax,%r15
+    1188db33:	mov    %rdx,%r12
+    1188db36:	movabs $0xffff800000000000,%rcx
+    1188db40:	lea    (%rcx,%r13,1),%rax
+    1188db44:	add    $0x1000,%rcx
+    1188db4b:	mov    %r13,%rdi
+    1188db4e:	cmp    %rcx,%rax
+    1188db51:	jb     1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188db53:	lea    -0x8(%r13),%r14
+    1188db57:	mov    %r14,%rdi
+    1188db5a:	call   *0x3a8e490(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    1188db60:	mov    %r13,%rdi
+    1188db63:	test   %al,%al
+    1188db65:	je     1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188db67:	cmpb   $0xf,(%r14)
+    1188db6b:	mov    %r13,%rdi
+    1188db6e:	jne    1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188db70:	mov    %r13,%rdi
+    1188db73:	movabs $0x5045525259484e44,%rax
+    1188db7d:	cmp    %rax,0x0(%r13)
+    1188db81:	jne    1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188db83:	testb  $0x1,0x1c(%r13)
+    1188db88:	mov    %r13,%rdi
+    1188db8b:	je     1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188db8d:	cmpb   $0x0,0x1b(%r13)
+    1188db92:	mov    %r13,%rdi
+    1188db95:	jne    1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188db97:	add    $0xbfb09,%rax
+    1188db9d:	mov    %r13,%rdi
+    1188dba0:	cmp    %rax,0x8(%r13)
+    1188dba4:	jne    1188dbaf <js_object_get_field_by_name+0x2d8f>
+    1188dba6:	mov    0x10(%r13),%rdi
+    1188dbaa:	test   %rdi,%rdi
+    1188dbad:	jle    1188dbff <js_object_get_field_by_name+0x2ddf>
+    1188dbaf:	movzbl 0x5567042(%rip),%eax        # 16df4bf8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime5timer10ref_states18TIMER_IDS_NONEMPTY.0>
+    1188dbb6:	test   %al,%al
+    1188dbb8:	je     1188dbff <js_object_get_field_by_name+0x2ddf>
+    1188dbba:	call   114fb1f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime5timer10ref_states22is_known_timer_id_slow>
+    1188dbbf:	test   %al,%al
+    1188dbc1:	je     1188dbff <js_object_get_field_by_name+0x2ddf>
+    1188dbc3:	movabs $0x7ffd000000000000,%rax
+    1188dbcd:	or     %rax,%r13
+    1188dbd0:	movq   %r13,%xmm0
+    1188dbd5:	mov    %r15,%rdi
+    1188dbd8:	mov    %r12,%rsi
+    1188dbdb:	call   *0x3aa2fe7(%rip)        # 15330bc8 <_GLOBAL_OFFSET_TABLE_+0x19b48>
+    1188dbe1:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188dbe3:	lea    0x2a5d7ae(%rip),%rdi        # 142eb398 <anon.b37f594bd5826585f7e5082f302a037e.5290.llvm.4573768808118376784+0x1c>
+    1188dbea:	mov    $0x4,%esi
+    1188dbef:	call   *0x3a89a9b(%rip)        # 15317690 <_GLOBAL_OFFSET_TABLE_+0x610>
+    1188dbf5:	movq   %xmm0,%r15
+    1188dbfa:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188dbff:	mov    %r13,%rdi
+    1188dc02:	mov    -0x30(%rbp),%r14
+    1188dc06:	lea    0x14(%r14),%rsi
+    1188dc0a:	mov    %rbx,%rdx
+    1188dc0d:	call   112825f0 <_RNvNtCscI5nJwKNRh4_13perry_runtime4text20text_handle_property>
+    1188dc12:	test   $0x1,%al
+    1188dc14:	jne    1188da0b <js_object_get_field_by_name+0x2beb>
+    1188dc1a:	cmp    $0xb,%ebx
+    1188dc1d:	jne    1188de40 <js_object_get_field_by_name+0x3020>
+    1188dc23:	lea    0x14(%r14),%rdx
+    1188dc27:	movzwl 0x8(%rdx),%eax
+    1188dc2b:	movzbl 0xa(%rdx),%ecx
+    1188dc2f:	shl    $0x10,%ecx
+    1188dc32:	or     %rax,%rcx
+    1188dc35:	movabs $0x63757274736e6f63,%rax
+    1188dc3f:	xor    (%rdx),%rax
+    1188dc42:	xor    $0x726f74,%rcx
+    1188dc49:	or     %rax,%rcx
+    1188dc4c:	jne    1188de40 <js_object_get_field_by_name+0x3020>
+    1188dc52:	movabs $0xffffffffffff,%r15
+    1188dc5c:	add    $0xfffffffffffffff9,%r15
+    1188dc60:	and    0x3a961f9(%rip),%r15        # 15323e60 <_GLOBAL_OFFSET_TABLE_+0xcde0>
+    1188dc67:	movabs $0x7ffd000000000000,%rax
+    1188dc71:	or     %rax,%r15
+    1188dc74:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188dc79:	test   %r14d,%r14d
+    1188dc7c:	movdqa -0x70(%rbp),%xmm0
+    1188dc81:	je     1188dcd9 <js_object_get_field_by_name+0x2eb9>
+    1188dc83:	mov    0x0(%r13),%rax
+    1188dc87:	movabs $0x63757274736e6f63,%rcx
+    1188dc91:	xor    %rcx,%rax
+    1188dc94:	mov    0x3(%r13),%rcx
+    1188dc98:	movabs $0x726f746375727473,%rdx
+    1188dca2:	xor    %rdx,%rcx
+    1188dca5:	or     %rax,%rcx
+    1188dca8:	jne    1188dcd9 <js_object_get_field_by_name+0x2eb9>
+    1188dcaa:	mov    $0xb,%edx
+    1188dcaf:	mov    %r14d,%edi
+    1188dcb2:	mov    %r13,%rsi
+    1188dcb5:	call   1151fcb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13native_module20class_has_own_method>
+    1188dcba:	movdqa -0x70(%rbp),%xmm0
+    1188dcbf:	test   %al,%al
+    1188dcc1:	je     1188dcd9 <js_object_get_field_by_name+0x2eb9>
+    1188dcc3:	mov    $0xb,%edx
+    1188dcc8:	mov    %r14d,%edi
+    1188dccb:	mov    %r13,%rsi
+    1188dcce:	call   *0x3a9422c(%rip)        # 15321f00 <_GLOBAL_OFFSET_TABLE_+0xae80>
+    1188dcd4:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188dcd9:	test   %r14d,%r14d
+    1188dcdc:	sete   %al
+    1188dcdf:	mov    0x0(%r13),%rcx
+    1188dce3:	movabs $0x63757274736e6f63,%rdx
+    1188dced:	xor    %rdx,%rcx
+    1188dcf0:	mov    0x3(%r13),%rdx
+    1188dcf4:	movabs $0x726f746375727473,%rsi
+    1188dcfe:	xor    %rsi,%rdx
+    1188dd01:	or     %rcx,%rdx
+    1188dd04:	setne  %cl
+    1188dd07:	or     %bl,%al
+    1188dd09:	or     %cl,%al
+    1188dd0b:	je     1188ddd7 <js_object_get_field_by_name+0x2fb7>
+    1188dd11:	xor    %edx,%edx
+    1188dd13:	test   %bl,%bl
+    1188dd15:	je     1188ddf9 <js_object_get_field_by_name+0x2fd9>
+    1188dd1b:	test   %r15,%r15
+    1188dd1e:	je     1188e1a3 <js_object_get_field_by_name+0x3383>
+    1188dd24:	mov    %edx,-0xa8(%rbp)
+    1188dd2a:	mov    %r14d,%edi
+    1188dd2d:	mov    %r13,%rsi
+    1188dd30:	mov    %r15,%rdx
+    1188dd33:	call   116eaf70 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state20class_is_key_deleted>
+    1188dd38:	test   %al,%al
+    1188dd3a:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188dd40:	lea    -0x34(%rbp),%rax
+    1188dd44:	mov    %rax,-0x58(%rbp)
+    1188dd48:	mov    %r13,-0x50(%rbp)
+    1188dd4c:	mov    %r15,-0x48(%rbp)
+    1188dd50:	mov    0x3ac2862(%rip),%ebx        # 153505b8 <_RNvNvNtCscI5nJwKNRh4_13perry_runtime6object19CLASS_DYNAMIC_PROPS4SLOT+0x10>
+    1188dd56:	cmp    $0x300,%ebx
+    1188dd5c:	jae    1188eb2f <js_object_get_field_by_name+0x3d0f>
+    1188dd62:	mov    -0x88(%rbp),%rdi
+    1188dd69:	cmpq   $0x0,0x78(%rdi)
+    1188dd6e:	je     1188eb11 <js_object_get_field_by_name+0x3cf1>
+    1188dd74:	mov    0x1e8(%rdi,%rbx,8),%rsi
+    1188dd7c:	test   %rsi,%rsi
+    1188dd7f:	je     1188eb2f <js_object_get_field_by_name+0x3d0f>
+    1188dd85:	lea    -0x58(%rbp),%rdi
+    1188dd89:	call   111490a0 <_RNCNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set17get_field_by_name27js_object_get_field_by_names_0B9_>
+    1188dd8e:	cmp    $0x1,%rax
+    1188dd92:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188dd98:	cmp    $0x4,%r15
+    1188dd9c:	jne    1188e215 <js_object_get_field_by_name+0x33f5>
+    1188dda2:	cmpl   $0x656d616e,0x0(%r13)
+    1188ddaa:	jne    1188e237 <js_object_get_field_by_name+0x3417>
+    1188ddb0:	jmp    1188e3ad <js_object_get_field_by_name+0x358d>
+    1188ddb5:	mov    %rax,%r15
+    1188ddb8:	movabs $0xffffffffffff,%rax
+    1188ddc2:	and    %rax,%r15
+    1188ddc5:	movabs $0x7fff000000000000,%rax
+    1188ddcf:	or     %rax,%r15
+    1188ddd2:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188ddd7:	mov    %r14d,%edi
+    1188ddda:	call   *0x3a8d840(%rip)        # 1531b620 <_GLOBAL_OFFSET_TABLE_+0x45a0>
+    1188dde0:	test   %al,%al
+    1188dde2:	je     1188ddfe <js_object_get_field_by_name+0x2fde>
+    1188dde4:	mov    %r14d,%eax
+    1188dde7:	movabs $0x7ffe000000000000,%r15
+    1188ddf1:	or     %rax,%r15
+    1188ddf4:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188ddf9:	test   %r14d,%r14d
+    1188ddfc:	je     1188de24 <js_object_get_field_by_name+0x3004>
+    1188ddfe:	mov    %r14d,%edi
+    1188de01:	mov    %r13,%rsi
+    1188de04:	mov    %r15,%rdx
+    1188de07:	call   1151fcb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13native_module20class_has_own_method>
+    1188de0c:	test   %al,%al
+    1188de0e:	je     1188de24 <js_object_get_field_by_name+0x3004>
+    1188de10:	mov    %r14d,%edi
+    1188de13:	mov    %r13,%rsi
+    1188de16:	mov    %r15,%rdx
+    1188de19:	call   *0x3a940e1(%rip)        # 15321f00 <_GLOBAL_OFFSET_TABLE_+0xae80>
+    1188de1f:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188de24:	lea    -0x58(%rbp),%rdi
+    1188de28:	call   11183880 <_RNvMs1_NtNtCscI5nJwKNRh4_13perry_runtime6object11class_imageINtB5_10ImageTableINtNtNtNtCsjFfivMnupPH_3std4sync6poison6rwlock6RwLockINtNtCs9ueeiBwVTSo_4core6option6OptionINtNtNtNtB1n_11collections4hash3map7HashMapmNtNtNtB7_14class_registry5state11ClassVTableNtNtB9_9fast_hash9PtrHasherEEEE4readB9_>
+    1188de2d:	cmpb   $0x0,-0x58(%rbp)
+    1188de31:	je     1188e059 <js_object_get_field_by_name+0x3239>
+    1188de37:	mov    -0x48(%rbp),%rdi
+    1188de3b:	jmp    1188e16a <js_object_get_field_by_name+0x334a>
+    1188de40:	call   1151e160 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object13class_handles24handle_property_dispatch>
+    1188de45:	test   %rax,%rax
+    1188de48:	je     1188de6e <js_object_get_field_by_name+0x304e>
+    1188de4a:	mov    %r13,%rdi
+    1188de4d:	lea    0x14(%r14),%rsi
+    1188de51:	mov    %rbx,%rdx
+    1188de54:	call   *%rax
+    1188de56:	movq   %xmm0,%r15
+    1188de5b:	movabs $0x7ffc000000000001,%rax
+    1188de65:	cmp    %rax,%r15
+    1188de68:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188de6e:	mov    %r13,%rdi
+    1188de71:	mov    %r14,%rsi
+    1188de74:	call   116b0470 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set17get_field_by_name28handle_proto_inherited_field>
+    1188de79:	jmp    1188da24 <js_object_get_field_by_name+0x2c04>
+    1188de7e:	lea    0x14(%r12),%rdx
+    1188de83:	movzbl 0x8(%rdx),%eax
+    1188de87:	movabs $0x7079746f746f7270,%rcx
+    1188de91:	xor    (%rdx),%rcx
+    1188de94:	xor    $0x65,%rax
+    1188de98:	or     %rcx,%rax
+    1188de9b:	movabs $0x7ffd000000000000,%r13
+    1188dea5:	je     1188df38 <js_object_get_field_by_name+0x3118>
+    1188deab:	lea    0x2ab8404(%rip),%rsi        # 143462b6 <anon.b37f594bd5826585f7e5082f302a037e.12135.llvm.4573768808118376784+0x33f6>
+    1188deb2:	mov    $0x14,%edx
+    1188deb7:	mov    %r14,%rdi
+    1188deba:	call   116e1f80 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static28class_object_own_field_bytes>
+    1188debf:	cmp    $0x1,%rax
+    1188dec3:	jne    1188df38 <js_object_get_field_by_name+0x3118>
+    1188dec5:	movq   %xmm0,%rbx
+    1188deca:	movabs $0xffff000000000000,%rax
+    1188ded4:	and    %rbx,%rax
+    1188ded7:	cmp    %r13,%rax
+    1188deda:	jne    1188df38 <js_object_get_field_by_name+0x3118>
+    1188dedc:	and    %r15,%rbx
+    1188dedf:	cmp    %r14,%rbx
+    1188dee2:	setne  %al
+    1188dee5:	cmp    $0x100000,%rbx
+    1188deec:	setae  %cl
+    1188deef:	and    %al,%cl
+    1188def1:	cmp    $0x1,%cl
+    1188def4:	jne    1188df38 <js_object_get_field_by_name+0x3118>
+    1188def6:	mov    %rbx,%rdi
+    1188def9:	call   *0x3a94fb1(%rip)        # 15322eb0 <_GLOBAL_OFFSET_TABLE_+0xbe30>
+    1188deff:	movabs $0x800000000000,%rcx
+    1188df09:	dec    %rcx
+    1188df0c:	cmp    %rcx,%rbx
+    1188df0f:	seta   %cl
+    1188df12:	or     %al,%cl
+    1188df14:	jne    1188df38 <js_object_get_field_by_name+0x3118>
+    1188df16:	mov    %rbx,%rdi
+    1188df19:	mov    %r12,%rsi
+    1188df1c:	call   *0x3a90ec6(%rip)        # 1531ede8 <_GLOBAL_OFFSET_TABLE_+0x7d68>
+    1188df22:	mov    %rax,%r15
+    1188df25:	movabs $0x7ffc000000000001,%rax
+    1188df2f:	cmp    %rax,%r15
+    1188df32:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188df38:	mov    %r14,%rdi
+    1188df3b:	mov    %r12,%rsi
+    1188df3e:	call   116b1d80 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set22get_field_by_name_tail29get_field_by_name_object_tail>
+    1188df43:	mov    %rax,%r15
+    1188df46:	movabs $0x7ffc000000000001,%rax
+    1188df50:	cmp    %rax,%r15
+    1188df53:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188df59:	mov    %r14,%rax
+    1188df5c:	shr    $0x34,%rax
+    1188df60:	or     %r14,%r13
+    1188df63:	cmp    $0x7ff,%eax
+    1188df68:	cmovae %r14,%r13
+    1188df6c:	test   %r14,%r14
+    1188df6f:	je     1188df77 <js_object_get_field_by_name+0x3157>
+    1188df71:	mov    %r13,-0x40(%rbp)
+    1188df75:	jmp    1188df84 <js_object_get_field_by_name+0x3164>
+    1188df77:	movsd  0xdde431(%rip),%xmm0        # 1266c3b0 <perry_typed_shape_mask_cli_2_1_112_js___e8__class_expr_17991+0x98>
+    1188df7f:	movsd  %xmm0,-0x40(%rbp)
+    1188df84:	mov    %r14,%rdi
+    1188df87:	call   *0x3a9ba8b(%rip)        # 15329a18 <_GLOBAL_OFFSET_TABLE_+0x12998>
+    1188df8d:	test   %eax,%eax
+    1188df8f:	je     1188e184 <js_object_get_field_by_name+0x3364>
+    1188df95:	mov    %eax,%r15d
+    1188df98:	mov    0x4(%r12),%ebx
+    1188df9d:	lea    -0x58(%rbp),%rdi
+    1188dfa1:	mov    -0x78(%rbp),%rsi
+    1188dfa5:	mov    %rbx,%rdx
+    1188dfa8:	call   *0x3a8f8c2(%rip)        # 1531d870 <_GLOBAL_OFFSET_TABLE_+0x67f0>
+    1188dfae:	mov    -0x48(%rbp),%r14
+    1188dfb2:	test   %r14,%r14
+    1188dfb5:	sete   %al
+    1188dfb8:	or     -0x58(%rbp),%al
+    1188dfbb:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188dfc1:	mov    -0x50(%rbp),%r12
+    1188dfc5:	mov    %r15d,%edi
+    1188dfc8:	mov    %r12,%rsi
+    1188dfcb:	mov    %r14,%rdx
+    1188dfce:	call   116eaf70 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state20class_is_key_deleted>
+    1188dfd3:	test   %al,%al
+    1188dfd5:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188dfdb:	lea    -0x58(%rbp),%rdi
+    1188dfdf:	mov    %r15d,%esi
+    1188dfe2:	mov    %r12,%rdx
+    1188dfe5:	mov    %r14,%rcx
+    1188dfe8:	call   116e2e30 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static29lookup_static_method_in_chain>
+    1188dfed:	cmpb   $0x2,-0x4c(%rbp)
+    1188dff1:	jne    1188e1d6 <js_object_get_field_by_name+0x33b6>
+    1188dff7:	mov    %r15d,%edi
+    1188dffa:	mov    %r12,%rsi
+    1188dffd:	mov    %r14,%rdx
+    1188e000:	movsd  -0x40(%rbp),%xmm0
+    1188e005:	call   116e3610 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static34class_static_accessor_getter_value>
+    1188e00a:	cmp    $0x1,%rax
+    1188e00e:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e014:	mov    %r15d,%edi
+    1188e017:	call   116fd740 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry9construct23promise_parent_in_chain>
+    1188e01c:	test   %al,%al
+    1188e01e:	je     1188e184 <js_object_get_field_by_name+0x3364>
+    1188e024:	lea    -0x58(%rbp),%rdi
+    1188e028:	mov    %r12,%rsi
+    1188e02b:	mov    %r14,%rdx
+    1188e02e:	call   11692fa0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object11global_this14bigint_promise28promise_static_function_spec>
+    1188e033:	cmpb   $0x2,-0x48(%rbp)
+    1188e037:	movabs $0x7ffc000000000001,%r15
+    1188e041:	je     1188e18e <js_object_get_field_by_name+0x336e>
+    1188e047:	mov    -0x78(%rbp),%rdi
+    1188e04b:	mov    %rbx,%rsi
+    1188e04e:	call   *0x3a92d4c(%rip)        # 15320da0 <_GLOBAL_OFFSET_TABLE_+0x9d20>
+    1188e054:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e059:	mov    %r15,%rbx
+    1188e05c:	mov    -0x50(%rbp),%r15
+    1188e060:	mov    -0x48(%rbp),%rdi
+    1188e064:	cmpq   $0x0,(%r15)
+    1188e068:	je     1188e16a <js_object_get_field_by_name+0x334a>
+    1188e06e:	mov    %rdi,-0x30(%rbp)
+    1188e072:	mov    -0x34(%rbp),%r14d
+    1188e076:	xor    %r12d,%r12d
+    1188e079:	cmpq   $0x0,0x18(%r15)
+    1188e07e:	je     1188e13a <js_object_get_field_by_name+0x331a>
+    1188e084:	mov    %r14d,%edx
+    1188e087:	movabs $0x9e3779b97f4a7c15,%rax
+    1188e091:	imul   %rax,%rdx
+    1188e095:	mov    %rdx,%rax
+    1188e098:	shr    $0x20,%rax
+    1188e09c:	xor    %rdx,%rax
+    1188e09f:	shr    $0x39,%rdx
+    1188e0a3:	mov    (%r15),%rdi
+    1188e0a6:	mov    0x8(%r15),%rcx
+    1188e0aa:	movd   %edx,%xmm0
+    1188e0ae:	punpcklbw %xmm0,%xmm0
+    1188e0b2:	pshuflw $0x0,%xmm0,%xmm0
+    1188e0b7:	pshufd $0x44,%xmm0,%xmm0
+    1188e0bc:	xor    %edx,%edx
+    1188e0be:	and    %rcx,%rax
+    1188e0c1:	movdqu (%rdi,%rax,1),%xmm1
+    1188e0c6:	movdqa %xmm1,%xmm2
+    1188e0ca:	pcmpeqb %xmm0,%xmm2
+    1188e0ce:	pmovmskb %xmm2,%esi
+    1188e0d2:	test   %esi,%esi
+    1188e0d4:	je     1188e102 <js_object_get_field_by_name+0x32e2>
+    1188e0d6:	tzcnt  %esi,%r8d
+    1188e0db:	add    %rax,%r8
+    1188e0de:	and    %rcx,%r8
+    1188e0e1:	neg    %r8
+    1188e0e4:	imul   $0x98,%r8,%r8
+    1188e0eb:	cmp    -0x98(%rdi,%r8,1),%r14d
+    1188e0f3:	je     1188e11f <js_object_get_field_by_name+0x32ff>
+    1188e0f5:	lea    -0x1(%rsi),%r8d
+    1188e0f9:	and    %si,%r8w
+    1188e0fd:	mov    %r8d,%esi
+    1188e100:	jne    1188e0d6 <js_object_get_field_by_name+0x32b6>
+    1188e102:	pcmpeqd %xmm2,%xmm2
+    1188e106:	pcmpeqb %xmm2,%xmm1
+    1188e10a:	pmovmskb %xmm1,%esi
+    1188e10e:	test   %esi,%esi
+    1188e110:	jne    1188e13a <js_object_get_field_by_name+0x331a>
+    1188e112:	add    %rdx,%rax
+    1188e115:	add    $0x10,%rax
+    1188e119:	add    $0x10,%rdx
+    1188e11d:	jmp    1188e0be <js_object_get_field_by_name+0x329e>
+    1188e11f:	add    %r8,%rdi
+    1188e122:	add    $0xffffffffffffffa0,%rdi
+    1188e126:	mov    %r13,%rsi
+    1188e129:	mov    %rbx,%rdx
+    1188e12c:	call   1103cba0 <_RINvMs1_NtCsbuoDnTMY902_9hashbrown3mapINtB6_7HashMapNtNtCscv7DEBI70Kq_5alloc6string6StringjNtNtNtCsjFfivMnupPH_3std4hash6random11RandomStateE3geteECscI5nJwKNRh4_13perry_runtime>
+    1188e131:	test   %rax,%rax
+    1188e134:	jne    1188e371 <js_object_get_field_by_name+0x3551>
+    1188e13a:	mov    %r14d,%edi
+    1188e13d:	call   115528f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object19class_meta_registry19get_parent_class_id.llvm.4573768808118376784>
+    1188e142:	test   $0x1,%al
+    1188e144:	je     1188e15f <js_object_get_field_by_name+0x333f>
+    1188e146:	test   %edx,%edx
+    1188e148:	je     1188e15f <js_object_get_field_by_name+0x333f>
+    1188e14a:	cmp    %r14d,%edx
+    1188e14d:	je     1188e15f <js_object_get_field_by_name+0x333f>
+    1188e14f:	inc    %r12
+    1188e152:	mov    %edx,%r14d
+    1188e155:	cmp    $0x20,%r12
+    1188e159:	jne    1188e079 <js_object_get_field_by_name+0x3259>
+    1188e15f:	mov    $0xffffffff,%esi
+    1188e164:	mov    -0x30(%rbp),%rdi
+    1188e168:	jmp    1188e16f <js_object_get_field_by_name+0x334f>
+    1188e16a:	mov    $0xffffffff,%esi
+    1188e16f:	lock xadd %esi,(%rdi)
+    1188e173:	dec    %esi
+    1188e175:	mov    %esi,%eax
+    1188e177:	and    $0xbfffffff,%eax
+    1188e17c:	neg    %eax
+    1188e17e:	jo     1188ead0 <js_object_get_field_by_name+0x3cb0>
+    1188e184:	movabs $0x7ffc000000000001,%r15
+    1188e18e:	mov    %r15,%rax
+    1188e191:	add    $0xd8,%rsp
+    1188e198:	pop    %rbx
+    1188e199:	pop    %r12
+    1188e19b:	pop    %r13
+    1188e19d:	pop    %r14
+    1188e19f:	pop    %r15
+    1188e1a1:	pop    %rbp
+    1188e1a2:	ret
+    1188e1a3:	mov    %r14d,%edi
+    1188e1a6:	mov    %r13,%rsi
+    1188e1a9:	xor    %edx,%edx
+    1188e1ab:	call   116e3610 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static34class_static_accessor_getter_value>
+    1188e1b0:	movabs $0x7ffc000000000001,%r15
+    1188e1ba:	cmp    $0x1,%rax
+    1188e1be:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e1c4:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e1c6:	test   %r13,%r13
+    1188e1c9:	jle    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e1cb:	mov    %rbx,%rdi
+    1188e1ce:	call   *0x3aa3c1c(%rip)        # 15331df0 <_GLOBAL_OFFSET_TABLE_+0x1ad70>
+    1188e1d4:	jmp    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e1d6:	cmp    $0x1,%rbx
+    1188e1da:	mov    %rbx,%rdi
+    1188e1dd:	adc    $0x0,%rdi
+    1188e1e1:	mov    $0x1,%esi
+    1188e1e6:	call   *0x3a8c724(%rip)        # 1531a910 <_GLOBAL_OFFSET_TABLE_+0x3890>
+    1188e1ec:	mov    %rax,%r14
+    1188e1ef:	mov    %rax,%rdi
+    1188e1f2:	mov    -0x78(%rbp),%rsi
+    1188e1f6:	mov    %rbx,%rdx
+    1188e1f9:	call   *0x3a8eb31(%rip)        # 1531cd30 <memcpy@GLIBC_2.14>
+    1188e1ff:	movsd  -0x40(%rbp),%xmm0
+    1188e204:	mov    %r14,%rdi
+    1188e207:	mov    %rbx,%rsi
+    1188e20a:	call   *0x3aa29b8(%rip)        # 15330bc8 <_GLOBAL_OFFSET_TABLE_+0x19b48>
+    1188e210:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e215:	cmp    $0x6,%r15
+    1188e219:	jne    1188e237 <js_object_get_field_by_name+0x3417>
+    1188e21b:	mov    $0x676e656c,%eax
+    1188e220:	xor    0x0(%r13),%eax
+    1188e224:	movzwl 0x4(%r13),%ecx
+    1188e229:	xor    $0x6874,%ecx
+    1188e22f:	or     %eax,%ecx
+    1188e231:	je     1188e3ad <js_object_get_field_by_name+0x358d>
+    1188e237:	mov    $0x20,%r14d
+    1188e23d:	mov    -0x34(%rbp),%ebx
+    1188e240:	jmp    1188e24b <js_object_get_field_by_name+0x342b>
+    1188e242:	dec    %r14
+    1188e245:	je     1188e3ad <js_object_get_field_by_name+0x358d>
+    1188e24b:	mov    %r15,%r12
+    1188e24e:	mov    %ebx,%edi
+    1188e250:	call   116eb740 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state22class_static_prototype>
+    1188e255:	test   %rax,%rax
+    1188e258:	je     1188e27d <js_object_get_field_by_name+0x345d>
+    1188e25a:	mov    %rax,%rdi
+    1188e25d:	mov    -0x30(%rbp),%rsi
+    1188e261:	call   *0x3a90b81(%rip)        # 1531ede8 <_GLOBAL_OFFSET_TABLE_+0x7d68>
+    1188e267:	mov    %rax,%r15
+    1188e26a:	movabs $0x7ffc000000000001,%rax
+    1188e274:	cmp    %rax,%r15
+    1188e277:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e27d:	mov    %ebx,%edi
+    1188e27f:	call   116e7bd0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry17prototype_objects22class_prototype_object>
+    1188e284:	test   %rax,%rax
+    1188e287:	je     1188e2ac <js_object_get_field_by_name+0x348c>
+    1188e289:	mov    %rax,%rdi
+    1188e28c:	mov    -0x30(%rbp),%rsi
+    1188e290:	call   *0x3a90b52(%rip)        # 1531ede8 <_GLOBAL_OFFSET_TABLE_+0x7d68>
+    1188e296:	mov    %rax,%r15
+    1188e299:	movabs $0x7ffc000000000001,%rax
+    1188e2a3:	cmp    %rax,%r15
+    1188e2a6:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e2ac:	mov    %ebx,%edi
+    1188e2ae:	call   115528f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object19class_meta_registry19get_parent_class_id.llvm.4573768808118376784>
+    1188e2b3:	cmp    $0x1,%eax
+    1188e2b6:	jne    1188e3aa <js_object_get_field_by_name+0x358a>
+    1188e2bc:	test   %edx,%edx
+    1188e2be:	je     1188e3aa <js_object_get_field_by_name+0x358a>
+    1188e2c4:	cmp    %ebx,%edx
+    1188e2c6:	je     1188e3aa <js_object_get_field_by_name+0x358a>
+    1188e2cc:	mov    %edx,%ebx
+    1188e2ce:	mov    %edx,-0xac(%rbp)
+    1188e2d4:	mov    %edx,%edi
+    1188e2d6:	mov    %r13,%rsi
+    1188e2d9:	mov    %r12,%r15
+    1188e2dc:	mov    %r12,%rdx
+    1188e2df:	call   116eaf70 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state20class_is_key_deleted>
+    1188e2e4:	test   %al,%al
+    1188e2e6:	jne    1188e242 <js_object_get_field_by_name+0x3422>
+    1188e2ec:	lea    -0xac(%rbp),%rax
+    1188e2f3:	mov    %rax,-0x58(%rbp)
+    1188e2f7:	mov    %r13,-0x50(%rbp)
+    1188e2fb:	mov    %r15,-0x48(%rbp)
+    1188e2ff:	mov    0x3ac22b2(%rip),%r15d        # 153505b8 <_RNvNvNtCscI5nJwKNRh4_13perry_runtime6object19CLASS_DYNAMIC_PROPS4SLOT+0x10>
+    1188e306:	cmp    $0x300,%r15d
+    1188e30d:	mov    -0x88(%rbp),%rdi
+    1188e314:	jae    1188e35f <js_object_get_field_by_name+0x353f>
+    1188e316:	cmpq   $0x0,0x78(%rdi)
+    1188e31b:	je     1188e345 <js_object_get_field_by_name+0x3525>
+    1188e31d:	mov    0x1e8(%rdi,%r15,8),%rsi
+    1188e325:	test   %rsi,%rsi
+    1188e328:	je     1188e35f <js_object_get_field_by_name+0x353f>
+    1188e32a:	lea    -0x58(%rbp),%rdi
+    1188e32e:	call   11148e80 <_RNCNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set17get_field_by_name27js_object_get_field_by_names0_0B9_>
+    1188e333:	cmp    $0x1,%rax
+    1188e337:	mov    %r12,%r15
+    1188e33a:	jne    1188e242 <js_object_get_field_by_name+0x3422>
+    1188e340:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e345:	call   *0x3a950cd(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    1188e34b:	mov    -0x88(%rbp),%rdi
+    1188e352:	mov    0x1e8(%rdi,%r15,8),%rsi
+    1188e35a:	test   %rsi,%rsi
+    1188e35d:	jne    1188e32a <js_object_get_field_by_name+0x350a>
+    1188e35f:	lea    0x39a31da(%rip),%rdi        # 15231540 <_RNvNtCscI5nJwKNRh4_13perry_runtime6object19CLASS_DYNAMIC_PROPS>
+    1188e366:	call   *0x3a9e74c(%rip)        # 1532cab8 <_GLOBAL_OFFSET_TABLE_+0x15a38>
+    1188e36c:	mov    %rax,%rsi
+    1188e36f:	jmp    1188e32a <js_object_get_field_by_name+0x350a>
+    1188e371:	movaps -0x70(%rbp),%xmm0
+    1188e375:	call   *(%rax)
+    1188e377:	mov    $0xffffffff,%esi
+    1188e37c:	mov    -0x30(%rbp),%rdi
+    1188e380:	lock xadd %esi,(%rdi)
+    1188e384:	dec    %esi
+    1188e386:	mov    %esi,%eax
+    1188e388:	and    $0xbfffffff,%eax
+    1188e38d:	neg    %eax
+    1188e38f:	jno    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e395:	movsd  %xmm0,-0x30(%rbp)
+    1188e39a:	call   *0x3a89190(%rip)        # 15317530 <_GLOBAL_OFFSET_TABLE_+0x4b0>
+    1188e3a0:	movsd  -0x30(%rbp),%xmm0
+    1188e3a5:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e3aa:	mov    %r12,%r15
+    1188e3ad:	mov    -0x34(%rbp),%esi
+    1188e3b0:	lea    -0x58(%rbp),%rdi
+    1188e3b4:	mov    %r13,%rdx
+    1188e3b7:	mov    %r15,%rcx
+    1188e3ba:	call   116e2e30 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static29lookup_static_method_in_chain>
+    1188e3bf:	cmpb   $0x2,-0x4c(%rbp)
+    1188e3c3:	jne    1188e45c <js_object_get_field_by_name+0x363c>
+    1188e3c9:	mov    %r15,%r14
+    1188e3cc:	mov    -0x34(%rbp),%edi
+    1188e3cf:	call   116fd740 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry9construct23promise_parent_in_chain>
+    1188e3d4:	test   %al,%al
+    1188e3d6:	je     1188e417 <js_object_get_field_by_name+0x35f7>
+    1188e3d8:	lea    -0x58(%rbp),%rdi
+    1188e3dc:	mov    %r13,%rsi
+    1188e3df:	mov    %r14,%rdx
+    1188e3e2:	call   11692fa0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object11global_this14bigint_promise28promise_static_function_spec>
+    1188e3e7:	cmpb   $0x2,-0x48(%rbp)
+    1188e3eb:	je     1188e417 <js_object_get_field_by_name+0x35f7>
+    1188e3ed:	mov    -0x30(%rbp),%rax
+    1188e3f1:	lea    0x14(%rax),%rdi
+    1188e3f5:	mov    -0x40(%rbp),%rsi
+    1188e3f9:	call   *0x3a929a1(%rip)        # 15320da0 <_GLOBAL_OFFSET_TABLE_+0x9d20>
+    1188e3ff:	movq   %xmm0,%r15
+    1188e404:	movabs $0x7ffc000000000001,%rax
+    1188e40e:	cmp    %rax,%r15
+    1188e411:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e417:	mov    -0x34(%rbp),%edi
+    1188e41a:	mov    %r13,%rsi
+    1188e41d:	mov    %r14,%r15
+    1188e420:	mov    %r14,%rdx
+    1188e423:	movdqa -0x70(%rbp),%xmm0
+    1188e428:	call   116e3610 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry13parent_static34class_static_accessor_getter_value>
+    1188e42d:	test   $0x1,%al
+    1188e42f:	jne    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e435:	movabs $0x8003fffffffffffd,%rbx
+    1188e43f:	cmp    $0x4,%r15
+    1188e443:	jne    1188e689 <js_object_get_field_by_name+0x3869>
+    1188e449:	cmpl   $0x656d616e,0x0(%r13)
+    1188e451:	jne    1188e6a7 <js_object_get_field_by_name+0x3887>
+    1188e457:	jmp    1188e6d2 <js_object_get_field_by_name+0x38b2>
+    1188e45c:	mov    -0x40(%rbp),%r14
+    1188e460:	cmp    $0x1,%r14
+    1188e464:	mov    %r14,%rdi
+    1188e467:	adc    $0x0,%rdi
+    1188e46b:	mov    $0x1,%esi
+    1188e470:	call   *0x3a8c49a(%rip)        # 1531a910 <_GLOBAL_OFFSET_TABLE_+0x3890>
+    1188e476:	mov    %rax,%rbx
+    1188e479:	mov    %rax,%rdi
+    1188e47c:	mov    -0x78(%rbp),%rsi
+    1188e480:	mov    %r14,%rdx
+    1188e483:	call   *0x3a8e8a7(%rip)        # 1531cd30 <memcpy@GLIBC_2.14>
+    1188e489:	movaps -0x70(%rbp),%xmm0
+    1188e48d:	mov    %rbx,%rdi
+    1188e490:	mov    %r14,%rsi
+    1188e493:	call   *0x3aa272f(%rip)        # 15330bc8 <_GLOBAL_OFFSET_TABLE_+0x19b48>
+    1188e499:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e49e:	lea    0x39902c3(%rip),%rdi        # 1521e768 <anon.b37f594bd5826585f7e5082f302a037e.644.llvm.4573768808118376784>
+    1188e4a5:	call   *0x3a9db75(%rip)        # 1532c020 <_GLOBAL_OFFSET_TABLE_+0x14fa0>
+    1188e4ab:	call   *0x3a8b71f(%rip)        # 15319bd0 <_GLOBAL_OFFSET_TABLE_+0x2b50>
+    1188e4b1:	lea    0x2a6f5c4(%rip),%rdi        # 142fda7c <anon.b37f594bd5826585f7e5082f302a037e.395.llvm.4573768808118376784+0x740>
+    1188e4b8:	mov    $0xb,%esi
+    1188e4bd:	call   *0x3a96aed(%rip)        # 15324fb0 <_GLOBAL_OFFSET_TABLE_+0xdf30>
+    1188e4c3:	lea    0x14(%r14),%rax
+    1188e4c7:	cmpb   $0x66,(%rax)
+    1188e4ca:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e4d0:	cmpb   $0x69,0x15(%r14)
+    1188e4d5:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e4db:	cmpb   $0x6e,0x16(%r14)
+    1188e4e0:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e4e6:	mov    -0x30(%rbp),%rax
+    1188e4ea:	cmpb   $0x61,0x17(%rax)
+    1188e4ee:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e4f4:	mov    -0x30(%rbp),%rax
+    1188e4f8:	cmpb   $0x6c,0x18(%rax)
+    1188e4fc:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e502:	mov    -0x30(%rbp),%rax
+    1188e506:	cmpb   $0x6c,0x19(%rax)
+    1188e50a:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e510:	mov    -0x30(%rbp),%rax
+    1188e514:	cmpb   $0x79,0x1a(%rax)
+    1188e518:	je     1188e55e <js_object_get_field_by_name+0x373e>
+    1188e51a:	jmp    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e51f:	lea    0x14(%r14),%rax
+    1188e523:	cmpb   $0x63,(%rax)
+    1188e526:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e52c:	cmpb   $0x61,0x15(%r14)
+    1188e531:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e537:	cmpb   $0x74,0x16(%r14)
+    1188e53c:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e542:	mov    -0x30(%rbp),%rax
+    1188e546:	cmpb   $0x63,0x17(%rax)
+    1188e54a:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e550:	mov    -0x30(%rbp),%rax
+    1188e554:	cmpb   $0x68,0x18(%rax)
+    1188e558:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e55e:	mov    -0x78(%rbp),%rsi
+    1188e562:	mov    %rbx,%rdx
+    1188e565:	call   *0x3a92f7d(%rip)        # 153214e8 <_GLOBAL_OFFSET_TABLE_+0xa468>
+    1188e56b:	movabs $0x7ffc000000000001,%r15
+    1188e575:	cmp    $0x1,%rax
+    1188e579:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e57f:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e584:	mov    -0x78(%rbp),%rdx
+    1188e588:	movzwl 0x8(%rdx),%eax
+    1188e58c:	movzbl 0xa(%rdx),%ecx
+    1188e590:	shl    $0x10,%ecx
+    1188e593:	movabs $0x63757274736e6f63,%rsi
+    1188e59d:	xor    (%rdx),%rsi
+    1188e5a0:	or     %rax,%rcx
+    1188e5a3:	xor    $0x726f74,%rcx
+    1188e5aa:	or     %rsi,%rcx
+    1188e5ad:	movabs $0x7ffc000000000001,%r15
+    1188e5b7:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e5bd:	lea    0x2a96a21(%rip),%rdi        # 14324fe5 <anon.b37f594bd5826585f7e5082f302a037e.7425.llvm.4573768808118376784+0x1b9>
+    1188e5c4:	mov    $0x7,%esi
+    1188e5c9:	jmp    1188dbef <js_object_get_field_by_name+0x2dcf>
+    1188e5ce:	mov    %rbx,%rdi
+    1188e5d1:	call   *0x3a96af9(%rip)        # 153250d0 <_GLOBAL_OFFSET_TABLE_+0xe050>
+    1188e5d7:	jmp    1188e5e2 <js_object_get_field_by_name+0x37c2>
+    1188e5d9:	mov    %rbx,%rdi
+    1188e5dc:	call   *0x3a92676(%rip)        # 15320c58 <_GLOBAL_OFFSET_TABLE_+0x9bd8>
+    1188e5e2:	mov    -0x90(%rbp),%rcx
+    1188e5e9:	cmpq   $0x0,(%rcx)
+    1188e5ed:	jne    1188e67c <js_object_get_field_by_name+0x385c>
+    1188e5f3:	mov    %eax,%eax
+    1188e5f5:	xorps  %xmm0,%xmm0
+    1188e5f8:	cvtsi2sd %rax,%xmm0
+    1188e5fd:	movq   %xmm0,%r15
+    1188e602:	cmp    0x18(%rcx),%r12
+    1188e606:	ja     1188e18e <js_object_get_field_by_name+0x336e>
+    1188e60c:	mov    %r12,0x18(%rcx)
+    1188e610:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e615:	mov    %ecx,%eax
+    1188e617:	xorps  %xmm0,%xmm0
+    1188e61a:	cvtsi2sd %rax,%xmm0
+    1188e61f:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e624:	mov    %r13,%rdi
+    1188e627:	call   1150a140 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer4view10backing_of>
+    1188e62c:	mov    %rax,%rdi
+    1188e62f:	call   *0x3a9eecb(%rip)        # 1532d500 <_GLOBAL_OFFSET_TABLE_+0x16480>
+    1188e635:	test   %rax,%rax
+    1188e638:	je     1188e860 <js_object_get_field_by_name+0x3a40>
+    1188e63e:	mov    %rax,%r15
+    1188e641:	shr    $0x34,%rax
+    1188e645:	cmp    $0x7fe,%eax
+    1188e64a:	ja     1188e18e <js_object_get_field_by_name+0x336e>
+    1188e650:	movabs $0xffffffffffff,%rax
+    1188e65a:	and    %rax,%r15
+    1188e65d:	jmp    1188dc67 <js_object_get_field_by_name+0x2e47>
+    1188e662:	lea    0x3990de7(%rip),%rdi        # 1521f450 <anon.b37f594bd5826585f7e5082f302a037e.932.llvm.4573768808118376784>
+    1188e669:	call   *0x3a9d9b1(%rip)        # 1532c020 <_GLOBAL_OFFSET_TABLE_+0x14fa0>
+    1188e66f:	lea    0x3990df2(%rip),%rdi        # 1521f468 <anon.b37f594bd5826585f7e5082f302a037e.933.llvm.4573768808118376784>
+    1188e676:	call   *0x3a9cd74(%rip)        # 1532b3f0 <_GLOBAL_OFFSET_TABLE_+0x14370>
+    1188e67c:	lea    0x399c9ed(%rip),%rdi        # 1522b070 <anon.b37f594bd5826585f7e5082f302a037e.3973.llvm.4573768808118376784>
+    1188e683:	call   *0x3a9cd67(%rip)        # 1532b3f0 <_GLOBAL_OFFSET_TABLE_+0x14370>
+    1188e689:	cmp    $0x6,%r15
+    1188e68d:	jne    1188e6a7 <js_object_get_field_by_name+0x3887>
+    1188e68f:	mov    $0x676e656c,%eax
+    1188e694:	xor    0x0(%r13),%eax
+    1188e698:	movzwl 0x4(%r13),%ecx
+    1188e69d:	xor    $0x6874,%ecx
+    1188e6a3:	or     %eax,%ecx
+    1188e6a5:	je     1188e6d2 <js_object_get_field_by_name+0x38b2>
+    1188e6a7:	mov    -0x34(%rbp),%edi
+    1188e6aa:	mov    -0x30(%rbp),%rsi
+    1188e6ae:	xor    %edx,%edx
+    1188e6b0:	mov    $0x1,%ecx
+    1188e6b5:	call   116e8b00 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry17prototype_objects31resolve_proto_chain_field_inner>
+    1188e6ba:	mov    %rdx,%r15
+    1188e6bd:	mov    %rdx,%rcx
+    1188e6c0:	add    %rbx,%rcx
+    1188e6c3:	cmp    $0xfffffffffffffffe,%rcx
+    1188e6c7:	setb   %cl
+    1188e6ca:	test   %al,%cl
+    1188e6cc:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e6d2:	mov    -0x34(%rbp),%edi
+    1188e6d5:	call   116eb210 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state20class_parent_closure>
+    1188e6da:	cmp    $0x1,%rax
+    1188e6de:	jne    1188e706 <js_object_get_field_by_name+0x38e6>
+    1188e6e0:	mov    %rdx,%rdi
+    1188e6e3:	mov    %r13,%rsi
+    1188e6e6:	mov    %r14,%rdx
+    1188e6e9:	call   *0x3a8a891(%rip)        # 15318f80 <_GLOBAL_OFFSET_TABLE_+0x1f00>
+    1188e6ef:	movq   %xmm0,%r15
+    1188e6f4:	lea    (%rbx,%r15,1),%rax
+    1188e6f8:	add    $0x2,%rax
+    1188e6fc:	cmp    $0x1,%rax
+    1188e700:	ja     1188e18e <js_object_get_field_by_name+0x336e>
+    1188e706:	cmp    $0x4,%r14
+    1188e70a:	jne    1188e872 <js_object_get_field_by_name+0x3a52>
+    1188e710:	cmpl   $0x656d616e,0x0(%r13)
+    1188e718:	setne  %al
+    1188e71b:	mov    -0x34(%rbp),%edi
+    1188e71e:	test   %edi,%edi
+    1188e720:	sete   %cl
+    1188e723:	or     %al,%cl
+    1188e725:	jne    1188e8d0 <js_object_get_field_by_name+0x3ab0>
+    1188e72b:	mov    $0x4,%edx
+    1188e730:	mov    %r13,%rsi
+    1188e733:	call   116eaf70 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state20class_is_key_deleted>
+    1188e738:	test   %al,%al
+    1188e73a:	jne    1188e8d0 <js_object_get_field_by_name+0x3ab0>
+    1188e740:	mov    -0x34(%rbp),%esi
+    1188e743:	lea    -0x58(%rbp),%rdi
+    1188e747:	call   *0x3a9c1eb(%rip)        # 1532a938 <_GLOBAL_OFFSET_TABLE_+0x138b8>
+    1188e74d:	mov    -0x58(%rbp),%r12
+    1188e751:	cmp    $0xffffffffffffffff,%r12
+    1188e755:	je     1188e8d0 <js_object_get_field_by_name+0x3ab0>
+    1188e75b:	mov    -0x50(%rbp),%rbx
+    1188e75f:	mov    -0x48(%rbp),%edx
+    1188e762:	mov    %rbx,%rdi
+    1188e765:	mov    %edx,%esi
+    1188e767:	call   *0x3a8db3b(%rip)        # 1531c2a8 <_GLOBAL_OFFSET_TABLE_+0x5228>
+    1188e76d:	mov    %rax,%r15
+    1188e770:	test   %rax,%rax
+    1188e773:	jne    1188e78e <js_object_get_field_by_name+0x396e>
+    1188e775:	xor    %edi,%edi
+    1188e777:	call   112a3ca0 <_RNvNtCscI5nJwKNRh4_13perry_runtime6string20string_storage_alloc.llvm.4573768808118376784>
+    1188e77c:	mov    %rax,%r15
+    1188e77f:	pxor   %xmm0,%xmm0
+    1188e783:	movdqu %xmm0,(%rax)
+    1188e787:	movl   $0x0,0x10(%rax)
+    1188e78e:	movabs $0xffffffffffff,%rax
+    1188e798:	and    %rax,%r15
+    1188e79b:	test   %r12,%r12
+    1188e79e:	je     1188ddc5 <js_object_get_field_by_name+0x2fa5>
+    1188e7a4:	mov    %rbx,%rdi
+    1188e7a7:	call   *0x3aa3643(%rip)        # 15331df0 <_GLOBAL_OFFSET_TABLE_+0x1ad70>
+    1188e7ad:	jmp    1188ddc5 <js_object_get_field_by_name+0x2fa5>
+    1188e7b2:	mov    %r13,%rdi
+    1188e7b5:	call   *0x3a99cfd(%rip)        # 153284b8 <_GLOBAL_OFFSET_TABLE_+0x11438>
+    1188e7bb:	mov    %eax,%eax
+    1188e7bd:	xorps  %xmm0,%xmm0
+    1188e7c0:	cvtsi2sd %rax,%xmm0
+    1188e7c5:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e7ca:	mov    %r13,%rdi
+    1188e7cd:	call   11508640 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer11exotic_view26is_non_indexed_buffer_view>
+    1188e7d2:	movabs $0x7ffc000000000001,%r15
+    1188e7dc:	test   %al,%al
+    1188e7de:	jne    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e7e4:	mov    %r13,%rax
+    1188e7e7:	shr    $0x33,%rax
+    1188e7eb:	movabs $0xffffffffffff,%rcx
+    1188e7f5:	and    %r13,%rcx
+    1188e7f8:	cmp    $0xfff,%eax
+    1188e7fd:	cmovb  %r13,%rcx
+    1188e801:	cmp    $0x1000,%rcx
+    1188e808:	jae    1188e9d1 <js_object_get_field_by_name+0x3bb1>
+    1188e80e:	xor    %r15d,%r15d
+    1188e811:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e816:	mov    -0x40(%rbp),%eax
+    1188e819:	cmp    $0x3,%eax
+    1188e81c:	mov    $0x2,%ebx
+    1188e821:	cmovae %eax,%ebx
+    1188e824:	xor    %ecx,%ecx
+    1188e826:	cmp    %ebx,%edx
+    1188e828:	setb   %cl
+    1188e82b:	mov    %r13,%rdi
+    1188e82e:	mov    -0x30(%rbp),%rsi
+    1188e832:	mov    %edx,%r14d
+    1188e835:	call   116b0290 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set17get_field_by_name15prime_read_stub>
+    1188e83a:	mov    %r14d,%esi
+    1188e83d:	cmp    %ebx,%r14d
+    1188e840:	jae    1188ea1e <js_object_get_field_by_name+0x3bfe>
+    1188e846:	mov    %r13,%rdi
+    1188e849:	add    $0xd8,%rsp
+    1188e850:	pop    %rbx
+    1188e851:	pop    %r12
+    1188e853:	pop    %r13
+    1188e855:	pop    %r14
+    1188e857:	pop    %r15
+    1188e859:	pop    %rbp
+    1188e85a:	jmp    *0x3a9d968(%rip)        # 1532c1c8 <_GLOBAL_OFFSET_TABLE_+0x15148>
+    1188e860:	movabs $0x7ffc000000000001,%r15
+    1188e86a:	inc    %r15
+    1188e86d:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e872:	cmp    $0x6,%r14
+    1188e876:	jne    1188e8d0 <js_object_get_field_by_name+0x3ab0>
+    1188e878:	mov    $0x676e656c,%eax
+    1188e87d:	xor    0x0(%r13),%eax
+    1188e881:	movzwl 0x4(%r13),%ecx
+    1188e886:	xor    $0x6874,%ecx
+    1188e88c:	or     %eax,%ecx
+    1188e88e:	setne  %al
+    1188e891:	mov    -0x34(%rbp),%edi
+    1188e894:	test   %edi,%edi
+    1188e896:	sete   %cl
+    1188e899:	or     %al,%cl
+    1188e89b:	mov    $0x1,%bl
+    1188e89d:	cmp    $0x1,%cl
+    1188e8a0:	je     1188e8d2 <js_object_get_field_by_name+0x3ab2>
+    1188e8a2:	mov    $0x6,%edx
+    1188e8a7:	mov    %r13,%rsi
+    1188e8aa:	call   116eaf70 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state20class_is_key_deleted>
+    1188e8af:	test   %al,%al
+    1188e8b1:	jne    1188e8d2 <js_object_get_field_by_name+0x3ab2>
+    1188e8b3:	mov    -0x34(%rbp),%edi
+    1188e8b6:	call   *0x3a966a4(%rip)        # 15324f60 <_GLOBAL_OFFSET_TABLE_+0xdee0>
+    1188e8bc:	cmp    $0x1,%eax
+    1188e8bf:	jne    1188e8d2 <js_object_get_field_by_name+0x3ab2>
+    1188e8c1:	mov    %edx,%eax
+    1188e8c3:	xorps  %xmm0,%xmm0
+    1188e8c6:	cvtsi2sd %rax,%xmm0
+    1188e8cb:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e8d0:	xor    %ebx,%ebx
+    1188e8d2:	mov    %r13,%rdi
+    1188e8d5:	mov    %r14,%rsi
+    1188e8d8:	call   116ae460 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set12has_property28reified_function_method_name>
+    1188e8dd:	test   %rax,%rax
+    1188e8e0:	je     1188e903 <js_object_get_field_by_name+0x3ae3>
+    1188e8e2:	movaps -0x70(%rbp),%xmm0
+    1188e8e6:	mov    %rax,%rdi
+    1188e8e9:	mov    %rdx,%rsi
+    1188e8ec:	call   1172a1c0 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime7closure8dispatch5bound27reify_function_method_value>
+    1188e8f1:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e8f6:	lea    0x398edb3(%rip),%rdi        # 1521d6b0 <anon.b37f594bd5826585f7e5082f302a037e.196.llvm.4573768808118376784>
+    1188e8fd:	call   *0x3a928bd(%rip)        # 153211c0 <_GLOBAL_OFFSET_TABLE_+0xa140>
+    1188e903:	test   %bl,%bl
+    1188e905:	je     1188e923 <js_object_get_field_by_name+0x3b03>
+    1188e907:	mov    $0x6c6c6163,%eax
+    1188e90c:	xor    0x0(%r13),%eax
+    1188e910:	movzwl 0x4(%r13),%ecx
+    1188e915:	xor    $0x7265,%ecx
+    1188e91b:	or     %eax,%ecx
+    1188e91d:	je     1188ec15 <js_object_get_field_by_name+0x3df5>
+    1188e923:	cmpb   $0x0,-0xa8(%rbp)
+    1188e92a:	je     1188e947 <js_object_get_field_by_name+0x3b27>
+    1188e92c:	lea    0x2a6f27b(%rip),%rsi        # 142fdbae <anon.b37f594bd5826585f7e5082f302a037e.395.llvm.4573768808118376784+0x872>
+    1188e933:	mov    %r13,%rdi
+    1188e936:	mov    %r14,%rdx
+    1188e939:	call   *0x3a95b91(%rip)        # 153244d0 <bcmp@GLIBC_2.2.5>
+    1188e93f:	test   %eax,%eax
+    1188e941:	je     1188ec15 <js_object_get_field_by_name+0x3df5>
+    1188e947:	cmp    $0xb,%r14
+    1188e94b:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e951:	movabs $0x63757274736e6f63,%rax
+    1188e95b:	xor    0x0(%r13),%rax
+    1188e95f:	movabs $0x726f746375727473,%rcx
+    1188e969:	xor    0x3(%r13),%rcx
+    1188e96d:	or     %rax,%rcx
+    1188e970:	setne  %al
+    1188e973:	mov    -0x34(%rbp),%edi
+    1188e976:	test   %edi,%edi
+    1188e978:	sete   %cl
+    1188e97b:	or     %al,%cl
+    1188e97d:	jne    1188e184 <js_object_get_field_by_name+0x3364>
+    1188e983:	call   *0x3a8cc97(%rip)        # 1531b620 <_GLOBAL_OFFSET_TABLE_+0x45a0>
+    1188e989:	movabs $0x7ffc000000000001,%r15
+    1188e993:	test   %al,%al
+    1188e995:	je     1188e18e <js_object_get_field_by_name+0x336e>
+    1188e99b:	lea    0xde4be6(%rip),%rdi        # 12673588 <anon.6caf4f70f73897e5f37d36d35ee47d16.255.llvm.15844591618349634503+0x3e8>
+    1188e9a2:	mov    $0x8,%esi
+    1188e9a7:	jmp    1188dbef <js_object_get_field_by_name+0x2dcf>
+    1188e9ac:	movabs $0x7ffc000000000001,%r15
+    1188e9b6:	movabs $0x7ffd000000000000,%rcx
+    1188e9c0:	cmp    %rcx,%rax
+    1188e9c3:	je     1188e18e <js_object_get_field_by_name+0x336e>
+    1188e9c9:	mov    %rax,%r15
+    1188e9cc:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188e9d1:	xorps  %xmm0,%xmm0
+    1188e9d4:	cvtsi2sdl (%rcx),%xmm0
+    1188e9d8:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188e9dd:	mov    -0x40(%rbp),%eax
+    1188e9e0:	cmp    $0x3,%eax
+    1188e9e3:	mov    $0x2,%ebx
+    1188e9e8:	cmovae %eax,%ebx
+    1188e9eb:	xor    %ecx,%ecx
+    1188e9ed:	cmp    %ebx,%edx
+    1188e9ef:	setb   %cl
+    1188e9f2:	mov    %r13,%rdi
+    1188e9f5:	mov    -0x30(%rbp),%r14
+    1188e9f9:	mov    %r14,%rsi
+    1188e9fc:	mov    %edx,%r12d
+    1188e9ff:	call   116b0290 <_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set17get_field_by_name15prime_read_stub>
+    1188ea04:	mov    %r15,%rdi
+    1188ea07:	mov    %r14,%rsi
+    1188ea0a:	mov    %r12d,%edx
+    1188ea0d:	call   115793c0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object9prop_plan16read_plan_record>
+    1188ea12:	mov    %r12d,%esi
+    1188ea15:	cmp    %ebx,%r12d
+    1188ea18:	jb     1188e846 <js_object_get_field_by_name+0x3a26>
+    1188ea1e:	mov    %esi,%esi
+    1188ea20:	mov    %r13,%rdi
+    1188ea23:	call   115691f0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object5spill12overflow_get>
+    1188ea28:	jmp    1188da24 <js_object_get_field_by_name+0x2c04>
+    1188ea2d:	mov    %r13,%rdi
+    1188ea30:	call   *0x3a96a92(%rip)        # 153254c8 <_GLOBAL_OFFSET_TABLE_+0xe448>
+    1188ea36:	xorps  %xmm0,%xmm0
+    1188ea39:	cvtsi2sd %eax,%xmm0
+    1188ea3d:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188ea42:	mov    %r13,%rdi
+    1188ea45:	call   *0x3a90c3d(%rip)        # 1531f688 <_GLOBAL_OFFSET_TABLE_+0x8608>
+    1188ea4b:	movabs $0x7ffc000000000001,%r15
+    1188ea55:	test   %rax,%rax
+    1188ea58:	je     1188e18e <js_object_get_field_by_name+0x336e>
+    1188ea5e:	mov    %rax,%rcx
+    1188ea61:	shr    $0x34,%rcx
+    1188ea65:	movabs $0xffffffffffff,%r15
+    1188ea6f:	and    %rax,%r15
+    1188ea72:	movabs $0x7ffd000000000000,%rdx
+    1188ea7c:	or     %rdx,%r15
+    1188ea7f:	cmp    $0x7ff,%ecx
+    1188ea85:	cmovae %rax,%r15
+    1188ea89:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188ea8e:	mov    %r13,%rdi
+    1188ea91:	call   1150f540 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header22is_shared_array_buffer>
+    1188ea96:	test   %al,%al
+    1188ea98:	je     1188eaaf <js_object_get_field_by_name+0x3c8f>
+    1188ea9a:	mov    $0x11,%esi
+    1188ea9f:	lea    0x2a71097(%rip),%rax        # 142ffb3d <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x65d>
+    1188eaa6:	mov    %rax,-0xa0(%rbp)
+    1188eaad:	jmp    1188eb05 <js_object_get_field_by_name+0x3ce5>
+    1188eaaf:	mov    %r13,%rdi
+    1188eab2:	call   1150e2d0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header15is_array_buffer>
+    1188eab7:	test   %al,%al
+    1188eab9:	je     1188eadb <js_object_get_field_by_name+0x3cbb>
+    1188eabb:	mov    $0xb,%esi
+    1188eac0:	lea    0x2a71087(%rip),%rax        # 142ffb4e <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x66e>
+    1188eac7:	mov    %rax,-0xa0(%rbp)
+    1188eace:	jmp    1188eb05 <js_object_get_field_by_name+0x3ce5>
+    1188ead0:	call   *0x3a88a5a(%rip)        # 15317530 <_GLOBAL_OFFSET_TABLE_+0x4b0>
+    1188ead6:	jmp    1188e184 <js_object_get_field_by_name+0x3364>
+    1188eadb:	mov    %r13,%rdi
+    1188eade:	call   1150f540 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header22is_shared_array_buffer>
+    1188eae3:	lea    0x2a71064(%rip),%rcx        # 142ffb4e <anon.b37f594bd5826585f7e5082f302a037e.2838.llvm.4573768808118376784+0x66e>
+    1188eaea:	test   %al,%al
+    1188eaec:	mov    -0xa0(%rbp),%rdx
+    1188eaf3:	cmovne %rcx,%rdx
+    1188eaf7:	mov    %rdx,-0xa0(%rbp)
+    1188eafe:	movzbl %al,%esi
+    1188eb01:	or     $0xa,%rsi
+    1188eb05:	mov    -0xa0(%rbp),%rdi
+    1188eb0c:	jmp    1188dbef <js_object_get_field_by_name+0x2dcf>
+    1188eb11:	call   *0x3a94901(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    1188eb17:	mov    -0x88(%rbp),%rdi
+    1188eb1e:	mov    0x1e8(%rdi,%rbx,8),%rsi
+    1188eb26:	test   %rsi,%rsi
+    1188eb29:	jne    1188dd85 <js_object_get_field_by_name+0x2f65>
+    1188eb2f:	lea    0x39a2a0a(%rip),%rdi        # 15231540 <_RNvNtCscI5nJwKNRh4_13perry_runtime6object19CLASS_DYNAMIC_PROPS>
+    1188eb36:	call   *0x3a9df7c(%rip)        # 1532cab8 <_GLOBAL_OFFSET_TABLE_+0x15a38>
+    1188eb3c:	mov    %rax,%rsi
+    1188eb3f:	lea    -0x58(%rbp),%rdi
+    1188eb43:	call   111490a0 <_RNCNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object13field_get_set17get_field_by_name27js_object_get_field_by_names_0B9_>
+    1188eb48:	cmp    $0x1,%rax
+    1188eb4c:	je     1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188eb52:	jmp    1188dd98 <js_object_get_field_by_name+0x2f78>
+    1188eb57:	mov    %r13,%rdi
+    1188eb5a:	call   *0x3a96968(%rip)        # 153254c8 <_GLOBAL_OFFSET_TABLE_+0xe448>
+    1188eb60:	cltq
+    1188eb62:	imul   %rax,%r15
+    1188eb66:	movq   %r15,%xmm0
+    1188eb6b:	punpckldq 0xe1051d(%rip),%xmm0        # 1269f090 <perry_class_keys_packed_cli_2_1_112_js__1227+0x530>
+    1188eb73:	subpd  0xe10525(%rip),%xmm0        # 1269f0a0 <perry_class_keys_packed_cli_2_1_112_js__1227+0x540>
+    1188eb7b:	movapd %xmm0,%xmm1
+    1188eb7f:	unpckhpd %xmm0,%xmm1
+    1188eb83:	addsd  %xmm0,%xmm1
+    1188eb87:	movq   %xmm1,%r15
+    1188eb8c:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188eb91:	mov    %r13,%rdi
+    1188eb94:	call   *0x3a8930e(%rip)        # 15317ea8 <_GLOBAL_OFFSET_TABLE_+0xe28>
+    1188eb9a:	jmp    1188e7bb <js_object_get_field_by_name+0x399b>
+    1188eb9f:	mov    %r13,%rdi
+    1188eba2:	call   11537fb0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain23object_static_prototype>
+    1188eba7:	movabs $0x7ffc000000000001,%rcx
+    1188ebb1:	inc    %rcx
+    1188ebb4:	cmp    %rcx,%rdx
+    1188ebb7:	setne  %cl
+    1188ebba:	test   %cl,%al
+    1188ebbc:	je     1188ebd4 <js_object_get_field_by_name+0x3db4>
+    1188ebbe:	mov    %r13,%rdi
+    1188ebc1:	mov    -0x30(%rbp),%rsi
+    1188ebc5:	call   115382c0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6object15prototype_chain23resolve_inherited_field>
+    1188ebca:	cmp    $0x1,%rax
+    1188ebce:	je     1188da0b <js_object_get_field_by_name+0x2beb>
+    1188ebd4:	movzbl -0x80(%rbp),%ebx
+    1188ebd8:	mov    %ebx,%edi
+    1188ebda:	mov    %r13,%rsi
+    1188ebdd:	call   11300da0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime10typedarray7species27prototype_constructor_patch>
+    1188ebe2:	test   $0x1,%al
+    1188ebe4:	jne    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188ebea:	mov    %ebx,%edi
+    1188ebec:	call   111d8810 <_RNvNtCscI5nJwKNRh4_13perry_runtime10typedarray13name_for_kind>
+    1188ebf1:	mov    %rax,%rdi
+    1188ebf4:	mov    %rdx,%rsi
+    1188ebf7:	jmp    1188dbef <js_object_get_field_by_name+0x2dcf>
+    1188ebfc:	movabs $0x3ff0000000000000,%r15
+    1188ec06:	jmp    1188e18e <js_object_get_field_by_name+0x336e>
+    1188ec0b:	cvtsi2sd %r15d,%xmm0
+    1188ec10:	jmp    1188dbf5 <js_object_get_field_by_name+0x2dd5>
+    1188ec15:	lea    0x2ab77ea(%rip),%rdi        # 14346406 <anon.b37f594bd5826585f7e5082f302a037e.12135.llvm.4573768808118376784+0x3546>
+    1188ec1c:	lea    0x2a6f17d(%rip),%rdx        # 142fdda0 <anon.b37f594bd5826585f7e5082f302a037e.1057.llvm.4573768808118376784>
+    1188ec23:	mov    $0x23,%esi
+    1188ec28:	mov    $0x14,%ecx
+    1188ec2d:	call   *0x3aa30fd(%rip)        # 15331d30 <_GLOBAL_OFFSET_TABLE_+0x1acb0>

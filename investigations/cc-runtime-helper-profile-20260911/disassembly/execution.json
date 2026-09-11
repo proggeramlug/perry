@@ -1,0 +1,200 @@
+{
+  "status": "complete",
+  "owner": "cc-runtime-helper-self-0911 3710840",
+  "started": "2026-09-11T14:18:10.657470+00:00",
+  "request_sha256": "885ac88834493768911f6b99ed5a761a747bfb8a5cf4a8eb611bd1654c02fea1",
+  "script_sha256": "539f47e44e4766f7e863e30d2a32b7962ae4b845b08390e7090e528380f333ca",
+  "elf_reader_sha256": "90772894d3e4be182a98382a67ba7c3ec0a4f355be544cbaa56737c1d5c5e09b",
+  "functions": [
+    {
+      "symbol": "perry_runtime::gc::malloc::gc_malloc_header_is_tracked",
+      "start": 289201072,
+      "size": 367,
+      "aliases": [
+        {
+          "name": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime2gc6malloc27gc_malloc_header_is_tracked",
+          "size": 367,
+          "binding": 1,
+          "visibility": 0
+        }
+      ],
+      "disassembly": "function-0.disasm",
+      "sha256": "c9ce05d316263050cc9526b313b46dfa42c41a2be2f1012bb3bce4af2e821849",
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--start-address=289201072",
+        "--stop-address=289201439",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    },
+    {
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer",
+      "start": 290516432,
+      "size": 566,
+      "aliases": [
+        {
+          "name": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784",
+          "size": 566,
+          "binding": 0,
+          "visibility": 0
+        }
+      ],
+      "disassembly": "function-1.disasm",
+      "sha256": "e6edf7222aab4590fbe5016cb355fbc844c8aab8aba49641fafcf0c0a2ae23dc",
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--start-address=290516432",
+        "--stop-address=290516998",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    },
+    {
+      "symbol": "perry_runtime::buffer::header::is_registered_buffer_slow",
+      "start": 290519344,
+      "size": 1057,
+      "aliases": [
+        {
+          "name": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow",
+          "size": 1057,
+          "binding": 1,
+          "visibility": 0
+        }
+      ],
+      "disassembly": "function-2.disasm",
+      "sha256": "e6ce15588374e968182f344c1203ede6ba44a34c83e78a9cec757dd6af8a41e2",
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--start-address=290519344",
+        "--stop-address=290520401",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    },
+    {
+      "symbol": "perry_runtime::closure::dynamic_props::is_closure_ptr",
+      "start": 291058624,
+      "size": 623,
+      "aliases": [
+        {
+          "name": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr",
+          "size": 623,
+          "binding": 1,
+          "visibility": 0
+        }
+      ],
+      "disassembly": "function-3.disasm",
+      "sha256": "3b2124d7786c7b5c1c0a6f1c38639f9f6272e8ef3c4c9b14d3597580a7a142b1",
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--start-address=291058624",
+        "--stop-address=291059247",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    },
+    {
+      "symbol": "js_native_call_method",
+      "start": 293962288,
+      "size": 19740,
+      "aliases": [
+        {
+          "name": "js_native_call_method",
+          "size": 19740,
+          "binding": 1,
+          "visibility": 0
+        }
+      ],
+      "disassembly": "function-4.disasm",
+      "sha256": "7bb19892155f0b27480afff8fba94ade365701a429589525c17ae552b03b4072",
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--start-address=293962288",
+        "--stop-address=293982028",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    },
+    {
+      "symbol": "js_object_get_field_by_name",
+      "start": 294170144,
+      "size": 15891,
+      "aliases": [
+        {
+          "name": "js_object_get_field_by_name",
+          "size": 15891,
+          "binding": 1,
+          "visibility": 0
+        }
+      ],
+      "disassembly": "function-5.disasm",
+      "sha256": "3d5aff430d350027a15b62d08fca547e6bbb0596965338baa36e2953328e2a52",
+      "command": [
+        "objdump",
+        "-d",
+        "--no-show-raw-insn",
+        "--start-address=294170144",
+        "--stop-address=294186035",
+        "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic"
+      ]
+    }
+  ],
+  "elf_identity": {
+    "path": "/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic",
+    "size": 438563920,
+    "inode": "36997294",
+    "device": "2304",
+    "mtime_ns": "1789128084282971176",
+    "ctime_ns": "1789128084283226934",
+    "elf_type": 3,
+    "machine": 62,
+    "whole_binary_hashed": false
+  },
+  "elf_reads": [
+    {
+      "purpose": "ELF header",
+      "offset": "0x0",
+      "bytes": 64,
+      "sha256": "d4d3b40548fc72be0ec5f2eb1d3bbb2787fbd54fbd814bcada268df7b327d639"
+    },
+    {
+      "purpose": "section header0",
+      "offset": "0x1a23e890",
+      "bytes": 64,
+      "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b"
+    },
+    {
+      "purpose": "section headers",
+      "offset": "0x1a23e890",
+      "bytes": 3008,
+      "sha256": "e3948622ff42ffd4701bd76c94ba123d22904a6b2547b9e6da70cc6d469445e9"
+    },
+    {
+      "purpose": "section names",
+      "offset": "0x1a23e69c",
+      "bytes": 493,
+      "sha256": "010900c1e56201769f34ae859f6a960954d1a2d9649c2d5edc19b0c5443f0025"
+    },
+    {
+      "purpose": ".symtab",
+      "offset": "0x17156178",
+      "bytes": 19111728,
+      "sha256": "acd1b6a276df20e108cb388dc6923127cdf9682d7012229e2f47c487147f347c"
+    },
+    {
+      "purpose": ".strtab",
+      "offset": "0x183900a8",
+      "bytes": 32171508,
+      "sha256": "ab8108885838640d3005b2a805a1e4df68379978bceaa0cd0c9c0b8ad6cd2e7c"
+    }
+  ],
+  "binary_sha256": "b907d616caf8eea350543185de24fc2af1426090fc58161ee49952e6980314f7",
+  "finished": "2026-09-11T14:18:13.212591+00:00",
+  "scope": "static disassembly only; no new performance row"
+}

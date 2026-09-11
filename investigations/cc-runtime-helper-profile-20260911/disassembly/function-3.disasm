@@ -1,0 +1,164 @@
+
+/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000115933c0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr>:
+    115933c0:	push   %rbp
+    115933c1:	mov    %rsp,%rbp
+    115933c4:	push   %r14
+    115933c6:	push   %rbx
+    115933c7:	cmp    $0x100000,%rdi
+    115933ce:	jb     11593600 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x240>
+    115933d4:	mov    %rdi,%rcx
+    115933d7:	shr    $0x3,%rcx
+    115933db:	movabs $0x9e3779b97f4a7c15,%rax
+    115933e5:	imul   %rcx,%rax
+    115933e9:	mov    %rax,%rdx
+    115933ec:	shr    $0x36,%rdx
+    115933f0:	mov    %rax,%rsi
+    115933f3:	shr    $0x3c,%rsi
+    115933f7:	lea    0x57e12a2(%rip),%rcx        # 16d746a0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER.llvm.4573768808118376784>
+    115933fe:	mov    (%rcx,%rsi,8),%rsi
+    11593402:	bt     %rdx,%rsi
+    11593406:	jae    1159347d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xbd>
+    11593408:	mov    %rax,%rdx
+    1159340b:	shr    $0x2c,%rdx
+    1159340f:	mov    %rax,%rsi
+    11593412:	shr    $0x32,%rsi
+    11593416:	and    $0xf,%esi
+    11593419:	mov    (%rcx,%rsi,8),%rsi
+    1159341d:	bt     %rdx,%rsi
+    11593421:	jae    1159347d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xbd>
+    11593423:	mov    %rax,%rdx
+    11593426:	shr    $0x22,%rdx
+    1159342a:	shr    $0x28,%rax
+    1159342e:	and    $0xf,%eax
+    11593431:	mov    (%rcx,%rax,8),%rax
+    11593435:	bt     %rdx,%rax
+    11593439:	jae    1159347d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xbd>
+    1159343b:	mov    %rdi,%rax
+    1159343e:	shr    $0x2f,%rax
+    11593442:	jne    11593600 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x240>
+    11593448:	lea    -0x8(%rdi),%rbx
+    1159344c:	mov    %rdi,%r14
+    1159344f:	mov    %rbx,%rdi
+    11593452:	call   *0x3d88b98(%rip)        # 1531bff0 <_GLOBAL_OFFSET_TABLE_+0x4f70>
+    11593458:	mov    %r14,%rdi
+    1159345b:	test   %al,%al
+    1159345d:	je     1159347d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xbd>
+    1159345f:	cmpb   $0xf,(%rbx)
+    11593462:	jne    1159347d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xbd>
+    11593464:	movabs $0x5045525259484e44,%rax
+    1159346e:	cmp    %rax,(%rdi)
+    11593471:	jne    1159347d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xbd>
+    11593473:	testb  $0x1,0x1c(%rdi)
+    11593477:	jne    11593607 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x247>
+    1159347d:	movabs $0xffff800000000007,%rax
+    11593487:	test   %rax,%rdi
+    1159348a:	jne    11593600 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x240>
+    11593490:	cmpl   $0x434c4f53,0xc(%rdi)
+    11593497:	jne    11593600 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x240>
+    1159349d:	mov    %rdi,%rbx
+    115934a0:	mov    %fs:0x0,%rax
+    115934a9:	lea    -0x3e1a8(%rax),%rax
+    115934b0:	cmpq   $0x0,0x78(%rax)
+    115934b5:	je     1159361b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x25b>
+    115934bb:	mov    %rbx,%rdx
+    115934be:	mov    %rbx,%rsi
+    115934c1:	shr    $0x14,%rsi
+    115934c5:	mov    0x10(%rax),%rax
+    115934c9:	cmpb   $0x2,(%rax)
+    115934cc:	jne    115934f5 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x135>
+    115934ce:	cmpb   $0x0,0x88(%rax)
+    115934d5:	je     11593541 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x181>
+    115934d7:	cmp    %rsi,0x80(%rax)
+    115934de:	jne    11593541 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x181>
+    115934e0:	cmp    0x60(%rax),%rdx
+    115934e4:	jb     11593541 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x181>
+    115934e6:	cmp    0x68(%rax),%rdx
+    115934ea:	jae    11593541 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x181>
+    115934ec:	lea    0x60(%rax),%rcx
+    115934f0:	jmp    115935c6 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x206>
+    115934f5:	mov    %rsi,%rcx
+    115934f8:	sub    0x8(%rax),%rcx
+    115934fc:	cmp    0x28(%rax),%rcx
+    11593500:	jae    115935d8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x218>
+    11593506:	mov    0x20(%rax),%rdi
+    1159350a:	lea    (%rcx,%rcx,4),%rcx
+    1159350e:	mov    (%rdi,%rcx,8),%r8
+    11593512:	cmp    0x10(%rax),%r8
+    11593516:	jne    115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    1159351c:	lea    (%rdi,%rcx,8),%rcx
+    11593520:	cmp    0x8(%rcx),%rdx
+    11593524:	jb     115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    1159352a:	cmp    0x10(%rcx),%rdx
+    1159352e:	jae    115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    11593534:	incq   0x30(%rax)
+    11593538:	add    $0x21,%rcx
+    1159353c:	jmp    115935ce <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x20e>
+    11593541:	cmpb   $0x1,0xb8(%rax)
+    11593548:	jne    1159356e <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1ae>
+    1159354a:	cmp    %rsi,0xb0(%rax)
+    11593551:	jne    1159356e <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1ae>
+    11593553:	cmp    0x90(%rax),%rdx
+    1159355a:	jb     1159356e <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1ae>
+    1159355c:	cmp    0x98(%rax),%rdx
+    11593563:	jae    1159356e <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1ae>
+    11593565:	lea    0x90(%rax),%rcx
+    1159356c:	jmp    115935c6 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x206>
+    1159356e:	cmpb   $0x1,0xe8(%rax)
+    11593575:	jne    1159359b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1db>
+    11593577:	cmp    %rsi,0xe0(%rax)
+    1159357e:	jne    1159359b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1db>
+    11593580:	cmp    0xc0(%rax),%rdx
+    11593587:	jb     1159359b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1db>
+    11593589:	cmp    0xc8(%rax),%rdx
+    11593590:	jae    1159359b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x1db>
+    11593592:	lea    0xc0(%rax),%rcx
+    11593599:	jmp    115935c6 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x206>
+    1159359b:	cmpb   $0x1,0x118(%rax)
+    115935a2:	jne    115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    115935a4:	cmp    %rsi,0x110(%rax)
+    115935ab:	jne    115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    115935ad:	cmp    0xf0(%rax),%rdx
+    115935b4:	jb     115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    115935b6:	cmp    0xf8(%rax),%rdx
+    115935bd:	jae    115935dc <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x21c>
+    115935bf:	lea    0xf0(%rax),%rcx
+    115935c6:	incq   0x30(%rax)
+    115935ca:	add    $0x19,%rcx
+    115935ce:	movzbl (%rcx),%ecx
+    115935d1:	cmp    $0xff,%cl
+    115935d4:	jne    115935ee <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x22e>
+    115935d6:	jmp    115935e0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x220>
+    115935d8:	incq   0x58(%rax)
+    115935dc:	incq   0x38(%rax)
+    115935e0:	mov    %rbx,%rdi
+    115935e3:	call   *0x3d85d8f(%rip)        # 15319378 <_GLOBAL_OFFSET_TABLE_+0x22f8>
+    115935e9:	mov    %rbx,%rdx
+    115935ec:	mov    %eax,%ecx
+    115935ee:	mov    $0x1,%al
+    115935f0:	test   %cl,%cl
+    115935f2:	je     11593602 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x242>
+    115935f4:	cmpb   $0x4,-0x8(%rdx)
+    115935f8:	jne    11593600 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x240>
+    115935fa:	cmpb   $0x0,-0x7(%rdx)
+    115935fe:	jns    11593602 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x242>
+    11593600:	xor    %eax,%eax
+    11593602:	pop    %rbx
+    11593603:	pop    %r14
+    11593605:	pop    %rbp
+    11593606:	ret
+    11593607:	xor    %eax,%eax
+    11593609:	test   $0x7,%dil
+    1159360d:	jne    11593602 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x242>
+    1159360f:	cmpb   $0x0,0x1b(%rdi)
+    11593613:	jne    11593490 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xd0>
+    11593619:	jmp    11593602 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0x242>
+    1159361b:	mov    %rax,%rdi
+    1159361e:	mov    %rax,%r14
+    11593621:	call   *0x3d8fdf1(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    11593627:	mov    %r14,%rax
+    1159362a:	jmp    115934bb <_RNvNtNtCscI5nJwKNRh4_13perry_runtime7closure13dynamic_props14is_closure_ptr+0xfb>

@@ -1,0 +1,160 @@
+
+/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000001150edd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784>:
+    1150edd0:	push   %rbp
+    1150edd1:	mov    %rsp,%rbp
+    1150edd4:	push   %r15
+    1150edd6:	push   %r14
+    1150edd8:	push   %r12
+    1150edda:	push   %rbx
+    1150eddb:	lea    0x58e5f42(%rip),%rax        # 16df4d24 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header27BUFFER_LIKE_EVER_REGISTERED>
+    1150ede2:	movzbl (%rax),%eax
+    1150ede5:	test   %al,%al
+    1150ede7:	je     1150efe9 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x219>
+    1150eded:	lea    0x3e40cec(%rip),%r14        # 1534fae0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header23BUFFER_LIKE_ADDR_WINDOW>
+    1150edf4:	mov    (%r14),%rax
+    1150edf7:	cmp    %rax,%rdi
+    1150edfa:	jb     1150ee05 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x35>
+    1150edfc:	mov    0x8(%r14),%rax
+    1150ee00:	cmp    %rax,%rdi
+    1150ee03:	jbe    1150ee1f <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x4f>
+    1150ee05:	xor    %ebx,%ebx
+    1150ee07:	lea    0x3e408f2(%rip),%r15        # 1534f700 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag11BUFFER_SINK>
+    1150ee0e:	mov    0x18(%r15),%eax
+    1150ee12:	test   %eax,%eax
+    1150ee14:	jne    1150eede <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x10e>
+    1150ee1a:	jmp    1150eeea <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x11a>
+    1150ee1f:	mov    0x3e42c5b(%rip),%eax        # 15351a80 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header26buffer_addr_filter_enabled6CACHED.llvm.4573768808118376784>
+    1150ee25:	test   %eax,%eax
+    1150ee27:	jne    1150eeb5 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0xe5>
+    1150ee2d:	mov    $0x1,%bl
+    1150ee2f:	cmpb   $0x0,0x3e42c4e(%rip)        # 15351a84 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header26buffer_addr_filter_enabled6CACHED.llvm.4573768808118376784+0x4>
+    1150ee36:	je     1150eecf <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0xff>
+    1150ee3c:	mov    %rdi,%rcx
+    1150ee3f:	shr    $0x3,%rcx
+    1150ee43:	movabs $0x9e3779b97f4a7c15,%rax
+    1150ee4d:	imul   %rcx,%rax
+    1150ee51:	mov    %rax,%rcx
+    1150ee54:	shr    $0x36,%rcx
+    1150ee58:	mov    %rax,%rsi
+    1150ee5b:	shr    $0x3c,%rsi
+    1150ee5f:	lea    0x58e5e3a(%rip),%rdx        # 16df4ca0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header23BUFFER_LIKE_ADDR_FILTER>
+    1150ee66:	mov    (%rdx,%rsi,8),%rsi
+    1150ee6a:	bt     %rcx,%rsi
+    1150ee6e:	jae    1150ee05 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x35>
+    1150ee70:	mov    %rax,%rcx
+    1150ee73:	shr    $0x2c,%rcx
+    1150ee77:	mov    %rax,%rsi
+    1150ee7a:	shr    $0x32,%rsi
+    1150ee7e:	and    $0xf,%esi
+    1150ee81:	mov    (%rdx,%rsi,8),%rsi
+    1150ee85:	bt     %rcx,%rsi
+    1150ee89:	jae    1150ee05 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x35>
+    1150ee8f:	mov    %rax,%rcx
+    1150ee92:	shr    $0x22,%rcx
+    1150ee96:	shr    $0x28,%rax
+    1150ee9a:	and    $0xf,%eax
+    1150ee9d:	mov    (%rdx,%rax,8),%rbx
+    1150eea1:	shr    %cl,%rbx
+    1150eea4:	lea    0x3e40855(%rip),%r15        # 1534f700 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag11BUFFER_SINK>
+    1150eeab:	mov    0x18(%r15),%eax
+    1150eeaf:	test   %eax,%eax
+    1150eeb1:	jne    1150eede <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x10e>
+    1150eeb3:	jmp    1150eeea <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x11a>
+    1150eeb5:	mov    %rdi,%rbx
+    1150eeb8:	call   3e64f1 <_RINvMNtNtCsjFfivMnupPH_3std4sync9once_lockINtB3_8OnceLockbE10initializeNCINvB2_11get_or_initNCNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header26buffer_addr_filter_enabled0E0zEB1A_.llvm.4573768808118376784>
+    1150eebd:	mov    %rbx,%rdi
+    1150eec0:	mov    $0x1,%bl
+    1150eec2:	cmpb   $0x0,0x3e42bbb(%rip)        # 15351a84 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header26buffer_addr_filter_enabled6CACHED.llvm.4573768808118376784+0x4>
+    1150eec9:	jne    1150ee3c <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x6c>
+    1150eecf:	lea    0x3e4082a(%rip),%r15        # 1534f700 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag11BUFFER_SINK>
+    1150eed6:	mov    0x18(%r15),%eax
+    1150eeda:	test   %eax,%eax
+    1150eedc:	je     1150eeea <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x11a>
+    1150eede:	mov    0x18(%r15),%eax
+    1150eee2:	test   %eax,%eax
+    1150eee4:	jne    1150efb7 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1e7>
+    1150eeea:	lea    0x5865700(%rip),%r12        # 16d745f1 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag9BUFFER_ON>
+    1150eef1:	movzbl (%r12),%eax
+    1150eef6:	test   %al,%al
+    1150eef8:	je     1150ef80 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1b0>
+    1150eefe:	mov    (%r14),%rsi
+    1150ef01:	mov    0x8(%r14),%rdx
+    1150ef05:	lea    0x58656a4(%rip),%rax        # 16d745b0 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag10BUF_PROBES>
+    1150ef0c:	mov    $0x1,%ecx
+    1150ef11:	lock xadd %rcx,(%rax)
+    1150ef16:	test   $0x1,%bl
+    1150ef19:	je     1150ef26 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x156>
+    1150ef1b:	lea    0x5865686(%rip),%rax        # 16d745a8 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag10BUF_ADMITS>
+    1150ef22:	lock incq (%rax)
+    1150ef26:	lea    0x3e40813(%rip),%r8        # 1534f740 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag12BUF_ADDR_MIN>
+    1150ef2d:	mov    (%r8),%rax
+    1150ef30:	cmp    %rdi,%rax
+    1150ef33:	mov    %rdi,%r9
+    1150ef36:	cmovbe %rax,%r9
+    1150ef3a:	lock cmpxchg %r9,(%r8)
+    1150ef3f:	jne    1150ef30 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x160>
+    1150ef41:	lea    0x5865680(%rip),%r8        # 16d745c8 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag12BUF_ADDR_MAX>
+    1150ef48:	mov    (%r8),%rax
+    1150ef4b:	nopl   0x0(%rax,%rax,1)
+    1150ef50:	cmp    %rdi,%rax
+    1150ef53:	mov    %rdi,%r9
+    1150ef56:	cmova  %rax,%r9
+    1150ef5a:	lock cmpxchg %r9,(%r8)
+    1150ef5f:	jne    1150ef50 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x180>
+    1150ef61:	cmp    %rdx,%rsi
+    1150ef64:	ja     1150ef7a <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1aa>
+    1150ef66:	lea    0x3e4076b(%rip),%rax        # 1534f6d8 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag10BUF_WIN_LO>
+    1150ef6d:	mov    %rsi,(%rax)
+    1150ef70:	lea    0x5865649(%rip),%rax        # 16d745c0 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag10BUF_WIN_HI>
+    1150ef77:	mov    %rdx,(%rax)
+    1150ef7a:	shl    $0x2c,%rcx
+    1150ef7e:	je     1150efd8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x208>
+    1150ef80:	test   $0x1,%bl
+    1150ef83:	je     1150efe9 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x219>
+    1150ef85:	call   *0x3e1171d(%rip)        # 153206a8 <_GLOBAL_OFFSET_TABLE_+0x9628>
+    1150ef8b:	test   %al,%al
+    1150ef8d:	je     1150efe9 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x219>
+    1150ef8f:	mov    0x18(%r15),%eax
+    1150ef93:	test   %eax,%eax
+    1150ef95:	je     1150ef9f <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1cf>
+    1150ef97:	mov    0x18(%r15),%eax
+    1150ef9b:	test   %eax,%eax
+    1150ef9d:	jne    1150eff4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x224>
+    1150ef9f:	movzbl (%r12),%ecx
+    1150efa4:	mov    $0x1,%al
+    1150efa6:	test   %cl,%cl
+    1150efa8:	je     1150efeb <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x21b>
+    1150efaa:	lea    0x5865627(%rip),%rcx        # 16d745d8 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag12BUF_TRUE_POS>
+    1150efb1:	lock incq (%rcx)
+    1150efb5:	jmp    1150efeb <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x21b>
+    1150efb7:	mov    %rdi,%r12
+    1150efba:	call   3e4605 <_RINvMNtNtCsjFfivMnupPH_3std4sync9once_lockINtB3_8OnceLockINtNtCs9ueeiBwVTSo_4core6option6OptionNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag4SinkEE10initializeNCINvB2_11get_or_initNCNvB1x_11buffer_sink0E0zEB1z_.llvm.4573768808118376784>
+    1150efbf:	mov    %r12,%rdi
+    1150efc2:	lea    0x5865628(%rip),%r12        # 16d745f1 <_RNvNtCscI5nJwKNRh4_13perry_runtime8hot_diag9BUFFER_ON>
+    1150efc9:	movzbl (%r12),%eax
+    1150efce:	test   %al,%al
+    1150efd0:	jne    1150eefe <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x12e>
+    1150efd6:	jmp    1150ef80 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1b0>
+    1150efd8:	mov    %rdi,%r14
+    1150efdb:	call   *0x3e1f997(%rip)        # 1532e978 <_GLOBAL_OFFSET_TABLE_+0x178f8>
+    1150efe1:	mov    %r14,%rdi
+    1150efe4:	test   $0x1,%bl
+    1150efe7:	jne    1150ef85 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1b5>
+    1150efe9:	xor    %eax,%eax
+    1150efeb:	pop    %rbx
+    1150efec:	pop    %r12
+    1150efee:	pop    %r14
+    1150eff0:	pop    %r15
+    1150eff2:	pop    %rbp
+    1150eff3:	ret
+    1150eff4:	call   3e4605 <_RINvMNtNtCsjFfivMnupPH_3std4sync9once_lockINtB3_8OnceLockINtNtCs9ueeiBwVTSo_4core6option6OptionNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag4SinkEE10initializeNCINvB2_11get_or_initNCNvB1x_11buffer_sink0E0zEB1z_.llvm.4573768808118376784>
+    1150eff9:	movzbl (%r12),%ecx
+    1150effe:	mov    $0x1,%al
+    1150f000:	test   %cl,%cl
+    1150f002:	jne    1150efaa <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x1da>
+    1150f004:	jmp    1150efeb <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header20is_registered_buffer.llvm.4573768808118376784+0x21b>

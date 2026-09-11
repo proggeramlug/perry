@@ -1,0 +1,1114 @@
+phase,symbol,samples,period,phase_percent
+command,perry_runtime::gc::malloc::gc_malloc_header_is_tracked,178,927579405,4.902402315613943
+command,js_native_call_method,115,594107551,3.139951381031502
+command,js_regexp_test,77,396571512,2.0959425018015816
+command,perry_runtime::regex::js_regexp_new_impl,76,386437521,2.0423827734624096
+command,__memmove_avx512_unaligned_erms,70,366227817,1.9355713251341964
+command,js_object_get_field_by_name,58,303473666,1.603905816479671
+command,perry_runtime::exception::try_push_with_kind,60,302355127,1.597994162820538
+command,<unicode_segmentation::grapheme::GraphemeCursor>::next_boundary,58,292991128,1.5485039627001433
+command,perry_runtime::buffer::header::is_registered_buffer_slow,50,256886049,1.3576829699733544
+command,<regex::regex::string::Regex>::find_at,50,253912370,1.3419666110967872
+command,<perry_runtime::arena::walk::ArenaObjectCursor>::next_budgeted,44,228224416,1.2062017542078134
+command,perry_runtime::closure::dynamic_props::is_closure_ptr,44,224186231,1.1848593145329291
+command,perry_runtime::object::regex_proto_thunks::regexp_prototype_test_is_canonical,45,222636823,1.1766704507805794
+command,js_object_get_own_field_or_undef,42,220430458,1.1650094664736999
+command,perry_runtime::object::shapes::scan_shape_table_rekey_mut,40,207104549,1.0945799519899662
+command,__memcmp_evex_movbe,40,206920289,1.0936061090544655
+command,perry_runtime::gc::layout_tables::layout_forget_object,38,194634936,1.0286760958710286
+command,js_array_get_f64,37,194244736,1.0266138278072474
+command,perry_runtime::object::descriptor_state::get_accessor_descriptor,36,186666962,0.9865641063445344
+command,js_object_get_field,36,184058530,0.9727781350217649
+command,perry_fn_cli_2_1_112_js__u_N_24_6,34,177072592,0.9358563594375653
+command,js_native_call_value,34,173561452,0.9172994350668213
+command,perry_runtime::buffer::header::is_registered_buffer,32,167917891,0.8874723320009564
+command,perry_runtime::object::class_meta_registry::get_parent_class_id,32,162663686,0.8597030363267922
+command,<perry_runtime::gc::copying_pointer_set::CopyingPointerSet>::classify_arena,31,160578006,0.8486798911313362
+command,<perry_runtime::gc::copying::CopyingNurseryCollector>::mark_addr,31,159145978,0.8411113990481986
+command,js_object_get_field_ic,30,156717334,0.8282756354410906
+command,<perry_runtime::gc::copying::CopyingNurseryCollector>::visit_slot_with_parent,30,153110053,0.8092105908399007
+command,perry_fn_cli_2_1_112_js__zF6,29,150793576,0.7969676473812041
+command,perry_runtime::object::field_get_set::get_field_by_name_tail::get_field_by_name_object_tail,27,140400908,0.7420407706157514
+command,js_segments_project_next,28,138908533,0.7341533351936979
+command,core::str::converts::from_utf8,27,136385138,0.72081679772367
+command,<perry_runtime::string::OwnedStringBytes>::copy_of_key,23,120172261,0.6351292055680808
+command,js_object_get_field_ic_miss,23,119392285,0.631006910346872
+command,perry_runtime::object::exotic_expando::value_lookup,24,118580612,0.6267170915202872
+command,perry_runtime::object::keys_lookup::keys_find_slot_by_bytes,21,109533761,0.5789030682115072
+command,perry_runtime::regex::regex_header_clear_dead_for_gc,21,109071259,0.5764586727629298
+command,perry_runtime::gc::dead_owner::owner_is_dead_copied_minor_from_space,20,104812280,0.5539493022452099
+command,js_closure_call0,20,104433304,0.5519463547779123
+command,"<hashbrown::raw::RawTable<(usize, perry_runtime::object::shapes::ShapeIndex)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, perry_runtime::object::shapes::ShapeIndex, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",41,104008517,0.5497012890064891
+command,perry_runtime::typedarray::lookup_registered_typed_array_kind,19,99895052,0.5279609827507707
+command,perry_runtime::object::object_ops::extract_obj_ptr,19,97685568,0.516283514040788
+command,perry_runtime::object::prototype_chain::object_static_prototype,18,94360380,0.4987093750903316
+command,<perry_runtime::arena::page_meta::page_class::PageGenerationCacheSet>::insert,17,89478889,0.4729099312335023
+command,js_object_set_field,17,88281025,0.466579032535519
+command,perry_runtime::gc::layout::layout_note_slot,17,88147155,0.46587150863572824
+command,_mi_page_malloc_zero,17,87512559,0.46251756946555084
+command,perry_runtime::typed_feedback::normalize_raw_object_addr,16,83791929,0.44285345766097417
+command,perry_runtime::object::shapes::shape_descriptor_by_id,16,83540069,0.44152233814651004
+command,<perry_runtime::regex::site_key::WeakPrograms>::upgrade,16,82885015,0.4380602752447877
+command,mi_free,16,82752553,0.4373601928453398
+command,perry_runtime::gc::copying::run_copied_minor_attempt,15,77411880,0.4091339002594917
+command,<perry_runtime::gc::layout::HeapChildSlotIterator as core::iter::traits::iterator::Iterator>::next,14,73753841,0.3898005916850025
+command,perry_runtime::object::class_registry::prototype_objects::class_prototype_object,14,73110942,0.3864027698604592
+command,perry_runtime::gc::types::gc_type_after_payload_move,14,72945183,0.38552670760524577
+command,js_segments_project_segment,14,72854697,0.3850484749347709
+command,perry_runtime::gc::layout::layout_transfer,14,72287577,0.3820511569841519
+command,perry_runtime::object::shapes::shape_object_kind_by_id,14,71822711,0.3795942674256238
+command,perry_runtime::gc::barrier::write_barrier_decoded_parent,14,71794428,0.37944478734451687
+command,perry_runtime::object::class_registry::parent_static::is_class_object_ptr,14,69491781,0.36727493760012603
+command,perry_runtime::gc::layout_slot_visit::visit_gc_layout_slot_descriptors.specialized.1,13,68717374,0.36318207541542963
+command,<perry_runtime::gc::copying::CopyingNurseryCollector>::rewrite_raw_addr,13,68272501,0.360830851990677
+command,perry_runtime::object::descriptor_state::may_have_descriptor_entry,13,67967880,0.359220882334457
+command,perry_runtime::buffer::header::is_uint8array_buffer_slow,13,67764887,0.3581480325623629
+command,perry_runtime::value::addr_class::try_read_tracked_gc_header,13,67645172,0.3575153200527382
+command,js_typed_feedback_class_field_set_guard,13,67635022,0.3574616757143287
+command,perry_runtime::object::shapes::shape_descriptor_ensure_with_holes,13,67618683,0.35737532154238066
+command,perry_runtime::arena::allocators::arena_alloc,13,66739975,0.3527312122502511
+command,"<hashbrown::map::HashMap<usize, alloc::vec::Vec<(u32, usize)>, perry_runtime::fast_hash::PtrHasher>>::insert",13,66555109,0.35175416650991553
+command,mi_theap_malloc_aligned,12,62753956,0.33166447804900917
+command,trunc,12,62557274,0.33062498289954584
+command,perry_runtime::regex::lookup_fancy_regex,12,61052284,0.3226708752283262
+command,perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slots::<<perry_runtime::gc::copying::CopyingNurseryCollector>::scan_object_fields::{closure#0}>::{closure#0},12,60919972,0.32197158560235234
+command,perry_runtime::array::iter_object::dispatch_array_iterator_method_inner,12,59238658,0.313085577997565
+command,perry_runtime::gc::trace::classifier_valid_object_start,11,58121288,0.30718010268637314
+command,perry_runtime::object::descriptor_state::get_property_attrs,11,57872453,0.30586497077030195
+command,js_put_value_set,11,57870126,0.3058526722111415
+command,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_nanbox_bits,11,57755728,0.30524806087859296
+command,perry_runtime::set::is_registered_set,11,57500796,0.30390070536338065
+command,perry_runtime::box::is_registered_box_ptr,11,57464529,0.3037090285928293
+command,perry_runtime::object::shapes::publish_object_shape_from,11,57410729,0.3034246871734766
+command,perry_fn_cli_2_1_112_js__GW7,11,57354258,0.30312622910112963
+command,<core::hash::sip::Hasher<core::hash::sip::Sip13Rounds> as core::hash::Hasher>::write,11,54693016,0.2890611486639361
+command,perry_runtime::native_handle::canonical::is_canonical_handle_addr,11,53034814,0.28029729159602756
+command,perry_runtime::box::scan_box_roots_mut,10,52767840,0.27888629222632
+command,perry_runtime::string::compare::js_string_key_matches,10,52512170,0.2775350362656155
+command,perry_runtime::arena::page_meta::classify_heap_space_in_range_uncached,10,52481616,0.2773735535941117
+command,js_array_alloc,10,52462692,0.2772735372926279
+command,perry_runtime::typed_feedback::guards::class_setter_in_chain,10,52435957,0.27713223863377295
+command,js_put_value_set_dyn_ic_miss,10,52072298,0.27521024390848703
+command,perry_runtime::weakref::is_weak_target_trace_slot,10,51682497,0.2731500846221469
+command,perry_runtime::gc::barrier_store::barrier_child_prologue,10,51599116,0.27270940298855867
+command,perry_runtime::object::descriptor_state::gc_scan::scan_descriptor_roots_mut,10,51467094,0.2720116460579679
+command,"<&mut perry_runtime::gc::copying::run_copied_minor_attempt::{closure#0} as core::ops::function::FnMut<(perry_runtime::gc::roots::MutableRootSlot,)>>::call_mut",10,50651705,0.2677021875898531
+command,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&usize>,10,50225749,0.26545094347048886
+command,[unknown],13,48360355,0.2555920442583698
+command,<perry_runtime::gc::dead_owner::PostTraceProbe>::owner_is_dead,9,47935696,0.25334765498697764
+command,perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slots::<perry_runtime::gc::verify::restore_surviving_dirty_coverage::{closure#0}::{closure#0}>::{closure#0},9,47902484,0.2531721243695141
+command,perry_runtime::arena::page_meta::old_page_account_swept_object,9,47692582,0.2520627594512061
+command,"core::ptr::drop_glue::<perry_runtime::gc::roots::GcRootRegistryGuard<core::option::Option<std::collections::hash::map::HashMap<alloc::string::String, alloc::vec::Vec<perry_runtime::ui_text_registry::ForEachBinding>>>>>",10,47537434,0.2512427779915456
+command,perry_runtime::symbol::is_immortal_symbol_pointer,9,47531970,0.2512138998964649
+command,perry_runtime::typed_feedback::object_shape,9,47435894,0.2507061232011911
+command,perry_runtime::map::is_registered_map,9,47387168,0.25044859866588665
+command,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&char>,9,47370378,0.25035986088836004
+command,perry_runtime::gc::layout_slot_visit::visit_gc_layout_slot_descriptors,9,47194674,0.2494312377518183
+command,perry_runtime::regex::regex_header_finalize_for_gc,9,47127729,0.24907742295035795
+command,perry_runtime::object::field_set_by_name::tail::set_field_by_name_object_tail,9,47087695,0.24886583699529538
+command,perry_runtime::object::class_registry::class_meta::is_anon_shape_class_id,9,46994374,0.24837262090616133
+command,<perry_runtime::object::shapes::shapes_store::ShapeSlab>::insert,9,46888351,0.24781227275924625
+command,perry_runtime::arena::page_meta::old_object_page_overlaps,9,46881359,0.24777531894504337
+command,perry_runtime::object::object_keys_array,9,46839956,0.24755649761074117
+command,perry_runtime::gc::barrier::remembered_child_needs_tracking,9,46803901,0.2473659412933664
+command,perry_runtime::gc::young_log::addr_is_minor_relevant,9,46493575,0.2457258198193507
+command,perry_runtime::object::shapes::move_shape_family,9,46272000,0.24455476126929357
+command,perry_runtime::iter_result::emit_iter_result_cached,9,45308053,0.23946015052281078
+command,perry_runtime::arena::page_meta::classify_heap_generation_uncached,8,42183261,0.2229451357930347
+command,js_is_symbol,8,42170498,0.2228776813407076
+command,perry_runtime::gc::layout_tables::layout_key_may_be_nursery,8,41067776,0.21704962300183314
+command,perry_runtime::object::spill::overflow_get,8,40942109,0.2163854532407589
+command,perry_runtime::object::native_call_method::class_vtable_fast_guard,8,38428442,0.20310032977310025
+command,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_nanbox_u64_raw_slot,7,37039583,0.19575999261063243
+command,perry_runtime::arena::page_meta::old_page_account_dirty_slots,7,36888602,0.1949620343980806
+command,mi_malloc_aligned,7,36886749,0.19495224100309805
+command,<perry_runtime::gc::trace::ValidPointerSetBuilder>::step,7,36672529,0.19382005477905093
+command,perry_runtime::gc::trace::drain_trace_worklist_step,7,36613145,0.1935062010458383
+command,perry_runtime::object::set_object_keys_array,7,36581120,0.19333694390913253
+command,perry_runtime::object::keys_lookup::keys_array_dense_slots,7,36560903,0.19323009390030255
+command,perry_runtime::arena::page_meta::flush_deferred_old_page_registrations_batch,7,36506122,0.19294056774242968
+command,perry_runtime::closure::dynamic_props::closure_get_dynamic_prop,7,36495042,0.1928820082084812
+command,js_object_set_field_by_name,7,36417402,0.1924716686583224
+command,perry_runtime::typed_feedback::registry,7,36283509,0.19176402319993224
+command,perry_runtime::object::field_get_set::accessors::default_object_prototype_property_value,7,36222914,0.1914437691422059
+command,<perry_runtime::object::shapes::shapes_slot_list::SlotIndex>::insert,7,36092920,0.19075673050898406
+command,js_number_coerce,7,35995719,0.19024300801265506
+command,perry_runtime::object::shapes::shape_slot_lookup_verdict,7,35982017,0.1901705907983805
+command,perry_runtime::object::class_registry::state::class_id_for_decl_prototype_object,6,31751054,0.16780928922498375
+command,perry_runtime::gc::verify::remember_evacuated_old_to_young_slot,6,31634821,0.1671949796302696
+command,perry_runtime::gc::layout_tables::prune_dead_per_object_layout_owners,6,31616586,0.16709860480160982
+command,perry_runtime::object::native_call_method::handle_methods::dispatch_handle,6,31550439,0.16674900755503133
+command,perry_runtime::regex::lookup_repeat_matcher,6,31539368,0.1666904955874913
+command,js_closure_call2,6,31489721,0.16642810342305628
+command,"<std::thread::local::LocalKey<core::cell::RefCell<std::collections::hash::map::HashMap<usize, perry_runtime::typedarray_view::ViewMeta, perry_runtime::fast_hash::PtrHasher>>>>::with::<perry_runtime::typedarray_view::view_meta_of::{closure#0}, core::option::Option<perry_runtime::typedarray_view::ViewMeta>>",6,31280770,0.16532376468857365
+command,perry_closure_cli_2_1_112_js__37648,6,31243918,0.16512899610147355
+command,perry_fn_cli_2_1_112_js__YF6,6,31203978,0.16491790695112138
+command,perry_runtime::object::class_registry::state::class_decl_prototype_object,6,31166255,0.1647185349927154
+command,perry_runtime::gc::barrier::write_barrier_slot_decoded,6,31133887,0.16454746504733234
+command,js_string_index_to_i32,6,31104062,0.16438983525491238
+command,js_string_slice,6,31081919,0.1642728060346758
+command,perry_runtime::object::exotic_expando::expando_clear_on_alloc,6,30846695,0.1630296103836383
+command,<perry_runtime::object::shapes::ShapeTableInner>::facts_remove,6,30834131,0.1629632076774534
+command,perry_runtime::array::header_gc_slots::store_array_slot_resolved,6,30639322,0.16193361162610248
+command,perry_runtime::closure::registry::body_record::{closure#0},6,30480645,0.1610949788491763
+command,<core::str::lossy::Utf8Chunks as core::iter::traits::iterator::Iterator>::next,6,29991375,0.15850911033157977
+command,"<hashbrown::raw::RawTable<(usize, ())>>::reserve_rehash::<hashbrown::map::make_hasher<usize, (), perry_runtime::fast_hash::PtrHasher>::{closure#0}>",5,26400875,0.13953275594150805
+command,perry_runtime::object::iterator_prototypes::prototype_next_is_canonical,5,26271351,0.1388482013318382
+command,perry_runtime::gc::layout_tables::per_object_slot_mask,5,26264127,0.13881002136132883
+command,perry_runtime::typed_feedback::guards::descriptor_blocks_class_field_set,5,26255332,0.1387635384099681
+command,perry_runtime::object::prop_plan::read_plan_lookup,5,26243518,0.13870109957115337
+command,perry_fn_cli_2_1_112_js__Ez4,5,26229976,0.13862952798191777
+command,js_try_end,5,26229461,0.1386268061263236
+command,perry_runtime::regex::lookup_repeat_matcher_for,5,26216763,0.13855969520916858
+command,perry_runtime::iter_result::build_iter_result_ordered,5,26203354,0.13848882654574665
+command,<perry_runtime::object::shapes::shapes_store::IdList>::append_unchecked,5,26156463,0.13824100027260786
+command,js_nanbox_get_pointer,5,26128758,0.13809457501195418
+command,js_jsvalue_to_string,5,26066936,0.13776783606721027
+command,perry_runtime::object::shapes::remove_descriptor_indexed_under,5,26025344,0.13754801583833076
+command,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::root_nanbox_f64_slice,5,25988551,0.1373535590754638
+command,perry_runtime::gc::barrier::leaf::decode_raw_pointer_candidate,5,25966648,0.13723779829278568
+command,perry_fn_cli_2_1_112_js__m_A,5,25890374,0.13683467826639706
+command,perry_runtime::object::field_get_set::accessors::prototype_property_value_with_guard,5,25854856,0.13664696007805935
+command,perry_runtime::object::class_registry::construct::lookup_prototype_method,5,25801810,0.13636660366670278
+command,perry_runtime::array::element_shape::clear_element_shape,5,25699834,0.13582764454811708
+command,perry_runtime::object::iterator_prototypes::call_overridden_iterator_next,5,25664795,0.13564245794973978
+command,perry_runtime::object::field_get_set::has_property::closure_dynamic_prop_by_key,5,25219444,0.1332887082201832
+command,js_number_is_safe_integer,5,25011271,0.13218848133745256
+command,js_get_string_pointer_unified,5,22600137,0.11944526082054652
+command,<perry_runtime::gc::oldgen::ArenaSweepObjectsState>::reclaim_dead_object,4,21436733,0.11329648861533081
+command,perry_runtime::closure::dynamic_props::clear_closure_side_tables_for_dead_ptr,4,21404966,0.11312859504900039
+command,perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slot_descriptors::<perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slots<perry_runtime::gc::verify::restore_surviving_dirty_coverage::{closure#0}::{closure#0}>::{closure#0}>,4,21200556,0.11204825621015493
+command,"<hashbrown::map::HashMap<u32, perry_runtime::object::class_registry::state::ClassVTable, perry_runtime::fast_hash::PtrHasher>>::get::<u32>",4,21176920,0.11192333625127351
+command,"<hashbrown::map::HashMap<usize, (), perry_runtime::fast_hash::PtrHasher>>::insert",4,21149076,0.11177617635386726
+command,perry_runtime::gc::barrier::scan_dirty_object_slots::{closure#1},4,21100709,0.111520549189744
+command,perry_runtime::gc::layout::typed_shape::init_typed_shape_layout,4,21073576,0.11137714703860466
+command,perry_runtime::proxy::ordinary_set_with_receiver,4,21069709,0.11135670933844412
+command,perry_runtime::object::class_registry::parent_static::is_registered_class_prototype_object,4,21064338,0.11132832276291729
+command,perry_runtime::typed_feedback::object_key_matches_field,4,21026299,0.11112728069505934
+command,perry_runtime::gc::trace::trace_heap_rewrite_slots::{closure#0}::{closure#0},4,21023258,0.11111120853416248
+command,perry_runtime::gc::old_free::old_free_take_exact,4,21018281,0.11108490431029411
+command,perry_fn_cli_2_1_112_js__US_,4,21017724,0.1110819604781272
+command,perry_runtime::url::search_params::shape_is_url_search_params,4,21009019,0.1110359531908509
+command,perry_runtime::proxy::own_set_descriptor,4,20999094,0.11098349801265246
+command,perry_runtime::typed_feedback::plain_array_index_guard,4,20979954,0.11088234011736602
+command,js_packed_arraylike_index_get,4,20975016,0.1108562420146009
+command,perry_runtime::object::reflect_support::obj_value_has_own_key,4,20956157,0.11075656924828914
+command,perry_runtime::typedarray_props::typed_array_addr_from_value,4,20953152,0.11074068735302604
+command,js_string_from_bytes_with_capacity,4,20950945,0.11072902301264478
+command,perry_fn_cli_2_1_112_js__yx_,4,20940594,0.1106743163577801
+command,__memset_avx512_unaligned_erms,4,20935947,0.1106497562355546
+command,perry_runtime::gc::layout_tables::layout_addr_filter_add,4,20932531,0.11063170214097266
+command,<perry_runtime::gc::layout::HeapChildSlotIterator>::new,4,20919122,0.11056083347755072
+command,perry_runtime::object::class_registry::parent_static::lookup_class_method_in_chain,4,20873075,0.11031746787649248
+command,perry_runtime::array::iter_object::make_pair_array,4,20850203,0.11019658577717212
+command,js_to_primitive,4,20807236,0.10996949845811399
+command,js_closure_set_box_capture_ptr,4,20804200,0.1099534527229996
+command,perry_runtime::proxy::lookup,4,20795273,0.10990627213098172
+command,perry_runtime::object::arguments::is_arguments_object,4,20759603,0.10971775059885698
+command,"perry_runtime::object::with_transition_cache::<perry_runtime::object::TransitionEntry, perry_runtime::object::transition_cache_lookup::{closure#0}>",4,20732188,0.10957285803358646
+command,<perry_runtime::gc::layout::GcMutableSlotDescriptor>::visit_slots,4,20697444,0.10938923055637476
+command,perry_runtime::gc::dead_owner::prune_dead_owner_side_tables_copied_minor::{closure#0},4,20545296,0.10858510456619494
+command,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_tagged_raw_addr,4,20521539,0.1084595451033778
+command,perry_runtime::gc::malloc::ensure_set_built,4,20369566,0.10765634401558435
+command,perry_runtime::gc::types::gc_type_clear_dead_payload_side_tables,3,16040262,0.08477529486745594
+command,<perry_runtime::gc::oldgen::IncrementalSweepState>::step,3,16014177,0.08463743156032183
+command,<perry_runtime::gc::barrier::RememberedSetRootMarkState>::step::{closure#0},3,15998282,0.08455342399785694
+command,perry_runtime::object::descriptor_state::prune_dead_descriptor_owner_entries_young,3,15946994,0.08428235889161603
+command,perry_runtime::closure::dynamic_props::scan_closure_owner,3,15930800,0.08419677106735957
+command,perry_runtime::object::side_table_roots::transition_entry_is_dead,3,15882657,0.08394232777829085
+command,<perry_runtime::gc::cycle::RootScanCycleState>::step_current_subphase,3,15870035,0.08387561853302933
+command,perry_runtime::array::iter_object::alloc_iterator_backing,3,15869423,0.08387238401725529
+command,perry_fn_cli_2_1_112_js__oN8,3,15860611,0.08382581121823417
+command,perry_runtime::object::alloc::object_alloc_class_inline_keys_impl,3,15851947,0.0837800206223741
+command,perry_runtime::object::field_set_by_name::fast_paths::object_set_field_by_name_transition_fast_impl_value,3,15846029,0.0837487430662453
+command,<perry_runtime::object::shapes::ShapeTableInner>::family_append_fresh,3,15844823,0.08374236916751408
+command,perry_runtime::string::intern::intern_dispatch_bytes,3,15838067,0.08370666265024371
+command,perry_runtime::gc::verify::restore_surviving_dirty_coverage,3,15836050,0.08369600248959622
+command,perry_runtime::process::env_misc::process_env_has_field,3,15833028,0.08368003074667273
+command,<perry_runtime::gc::cycle::BlockPersistCycleState>::step,3,15832931,0.08367951808649285
+command,perry_closure_cli_2_1_112_js__36650,3,15811277,0.08356507330778164
+command,"<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::across_mut::<perry_runtime::json_tape::LazyArrayHeader, (), perry_runtime::json_tape::reparse_materialize::{closure#1}>",3,15809763,0.08355707158085042
+command,_mi_theap_malloc_zero,3,15796578,0.08348738679248303
+command,perry_runtime::typedarray::typed_array_fast_index_get,3,15793439,0.08347079668624979
+command,perry_fn_cli_2_1_112_js__Wa6.__arena,3,15760831,0.08329845830330829
+command,perry_runtime::typedarray::store_at,3,15752896,0.08325652058653202
+command,perry_runtime::set::find_value_index_cold,3,15750538,0.08324405818752025
+command,perry_runtime::array::subclass::note_array_subclass_index_write,3,15740745,0.08319230064997896
+command,perry_runtime::object::prop_plan::store_plan_check,3,15736337,0.08316900368015541
+command,perry_runtime::timer::ref_states::is_known_timer_id_slow,3,15733416,0.08315356573803777
+command,perry_runtime::object::object_is_regular,3,15728550,0.08312784816654017
+command,perry_runtime::object::class_registry::dispatch::obj_dispatch_ic_lookup,3,15726562,0.08311734127543101
+command,<alloc::string::String>::from_utf8_lossy,3,15712162,0.08304123502192397
+command,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_metadata_usize_slot,3,15698905,0.08297116970228906
+command,perry_runtime::object::field_get_set::accessors::array_subclass_prototype_field,3,15688642,0.0829169281411958
+command,perry_runtime::object::descriptor_state::owner_index_add,3,15677734,0.08285927765416422
+command,perry_fn_cli_2_1_112_js__AF6,3,15674219,0.08284070032908941
+command,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&str>,3,15659270,0.08276169252466742
+command,js_array_length,3,15653932,0.08273348035930488
+command,"<perry_runtime::object::class_image::ImageTable<std::sync::poison::rwlock::RwLock<core::option::Option<std::collections::hash::map::HashMap<u32, perry_runtime::object::class_registry::state::ClassVTable, perry_runtime::fast_hash::PtrHasher>>>>>::read",3,15650411,0.0827148713232911
+command,js_string_coerce,3,15625092,0.08258105644603105
+command,perry_runtime::async_hooks::is_async_resource_handle,3,15612975,0.08251701620479877
+command,perry_runtime::object::field_get_set::enumeration::canonical_array_index,3,15590675,0.08239915721499273
+command,perry_runtime::object::native_module::callable_exports::bound_native_callable_module_and_method,3,15589855,0.08239482338666802
+command,perry_runtime::proxy::reflect_value_is_object,3,15575037,0.08231650793774668
+command,js_box_alloc_bits,3,15558718,0.08223025946892852
+command,perry_runtime::string::string_storage_alloc,3,15543547,0.08215007835976496
+command,perry_runtime::object::descriptor_state::set_property_attrs,3,15537644,0.08211888008098356
+command,js_closure_alloc_init,3,15519512,0.08202304962344262
+command,js_dynamic_string_or_number_add,3,15082132,0.07971142787629609
+command,js_string_code_point_at,3,15054941,0.07956771918608013
+command,perry_runtime::object::shapes::stamp_object_shape_id_with_carrier_note,3,13097996,0.06922495861182058
+command,perry_runtime::object::field_set_by_name::fast_paths::try_existing_own_data_overwrite,2,10692046,0.05650913634617707
+command,perry_fn_cli_2_1_112_js__Qh_,2,10661910,0.05634986287008761
+command,perry_runtime::gc::copying::scan_remembered_dirty_slots_copying::<perry_runtime::gc::copying::run_copied_minor_attempt::{closure#7}>::{closure#0}::{closure#0},2,10619117,0.05612369516825935
+command,_mi_theap_realloc_zero,2,10618204,0.05611886982038075
+command,js_dyn_index_get,2,10614121,0.056097290526417605
+command,js_implicit_this_set,2,10600890,0.05602736262085152
+command,mi_theap_umalloc,2,10596037,0.05600171375638835
+command,perry_runtime::closure::box_captures::decrement_cell_capture_count,2,10595427,0.05599848981092728
+command,<perry_runtime::gc::roots::stack_maps::lazy::RecordWalk>::next,2,10588555,0.05596217021550365
+command,perry_runtime::gc::layout::layout_rebuild_from_slots_with_policy,2,10582381,0.0559295396593125
+command,perry_runtime::array::subclass::array_subclass_named_prefix_token_for_slot,2,10582318,0.05592920669445341
+command,perry_runtime::gc::barrier::dirty_slot_ranges_for,2,10576466,0.05589827795865319
+command,"<hashbrown::map::HashMap<(usize, alloc::string::String), perry_runtime::object::descriptor_state::PropertyAttrs, perry_runtime::fast_hash::FastKeyHasher>>::remove::<(usize, alloc::string::String)>",2,10568030,0.055853692378473645
+command,perry_runtime::object::descriptor_state::transfer_descriptor_owner,2,10567123,0.055848898741534
+command,js_to_property_key,2,10567034,0.055848428362606076
+command,perry_runtime::object::class_registry::dispatch::call_vtable_method_inner,2,10565943,0.055842662256871616
+command,perry_runtime::collection_iter_object::dispatch_map_iterator_method_emit,2,10563504,0.05582977176018386
+command,perry_runtime::async_hooks::scopes::run_provider_completion::<perry_runtime::node_submodules::blob::blob_reader_promise_value::{closure#0}>::{closure#2},2,10554335,0.05578131216029455
+command,js_closure_call4,2,10551640,0.05576706866354445
+command,perry_runtime::state::state,2,10547862,0.05574710134231184
+command,perry_runtime::object::native_call_method::gc_pointer_and_type_from_value,2,10545897,0.055736716009802026
+command,<unicode_normalization::decompose::Decompositions<core::str::iter::Chars> as core::iter::traits::iterator::Iterator>::next,2,10544768,0.05573074906812081
+command,perry_runtime::intl::segments_project::own_data,2,10543737,0.055725300071775966
+command,perry_runtime::object::has_own_helpers::array_own_key_present,2,10535139,0.05567985829624447
+command,js_for_of_next,2,10532916,0.05566810939335932
+command,perry_runtime::url::url_class::is_url_object_shape,2,10529782,0.055651545712908555
+command,js_require_object_coercible,2,10528578,0.05564518238449032
+command,perry_runtime::object::field_get_set::ic_miss::pic_prime_get,2,10527009,0.055636889973951956
+command,perry_runtime::object::native_call_method::primitive_methods::dispatch_primitive,2,10518113,0.05558987322178538
+command,perry_runtime::closure::alloc::scan_singleton_closure_roots_mut,2,10515665,0.05557693515868918
+command,perry_runtime::gc::trace::try_mark_value,2,10511895,0.05555701011870852
+command,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::root_raw_mut_ptr::<perry_runtime::map::MapHeader>,2,10507445,0.055533491172312245
+command,perry_runtime::collection_iter_object::dispatch_map_iterator_method_emit::{closure#1},2,10506727,0.055529696429949885
+command,perry_runtime::typed_feedback::guards::class_getter_in_chain,2,10503116,0.055510611729851694
+command,perry_runtime::gc::layout::layout_note_slot::{closure#1},2,10499086,0.055489312549182705
+command,perry_runtime::object::live_slots::object_live_slot_count,2,10490709,0.055445038793236284
+command,js_dyn_index_set_strict,2,10483680,0.05540788942824316
+command,js_eh_try_push,2,10482212,0.05540013081851064
+command,<alloc::raw_vec::RawVecInner>::finish_grow,2,10477591,0.05537570811035397
+command,"<hashbrown::map::HashMap<(usize, alloc::string::String), perry_runtime::object::descriptor_state::PropertyAttrs, perry_runtime::fast_hash::FastKeyHasher>>::insert",2,10471701,0.05534457853860699
+command,js_write_barrier_slot,2,10470239,0.05533685163981343
+command,<regex::regex::string::Regex>::captures_at,2,10468700,0.05532871778396986
+command,perry_runtime::object::shapes::shape_live_inline_slot_count_by_id,2,10463675,0.0553021598725898
+command,perry_fn_cli_2_1_112_js__h46,2,10463328,0.05530032592328654
+command,perry_runtime::array::element_shape::note_element_store_with_bit,2,10463096,0.05529909976698004
+command,perry_runtime::url::search_params::url_search_params_backing_of,2,10462527,0.05529609251293521
+command,"<hashbrown::map::HashMap<usize, perry_runtime::gc::layout::slot_mask::LayoutSlotMask, perry_runtime::fast_hash::PtrHasher>>::get_mut::<usize>",2,10461873,0.05529263602058843
+command,perry_runtime::array::indexing::keyed::js_array_set_index_or_string_with_strictness,2,10461651,0.05529146271584687
+command,perry_runtime::object::field_get_set::temporal_subclass_cell,2,10458727,0.05527600891825974
+command,perry_runtime::map::find_key_index_cold,2,10458144,0.055272927672024005
+command,perry_runtime::array::indexing_support::keys_array_slot,2,10457789,0.0552710514414688
+command,js_object_alloc_with_parent,2,10449078,0.055225012443253535
+command,perry_runtime::node_test::dispatch_object_method,2,10444954,0.055203216457874155
+command,js_array_push_f64,2,10441417,0.05518452285935649
+command,perry_runtime::object::native_module::nm_ee_dynamic_super,2,10430170,0.05512508070427359
+command,_mi_malloc_generic,2,10416689,0.055053831509584115
+command,perry_runtime::object::keys_lookup::keys_find_slot_by_key_ptr,2,10406113,0.05499793569450839
+command,perry_runtime::proxy::target_set,2,10403735,0.05498536759236674
+command,js_class_field_set_ic,2,10399417,0.05496254628662762
+command,perry_runtime::gc::forwarding::forwarding_target_is_object_start,2,10391052,0.054918335952559114
+command,alloc::fmt::format::format_inner,2,10390398,0.05491487946021234
+command,js_iterator_result_validate,2,10384424,0.054883305935319905
+command,perry_eh_personality,2,10380211,0.0548610395710126
+command,perry_runtime::array::header::array_numeric_layout,2,10370153,0.05480788146700053
+command,perry_runtime::closure::registry::closure_is_arrow,2,10365074,0.054781038157169816
+command,perry_closure_cli_2_1_112_js__14427,2,10364702,0.054779072078954216
+command,perry_runtime::object::descriptor_state::object_proto_may_intercept_key,2,10358959,0.05474871942521179
+command,perry_runtime::buffer::header::is_array_buffer,2,10334655,0.05462026898179268
+command,js_string_concat_box,2,10332818,0.05461056014931404
+command,perry_runtime::string::compare::js_string_key_matches_bytes,2,10327889,0.05458450961295736
+command,<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>,2,10326806,0.05457878578847485
+command,<perry_runtime::gc::copying_pointer_set::CopyingPointerSet>::classify_malloc,2,10311756,0.05449924418324701
+command,js_closure_get_capture_bits,2,10296954,0.05442101329682956
+command,"core::slice::sort::unstable::quicksort::quicksort::<u32, <u32 as core::cmp::PartialOrd>::lt>",2,10294975,0.054410553972128836
+command,perry_closure_cli_2_1_112_js__37152,2,10286815,0.054367427095141516
+command,perry_runtime::closure::dynamic_props::merge_closure_prop_map,2,10258079,0.054215552838143014
+command,perry_runtime::string::string_copy_range,2,10245502,0.05414908142492371
+command,perry_runtime::string::format::ascii_char_string,2,10230496,0.05406977236658158
+command,js_closure_call1_receiverless,2,10208075,0.053951273872839815
+command,<perry_runtime::gc::trace::ValidPointerSet>::contains,2,10197615,0.05389599113591734
+command,perry_runtime::object::field_get_set::prototype_override::inherited_field_if_overridden,2,10189039,0.053850665633828704
+command,perry_runtime::gc::layout_slot_visit::visit_gc_layout_slot_descriptors.specialized.10,2,10160655,0.053700651751915934
+command,<regex_automata::nfa::thompson::map::Utf8BoundedEntry as alloc::vec::spec_from_elem::SpecFromElem>::from_elem::<alloc::alloc::Global>,2,10134973,0.05356491836284872
+command,<regex_automata::meta::regex::Regex>::search_half,2,10048132,0.05310595008779282
+command,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::char,2,9980364,0.05274778560253829
+command,regex_automata::util::determinize::add_nfa_states,2,9890155,0.05227101692041213
+command,perry_runtime::object::array_tail_transition::prune_invalid_entries,1,5380706,0.02843787325575414
+command,perry_runtime::set::finalize_set_side_allocation_for_gc,1,5375503,0.028410374586518225
+command,js_regexp_new_site,1,5368625,0.028374023280155626
+command,<perry_runtime::gc::cycle::GcCycleState>::step,1,5368323,0.028372427162894575
+command,cli_2_1_112_js____AnonShape_458a282dc6795a14_constructor,1,5350670,0.028279128295314034
+command,perry_runtime::gc::policy::js_gc_loop_safepoint_armed,1,5350337,0.028277368338201683
+command,perry_runtime::arena::page_meta::register_old_block_pages::{closure#0},1,5345776,0.028253262739434626
+command,<regex_automata::meta::strategy::Core as regex_automata::meta::strategy::Strategy>::search_slots,1,5345054,0.028249446856446286
+command,perry_runtime::object::object_ops::keys_array::own_key_present,1,5344968,0.028248992332987843
+command,perry_fn_cli_2_1_112_js__nz4,1,5344587,0.028246978688363802
+command,<perry_runtime::gc::barrier::maintenance::RememberedSetClearState>::step_counted,1,5332263,0.02818184441973736
+command,js_put_value_set_dyn_ic,1,5328554,0.028162241774302803
+command,<regex_automata::dfa::dense::DFA<alloc::vec::Vec<u32>> as regex_automata::dfa::automaton::Automaton>::start_state_forward,1,5326978,0.02815391236766898
+command,perry_runtime::gc::policy::flush_deferred_gc_request,1,5326129,0.028149425269805958
+command,perry_runtime::gc::layout_slot_visit::fixed_slot,1,5319453,0.028114141565055054
+command,_mi_bin_size,1,5319044,0.028111979936049195
+command,js_array_filter,1,5318721,0.02811027283050178
+command,perry_closure_cli_2_1_112_js__37358,1,5318619,0.02810973374453944
+command,perry_runtime::object::native_module::callable_exports::scan_builtin_closure_metadata_roots_mut,1,5317719,0.028104977103695247
+command,js_object_get_symbol_property,1,5316952,0.028100923388664698
+command,<perry_runtime::gc::barrier::DirtyHeaderSlotScan>::new::{closure#0},1,5316583,0.02809897316591858
+command,perry_runtime::object::class_registry::construct::lookup_own_prototype_method,1,5315618,0.028093872989902312
+command,perry_runtime::array::subclass::dense_layout_for_validated_object,1,5315560,0.028093566450825686
+command,perry_runtime::object::native_call_method::js_native_call_method::{closure#5},1,5314588,0.02808842927871396
+command,js_promise_resolved,1,5313878,0.028084676817603543
+command,perry_runtime::object::object_ops::keys_array::ensure_key_in_keys_array,1,5313437,0.02808234606358989
+command,perry_fn_cli_2_1_112_js__Ni8,1,5312762,0.028078778582956748
+command,perry_runtime::object::field_get_set::accessors::accessor_receiver_override_begin,1,5312678,0.02807833462981129
+command,perry_closure_cli_2_1_112_js__37188,1,5312116,0.028075364371861918
+command,perry_runtime::object::shapes::stamp_object_shape,1,5310702,0.028067891160580047
+command,perry_runtime::closure::dynamic_props::closure_get_own_dynamic_prop,1,5310005,0.028064207406504046
+command,perry_runtime::object::descriptor_state::note_descriptor_target,1,5308216,0.028054752261537093
+command,js_typed_feedback_native_call_method,1,5307650,0.02805176086296175
+command,perry_runtime::object::arguments::arguments_object_set_field,1,5307385,0.028050360296490957
+command,perry_transition_cache_base,1,5304902,0.02803723725291749
+command,perry_runtime::gc::barrier::scan_dirty_object_slots,1,5304464,0.028034922354373316
+command,js_gc_declare_typed_shape_layout,1,5304301,0.028034060873864865
+command,__strlen_evex,1,5303760,0.02803120160420186
+command,perry_runtime::typedarray::load_at,1,5303396,0.02802927780723821
+command,__strncmp_evex,1,5300833,0.028015731951145255
+command,perry_runtime::gc::policy::gc_safepoint_moving_minor,1,5298976,0.028005917415536742
+command,perry_fn_cli_2_1_112_js__TM,1,5298846,0.028005230345192582
+command,perry_runtime::object::native_call_method::string_methods::dispatch_string,1,5296405,0.027992329278191837
+command,perry_fn_cli_2_1_112_js__mv5,1,5296174,0.02799110840704183
+command,perry_runtime::object::native_call_method::common_methods::dispatch_common,1,5293710,0.027978085781441737
+command,perry_stdlib::streams::byob::has_pending,1,5293321,0.027976029855565746
+command,perry_runtime::abi_trampoline::call_all_f64_x86_64,1,5292163,0.027969909644346223
+command,perry_runtime::gc::layout_tables::layout_payload_slot_count,1,5288122,0.02794855232695581
+command,perry_runtime::object::class_registry::class_meta::declared_class_outranks_anon_shape,1,5287499,0.02794525967446033
+command,perry_runtime::array::indexing::array_iteration_is_exotic,1,5280323,0.027907333391462657
+command,<core::str::pattern::StrSearcher as core::str::pattern::Searcher>::next_match,1,5280167,0.02790650890704966
+command,perry_method_cli_2_1_112_js__u_P_24_8__emit,1,5279611,0.02790357036003925
+command,perry_runtime::shared_sab::is_shared_sab,1,5277780,0.02789389323849957
+command,perry_runtime::regex::repeat_matcher::compile,1,5275359,0.0278810978746287
+command,perry_runtime::object::descriptor_state::set_accessor_descriptor,1,5275116,0.027879813581600767
+command,perry_runtime::closure::dispatch::bound::dispatch_bound_function,1,5274095,0.02787441743682086
+command,perry_runtime::proxy::prototype_of_for_set,1,5273918,0.027873481964121503
+command,tokio::runtime::task::waker::clone_waker,1,5273684,0.027872245237502015
+command,perry_fn_cli_2_1_112_js__QS_,1,5273499,0.027871267483550708
+command,perry_runtime::array::push_pop::array_length_is_non_writable,1,5272699,0.027867039358355872
+command,fancy_regex::vm::run,1,5270198,0.027853821181965516
+command,perry_runtime::object::field_get_set::accessors::ordinary_object_prototype_property_value,1,5269170,0.027848388041090154
+command,perry_runtime::proxy::small_handle_from_value,1,5268551,0.02784511652922065
+command,perry_runtime::buffer::header::is_data_view,1,5268454,0.027844603869040776
+command,js_promise_new_with_executor,1,5267362,0.027838832478149826
+command,perry_runtime::typedarray::typed_array_fast_index_set,1,5267331,0.027838668638298526
+command,perry_runtime::object::object_ops::descriptor_helpers::object_prototype_has_desc_field,1,5267275,0.027838372669534886
+command,perry_runtime::object::descriptor_state::owner_index_transfer,1,5266109,0.027832210177063412
+command,perry_runtime::object::field_get_set::ic_slot::pic_arena_alloc,1,5266025,0.027831766223917954
+command,<regex_syntax::utf8::Utf8Sequences as core::iter::traits::iterator::Iterator>::next,1,5265838,0.02783077789965366
+command,<regex_automata::meta::strategy::Core as regex_automata::meta::strategy::Strategy>::search,1,5265689,0.027829990411336124
+command,perry_runtime::typed_feedback::guards::descriptor_blocks_class_field_get,1,5264911,0.027825878559584148
+command,js_string_equals,1,5264285,0.02782257005161919
+command,perry_method_cli_2_1_112_js__oF6__get,1,5263061,0.02781610102007109
+command,js_object_get_prototype_of,1,5262948,0.027815503797387318
+command,perry_runtime::object::descriptor_state::set_builtin_property_attrs,1,5262662,0.027813992242630165
+command,<perry_runtime::object::shapes::shapes_slot_list::SlotIndex>::drain_pairs,1,5262540,0.027813347453537952
+command,perry_runtime::box::release_async_box_activation,1,5261652,0.027808654234571684
+command,perry_runtime::closure::dynamic_props::clone_closure_rebind_this,1,5259752,0.02779861243723395
+command,perry_runtime::gc::policy::old_reclaim_pressure_due,1,5259586,0.02779773510125602
+command,keys_array_len_capped_to_capacity,1,5258078,0.027789765085263755
+command,perry_fn_cli_2_1_112_js__iQK,1,5257819,0.027788396229731928
+command,perry_runtime::buffer::own_props::buffer_get_own_prop,1,5254167,0.027769094838217503
+command,perry_runtime::object::field_get_set::enumeration::registered_buffer_enum,1,5251965,0.02775745692361872
+command,js_is_truthy,1,5251930,0.027757271943141443
+command,<alloc::string::String as core::iter::traits::collect::FromIterator<char>>::from_iter::<unicode_normalization::recompose::Recompositions<core::str::iter::Chars>>,1,5248443,0.027738842602448455
+command,js_array_set_f64_unchecked,1,5247348,0.027733055356088023
+command,mi_bin,1,5247162,0.027732072316980223
+command,<perry_runtime::gc::layout::slot_mask::LayoutSlotMask>::clear_slot,1,5247043,0.027731443383357493
+command,js_array_push_guard,1,5246906,0.027730719316917878
+command,js_object_get_own_property_symbols,1,5246294,0.02772748480114383
+command,perry_fn_cli_2_1_112_js__cS_,1,5245672,0.027724197433804842
+command,perry_runtime::string::short_ascii_sso_bits,1,5243791,0.027714256054440486
+command,perry_closure_cli_2_1_112_js__37638,1,5242209,0.0277058949368677
+command,perry_runtime::object::prototype_chain::resolve_inherited_field_from_prototype,1,5241914,0.027704335815702103
+command,perry_runtime::weakref::entries_array,1,5241545,0.027702385592955986
+command,js_array_from_values,1,5240910,0.027699029518582583
+command,js_object_has_own,1,5240894,0.027698944956078688
+command,js_object_alloc_class_inline_keys_stamped,1,5240582,0.0276972959872527
+command,perry_fn_cli_2_1_112_js__oE,1,5239627,0.027692248662801365
+command,compiler_builtins::math::libm_math::fmod::fmod,1,5239595,0.02769207953779357
+command,perry_method_cli_2_1_112_js__Os6__onRender,1,5239430,0.02769120748697214
+command,<perry_runtime::gc::layout::slot_mask::LayoutSlotMask>::set_slot,1,5239053,0.02768921498297407
+command,perry_runtime::promise::reactions::js_promise_attach_settle_listener,1,5238956,0.027688702322794197
+command,perry_fn_cli_2_1_112_js__rlY,1,5238832,0.027688046963388998
+command,core::ptr::drop_glue::<tokio::runtime::scheduler::current_thread::CoreGuard>,1,5238243,0.0276849340062143
+command,perry_closure_cli_2_1_112_js__37429,1,5237777,0.02768247112328831
+command,<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category,1,5237144,0.027679125619227897
+command,js_promise_reject,1,5235536,0.027670627087586275
+command,perry_closure_cli_2_1_112_js__37315,1,5235394,0.02766987659536419
+command,js_string_split_n,1,5234781,0.02766663679443365
+command,"<hashbrown::map::HashMap<u32, u32, perry_runtime::fast_hash::PtrHasher>>::insert",1,5234766,0.027666557517086247
+command,js_getenv_value,1,5233724,0.02766105038401997
+command,<aho_corasick::nfa::noncontiguous::NFA>::add_transition,1,5232322,0.027653640594616023
+command,perry_fn_cli_2_1_112_js__hE8.__arena,1,5232041,0.027652155465641336
+command,js_iterator_next_result,1,5231487,0.027649227488943915
+command,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::root_nanbox_u64,1,5231416,0.027648852242832873
+command,perry_runtime::array::iterator::array_from_spread_value::{closure#0},1,5229593,0.02763921740254514
+command,perry_runtime::proxy::ordinary_set_with_receiver::{closure#4},1,5228633,0.027634143652311337
+command,perry_fn_cli_2_1_112_js__nR_,1,5228610,0.027634022093711987
+command,perry_closure_cli_2_1_112_js__36680,1,5228075,0.02763119453498794
+command,perry_runtime::object::native_call_method::collection_methods::dispatch_map_set,1,5227769,0.027629577277100914
+command,perry_runtime::object::prototype_chain::resolve_inherited_field,1,5227373,0.02762748435512947
+command,perry_closure_cli_2_1_112_js__37276,1,5225880,0.027619593616484608
+command,perry_runtime::object::class_registry::prototype_objects::resolve_proto_chain_field_inner,1,5222022,0.027599203482732513
+command,js_string_concat,1,5221798,0.02759801960767796
+command,js_math_to_number,1,5221500,0.027596444631042886
+command,<perry_runtime::gc::roots::stack_maps::StackMapIndex>::match_records,1,5220771,0.027592591751959092
+command,perry_runtime::map::js_map_set::{closure#0},1,5220140,0.027589256818211665
+command,perry_runtime::object::descriptor_state::class_instance_set_may_intercept,1,5220133,0.02758921982211621
+command,perry_runtime::object::class_registry::registration::is_class_id_registered,1,5220112,0.027589108833829843
+command,perry_closure_cli_2_1_112_js__82335,1,5220025,0.027588649025214906
+command,perry_runtime::closure::registry::resolve_strategy_slow,1,5219219,0.02758438918908111
+command,"<dashmap::DashMap<i64, alloc::boxed::Box<dyn core::any::Any + core::marker::Send + core::marker::Sync>> as dashmap::t::Map<i64, alloc::boxed::Box<dyn core::any::Any + core::marker::Send + core::marker::Sync>, std::hash::random::RandomState>>::_get::<i64>",1,5218560,0.027580906270951864
+command,perry_closure_cli_2_1_112_js__37169,1,5216748,0.02757132956738556
+command,floor,1,5216538,0.027570219684521915
+command,perry_fn_cli_2_1_112_js__TG7,1,5216391,0.027569442766517366
+command,perry_fn_cli_2_1_112_js___f5,1,5215980,0.02756727056719852
+command,js_object_is,1,5215877,0.027566726196079683
+command,<fancy_regex::vm::State>::save,1,5208738,0.027528995463872268
+command,perry_runtime::object::field_get_set::accessors::own_data_field_by_name,1,5208717,0.027528884475585904
+command,perry_runtime::symbol::accessors::symbol_accessor_property,1,5208055,0.027525385701987176
+command,perry_fn_cli_2_1_112_js__qD7,1,5204929,0.027508864302788358
+command,perry_runtime::json::stringify::stringify_object_inner,1,5204699,0.02750764871679484
+command,perry_runtime::object::string_wrapper::has_index_key,1,5203073,0.027499055052336338
+command,"<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::with_const_ptr::<perry_runtime::string::StringHeader, (f64, f64, f64), perry_runtime::object::field_set_by_name::fast_paths::object_set_field_by_name_transition_fast_impl_value::{closure#0}>",1,5202033,0.027493558489583052
+command,_Unwind_Find_FDE,1,5201863,0.02749266001297915
+command,js_string_intern,1,5197863,0.027471519387004973
+command,perry_fn_cli_2_1_112_js__SS_,1,5196066,0.027462021960786072
+command,perry_closure_cli_2_1_112_js__37118,1,5195995,0.02746164671467503
+command,js_array_note_numeric_write,1,5195165,0.027457260034785387
+command,perry_fn_cli_2_1_112_js__Fv5,1,5195084,0.027456831937109412
+command,perry_runtime::json::stringify_scalars::write_escaped_string,1,5194912,0.02745592289019252
+command,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::root_string_ptr,1,5194899,0.027455854183158105
+command,"<alloc::vec::Vec<(i64, i64)> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<(i64, i64), core::iter::adapters::filter::Filter<core::iter::adapters::map::Map<core::ops::range::Range<usize>, perry_runtime::proxy::put_value::js_put_value_set_dyn_ic_miss::{closure#1}>, perry_runtime::proxy::put_value::js_put_value_set_dyn_ic_miss::{closure#2}>>>::from_iter",1,5194785,0.027455251675317843
+command,perry_runtime::buffer::header::mark_as_uint8array,1,5194545,0.02745398323775939
+command,perry_runtime::object::object_ops::keys_array::own_key_present_via_index,1,5194380,0.027453111186937957
+command,perry_runtime::object::field_get_set::get_field_by_name::prime_read_stub,1,5194195,0.02745213343298665
+command,perry_runtime::object::side_table_roots::scan_transition_cache_slot,1,5194172,0.027452011874387297
+command,perry_runtime::gc::barrier_store::runtime_store_jsvalue_slot,1,5191729,0.02743910023707357
+command,perry_fn_cli_2_1_112_js__DMq,1,5188267,0.027420803025292918
+command,perry_fn_cli_2_1_112_js__E,1,5188054,0.027419677286959793
+command,<url::parser::Parser>::parse_host,1,5187175,0.027415031634401968
+command,_mi_page_free_collect,1,5186595,0.02741196624363571
+command,"<hashbrown::raw::RawTable<(usize, perry_runtime::closure::registry::ClosureBodyRecord)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, perry_runtime::closure::registry::ClosureBodyRecord, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",1,5186498,0.027411453583455838
+command,perry_runtime::promise::assimilate::get_then_action,1,5183680,0.02739656001245703
+command,perry_runtime::object::prop_plan::read_plan_record,1,5182821,0.027392020063029075
+command,js_async_step_chain,1,5179799,0.027376048320105584
+command,js_closure_unbox_callee_checked,1,5178637,0.027369906968260083
+command,<perry_runtime::object::shapes::shapes_store::IdList>::remove_inline,1,5178308,0.027368168151773706
+command,perry_runtime::path::normalize_str,1,5172492,0.027337429681607253
+command,<regex_automata::nfa::thompson::builder::Builder>::patch,1,5168656,0.027317155821298015
+command,<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::get_nanbox_u64,1,5167751,0.027312372754671358
+command,perry_runtime::error::recorded_stack_frame,1,5167109,0.0273089796842025
+command,perry_runtime::object::class_registry::state::class_is_key_deleted,1,5160946,0.027276407264732787
+command,perry_runtime::closure::box_captures::increment_cell_capture_count,1,5158505,0.027263506197732046
+command,perry_closure_cli_2_1_112_js__84392,1,5152955,0.027234173579192875
+command,js_switch_strict_equals,1,5145744,0.027196062315717924
+command,perry_runtime::buffer::access::read_buffer_byte,1,5142905,0.02718105775643275
+command,regex_automata::hybrid::search::find_fwd,1,5140219,0.02716686182609109
+command,js_bool_box_alloc,1,5138037,0.027155329614622175
+command,perry_runtime::object::arguments::prune_dead_arguments_object_entries,1,5137599,0.027153014716078002
+command,perry_runtime::gc::layout_tables::refresh_per_object_layouts_flag,1,5121983,0.027070481712274812
+command,js_closure_call3,1,5121315,0.027066951227737123
+command,perry_runtime::gc::barrier::mark_dirty_external_slot_page,1,5117138,0.02704487512906359
+command,perry_closure_cli_2_1_112_js__37426,1,5109795,0.02700606622493149
+command,js_array_alloc_literal,1,5088979,0.026896050407361868
+command,js_object_get_class_id,1,5073391,0.026813665387940493
+command,perry_runtime::symbol::is_registered_symbol_slow,1,5069576,0.02679350251591762
+command,perry_runtime::object::object_ops::descriptor_helpers::define_property_force_store_value,1,5065447,0.026771680104755776
+command,perry_method_cli_2_1_112_js__iE8__class_expr_6712___readdirp,1,5057852,0.026731539341187306
+command,perry_runtime::object::class_registry::construct::extends_target_must_throw,1,5011145,0.02648468553684332
+command,perry_runtime::typed_feedback::invalidate_representation_change,1,4964522,0.026238275685644793
+command,perry_runtime::arena::block::arena_cell_alloc,1,4957004,0.026198541879126323
+command,perry_closure_cli_2_1_112_js__38778,1,4951426,0.026169061276205333
+command,regex_automata::util::determinize::epsilon_closure,1,4944704,0.026133534454255727
+command,js_array_find,1,4929339,0.026052328024732414
+command,<perry_runtime::fast_hash::PtrHasher as core::hash::BuildHasher>::hash_one::<&perry_runtime::set::JSValueKey>,1,4919768,0.0260017437919327
+command,"<hashbrown::map::HashMap<usize, perry_runtime::gc::layout::slot_mask::LayoutSlotMask, perry_runtime::fast_hash::PtrHasher>>::remove::<usize>",1,4878274,0.025782441508389563
+command,perry_runtime::gc::trace::trace_heap_rewrite_slots::{closure#0},1,4871526,0.025746777272371124
+command,perry_runtime::object::class_registry::class_meta::class_name_for_id,1,4821227,0.025480939185902326
+command,perry_runtime::path::string_from_header,1,4792724,0.025330296370366826
+command,perry_runtime::object::live_slots::object_store_known_live_slot,1,4719404,0.024942788696260137
+command,perry_closure_cli_2_1_112_js__37050,1,4672796,0.024696458122409014
+command,perry_runtime::closure::dynamic_props::closure_static_prototype,1,4645530,0.024552353045456027
+command,perry_runtime::arena::allocators::arena_alloc_gc_old,1,4443272,0.023483387863384695
+command,"core::slice::sort::unstable::quicksort::quicksort::<usize, <usize as core::cmp::PartialOrd>::lt>",1,4199181,0.02219332872971891
+command,js_array_is_array,1,1988626,0.010510199617131531
+command,js_string_append_known_heap,1,1945983,0.010284824688777311
+command,<notify::inotify::EventLoop>::handle_event,1,198439,0.0010487811694224877
+startup,__memmove_avx512_unaligned_erms,111,548756152,3.710596780370317
+startup,<perry_runtime::gc::copying::CopyingNurseryCollector>::mark_addr,79,389226276,2.6318825972107343
+startup,<perry_runtime::gc::copying::CopyingNurseryCollector>::visit_slot_with_parent,60,307629706,2.080140318189758
+startup,js_object_get_field_by_name,54,297632047,2.0125378299781262
+startup,perry_runtime::object::class_meta_registry::get_parent_class_id,51,281864960,1.9059234402445628
+startup,perry_runtime::object::descriptor_state::get_accessor_descriptor,53,271203607,1.833833164860841
+startup,<perry_runtime::gc::copying_pointer_set::CopyingPointerSet>::classify_arena,49,243869526,1.6490047076611822
+startup,perry_runtime::gc::layout_tables::layout_forget_object,46,226063032,1.5286001908912576
+startup,perry_runtime::object::shapes::scan_shape_table_rekey_mut,39,195391320,1.3212032343726805
+startup,perry_runtime::object::class_registry::parent_static::is_class_object_ptr,38,188834860,1.2768695548723061
+startup,__memcmp_evex_movbe,37,185593760,1.2549537819355898
+startup,core::str::converts::from_utf8,36,177118799,1.1976475214303517
+startup,<perry_runtime::gc::layout::HeapChildSlotIterator as core::iter::traits::iterator::Iterator>::next,34,175173791,1.1844957045508673
+startup,<perry_runtime::object::shapes::shapes_store::ShapeSlab>::insert,32,165873596,1.1216093505700628
+startup,perry_runtime::object::descriptor_state::gc_scan::scan_descriptor_roots_mut,29,142151676,0.9612057183640366
+startup,perry_runtime::object::field_get_set::get_field_by_name_tail::get_field_by_name_object_tail,27,139774094,0.9451289088702154
+startup,perry_runtime::object::shapes::shape_descriptor_ensure_with_holes,27,137832171,0.931997952241729
+startup,perry_runtime::object::shapes::shape_slot_lookup_verdict,26,133960265,0.9058167752560421
+startup,perry_runtime::gc::barrier::remembered_child_needs_tracking,25,130204290,0.880419504188817
+startup,_mi_page_malloc_zero,26,129963746,0.8787929861285011
+startup,regex_automata::util::determinize::next,26,129644514,0.876634393050184
+startup,perry_runtime::gc::layout_tables::layout_addr_filter_add,24,120038289,0.8116787156940368
+startup,perry_runtime::gc::types::gc_type_after_payload_move,25,119621919,0.8088632918016359
+startup,<perry_runtime::gc::copying::CopyingNurseryCollector>::rewrite_raw_addr,23,119477138,0.8078843070367256
+startup,js_native_call_method,17,116782905,0.7896663567523752
+startup,<perry_runtime::string::OwnedStringBytes>::copy_of_key,22,115196056,0.7789363507763623
+startup,perry_runtime::closure::dynamic_props::is_closure_ptr,22,113070454,0.7645633876509325
+startup,perry_runtime::proxy::ordinary_set_with_receiver,22,113029385,0.7642856859821355
+startup,<perry_runtime::object::shapes::ShapeTableInner>::facts_remove,22,111333274,0.7528168687437081
+startup,perry_runtime::gc::layout_slot_visit::visit_gc_layout_slot_descriptors.specialized.1,21,109352597,0.7394238640869629
+startup,perry_runtime::string::compare::js_string_key_matches,22,108473082,0.7334767316213074
+startup,perry_runtime::object::keys_lookup::keys_find_slot_by_bytes,23,107935841,0.7298439983615208
+startup,perry_runtime::object::field_set_by_name::tail::set_field_by_name_object_tail,23,106941607,0.7231211553175039
+startup,perry_runtime::buffer::header::is_registered_buffer,21,106645836,0.7211212015742483
+startup,perry_runtime::gc::layout::layout_transfer,21,105897861,0.7160635204590897
+startup,perry_runtime::gc::layout_slot_visit::visit_gc_layout_slot_descriptors.specialized.10,20,102227349,0.6912441358200805
+startup,js_put_value_set,19,101701601,0.6876891162927803
+startup,perry_runtime::closure::dynamic_props::closure_get_dynamic_prop,20,100936381,0.6825148273888174
+startup,perry_runtime::object::shapes::move_shape_family,20,98443116,0.6656557889108123
+startup,perry_runtime::object::reflect_support::obj_value_has_own_key,19,98392318,0.6653123013807641
+startup,<perry_runtime::object::shapes::shapes_slot_list::SlotIndex>::insert,19,97998216,0.662647449958128
+startup,js_is_symbol,17,96001063,0.6491430373612066
+startup,mi_theap_malloc_aligned,18,92443720,0.6250888824613215
+startup,perry_runtime::closure::dynamic_props::scan_closure_owner,18,91228716,0.6168732298183293
+startup,"<hashbrown::map::HashMap<usize, alloc::vec::Vec<(u32, usize)>, perry_runtime::fast_hash::PtrHasher>>::insert",18,90930109,0.6148540995201854
+startup,mi_free,19,90416711,0.611382588615195
+startup,perry_runtime::object::descriptor_state::get_property_attrs,17,88274567,0.5968977712686925
+startup,perry_runtime::gc::copying::run_copied_minor_attempt,17,86588537,0.585497120056298
+startup,js_put_value_set_dyn_ic_miss,15,82651822,0.5588777155156897
+startup,perry_runtime::gc::layout::layout_note_slot,16,79854216,0.5399607743961946
+startup,perry_runtime::object::object_keys_array,12,77291491,0.5226320590837246
+startup,perry_runtime::object::keys_lookup::keys_array_dense_slots,14,72534798,0.4904681012553119
+startup,perry_runtime::object::shapes::shape_object_kind_by_id,14,71347371,0.48243891964693003
+startup,perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slots::<<perry_runtime::gc::copying::CopyingNurseryCollector>::scan_object_fields::{closure#0}>::{closure#0},14,70595138,0.4773524466521119
+startup,perry_runtime::value::addr_class::try_read_tracked_gc_header,13,66519316,0.4497924239800335
+startup,perry_runtime::arena::allocators::arena_alloc_gc_old,13,65948045,0.4459295855852506
+startup,perry_runtime::object::shapes::remove_descriptor_indexed_under,13,65716834,0.44436617570080666
+startup,js_array_alloc,13,63588767,0.42997654466007384
+startup,perry_runtime::gc::barrier_store::barrier_child_prologue,12,63531622,0.42959013978380695
+startup,perry_runtime::proxy::own_set_descriptor,12,62244672,0.4208880003925795
+startup,js_object_get_field_ic_miss,13,59591205,0.402945702942001
+startup,perry_runtime::object::alloc::remember_class_keys_array,7,58850700,0.3979385327101343
+startup,perry_runtime::object::arguments::is_arguments_object,12,58734761,0.39715457269701837
+startup,"core::slice::sort::unstable::quicksort::quicksort::<usize, <usize as core::cmp::PartialOrd>::lt>",12,58163284,0.39329034136489166
+startup,perry_runtime::gc::dead_owner::owner_is_dead_copied_minor_from_space,11,57614996,0.38958291014958624
+startup,perry_runtime::async_hooks::is_async_resource_handle,11,57488798,0.38872958050438317
+startup,perry_runtime::symbol::is_immortal_symbol_pointer,11,57228092,0.3869667303920017
+startup,perry_runtime::arena::page_meta::classify_heap_space_in_range_uncached,11,56306257,0.3807334372060099
+startup,perry_runtime::object::class_registry::state::class_id_for_decl_prototype_object,11,56242932,0.38030524420942924
+startup,perry_runtime::object::class_registry::class_meta::is_anon_shape_class_id,11,56071960,0.3791491603087362
+startup,perry_runtime::object::shapes::publish_object_shape_from,11,54908982,0.3712852987252008
+startup,js_object_get_field,10,51109565,0.34559428016239796
+startup,perry_runtime::gc::young_log::addr_is_minor_relevant,10,49891796,0.3373599310545728
+startup,perry_runtime::typed_feedback::registry,11,49451245,0.3343809993082387
+startup,perry_runtime::object::descriptor_state::owner_index_transfer,10,49170660,0.33248373074218135
+startup,perry_runtime::array::element_shape::clear_element_shape,9,47427126,0.3206942471559159
+startup,perry_runtime::gc::verify::remember_evacuated_old_to_young_slot,9,47312435,0.31991872590884396
+startup,perry_runtime::box::is_registered_box_ptr,6,47194082,0.31911844283384494
+startup,js_array_get_f64,10,47131508,0.31869532797292055
+startup,<regex_automata::meta::strategy::ReverseSuffix as regex_automata::meta::strategy::Strategy>::search_half,9,46802566,0.3164710775081557
+startup,js_jsvalue_to_string,9,46685506,0.31567953748163013
+startup,perry_runtime::typedarray_props::typed_array_addr_from_value,8,45858661,0.3100885506950887
+startup,mi_malloc_aligned,9,45381710,0.306863488272473
+startup,js_string_coerce,9,45286974,0.30622289937829117
+startup,"<hashbrown::map::HashMap<(usize, alloc::string::String), perry_runtime::object::descriptor_state::PropertyAttrs, perry_runtime::fast_hash::FastKeyHasher>>::insert",9,45106313,0.3050013000896175
+startup,perry_runtime::object::descriptor_state::owner_index_add,10,44486953,0.30081329196704043
+startup,<core::hash::sip::Hasher<core::hash::sip::Sip13Rounds> as core::hash::Hasher>::write,9,43416214,0.29357313498376725
+startup,"<hashbrown::raw::RawTable<(usize, perry_runtime::closure::registry::ClosureBodyRecord)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, perry_runtime::closure::registry::ClosureBodyRecord, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",10,42762977,0.289156056286454
+startup,<regex_syntax::hir::ClassUnicodeRange as regex_syntax::hir::interval::Interval>::case_fold_simple,8,42009455,0.28406086729048957
+startup,perry_runtime::typed_feedback::object_key_matches_field,6,41336028,0.2795072672098212
+startup,<perry_runtime::gc::layout::slot_mask::LayoutSlotMask>::set_slot,8,41226528,0.27876684663144646
+startup,"<hashbrown::map::HashMap<usize, perry_runtime::object::shapes::ShapeIndex, perry_runtime::fast_hash::PtrHasher>>::insert",8,41213997,0.278682114117587
+startup,js_object_set_field_by_name,8,40962373,0.27698067496130413
+startup,perry_runtime::box::scan_box_roots_mut,8,40820345,0.27602030551924556
+startup,<perry_runtime::gc::layout::HeapChildSlotIterator>::new,8,40773812,0.2757056572016793
+startup,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&usize>,8,39535565,0.2673328393029503
+startup,perry_runtime::arena::page_meta::flush_deferred_old_page_registrations_batch,8,38938736,0.2632971820118925
+startup,<perry_runtime::object::shapes::shapes_store::IdList>::append_unchecked,8,38897274,0.2630168229432115
+startup,perry_runtime::object::object_ops::keys_array::own_key_present,8,38621449,0.26115174069636016
+startup,<regex_automata::nfa::thompson::compiler::Compiler>::c,8,38611810,0.2610865633999679
+startup,perry_runtime::object::object_ops::keys_array::ensure_key_in_keys_array,8,38456282,0.26003490922906863
+startup,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&str>,7,38298543,0.25896830464813475
+startup,perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slot_descriptors::<perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slots<perry_runtime::gc::verify::restore_surviving_dirty_coverage::{closure#0}::{closure#0}>::{closure#0}>,7,36572220,0.2472951989483936
+startup,perry_runtime::proxy::target_set,7,36515637,0.24691259422157918
+startup,perry_runtime::object::set_object_keys_array,7,36506455,0.24685050708230394
+startup,perry_runtime::weakref::is_weak_target_trace_slot,7,36491308,0.24674808561654465
+startup,js_object_get_field_ic,7,36117534,0.2442206887100474
+startup,perry_runtime::typed_feedback::guards::class_setter_in_chain,7,36049176,0.24375846341418858
+startup,js_string_intern,7,35844277,0.24237297084717113
+startup,js_to_primitive,7,35438604,0.2396298782691709
+startup,perry_runtime::arena::block::arena_cell_alloc,7,35033441,0.2368902342253713
+startup,perry_runtime::closure::registry::resolve_strategy_slow,7,35013576,0.23675591043734012
+startup,perry_runtime::map::is_registered_map,7,34923747,0.23614850185163394
+startup,perry_runtime::set::is_registered_set,8,34864144,0.23574547639288626
+startup,perry_runtime::typedarray::lookup_registered_typed_array_kind,7,34752269,0.2349889964640673
+startup,perry_runtime::typed_feedback::object_shape,11,34226265,0.23143224590783498
+startup,<alloc::raw_vec::RawVecInner>::finish_grow,7,33995280,0.2298703641973702
+startup,perry_runtime::closure::dynamic_props::merge_closure_prop_map,7,33755683,0.2282502495917368
+startup,js_object_define_property,7,33255299,0.22486673716534886
+startup,perry_runtime::string::string_storage_alloc,6,31984460,0.21627353764570315
+startup,perry_runtime::object::shapes::shape_descriptor_by_id,6,31091133,0.2102330107596959
+startup,js_typed_feedback_class_field_set_guard,6,30795620,0.20823480156903598
+startup,perry_runtime::closure::box_captures::increment_cell_capture_count,6,30645270,0.20721816016302094
+startup,js_array_length,6,30114810,0.2036312788844394
+startup,perry_runtime::object::transition_cache_insert,6,30054302,0.20322213396794353
+startup,perry_runtime::gc::forwarding::forwarding_target_is_object_start,6,30043018,0.2031458334582962
+startup,"core::ptr::drop_glue::<perry_runtime::gc::roots::GcRootRegistryGuard<core::option::Option<std::collections::hash::map::HashMap<alloc::string::String, alloc::vec::Vec<perry_runtime::ui_text_registry::ForEachBinding>>>>>",6,29944496,0.20247964426904838
+startup,perry_runtime::arena::allocators::arena_alloc,6,29201827,0.19745784143324008
+startup,perry_runtime::array::header_gc_slots::store_array_slot_resolved,6,27920400,0.18879304763885618
+startup,"<&mut perry_runtime::gc::copying::run_copied_minor_attempt::{closure#0} as core::ops::function::FnMut<(perry_runtime::gc::roots::MutableRootSlot,)>>::call_mut",6,27524354,0.18611505121526703
+startup,regex_automata::util::determinize::add_nfa_states,6,27445326,0.1855806771744652
+startup,perry_runtime::array::iter_object::dispatch_array_iterator_method_inner,5,26306033,0.17787696957630703
+startup,perry_runtime::object::live_slots::object_live_slot_count,5,26114799,0.17658387744037168
+startup,perry_runtime::arena::page_meta::old_object_page_overlaps,5,25828388,0.17464721444244571
+startup,perry_runtime::gc::layout_tables::per_object_slot_mask,5,25712989,0.17386690581848344
+startup,perry_runtime::object::object_ops::extract_obj_ptr,5,25516458,0.1725379962596837
+startup,js_string_from_bytes_with_capacity,2,25491779,0.17237112101353108
+startup,perry_runtime::object::alloc::object_alloc_class_inline_keys_impl,7,25371996,0.17156116851910674
+startup,perry_runtime::object::string_wrapper::has_index_key,5,25340743,0.1713498409909246
+startup,perry_runtime::object::field_set_by_name::fast_paths::object_set_field_by_name_transition_fast_impl_value,5,25124917,0.16989046188820028
+startup,perry_runtime::object::prototype_chain::object_static_prototype,5,24939541,0.16863698056275006
+startup,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&char>,5,24893732,0.1683272278113823
+startup,_mi_theap_malloc_zero,5,24747693,0.1673397366621104
+startup,"<hashbrown::map::HashMap<usize, perry_runtime::gc::layout::slot_mask::LayoutSlotMask, perry_runtime::fast_hash::PtrHasher>>::get_mut::<usize>",5,24732327,0.16723583435519437
+startup,perry_runtime::regex::grammar::js_regex_to_rust_with_flags,5,24729724,0.16721823330710753
+startup,perry_runtime::object::field_get_set::has_property::closure_dynamic_prop_by_key,5,24539172,0.1659297527404366
+startup,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&[u8]>,5,24537648,0.16591944770882522
+startup,perry_runtime::array::iterator::array_from_spread_value::{closure#0},5,24315354,0.16441633307823855
+startup,js_register_closure_arity,4,23908529,0.16166545087004391
+startup,<perry_runtime::object::shapes::shapes_slot_list::SlotIndex>::drain_pairs,5,23544746,0.15920561142472056
+startup,perry_runtime::typed_feedback::normalize_raw_object_addr,5,21753802,0.14709554939443004
+startup,perry_runtime::array::header_gc_slots::note_array_slot_layout_only,2,21637472,0.14630894550509366
+startup,"<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::across_mut::<perry_runtime::json_tape::LazyArrayHeader, (), perry_runtime::json_tape::reparse_materialize::{closure#1}>",4,21597974,0.146041866674001
+startup,perry_runtime::typedarray::lookup_typed_array_kind,4,21316019,0.14413533439842421
+startup,perry_runtime::gc::layout_slot_visit::visit_gc_rewrite_slots::<perry_runtime::gc::verify::restore_surviving_dirty_coverage::{closure#0}::{closure#0}>::{closure#0},4,21140484,0.142948396259383
+startup,perry_runtime::string::intern::intern_dispatch_bytes,4,21045968,0.14230929496818967
+startup,perry_runtime::gc::layout::layout_rebuild_from_slots_with_policy,4,20979000,0.14185646861848553
+startup,js_closure_call1_receiverless,4,20938726,0.1415841426059425
+startup,perry_runtime::proxy::reflect_value_is_object,4,20897650,0.1413063936043231
+startup,perry_runtime::gc::barrier::write_barrier_decoded_parent,4,20864261,0.14108062280348882
+startup,perry_runtime::gc::verify::rebuild_evacuated_old_to_young_remembered_set,4,20774564,0.14047410677957575
+startup,js_for_in_keys_value,4,20617702,0.13941343232510064
+startup,perry_runtime::typed_feedback::invalidate_representation_change,4,20600783,0.13929902889345205
+startup,js_closure_alloc_init,4,20496553,0.13859424316848398
+startup,"<hashbrown::raw::RawTable<(usize, alloc::vec::Vec<perry_runtime::typedarray_props::TypedArrayOwnProp>)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, alloc::vec::Vec<perry_runtime::typedarray_props::TypedArrayOwnProp>, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",4,20453336,0.13830201708505366
+startup,perry_runtime::object::class_registry::prototype_objects::class_prototype_object,5,20285285,0.137165684494949
+startup,perry_runtime::arena::page_meta::classify_heap_generation_uncached,4,20225773,0.13676327436289204
+startup,perry_runtime::array::subclass::note_array_subclass_index_write,4,20144405,0.13621307763575782
+startup,<perry_runtime::object::shapes::ShapeTableInner>::family_append_fresh,4,20063283,0.13566454431923802
+startup,js_closure_set_box_capture_ptr,4,19990468,0.13517218153919822
+startup,perry_runtime::process::env_misc::process_env_has_field,4,19855697,0.13426088271026537
+startup,<regex_automata::nfa::thompson::builder::Builder>::add,4,19743418,0.13350167100141297
+startup,<regex_automata::nfa::thompson::compiler::Utf8Compiler>::compile,4,19722890,0.13336286411892093
+startup,core::ptr::drop_glue::<regex_automata::nfa::thompson::compiler::Compiler>,4,19625154,0.13270198972944117
+startup,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_metadata_usize_slot,4,19540043,0.13212648346600686
+startup,perry_runtime::object::shape_cache_insert,2,18933321,0.1280239313732882
+startup,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::parse_with_comments,4,18347703,0.12406408097815878
+startup,perry_runtime::closure::dynamic_props::closure_set_dynamic_prop,4,17896186,0.12101099898467897
+startup,perry_runtime::object::field_get_set::accessors::prototype_property_value_with_guard,1,17582328,0.11888874399027216
+startup,perry_runtime::object::prop_plan::store_plan_check,3,16404835,0.11092673441865357
+startup,perry_runtime::gc::malloc::gc_malloc_header_is_tracked,2,16220308,0.10967899388837266
+startup,mi_realloc_aligned,1,16155153,0.10923842673966026
+startup,perry_runtime::event_target::event_target_value_read,3,15970745,0.1079914908673595
+startup,perry_runtime::gc::old_free::old_free_take_exact,3,15883185,0.10739942487793032
+startup,perry_runtime::object::class_registry::dispatch::call_vtable_method_inner,3,15791135,0.10677699826387191
+startup,<perry_runtime::arena::page_meta::page_class::PageGenerationCacheSet>::insert,3,15715169,0.1062633289519375
+startup,regex_automata::dfa::search::find_fwd::<&regex_automata::dfa::dense::DFA<alloc::vec::Vec<u32>>>,3,15705583,0.10619851003262881
+startup,perry_runtime::object::keys_lookup::keys_find_slot_by_key_ptr,3,15675216,0.10599317348739132
+startup,js_object_get_own_field_or_undef,3,15624372,0.10564937491308185
+startup,js_object_set_field,3,15597282,0.10546619689054146
+startup,[unknown],20,15563004,0.10523441482126722
+startup,js_typed_feedback_class_field_get_guard,3,15544756,0.10511102491520162
+startup,perry_runtime::native_handle::canonical::is_canonical_handle_addr,4,15526146,0.10498518722603674
+startup,<regex_automata::meta::regex::Regex>::search_half,3,15468282,0.1045939205927301
+startup,perry_runtime::gc::policy::flush_deferred_gc_request,3,15467408,0.10458801075176663
+startup,perry_fn_cli_2_1_112_js__GW7,3,15331430,0.10366855039189227
+startup,perry_runtime::regex::js_regexp_new_impl,3,15225301,0.10295092394840062
+startup,js_get_global_this_builtin_value,3,15219987,0.1029149915743962
+startup,js_closure_call2,4,15190876,0.10271814788985677
+startup,js_array_push_f64,3,15186668,0.10268969410178552
+startup,js_closure_call0,3,15140979,0.10238075277022969
+startup,js_to_property_key,3,15132863,0.102325873743617
+startup,perry_runtime::gc::barrier::write_barrier_slot_decoded,3,15089447,0.10203230205566523
+startup,perry_runtime::set::js_set_add::{closure#0},3,15000028,0.1014276658209831
+startup,"<hashbrown::map::HashMap<(usize, alloc::string::String), perry_runtime::object::descriptor_state::AccessorDescriptor, perry_runtime::fast_hash::FastKeyHasher>>::insert",3,14870993,0.10055515285905993
+startup,<regex_automata::nfa::thompson::nfa::Inner>::add,3,14752661,0.09975501178252803
+startup,perry_runtime::typed_feedback::guards::descriptor_blocks_class_field_set,2,14745359,0.09970563688697284
+startup,mi_theap_umalloc,3,14711532,0.09947690440382505
+startup,js_box_alloc_bits,3,14650376,0.0990633778203448
+startup,<perry_runtime::object::shapes::shapes_store::IdList>::remove_inline,3,14471813,0.09785596485471619
+startup,<regex_automata::dfa::determinize::Runner>::maybe_add_state,3,14375315,0.0972034616129627
+startup,mi_page_free_list_extend,5,14365751,0.09713879145395286
+startup,perry_runtime::object::shapes::stamp_object_shape_id_with_carrier_note,3,14205116,0.09605260460822473
+startup,perry_runtime::gc::barrier_store::runtime_write_barrier_gc_slot,3,14194037,0.09597769027408945
+startup,"<hashbrown::raw::RawTable<((usize, alloc::string::String), perry_runtime::object::descriptor_state::PropertyAttrs)>>::reserve_rehash::<hashbrown::map::make_hasher<(usize, alloc::string::String), perry_runtime::object::descriptor_state::PropertyAttrs, perry_runtime::fast_hash::FastKeyHasher>::{closure#0}>",3,13838521,0.09357375089197546
+startup,perry_runtime::object::descriptor_state::class_instance_set_may_intercept,3,13740490,0.09291088176212471
+startup,"<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::across_mut::<perry_runtime::string::StringHeader, ((), *mut perry_runtime::object::ObjectHeader), perry_runtime::object::object_ops::define_property::js_object_define_property::{closure#61}>",3,13535091,0.09152200827922427
+startup,perry_runtime::object::object_ops::prototype::js_object_get_prototype_of::{closure#0},3,13487285,0.09119875214981986
+startup,perry_runtime::gc::policy::gc_budgeted_due_trigger,3,13430342,0.09081371316356968
+startup,perry_runtime::object::class_registry::registration::is_class_id_registered,3,13037239,0.08815561681086781
+startup,<perry_runtime::gc::verify::OldToYoungRememberedRebuildState>::step,3,12841546,0.08683237366708797
+startup,perry_runtime::object::native_call_method::primitive_methods::dispatch_primitive,2,11272605,0.07622345857434021
+startup,"<hashbrown::raw::RawTable<(u32, ())>>::reserve_rehash::<hashbrown::map::make_hasher<u32, (), perry_runtime::fast_hash::PtrHasher>::{closure#0}>",1,11249690,0.07606851119942279
+startup,trunc,3,11105036,0.07509038518714678
+startup,"<hashbrown::raw::RawTable<(u64, (*mut perry_runtime::array::header::ArrayHeader, *mut perry_runtime::array::header::ArrayHeader))>>::reserve_rehash::<hashbrown::map::make_hasher<u64, (*mut perry_runtime::array::header::ArrayHeader, *mut perry_runtime::array::header::ArrayHeader), std::hash::random::RandomState>::{closure#0}>",3,11016169,0.07448948148359946
+startup,perry_fn_cli_2_1_112_js__Ez4,2,10629635,0.07187580360376832
+startup,_mi_malloc_generic,3,10625342,0.07184677505999697
+startup,perry_runtime::object::class_registry::state::class_decl_prototype_object,2,10590241,0.07160942800317932
+startup,mi_page_queue_find_free_ex,2,10580335,0.07154244529770552
+startup,mi_bitmap_setN,2,10552001,0.07135085555644825
+startup,perry_runtime::object::field_get_set::ic_miss::pic_prime_get,3,10541929,0.07128275038690131
+startup,perry_runtime::gc::layout_slot_visit::fixed_slot,2,10529484,0.0711985993905737
+startup,perry_runtime::object::prototype_helpers::constructor_dynamic_prototype,2,10527133,0.07118270232409188
+startup,perry_runtime::object::field_set_by_name::fast_paths::try_existing_own_data_overwrite,2,10504840,0.0710319608085329
+startup,__memset_avx512_unaligned_erms,2,10499218,0.07099394579034456
+startup,"<hashbrown::map::HashMap<u32, perry_runtime::object::class_registry::state::ClassVTable, perry_runtime::fast_hash::PtrHasher>>::get::<u32>",2,10492555,0.07094889170528784
+startup,js_number_coerce,2,10491738,0.07094336728873503
+startup,perry_runtime::proxy::small_handle_from_value,2,10490444,0.07093461747842986
+startup,perry_runtime::gc::layout_tables::prune_dead_per_object_layout_owners,2,10483141,0.0708852358210429
+startup,"core::slice::sort::unstable::quicksort::quicksort::<u32, <u32 as core::cmp::PartialOrd>::lt>",2,10482371,0.0708800292105831
+startup,perry_runtime::gc::layout_tables::layout_key_may_be_nursery,2,10474399,0.07082612388774472
+startup,perry_runtime::gc::layout_tables::slot_masks_insert,2,10456480,0.07070495862433013
+startup,perry_runtime::object::prototype_chain::resolve_inherited_field_from_prototype,2,10428149,0.07051338916856816
+startup,fancy_regex::vm::run,2,10421816,0.07047056648799421
+startup,perry_runtime::object::field_get_set::accessors::builtin_reflection_accessor_read,2,10419470,0.07045470323067123
+startup,perry_transition_cache_base,2,10418323,0.07044694740963564
+startup,perry_runtime::object::descriptor_state::clear_property_attrs,2,10413329,0.07041317882179635
+startup,js_new_function_construct,2,10405275,0.07035871902875314
+startup,"<perry_runtime::object::class_image::ImageTable<std::sync::poison::rwlock::RwLock<core::option::Option<std::collections::hash::map::HashMap<u32, perry_runtime::object::class_registry::state::ClassVTable, perry_runtime::fast_hash::PtrHasher>>>>>::read",2,10402223,0.07033808191820337
+startup,perry_runtime::buffer::header::is_array_buffer,2,10400868,0.07032891963616046
+startup,perry_runtime::proxy::key_to_rust_string::{closure#0},3,10397486,0.07030605112112792
+startup,perry_runtime::object::class_registry::parent_static::is_registered_class_prototype_object,2,10389091,0.07024928554345253
+startup,perry_runtime::string::compare::js_string_key_matches_bytes,2,10386468,0.07023154925873036
+startup,<core::str::lossy::Utf8Chunks as core::iter::traits::iterator::Iterator>::next,2,10379048,0.0701813764670268
+startup,js_native_call_value,2,10346635,0.0699622052139961
+startup,perry_runtime::closure::box_captures::decrement_cell_capture_count,2,10338955,0.06991027434603338
+startup,perry_runtime::proxy::lookup,2,10332575,0.06986713385936642
+startup,<regex_syntax::utf8::Utf8Sequences as core::iter::traits::iterator::Iterator>::next,2,10326952,0.06982911207934632
+startup,perry_runtime::url::search_params::shape_is_url_search_params,2,10297135,0.06962749454158011
+startup,js_closure_get_capture_bits,2,10294779,0.06961156366593946
+startup,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_tagged_raw_addr,2,10259804,0.06937506859992433
+startup,perry_runtime::iter_result::emit_iter_result_cached,2,10255414,0.06934538415847168
+startup,perry_runtime::object::descriptor_state::set_property_attrs,2,10247629,0.06929274329817352
+startup,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::root_nanbox_u64,2,10206070,0.06901172833181118
+startup,perry_runtime::object::arguments::arguments_object_set_field,2,10106280,0.06833696513988408
+startup,<perry_runtime::gc::copying_pointer_set::CopyingPointerSet>::classify_malloc,2,10104443,0.06832454365492997
+startup,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_nanbox_u64_raw_slot,2,10083127,0.06818040844900636
+startup,mi_page_queue_remove,2,10040353,0.06789117785704835
+startup,perry_runtime::gc::layout_tables::refresh_per_object_layouts_flag,2,10020698,0.067758274053688
+startup,<regex_automata::nfa::thompson::builder::Builder>::patch,2,9993895,0.06757703667686446
+startup,perry_runtime::array::subclass::array_subclass_named_prefix_token_for_slot,2,9975872,0.06745516818294621
+startup,perry_runtime::object::field_get_set::accessors::own_data_field_by_name,2,9966899,0.06739449426651008
+startup,js_register_function_source_static,2,9904801,0.06697459803750627
+startup,perry_runtime::gc::roots::stack_maps::ensure_built,2,9877009,0.06678667320906617
+startup,<regex_syntax::hir::interval::IntervalSet<regex_syntax::hir::ClassUnicodeRange>>::canonicalize,2,9842502,0.06655334268031751
+startup,perry_runtime::object::object_ops::define_property::js_object_define_property::{closure#62},2,9837053,0.06651649745902469
+startup,perry_runtime::object::object_ops::keys_array::own_key_present_via_index,2,9796016,0.06623901216884419
+startup,perry_runtime::gc::layout::typed_shape::init_typed_shape_layout,2,9752793,0.06594674551442326
+startup,perry_runtime::set::is_string_like,2,9740783,0.06586553591491384
+startup,perry_runtime::object::native_call_method::js_native_call_method::{closure#5},2,9694110,0.06554994094090028
+startup,perry_runtime::proxy::create_or_update_receiver_property,2,9675376,0.06542326478459641
+startup,<perry_runtime::gc::roots::stack_maps::StackMapIndex>::match_records,2,9661726,0.06533096578099079
+startup,regex_automata::meta::strategy::new,2,9657189,0.06530028735026855
+startup,perry_runtime::buffer::header::is_data_view,2,9618810,0.06504077500892201
+startup,perry_runtime::object::field_get_set::enumeration::is_internal_runtime_key_bytes,2,9605738,0.06495238434407713
+startup,regex_automata::util::determinize::epsilon_closure,2,9572613,0.06472839866682906
+startup,js_object_get_prototype_of,2,9506710,0.0642827736679557
+startup,"perry_runtime::object::with_transition_cache::<perry_runtime::object::TransitionEntry, perry_runtime::object::transition_cache_lookup::{closure#0}>",2,9497141,0.06421806969978704
+startup,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&regex_automata::util::determinize::state::State>,2,9485611,0.0641401057795253
+startup,keys_array_len_capped_to_capacity,2,9466830,0.06401311181712843
+startup,<regex_automata::nfa::thompson::builder::Builder>::build,2,9452743,0.06391785789304108
+startup,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::char,2,9437323,0.06381359044720968
+startup,<regex_automata::nfa::thompson::compiler::Utf8Compiler>::compile_from,2,9432007,0.06377764454954173
+startup,perry_runtime::gc::verify::remember_retained_old_to_young_slots,2,9403001,0.06358151085733772
+startup,<alloc::string::String as core::fmt::Write>::write_str,2,9394358,0.06352306834538436
+startup,"<hashbrown::raw::RawTable<((usize, alloc::string::String), perry_runtime::object::descriptor_state::AccessorDescriptor)>>::reserve_rehash::<hashbrown::map::make_hasher<(usize, alloc::string::String), perry_runtime::object::descriptor_state::AccessorDescriptor, perry_runtime::fast_hash::FastKeyHasher>::{closure#0}>",2,9373661,0.06338311871332389
+startup,<regex_automata::nfa::thompson::map::Utf8BoundedEntry as alloc::vec::spec_from_elem::SpecFromElem>::from_elem::<alloc::alloc::Global>,2,9207852,0.06226194615003858
+startup,perry_runtime::array::indexing_support::keys_array_slot,2,9107534,0.06158361271093904
+startup,"<hashbrown::map::HashMap<u32, (), perry_runtime::fast_hash::PtrHasher>>::insert",2,9011043,0.060931156802007905
+startup,<core::str::pattern::StrSearcher>::new,2,8806988,0.05955137122100094
+startup,perry_runtime::typed_feedback::guards::key_as_str,2,8805552,0.05954166123058499
+startup,perry_runtime::object::class_registry::prototype_objects::resolve_proto_chain_field_inner,1,8731888,0.059043557655375875
+startup,<perry_runtime::arena::walk::ArenaObjectCursor>::next_budgeted,2,8125746,0.05494492742508148
+startup,perry_runtime::object::shapes::birth_stamp_object_shape,1,7415495,0.05014232965146272
+startup,perry_runtime::closure::dynamic_props::note_young_closure_owner,2,7387371,0.049952159894876315
+startup,perry_runtime::object::shapes::shape_live_inline_slot_count_by_id,1,6846174,0.04629267682862346
+startup,<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&alloc::boxed::Box<str>>,2,6701916,0.04531722850172678
+startup,js_array_alloc_literal,1,6281322,0.042473242631946365
+startup,perry_runtime::object::native_module::callable_exports::set_bound_native_closure_name,1,5728253,0.038733483098967805
+startup,perry_runtime::object::class_registry::class_meta::identify_global_builtin_constructor,1,5519659,0.03732300556357506
+startup,perry_fn_cli_2_1_112_js__Wa6.__arena,1,5405763,0.036552859972757056
+startup,"<alloc::vec::Vec<(i64, i64)> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<(i64, i64), core::iter::adapters::filter::Filter<core::iter::adapters::map::Map<core::ops::range::Range<usize>, perry_runtime::proxy::put_value::js_put_value_set_dyn_ic_miss::{closure#1}>, perry_runtime::proxy::put_value::js_put_value_set_dyn_ic_miss::{closure#2}>>>::from_iter",1,5383435,0.03640188179308626
+startup,perry_runtime::object::native_call_method::class_vtable_fast_guard,1,5363337,0.03626598249825361
+startup,"<hashbrown::raw::RawTable<(perry_runtime::set::JSValueKey, u32)>>::reserve_rehash::<hashbrown::map::make_hasher<perry_runtime::set::JSValueKey, u32, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",1,5356913,0.03622254449098895
+startup,perry_runtime::closure::dynamic_props::clone_closure_rebind_this,1,5354120,0.036203658694866574
+startup,perry_runtime::set::find_value_index_cold,1,5350844,0.03618150693400122
+startup,mi_bin,1,5349648,0.036173419783209114
+startup,perry_runtime::object::object_ops::prototype::js_object_get_prototype_of::{closure#3},1,5343618,0.03613264593766025
+startup,perry_runtime::regex::replace_expand::js_string_replace_regex_fn::{closure#4},1,5339550,0.03610513880603625
+startup,perry_runtime::typed_feedback::plain_array_index_guard,1,5333194,0.036062160603331686
+startup,"<hashbrown::map::HashMap<(usize, alloc::string::String), perry_runtime::object::descriptor_state::AccessorDescriptor, perry_runtime::fast_hash::FastKeyHasher>>::remove::<(usize, alloc::string::String)>",1,5331386,0.03604993521149879
+startup,perry_runtime::symbol::store_object_symbol_property_root,1,5330857,0.03604635820249459
+startup,js_string_concat_chain,1,5330159,0.036041638443921935
+startup,perry_runtime::object::class_registry::construct::lookup_prototype_method,1,5329764,0.036038967520374374
+startup,perry_runtime::object::field_get_set::for_in_stable::stable_miss::<*mut perry_runtime::array::header::ArrayHeader>,1,5325651,0.0360111561063209
+startup,_mi_theap_realloc_zero,1,5322995,0.035993196681150454
+startup,perry_runtime::object::native_call_method::collection_methods::dispatch_map_set,1,5320715,0.035977779704724024
+startup,perry_runtime::object::descriptor_state::set_builtin_property_attrs,1,5320089,0.03597354679803852
+startup,perry_runtime::closure::registry::closure_is_arrow,1,5319475,0.03596939503333421
+startup,perry_runtime::string::intern::scan_intern_table_roots_mut,1,5319409,0.035968948752437654
+startup,js_object_get_class_id,1,5313567,0.035929446131260805
+startup,perry_runtime::object::reflect_support::reflect_define_property,1,5312498,0.03592221773310297
+startup,<unicode_segmentation::grapheme::GraphemeCursor>::next_boundary,1,5307722,0.03588992322458865
+startup,<regex_syntax::ast::parse::NestLimiter<&mut regex_syntax::ast::parse::Parser>>::check,1,5302034,0.03585146192550376
+startup,perry_runtime::array::generic::classify_pointer,1,5299436,0.035833894686575746
+startup,perry_runtime::iter_result::build_iter_result_ordered,1,5295063,0.035804325196263115
+startup,perry_closure_cli_2_1_112_js__10699,1,5292802,0.03578903669464024
+startup,perry_runtime::object::prototype_chain::default_object_prototype_for_owner,1,5286076,0.035743556614182256
+startup,perry_runtime::object::meta_accessors::object_meta_ensure_for_cell,1,5284179,0.03573072941932219
+startup,"<hashbrown::raw::RawTable<(usize, perry_runtime::object::shapes::ShapeIndex)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, perry_runtime::object::shapes::ShapeIndex, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",1,5281128,0.03571009907060419
+startup,perry_runtime::gc::barrier::leaf::decode_raw_pointer_candidate,1,5276828,0.03568102319401048
+startup,perry_closure_cli_2_1_112_js__38540,1,5272535,0.035651994650239126
+startup,"<alloc::vec::Vec<char> as alloc::vec::spec_from_iter_nested::SpecFromIterNested<char, core::str::iter::Chars>>::from_iter",1,5270981,0.0356414867636748
+startup,perry_runtime::gc::verify::restore_surviving_dirty_coverage::{closure#0}::{closure#0},1,5269722,0.035632973617481425
+startup,perry_runtime::closure::dispatch::bound::dispatch_bound_function,1,5269342,0.03563040412141035
+startup,perry_runtime::set::ensure_capacity,1,5269040,0.03562836204821703
+startup,perry_runtime::typed_feedback::guards::class_getter_in_chain,1,5268623,0.03562554236437061
+startup,js_string_slice,1,5267833,0.03562020051727549
+startup,js_box_get_bits,1,5264174,0.03559545897484377
+startup,perry_runtime::object::field_get_set::ic_slot::pic_slot_publish::<[i64; 12]>,2,5264024,0.03559444470007887
+startup,"core::slice::sort::shared::pivot::median3_rec::<usize, <usize as core::cmp::PartialOrd>::lt>",1,5263690,0.035592186248269035
+startup,perry_runtime::gc::barrier::mark_dirty_external_slot_page,1,5260028,0.03556742442034202
+startup,perry_runtime::object::prototype_chain::object_set_static_prototype_impl,1,5257692,0.03555162878133669
+startup,perry_fn_cli_2_1_112_js__yx_,1,5255858,0.035539227581877886
+startup,perry_runtime::json::scan_parse_roots_mut,1,5255611,0.03553755740943169
+startup,perry_runtime::closure::dynamic_props::closure_is_key_deleted,1,5254136,0.03552758370757687
+startup,perry_runtime::object::store_object_field_slot,1,5253098,0.035520564926203785
+startup,"<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::across_mut::<perry_runtime::string::StringHeader, ((), *mut perry_runtime::object::ObjectHeader), perry_runtime::object::object_ops::define_property::js_object_define_property::{closure#67}>",1,5252409,0.03551590602411702
+startup,perry_closure_cli_2_1_112_js__38159,1,5252076,0.03551365433413895
+startup,perry_runtime::object::field_get_set::accessors::default_object_prototype_property_value,1,5251279,0.035508265154221466
+startup,<perry_runtime::arena::block::Arena>::try_block_alloc,1,5251277,0.03550825163055794
+startup,perry_runtime::gc::tenuring::influx_driven_nursery_cap_bytes,1,5250860,0.03550543194671152
+startup,perry_runtime::object::descriptor_state::note_meta_descriptor_key,1,5248211,0.03548751985436344
+startup,perry_runtime::object::meta_accessors::object_meta_ensure,1,5243663,0.035456767043491766
+startup,perry_fn_cli_2_1_112_js__h46$spec_b_i32_b,1,5243587,0.03545625314427755
+startup,<perry_runtime::gc::layout::slot_mask::LayoutSlotMask>::is_empty,1,5243069,0.03545275051542277
+startup,perry_fn_cli_2_1_112_js__Hu1,1,5242431,0.03544843646675608
+startup,perry_closure_cli_2_1_112_js__13439,1,5241425,0.0354416340639995
+startup,js_closure_call1,1,5239378,0.03542779259437454
+startup,perry_runtime::gc::layout::typed_shape::install_typed_shape_layout_slow,1,5237891,0.03541773775053853
+startup,perry_runtime::object::object_ops::descriptor_helpers::try_decode_descriptor::{closure#0},1,5236633,0.03540923136617693
+startup,_mi_page_free,1,5235728,0.035403111908428715
+startup,__rustc::__rust_realloc,1,5234815,0.03539693835602638
+startup,perry_runtime::array::iter_object::alloc_iterator_backing,1,5232874,0.03538381364056861
+startup,perry_runtime::object::object_ops::descriptor_helpers::desc_field_index,1,5232396,0.03538058148498447
+startup,perry_closure_cli_2_1_112_js__62845,1,5229527,0.03536118178964788
+startup,perry_closure_cli_2_1_112_js__37415,1,5228037,0.035351106660316566
+startup,perry_runtime::symbol::well_known_symbol,1,5226312,0.035339442500520256
+startup,perry_runtime::object::class_constructors::scan_class_capture_value_roots_mut,1,5221787,0.0353088452117792
+startup,"<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&(usize, usize)>",1,5221714,0.03530835159806028
+startup,perry_runtime::gc::dead_owner::prune_dead_owner_side_tables_copied_minor::{closure#0},1,5218010,0.03528330577319909
+startup,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::root_raw_mut_ptr::<perry_runtime::map::MapHeader>,1,5215397,0.03526563710679459
+startup,js_implicit_this_set,1,5209478,0.035225613824571754
+startup,perry_fn_cli_2_1_112_js__xC,1,5208613,0.03521976484009418
+startup,<regex_syntax::ast::Ast as core::ops::drop::Drop>::drop,1,5205957,0.03520180541492374
+startup,js_string_equals,1,5203639,0.0351861314888902
+startup,_mi_theap_collect_retired,1,5201519,0.035171796405546324
+startup,perry_runtime::string::js_string_from_builder_bytes,1,5200189,0.03516280316929757
+startup,perry_runtime::object::class_registry::dispatch::obj_dispatch_ic_lookup,1,5198140,0.035148948176009075
+startup,perry_runtime::object::spill::overflow_get,1,5195450,0.03513075884855859
+startup,js_buffer_set,1,5192414,0.03511022992731708
+startup,perry_runtime::closure::registry::dispatch_rest_bundled,1,5191296,0.03510267019940271
+startup,perry_runtime::object::side_table_roots::scan_transition_cache_slot,1,5190477,0.03509713225918638
+startup,perry_runtime::object::field_get_set::temporal_subclass_cell,1,5189298,0.03508916005953429
+startup,"<hashbrown::map::HashMap<usize, std::collections::hash::map::HashMap<perry_runtime::map::MapPtrKey, u32, perry_runtime::fast_hash::PtrHasher>, perry_runtime::fast_hash::PtrHasher>>::insert",1,5188771,0.03508559657419361
+startup,perry_runtime::object::field_get_set::fetch_subclass_handle_id,1,5188632,0.03508465667957814
+startup,<regex_automata::dfa::dense::DFA<alloc::vec::Vec<u32>> as regex_automata::dfa::automaton::Automaton>::start_state_forward,1,5188434,0.03508331783688848
+startup,js_object_alloc_class_inline_keys_stamped,1,5187733,0.035078577792820524
+startup,perry_closure_cli_2_1_112_js__86815,1,5179765,0.0350246995173092
+startup,"<hashbrown::map::HashMap<usize, (), perry_runtime::fast_hash::PtrHasher>>::insert",1,5179275,0.03502138621974387
+startup,perry_runtime::value::equality::resolve_forwarding,1,5178629,0.03501701807642305
+startup,<regex_automata::nfa::thompson::compiler::Compiler>::c_at_least,1,5175282,0.034994386225502314
+startup,<perry_runtime::fast_hash::PtrHasher as core::hash::BuildHasher>::hash_one::<&perry_runtime::set::JSValueKey>,1,5175176,0.03499366947133512
+startup,<regex_automata::dfa::dense::DFA<alloc::vec::Vec<u32>>>::accelerate,1,5172519,0.034975703284332915
+startup,js_object_alloc_with_shape,1,5172103,0.034972890362318265
+startup,<regex_automata::meta::strategy::Pre<regex_automata::util::prefilter::memchr::Memchr2> as regex_automata::meta::strategy::Strategy>::search_half,1,5170084,0.03495923822398275
+startup,perry_runtime::object::native_call_method::common_methods::dispatch_common,1,5165753,0.0349299527306043
+startup,perry_runtime::proxy::prototype_of_for_set,1,5164221,0.034919593604338814
+startup,js_closure_call4,1,5156870,0.0348698873790271
+startup,perry_runtime::collection_iter_object::dispatch_map_iterator_method_emit::{closure#1},1,5143344,0.03477842684256046
+startup,<perry_runtime::gc::roots::runtime_handles::RuntimeHandleScope>::new,1,5141495,0.03476592421562517
+startup,perry_runtime::array::subclass::is_array_subclass_value,1,5139098,0.03474971610488211
+startup,perry_fn_cli_2_1_112_js__M8,1,5134402,0.03471796254290907
+startup,perry_runtime::url::search_params::url_search_params_backing_of,1,5132041,0.034701997858109596
+startup,js_array_concat,1,5113473,0.034576444165878885
+startup,perry_runtime::object::class_registry::parent_static::lookup_class_method_in_chain,1,5104262,0.034514160933482446
+startup,<regex_automata::meta::strategy::Core as regex_automata::meta::strategy::Strategy>::search_slots,1,5100829,0.034490947565029836
+startup,<regex_automata::dfa::remapper::Remapper>::remap::<regex_automata::dfa::dense::DFA<alloc::vec::Vec<u32>>>,1,5100674,0.03448989948110611
+startup,js_closure_alloc,1,5100034,0.03448557190877589
+startup,mi_theap_malloc_zero_aligned_at_overalloc,1,5099123,0.03447941188003708
+startup,<fancy_regex::vm::State>::pop,1,5091242,0.03442612188388939
+startup,perry_runtime::state::state,1,5077483,0.03433308584062128
+startup,"core::slice::sort::stable::drift::sort::<regex_syntax::hir::ClassUnicodeRange, <regex_syntax::hir::ClassUnicodeRange as core::cmp::PartialOrd>::lt>",1,5070912,0.034288653844087025
+startup,perry_runtime::json::stringify::stringify_object_inner,1,5068085,0.034269538145684605
+startup,js_eh_try_push,1,5059949,0.03421452388243659
+startup,perry_runtime::object::native_module::nm_own_keys_array_opt,1,5057307,0.03419665912291087
+startup,perry_fn_cli_2_1_112_js__Ox_,1,5054894,0.03418034282285957
+startup,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::push_group,1,5051143,0.034154979191905376
+startup,"<alloc::collections::btree::map::IntoIter<regex_automata::util::primitives::StateID, alloc::vec::Vec<regex_automata::util::primitives::PatternID>>>::dying_next",1,5040123,0.034080463805844285
+startup,<hashbrown::raw::RawTableInner>::fallible_with_capacity::<alloc::alloc::Global>,1,5039229,0.034074418728245494
+startup,<perry_runtime::gc::roots::RuntimeRootVisitor>::visit_nanbox_f64_slot,1,5035005,0.034045856750866
+startup,perry_runtime::object::field_get_set::prototype_override::inherited_field_if_overridden,1,5028813,0.03400398748857105
+startup,perry_runtime::promise::then::js_promise_new_with_parent_impl,1,5019714,0.033942461581332406
+startup,js_register_closure_strict_function,1,5017235,0.03392569900038454
+startup,perry_runtime::object::class_registry::state::class_decl_prototype_value,1,5013850,0.0339028101998567
+startup,perry_runtime::array::header::array_numeric_layout,1,4997734,0.033793836519116174
+startup,"<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::across_mut::<perry_runtime::string::StringHeader, ((), *mut perry_runtime::object::ObjectHeader), perry_runtime::object::object_ops::define_property::js_object_define_property::{closure#73}>",1,4992591,0.03375906041834374
+startup,"<regress::parse::Parser<core::iter::adapters::map::Map<core::str::iter::Chars, <u32 as core::convert::From<char>>::from>>>::consume_disjunction",1,4989483,0.03373804464521508
+startup,perry_runtime::object::native_module::callable_exports::bound_native_callable_module_and_method,1,4984879,0.0337069131717645
+startup,<i32 as core::fmt::Display>::fmt,1,4964624,0.03356995226934459
+startup,"<hashbrown::raw::RawTable<(regex_automata::util::determinize::state::State, regex_automata::util::primitives::StateID)>>::reserve_rehash::<hashbrown::map::make_hasher<regex_automata::util::determinize::state::State, regex_automata::util::primitives::StateID, std::hash::random::RandomState>::{closure#0}>",1,4960201,0.03354004468744366
+startup,perry_runtime::typedarray::typed_array_fast_index_get,1,4945700,0.03344199136500519
+startup,perry_runtime::exception::try_push_with_kind,1,4925798,0.033307417389198665
+startup,perry_closure_cli_2_1_112_js__13783,1,4919405,0.03326418899871876
+startup,perry_runtime::url::get_string_content,1,4912069,0.03321458420088353
+startup,regress::emit::emit,1,4900940,0.033139331775159944
+startup,js_register_closure_async_function,1,4888584,0.033055782581859504
+startup,perry_runtime::object::side_table_roots::transition_entry_is_dead,1,4880516,0.03300122812317158
+startup,perry_runtime::wasi::is_wasi_instance,1,4869316,0.03292549560739261
+startup,"<aho_corasick::nfa::noncontiguous::Compiler>::build_trie::<&[regex_syntax::hir::literal::Literal], &regex_syntax::hir::literal::Literal>",1,4843647,0.032751926147791675
+startup,perry_runtime::object::side_table_roots::scan_shape_cache_roots_mut,1,4837553,0.0327107195450098
+startup,perry_runtime::promise::set_promise_callback_context,1,4813821,0.03255024775353957
+startup,js_gc_typed_shape_id_for_keys,1,4776008,0.032294562608972587
+startup,perry_runtime::gc::malloc::ensure_set_built,1,4756527,0.03216283536433954
+startup,perry_runtime::object::prop_plan::read_plan_record,1,4748153,0.032106211785131226
+startup,js_gc_declare_typed_shape_layout,1,4744994,0.0320848511585825
+startup,perry_runtime::object::field_get_set::class_object_props::instance_constructor_value,1,4741521,0.03206136731685925
+startup,<perry_runtime::object::shapes::shapes_store::SpillList>::position,1,4738774,0.032042792564998104
+startup,perry_runtime::object::object_ops::descriptor_helpers::define_property_force_store_value,1,4726720,0.031961285444890984
+startup,perry_runtime::object::field_get_set::enumeration::canonical_array_index,1,4713801,0.03187392934030629
+startup,perry_runtime::map::js_map_set::{closure#0},1,4712198,0.03186309012398543
+startup,<regex_automata::dfa::determinize::Config>::run,1,4711777,0.03186024339281195
+startup,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::push_class_open,1,4703754,0.031805993216553495
+startup,js_string_concat_box,1,4703012,0.03180097593738314
+startup,"core::ptr::drop_glue::<std::sync::poison::mutex::MutexGuard<std::collections::hash::map::HashMap<usize, perry_runtime::closure::dynamic_props::ClosureProps, perry_runtime::fast_hash::PtrHasher>>>",1,4689452,0.031709285498636455
+startup,<aho_corasick::nfa::noncontiguous::Compiler>::fill_failure_transitions,1,4684929,0.03167870173355893
+startup,"<hashbrown::map::HashMap<i64, (), std::hash::random::RandomState>>::insert",1,4679521,0.03164213374736852
+startup,"<alloc::vec::Vec<(i64, i64)>>::insert_mut",1,4678918,0.03163805636281363
+startup,perry_runtime::gc::dead_owner::prune_dead_owner_side_tables_copied_minor::{closure#1},1,4673880,0.03160399025437662
+startup,"<regress::parse::Parser<core::iter::adapters::map::Map<core::str::iter::Chars, <u32 as core::convert::From<char>>::from>>>::consume_term",1,4669884,0.03157696997463977
+startup,<regex_automata::dfa::dense::Builder>::build_from_nfa,1,4666044,0.03155100454065841
+startup,perry_runtime::arena::page_meta::register_old_block_pages::{closure#0},1,4654790,0.03147490688596408
+startup,perry_runtime::gc::layout_tables::typed_layouts_remove,1,4638765,0.03136654853191425
+startup,"<hashbrown::map::HashMap<perry_runtime::set::JSValueKey, u32, perry_runtime::fast_hash::PtrHasher>>::insert",1,4637810,0.03136009098257774
+startup,perry_runtime::object::class_registry::construct::extends_target_must_throw,1,4634822,0.031339886629260995
+startup,js_iterator_result_validate,1,4627046,0.031287306625448735
+startup,<aho_corasick::nfa::noncontiguous::NFA>::init_full_state,1,4625761,0.031278617671629455
+startup,<regex_automata::dfa::onepass::InternalBuilder>::compile_transition,1,4624367,0.03126919167814768
+startup,js_get_string_pointer_unified,1,4602020,0.03111808502367333
+startup,"<hashbrown::raw::RawTable<(perry_runtime::gc::layout::typed_shape::RegisteredTypedShapeKey, u32)>>::reserve_rehash::<hashbrown::map::make_hasher<perry_runtime::gc::layout::typed_shape::RegisteredTypedShapeKey, u32, perry_runtime::fast_hash::FastKeyHasher>::{closure#0}>",1,4598193,0.031092207493504928
+startup,js_write_barrier_slot,1,4586750,0.031014831852606825
+startup,perry_runtime::regex::exec_array::materialize_exec_match,1,4571095,0.03090897537631041
+startup,"<hashbrown::raw::RawTable<(u32, (bool, bool))>>::reserve_rehash::<hashbrown::map::make_hasher<u32, (bool, bool), perry_runtime::fast_hash::PtrHasher>::{closure#0}>",1,4561205,0.030842100860144876
+startup,"<hashbrown::map::HashMap<u32, u32, perry_runtime::fast_hash::PtrHasher>>::insert",1,4543688,0.030723653853100212
+startup,regress::optimizer::contains_capture_groups,1,4541372,0.030707993450730203
+startup,"<regress::api::Regex>::from_unicode::<core::iter::adapters::map::Map<core::str::iter::Chars, <u32 as core::convert::From<char>>::from>, &str>",1,4524190,0.03059181165732714
+startup,perry_runtime::arena::allocators::arena_alloc_gc_longlived,1,4506274,0.03047066667940785
+startup,perry_closure_cli_2_1_112_js__35629,1,4505833,0.030467684711599052
+startup,<regex_syntax::hir::literal::PreferenceTrie>::minimize::{closure#0},1,4495723,0.030399322592445002
+startup,"<hashbrown::raw::RawTable<((u32, alloc::string::String), u64)>>::reserve_rehash::<hashbrown::map::make_hasher<(u32, alloc::string::String), u64, std::hash::random::RandomState>::{closure#0}>",1,4466771,0.03020355403915636
+startup,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::parse_escape,1,4460679,0.030162360960038014
+startup,js_object_get_index_polymorphic,1,4459200,0.030152360210856127
+startup,perry_runtime::object::native_module::build_bound_method_closure_with_private_brand,1,4457544,0.030141162617451665
+startup,perry_closure_cli_2_1_112_js__10694,1,4421408,0.029896817064756227
+startup,perry_closure_cli_2_1_112_js__17968,1,4412809,0.02983867207340057
+startup,<perry_runtime::gc::roots::runtime_handles::RuntimeHandle>::get_nanbox_u64,1,4409333,0.029815167946182025
+startup,"<alloc::raw_vec::RawVec<(extern ""C"" fn(usize, extern ""C"" fn(u32, *mut core::ffi::c_void, *mut core::ffi::c_void) -> bool, *mut core::ffi::c_void), usize)>>::grow_one",1,4406653,0.0297970462370492
+startup,perry_runtime::object::native_module::get_module_name_from_namespace,1,4406053,0.02979298913798961
+startup,"<std::hash::random::RandomState as core::hash::BuildHasher>::hash_one::<&(u32, bool, alloc::string::String)>",1,4382357,0.02963276077246296
+startup,mi_arena_try_alloc_at,1,4314652,0.029174950952747313
+startup,js_object_alloc_with_parent,1,4307480,0.029126455095321708
+startup,js_object_has_property,1,4297593,0.029059600864651466
+startup,perry_closure_cli_2_1_112_js__10691,1,4281764,0.028952567829627775
+startup,perry_runtime::url::url_class::is_url_object_shape,1,4209379,0.028463112637247344
+startup,js_build_class_keys_array,1,4181259,0.028272969927987997
+startup,js_put_value_set_dyn_ic,1,4158316,0.02811783322178113
+startup,perry_runtime::object::native_module::callable_exports::builtin_closure_length,1,4099174,0.027717924967477565
+startup,perry_runtime::object::shapes::remove_descriptor_and_reverse_indices,1,4089700,0.027653863373326676
+startup,mi_good_size,1,4086279,0.02763073114685526
+startup,js_dyn_index_get,1,4051872,0.0273980768012832
+startup,perry_runtime::object::class_registry::class_meta::class_name_for_id,1,3986510,0.026956109953395244
+startup,perry_runtime::object::class_registry::parent_static::class_dynamic_static_accessor_setter_apply,1,3960301,0.026778889104640685
+startup,"<hashbrown::raw::RawTable<(usize, perry_runtime::closure::dynamic_props::ClosureProps)>>::reserve_rehash::<hashbrown::map::make_hasher<usize, perry_runtime::closure::dynamic_props::ClosureProps, perry_runtime::fast_hash::PtrHasher>::{closure#0}>",1,3934116,0.02660183053984851
+startup,<regex_syntax::ast::parse::ParserI<&mut regex_syntax::ast::parse::Parser>>::pop_group,1,3848991,0.026026229610769495
+startup,js_class_register_capture_values,1,3838515,0.025955392661189094
+startup,js_object_get_field_by_name_f64,1,3782718,0.02557810273414273
+startup,"<hashbrown::map::HashMap<alloc::string::String, f64, std::hash::random::RandomState>>::insert",1,3701038,0.02502579631549752
+startup,perry_fn_cli_2_1_112_js__u__5f__5f_perry_5f_entry_5f_chunk_5f_cli_5f_2_2e_1_2e_112_2e_js_5f_44,1,3622371,0.024493863295963206
+startup,perry_runtime::closure::dynamic_props::function_prototype_fallback_target,1,3137668,0.021216383153497605
+startup,perry_runtime::builtins::fn_metadata::registered_name_string,1,2355327,0.015926324927869377
+startup,strcmp,1,2044482,0.013824443332573457
+startup,perry_runtime::promise::context_for_promise,1,594321,0.004018698616988748
+startup,__strlen_evex,2,194305,0.0013138577212886617
+startup,perry_runtime::object::class_registry::prototype_objects::function_value_for_class_id,1,132169,0.0008937045426777547
+startup,PyList_New,1,51990,0.0003515476335132782
+startup,PyDict_Keys,1,47635,0.00032209985617243715
+startup,__strchrnul_evex,5,7730,5.226895955102213e-05
+startup,__printf_buffer,6,6844,4.627797660636422e-05
+startup,_mi_prim_clock_now,1,3591,2.428173787163266e-05
+startup,__ctype_init,35,3437,2.3240415779671805e-05
+startup,__set_vma_name,1,3163,2.13876738757934e-05
+startup,<std::sys::process::unix::common::Command>::spawn,2,3131,2.1171295259282055e-05
+startup,__rustc::__rust_dealloc,1,3008,2.033958995206657e-05
+startup,pthread_setspecific@GLIBC_2.2.5,1,2684,1.8148756459889184e-05
+startup,_itoa_word,1,2537,1.7154767190290187e-05
+startup,__posix_spawnattr_destroy,1,2529,1.710067253616235e-05
+startup,__printf_buffer_write,2,2322,1.5700973360604576e-05
+startup,__waitpid,1,1884,1.2739291047105522e-05
+startup,__vsnprintf_internal,5,1832,1.2387675795274584e-05
+startup,__GI___pthread_self,3,1708,1.1549208656293118e-05
+startup,PyObject_Free,1,1007,6.809164588341434e-06
+startup,PyErr_CheckSignals,7,81,5.477083730443457e-07
+startup,<std::sync::mpmc::list::Channel<()>>::start_recv,1,42,2.839969341711422e-07
+startup,perry_runtime::array::subclass::array_subclass_fast_length,1,36,2.4342594357526476e-07
+startup,mi_page_fresh_alloc,2,31,2.0961678474536687e-07
+startup,_dl_start,2,26,1.75807625915469e-07
+startup,start_thread,26,26,1.75807625915469e-07
+startup,clone3,6,6,4.057099059587746e-08
+startup,__GI___pthread_disable_asynccancel,5,5,3.380915882989788e-08
+startup,__GI___wait4,3,3,2.028549529793873e-08
+startup,__spawnix,2,2,1.3523663531959153e-08
+startup,_mi_page_init,2,2,1.3523663531959153e-08
+startup,clock_nanosleep@GLIBC_2.2.5,2,2,1.3523663531959153e-08
+startup,perry_runtime::array::subclass::dense_layout_for_validated_object,2,2,1.3523663531959153e-08
+startup,perry_runtime::child_process::sync_run::cp_run_to_completion,2,2,1.3523663531959153e-08
+startup,__munmap,1,1,6.7618317659795766e-09
+startup,mi_arenas_page_regular_alloc,1,1,6.7618317659795766e-09
+startup,perry_runtime::array::subclass::build_dense_layout,1,1,6.7618317659795766e-09

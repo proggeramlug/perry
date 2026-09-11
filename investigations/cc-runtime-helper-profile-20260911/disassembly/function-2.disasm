@@ -1,0 +1,256 @@
+
+/root/cc-perf-native-recv-0909/gc-leaf-census-20260911/compile-v2/cc-diagnostic:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000001150f930 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow>:
+    1150f930:	push   %rbp
+    1150f931:	mov    %rsp,%rbp
+    1150f934:	push   %r15
+    1150f936:	push   %r14
+    1150f938:	push   %r13
+    1150f93a:	push   %r12
+    1150f93c:	push   %rbx
+    1150f93d:	push   %rax
+    1150f93e:	mov    %rdi,%rbx
+    1150f941:	mov    0x3e42141(%rip),%eax        # 15351a88 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header27buffer_range_filter_enabled6CACHED>
+    1150f947:	test   %eax,%eax
+    1150f949:	jne    1150fbd2 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x2a2>
+    1150f94f:	movzbl 0x3e42135(%rip),%r14d        # 15351a8c <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header27buffer_range_filter_enabled6CACHED+0x4>
+    1150f957:	mov    0x3e4205a(%rip),%r15d        # 153519b8 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header15BUFFER_REGISTRY4SLOT+0x10>
+    1150f95e:	cmp    $0x300,%r15d
+    1150f965:	jae    1150fc15 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x2e5>
+    1150f96b:	mov    %fs:0x0,%rax
+    1150f974:	lea    -0x3e1a8(%rax),%rax
+    1150f97b:	cmpq   $0x0,0x78(%rax)
+    1150f980:	je     1150fbf5 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x2c5>
+    1150f986:	mov    0x1e8(%rax,%r15,8),%rax
+    1150f98e:	test   %rax,%rax
+    1150f991:	je     1150fc15 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x2e5>
+    1150f997:	movabs $0x7fffffffffffffff,%r15
+    1150f9a1:	test   %r14b,%r14b
+    1150f9a4:	je     1150f9b9 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x89>
+    1150f9a6:	cmp    (%rax),%rbx
+    1150f9a9:	jb     1150fa7c <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x14c>
+    1150f9af:	cmp    0x8(%rax),%rbx
+    1150f9b3:	ja     1150fa7c <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x14c>
+    1150f9b9:	mov    0x10(%rax),%rcx
+    1150f9bd:	cmp    %r15,%rcx
+    1150f9c0:	jae    1150fc3a <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x30a>
+    1150f9c6:	lea    0x1(%rcx),%rdx
+    1150f9ca:	mov    %rdx,0x10(%rax)
+    1150f9ce:	cmpq   $0x0,0x30(%rax)
+    1150f9d3:	je     1150fa78 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x148>
+    1150f9d9:	movabs $0x9e3779b97f4a7c15,%r8
+    1150f9e3:	imul   %rbx,%r8
+    1150f9e7:	mov    %r8,%rdx
+    1150f9ea:	shr    $0x20,%rdx
+    1150f9ee:	xor    %r8,%rdx
+    1150f9f1:	shr    $0x39,%r8
+    1150f9f5:	mov    0x18(%rax),%rsi
+    1150f9f9:	mov    0x20(%rax),%rdi
+    1150f9fd:	movd   %r8d,%xmm0
+    1150fa02:	punpcklbw %xmm0,%xmm0
+    1150fa06:	pshuflw $0x0,%xmm0,%xmm0
+    1150fa0b:	pshufd $0x44,%xmm0,%xmm0
+    1150fa10:	xor    %r8d,%r8d
+    1150fa13:	pcmpeqd %xmm1,%xmm1
+    1150fa17:	and    %rdi,%rdx
+    1150fa1a:	movdqu (%rsi,%rdx,1),%xmm2
+    1150fa1f:	movdqa %xmm2,%xmm3
+    1150fa23:	pcmpeqb %xmm0,%xmm3
+    1150fa27:	pmovmskb %xmm3,%r9d
+    1150fa2c:	test   %r9d,%r9d
+    1150fa2f:	je     1150fa5d <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x12d>
+    1150fa31:	tzcnt  %r9d,%r10d
+    1150fa36:	add    %rdx,%r10
+    1150fa39:	and    %rdi,%r10
+    1150fa3c:	shl    $0x3,%r10
+    1150fa40:	mov    %rsi,%r11
+    1150fa43:	sub    %r10,%r11
+    1150fa46:	cmp    -0x8(%r11),%rbx
+    1150fa4a:	je     1150fb11 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1e1>
+    1150fa50:	lea    -0x1(%r9),%r10d
+    1150fa54:	and    %r9w,%r10w
+    1150fa58:	mov    %r10d,%r9d
+    1150fa5b:	jne    1150fa31 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x101>
+    1150fa5d:	pcmpeqb %xmm1,%xmm2
+    1150fa61:	pmovmskb %xmm2,%r9d
+    1150fa66:	test   %r9d,%r9d
+    1150fa69:	jne    1150fa78 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x148>
+    1150fa6b:	add    %r8,%rdx
+    1150fa6e:	add    $0x10,%rdx
+    1150fa72:	add    $0x10,%r8
+    1150fa76:	jmp    1150fa17 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0xe7>
+    1150fa78:	mov    %rcx,0x10(%rax)
+    1150fa7c:	lea    0x58e529f(%rip),%rax        # 16df4d22 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25EXTERNAL_BUFFERS_NONEMPTY>
+    1150fa83:	movzbl (%rax),%eax
+    1150fa86:	test   %al,%al
+    1150fa88:	je     1150fd27 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3f7>
+    1150fa8e:	mov    0x3e40094(%rip),%eax        # 1534fb28 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x38>
+    1150fa94:	test   %eax,%eax
+    1150fa96:	jne    1150fc47 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x317>
+    1150fa9c:	mov    $0x1,%ecx
+    1150faa1:	xor    %eax,%eax
+    1150faa3:	lock cmpxchg %ecx,0x3e40045(%rip)        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150faab:	jne    1150fc61 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x331>
+    1150fab1:	lea    0x5853688(%rip),%r12        # 16d63140 <_RNvNtNtCsjFfivMnupPH_3std9panicking11panic_count18GLOBAL_PANIC_COUNT>
+    1150fab8:	mov    (%r12),%rax
+    1150fabc:	test   %r15,%rax
+    1150fabf:	jne    1150fc82 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x352>
+    1150fac5:	movzbl 0x3e40028(%rip),%eax        # 1534faf4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x4>
+    1150facc:	test   %al,%al
+    1150face:	je     1150fb1a <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1ea>
+    1150fad0:	mov    (%r12),%rax
+    1150fad4:	test   %r15,%rax
+    1150fad7:	jne    1150fca4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x374>
+    1150fadd:	xor    %eax,%eax
+    1150fadf:	xchg   %eax,0x3e4000b(%rip)        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150fae5:	cmp    $0x2,%eax
+    1150fae8:	jne    1150fd27 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3f7>
+    1150faee:	lea    0x3e3fffb(%rip),%rsi        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150faf5:	mov    $0xca,%edi
+    1150fafa:	mov    $0x81,%edx
+    1150faff:	mov    $0x1,%ecx
+    1150fb04:	xor    %eax,%eax
+    1150fb06:	call   *0x3e0b824(%rip)        # 1531b330 <syscall@GLIBC_2.2.5>
+    1150fb0c:	jmp    1150fd27 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3f7>
+    1150fb11:	mov    %rcx,0x10(%rax)
+    1150fb15:	jmp    1150fcf3 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3c3>
+    1150fb1a:	xor    %r14d,%r14d
+    1150fb1d:	cmpq   $0x0,0x3e3ffeb(%rip)        # 1534fb10 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x20>
+    1150fb25:	je     1150fcd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3a0>
+    1150fb2b:	mov    0x3e3ffe6(%rip),%rdi        # 1534fb18 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x28>
+    1150fb32:	mov    0x3e3ffe7(%rip),%rsi        # 1534fb20 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x30>
+    1150fb39:	mov    %rbx,%rdx
+    1150fb3c:	call   11122f10 <_RINvYNtNtNtCsjFfivMnupPH_3std4hash6random11RandomStateNtNtCs9ueeiBwVTSo_4core4hash11BuildHasher8hash_oneRjECscI5nJwKNRh4_13perry_runtime>
+    1150fb41:	mov    %rax,%rsi
+    1150fb44:	shr    $0x39,%rsi
+    1150fb48:	mov    0x3e3ffb1(%rip),%rcx        # 1534fb00 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x10>
+    1150fb4f:	mov    0x3e3ffa2(%rip),%rdx        # 1534faf8 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x8>
+    1150fb56:	movd   %esi,%xmm0
+    1150fb5a:	punpcklbw %xmm0,%xmm0
+    1150fb5e:	pshuflw $0x0,%xmm0,%xmm0
+    1150fb63:	pshufd $0x44,%xmm0,%xmm0
+    1150fb68:	xor    %esi,%esi
+    1150fb6a:	pcmpeqd %xmm1,%xmm1
+    1150fb6e:	and    %rcx,%rax
+    1150fb71:	movdqu (%rdx,%rax,1),%xmm2
+    1150fb76:	movdqa %xmm2,%xmm3
+    1150fb7a:	pcmpeqb %xmm0,%xmm3
+    1150fb7e:	pmovmskb %xmm3,%edi
+    1150fb82:	test   %edi,%edi
+    1150fb84:	je     1150fbb5 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x285>
+    1150fb86:	tzcnt  %edi,%r8d
+    1150fb8b:	add    %rax,%r8
+    1150fb8e:	and    %rcx,%r8
+    1150fb91:	shl    $0x3,%r8
+    1150fb95:	mov    %rdx,%r9
+    1150fb98:	sub    %r8,%r9
+    1150fb9b:	mov    $0x1,%r13b
+    1150fb9e:	cmp    -0x8(%r9),%rbx
+    1150fba2:	je     1150fcd3 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3a3>
+    1150fba8:	lea    -0x1(%rdi),%r8d
+    1150fbac:	and    %di,%r8w
+    1150fbb0:	mov    %r8d,%edi
+    1150fbb3:	jne    1150fb86 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x256>
+    1150fbb5:	pcmpeqb %xmm1,%xmm2
+    1150fbb9:	pmovmskb %xmm2,%edi
+    1150fbbd:	test   %edi,%edi
+    1150fbbf:	jne    1150fcd0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3a0>
+    1150fbc5:	add    %rsi,%rax
+    1150fbc8:	add    $0x10,%rax
+    1150fbcc:	add    $0x10,%rsi
+    1150fbd0:	jmp    1150fb6e <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x23e>
+    1150fbd2:	call   3e6545 <_RINvMNtNtCsjFfivMnupPH_3std4sync9once_lockINtB3_8OnceLockbE10initializeNCINvB2_11get_or_initNCNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header27buffer_range_filter_enabled0E0zEB1A_>
+    1150fbd7:	movzbl 0x3e41ead(%rip),%r14d        # 15351a8c <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header27buffer_range_filter_enabled6CACHED+0x4>
+    1150fbdf:	mov    0x3e41dd2(%rip),%r15d        # 153519b8 <_RNvNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header15BUFFER_REGISTRY4SLOT+0x10>
+    1150fbe6:	cmp    $0x300,%r15d
+    1150fbed:	jb     1150f96b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3b>
+    1150fbf3:	jmp    1150fc15 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x2e5>
+    1150fbf5:	mov    %rax,%rdi
+    1150fbf8:	mov    %rax,%r12
+    1150fbfb:	call   *0x3e13817(%rip)        # 15323418 <_GLOBAL_OFFSET_TABLE_+0xc398>
+    1150fc01:	mov    %r12,%rax
+    1150fc04:	mov    0x1e8(%rax,%r15,8),%rax
+    1150fc0c:	test   %rax,%rax
+    1150fc0f:	jne    1150f997 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x67>
+    1150fc15:	lea    0x3d27d34(%rip),%rdi        # 15237950 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header15BUFFER_REGISTRY>
+    1150fc1c:	call   *0x3e1ce96(%rip)        # 1532cab8 <_GLOBAL_OFFSET_TABLE_+0x15a38>
+    1150fc22:	movabs $0x7fffffffffffffff,%r15
+    1150fc2c:	test   %r14b,%r14b
+    1150fc2f:	jne    1150f9a6 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x76>
+    1150fc35:	jmp    1150f9b9 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x89>
+    1150fc3a:	lea    0x3d15f7f(%rip),%rdi        # 15225bc0 <anon.b37f594bd5826585f7e5082f302a037e.2603.llvm.4573768808118376784+0x48>
+    1150fc41:	call   *0x3e1c3d9(%rip)        # 1532c020 <_GLOBAL_OFFSET_TABLE_+0x14fa0>
+    1150fc47:	call   3e525f <_RINvMNtNtCsjFfivMnupPH_3std4sync9once_lockINtB3_8OnceLockINtNtNtB5_6poison5mutex5MutexINtNtNtNtB7_11collections4hash3set7HashSetjEEE10initializeNCINvB2_11get_or_initNCNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header16external_buffers0E0zEB2L_.llvm.4573768808118376784>
+    1150fc4c:	mov    $0x1,%ecx
+    1150fc51:	xor    %eax,%eax
+    1150fc53:	lock cmpxchg %ecx,0x3e3fe95(%rip)        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150fc5b:	je     1150fab1 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x181>
+    1150fc61:	lea    0x3e3fe88(%rip),%rdi        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150fc68:	call   *0x3e08a42(%rip)        # 153186b0 <_GLOBAL_OFFSET_TABLE_+0x1630>
+    1150fc6e:	lea    0x58534cb(%rip),%r12        # 16d63140 <_RNvNtNtCsjFfivMnupPH_3std9panicking11panic_count18GLOBAL_PANIC_COUNT>
+    1150fc75:	mov    (%r12),%rax
+    1150fc79:	test   %r15,%rax
+    1150fc7c:	je     1150fac5 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x195>
+    1150fc82:	call   *0x3e0e9e0(%rip)        # 1531e668 <_GLOBAL_OFFSET_TABLE_+0x75e8>
+    1150fc88:	mov    %eax,%r14d
+    1150fc8b:	movzbl 0x3e3fe62(%rip),%eax        # 1534faf4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x4>
+    1150fc92:	test   %al,%al
+    1150fc94:	je     1150fcbe <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x38e>
+    1150fc96:	test   %r14b,%r14b
+    1150fc99:	jne    1150fad0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1a0>
+    1150fc9f:	jmp    1150fadd <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1ad>
+    1150fca4:	call   *0x3e0e9be(%rip)        # 1531e668 <_GLOBAL_OFFSET_TABLE_+0x75e8>
+    1150fcaa:	test   %al,%al
+    1150fcac:	jne    1150fadd <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1ad>
+    1150fcb2:	movb   $0x1,0x3e3fe3b(%rip)        # 1534faf4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x4>
+    1150fcb9:	jmp    1150fadd <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1ad>
+    1150fcbe:	xor    $0x1,%r14b
+    1150fcc2:	cmpq   $0x0,0x3e3fe46(%rip)        # 1534fb10 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x20>
+    1150fcca:	jne    1150fb2b <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x1fb>
+    1150fcd0:	xor    %r13d,%r13d
+    1150fcd3:	test   %r14b,%r14b
+    1150fcd6:	jne    1150fce1 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3b1>
+    1150fcd8:	mov    (%r12),%rax
+    1150fcdc:	test   %r15,%rax
+    1150fcdf:	jne    1150fd3e <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x40e>
+    1150fce1:	xor    %eax,%eax
+    1150fce3:	xchg   %eax,0x3e3fe07(%rip)        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150fce9:	cmp    $0x2,%eax
+    1150fcec:	je     1150fd04 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3d4>
+    1150fcee:	test   %r13b,%r13b
+    1150fcf1:	je     1150fd27 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3f7>
+    1150fcf3:	mov    $0x1,%al
+    1150fcf5:	add    $0x8,%rsp
+    1150fcf9:	pop    %rbx
+    1150fcfa:	pop    %r12
+    1150fcfc:	pop    %r13
+    1150fcfe:	pop    %r14
+    1150fd00:	pop    %r15
+    1150fd02:	pop    %rbp
+    1150fd03:	ret
+    1150fd04:	lea    0x3e3fde5(%rip),%rsi        # 1534faf0 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784>
+    1150fd0b:	mov    $0xca,%edi
+    1150fd10:	mov    $0x81,%edx
+    1150fd15:	mov    $0x1,%ecx
+    1150fd1a:	xor    %eax,%eax
+    1150fd1c:	call   *0x3e0b60e(%rip)        # 1531b330 <syscall@GLIBC_2.2.5>
+    1150fd22:	test   %r13b,%r13b
+    1150fd25:	jne    1150fcf3 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3c3>
+    1150fd27:	mov    %rbx,%rdi
+    1150fd2a:	add    $0x8,%rsp
+    1150fd2e:	pop    %rbx
+    1150fd2f:	pop    %r12
+    1150fd31:	pop    %r13
+    1150fd33:	pop    %r14
+    1150fd35:	pop    %r15
+    1150fd37:	pop    %rbp
+    1150fd38:	jmp    *0x3e07592(%rip)        # 153172d0 <_GLOBAL_OFFSET_TABLE_+0x250>
+    1150fd3e:	call   *0x3e0e924(%rip)        # 1531e668 <_GLOBAL_OFFSET_TABLE_+0x75e8>
+    1150fd44:	test   %al,%al
+    1150fd46:	jne    1150fce1 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3b1>
+    1150fd48:	movb   $0x1,0x3e3fda5(%rip)        # 1534faf4 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header24EXTERNAL_BUFFER_REGISTRY.llvm.4573768808118376784+0x4>
+    1150fd4f:	jmp    1150fce1 <_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header25is_registered_buffer_slow+0x3b1>
