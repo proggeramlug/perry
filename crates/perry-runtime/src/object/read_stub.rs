@@ -37,8 +37,8 @@
 
 use crate::object::ObjectHeader;
 
-const READ_STUB_BUCKETS: usize = 2048;
-const READ_STUB_ASSOC: usize = 2;
+pub(super) const READ_STUB_BUCKETS: usize = 2048;
+pub(super) const READ_STUB_ASSOC: usize = 2;
 
 crate::perry_thread_local! {
     static READ_STUB: [[std::cell::Cell<(u64, u64, u64)>; READ_STUB_ASSOC]; READ_STUB_BUCKETS] =

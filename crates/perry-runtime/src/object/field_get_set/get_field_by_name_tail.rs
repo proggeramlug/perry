@@ -1615,6 +1615,7 @@ pub(crate) fn get_field_by_name_object_tail(
                         }
                     }
                 }
+                super::super::own_read_cache::prime(obj, key_bytes, field_idx, None);
                 return js_object_get_field(obj, field_idx);
             }
         }
@@ -1647,6 +1648,7 @@ pub(crate) fn get_field_by_name_object_tail(
                         }
                     }
                 }
+                super::super::own_read_cache::prime(obj, key_bytes, i, Some(live_slots));
                 return if (i as usize) < alloc_limit {
                     super::accessors::object_field_at_with_live(obj, i, live_slots)
                 } else {
@@ -1711,6 +1713,7 @@ pub(crate) fn get_field_by_name_object_tail(
                         }
                     }
                 }
+                super::super::own_read_cache::prime(obj, key_bytes, i as u32, Some(live_slots));
                 if i < alloc_limit {
                     return super::accessors::object_field_at_with_live(obj, i as u32, live_slots);
                 } else {

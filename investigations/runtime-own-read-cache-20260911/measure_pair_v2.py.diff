@@ -1,0 +1,25 @@
+--- prior/measure_pair_v2.py
++++ current/measure_pair_v2.py
+@@ -33,7 +33,7 @@
+         assert time.monotonic() < deadline, 'build observation deadline reached'
+         print('BUILD_LIVE', owner['pid'], flush=True)
+         time.sleep(10)
+-    owner = f'cc-property-key-pair-measure-v2 {os.getpid()}\n'
++    owner = f'cc-own-read-cache-measure-v1 {os.getpid()}\n'
+     while True:
+         try:
+             LOCK.mkdir()
+@@ -87,11 +87,11 @@
+                 order.insert(row - 1, 'node')
+             for arm in order:
+                 ordinal += 1
+-                label = f'property-key-v2-{arm}-{row}'
++                label = f'own-read-cache-v1-{arm}-{row}'
+                 out = BASE / f'v2-row-{arm}-{row}'
+                 before = {'load': os.getloadavg(), 'at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+                 app = node if arm == 'node' else apps[arm]
+-                result = run(app, label, 10740 + ordinal, out, [bundle] if arm == 'node' else [], ['claude'] if arm == 'node' else None)
++                result = run(app, label, 10800 + ordinal, out, [bundle] if arm == 'node' else [], ['claude'] if arm == 'node' else None)
+                 assert result['pass'] and result['cleanup_errors'] == [], (arm, row)
+                 assert result['counter_control']['kind'] == 'controller-timestamps-only'
+                 assert [x['phase'] for x in result['counter_control']['phases']] == [1, 2, 3, 4]

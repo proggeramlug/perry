@@ -111,31 +111,24 @@ pub extern "C" fn js_object_get_field_by_name(
             }
         }
     }
-    // Megamorphic read stub. Primed below once the lane has proved this
-    // receiver ordinary, so a hit only has to re-prove the properties that can
-    // change: heap-object type, not forwarded, no blocking flags, a real class
-    // id, and the receiver's CURRENT shape token. The token pins the exact key
-    // set and order, so a match means the cached slot still names this key; a
-    // stale entry misses rather than resolving to the wrong property.
-    //
-    // Sits after the process.env and Proxy arms above, which have their own
-    // semantics and must keep them, and before the lane's guard chain plus the
-    // read-plan probe — which is what a hit is here to skip. The plan's epoch
-    // is bumped by the collector at loop-poll cadence, so on a steady read loop
-    // it is repeatedly cold and falls through to a shape-index hash lookup.
+    // Both caches sit after the receiver-specific prelude. The original
+    // read stub retains its class/descriptor guards. The separate own-data
+    // cache learns only after full ordinary resolution and includes exact
+    // class identity in its shape/key proof; descriptor transitions revoke
+    // its entries. Its entries never reach the direct SSO consumer.
     unsafe {
         if let Some(key_bits) = super::super::read_stub::read_stub_key_bits(key) {
             let addr = obj as usize;
             if let Some(gc) = crate::value::addr_class::try_read_gc_header(addr) {
-                const STUB_BLOCKING: u16 =
-                    crate::gc::OBJ_FLAG_HAS_DESCRIPTORS | crate::gc::OBJ_FLAG_TYPED_ARRAY_PROTO;
+                const STUB_BLOCKING: u16 = crate::gc::OBJ_FLAG_TYPED_ARRAY_PROTO;
                 if gc.obj_type == crate::gc::GC_TYPE_OBJECT
                     && gc.gc_flags & crate::gc::GC_FLAG_FORWARDED == 0
                     && gc._reserved & STUB_BLOCKING == 0
                 {
                     let o = addr as *const ObjectHeader;
                     let class_id = (*o).class_id;
-                    if class_id != 0
+                    if gc._reserved & crate::gc::OBJ_FLAG_HAS_DESCRIPTORS == 0
+                        && class_id != 0
                         && class_id != super::super::native_module::NATIVE_MODULE_CLASS_ID
                     {
                         if let Some(token) = super::super::read_stub::receiver_shape_token(o) {
@@ -150,6 +143,13 @@ pub extern "C" fn js_object_get_field_by_name(
                                     return JSValue::from_bits(v.to_bits());
                                 }
                             }
+                        }
+                    }
+                    if let Some(slot) = super::super::own_read_cache::probe(o, key_bits) {
+                        if let Some(v) = super::super::read_stub::read_slot_by_tag(o, addr, slot) {
+                            #[cfg(test)]
+                            super::super::own_read_cache::note_hit();
+                            return JSValue::from_bits(v.to_bits());
                         }
                     }
                 }

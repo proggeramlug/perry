@@ -1,0 +1,19 @@
+{
+  "base_commit": "b6545b491ee0dc4b6fb36db7b47903431686b313",
+  "files": {
+    "crates/perry-runtime/src/object/mod.rs": "01bbf06fb1e6542994b9ca7711283eb07a551d4de3360e502ae22a80f492d81d",
+    "crates/perry-runtime/src/object/read_stub.rs": "8b78d3d71063a19bf18dc4a6476721fe63836f0adfba3dd7bfe50d481b17fbce",
+    "crates/perry-runtime/src/object/own_read_cache.rs": "2f69516b0ccf546bfe44cb6f55633deb1ebdaa1e0e444be4d2965e35f2a0e1ef",
+    "crates/perry-runtime/src/object/own_read_cache_tests.rs": "0b13448282392e4c7cff3b9c4a21f016bc051aedbaa6d6673c5b1d3ddf22d0fb",
+    "crates/perry-runtime/src/object/field_get_set/get_field_by_name.rs": "bbc26cea93c07d56379cb60361fa706d7fc58f99031fe51f6537a1921199dbe6",
+    "crates/perry-runtime/src/object/field_get_set/get_field_by_name_tail.rs": "7fe92f68427b7d988fd7fcb874f941a9272fb74e57b5f5ffe931e7ec676e501f"
+  },
+  "base_files": {
+    "crates/perry-runtime/src/object/mod.rs": "c325e3d07fc482506c38c515c10b863d4ec8be83addf502aef7b0301b0d7aec9",
+    "crates/perry-runtime/src/object/read_stub.rs": "bcfe48acb82f558e53486dd114e03a2de8dba104ac73ff3f0fb57d9977f98225",
+    "crates/perry-runtime/src/object/own_read_cache.rs": null,
+    "crates/perry-runtime/src/object/own_read_cache_tests.rs": null,
+    "crates/perry-runtime/src/object/field_get_set/get_field_by_name.rs": "f4038fcd8e8f12f06d9520bf6969e3e296a073280e8acb1398dc867b302a0114",
+    "crates/perry-runtime/src/object/field_get_set/get_field_by_name_tail.rs": "539f0cf84b42a601488b61b97e1b443e37916d8576fe2c990c5560247e6958f0"
+  }
+}

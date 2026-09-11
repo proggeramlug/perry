@@ -1,0 +1,40 @@
+{
+  "prior_study": "property_key_dispatch_20260911",
+  "files": [
+    {
+      "file": "paired_workload_v2.py",
+      "prior_file": "paired_workload_v2.py",
+      "prior_sha256": "41cc15fbfa3a5b743eb3249e53bc9d05179443e4699b08265fdcaf4135147908",
+      "current_sha256": "41cc15fbfa3a5b743eb3249e53bc9d05179443e4699b08265fdcaf4135147908",
+      "changed": false
+    },
+    {
+      "file": "phase_recorder.py",
+      "prior_file": "phase_recorder.py",
+      "prior_sha256": "9999f0cdb87fbc25d65460fdb9ae470bbc12271358fbd4c8eee32014be63d8b9",
+      "current_sha256": "9999f0cdb87fbc25d65460fdb9ae470bbc12271358fbd4c8eee32014be63d8b9",
+      "changed": false
+    },
+    {
+      "file": "measure_pair_v2.py",
+      "prior_file": "measure_pair_v2.py",
+      "prior_sha256": "52e602c49b65e713a3702ea29d032a8367c4a2d55dfeacf655a6c155c553176f",
+      "current_sha256": "cf6483cdd45413db8379ca6240c619a6b41e6fb9950368a3052cf8ca27b33422",
+      "changed": true
+    },
+    {
+      "file": "analyze_pair_v2.py",
+      "prior_file": "analyze_pair_v2.py",
+      "prior_sha256": "91abf526c0bf4b9a00879daa5f5dd776e5b441a6a612d41a7ee04a98c3b5c744",
+      "current_sha256": "91abf526c0bf4b9a00879daa5f5dd776e5b441a6a612d41a7ee04a98c3b5c744",
+      "changed": false
+    },
+    {
+      "file": "finish_v1.py",
+      "prior_file": "finish_pair_v1.py",
+      "prior_sha256": "73a839a1eababc41e85f3b43066b79e38b4bed0a7b04170b44ffb8495d6a6769",
+      "current_sha256": "1ddc8d63a25a7fa98e81bbda451dee71c763073188973f1fcc3e6f28f66890cd",
+      "changed": true
+    }
+  ]
+}
