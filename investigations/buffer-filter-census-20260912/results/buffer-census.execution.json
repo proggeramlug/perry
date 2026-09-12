@@ -1,0 +1,26 @@
+{
+  "status": "complete",
+  "application": "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911/cc-candidate",
+  "application_sha256": "42bfb149007b5c79d11b11d6acb7ad16008932945a78efe700c19bec9d3e513a",
+  "rows": [
+    {
+      "row": 1,
+      "cpu": {
+        "startup_s": 1.07,
+        "command_s": 1.3399999999999999
+      },
+      "vmhwm_mb": 626.375,
+      "diag": "[buffer-diag] probes=31457281 admits=26577900 (84.49 %) rejected=4879381 (15.51 %) true_positives=23620613 (88.873135 % of admits)\n  window   [0x5c22235d8c8, 0x5c2349a08c0] span 294.3 MB\n  probed   [0x1, 0x7ffe000000001d9a] span 8795556151296.0 MB  -- window covers 0.0 % of the probed range\n  registrations=3232 unregistrations=1907 live_max=1618           => a 1024-bit/3-hash Bloom holding all admissions would be 100.0 % false-positive          (and 97.4 % if it could hold only the live set)"
+    },
+    {
+      "row": 2,
+      "cpu": {
+        "startup_s": 1.0,
+        "command_s": 1.2999999999999998
+      },
+      "vmhwm_mb": 630.4609375,
+      "diag": "[buffer-diag] probes=31457281 admits=26803207 (85.21 %) rejected=4654074 (14.79 %) true_positives=23620604 (88.126037 % of admits)\n  window   [0x22d16b5d8c8, 0x22d2c6d5c38] span 347.5 MB\n  probed   [0x1, 0x7ffe000000001d9a] span 8795556151296.0 MB  -- window covers 0.0 % of the probed range\n  registrations=3231 unregistrations=1908 live_max=1618           => a 1024-bit/3-hash Bloom holding all admissions would be 100.0 % false-positive          (and 97.4 % if it could hold only the live set)"
+    }
+  ],
+  "started": "2026-09-12T04:33:08.546783+00:00"
+}
