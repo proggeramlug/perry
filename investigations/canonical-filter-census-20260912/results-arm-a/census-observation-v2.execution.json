@@ -1,0 +1,320 @@
+{
+  "status": "complete",
+  "pid": 3850143,
+  "owner": "canonical-index-census-rows-20260912 3850143",
+  "application": "/root/cc-perf-native-recv-0909/canonical-filter-census-20260912/arm-a/cc-fix-census",
+  "application_sha256": "eb0ea082e9b8327f06b49f12180eb7b126ffffd38d91700ebb6e997963e83385",
+  "started": "2026-09-12T04:03:26.260803+00:00",
+  "rows": [
+    {
+      "row": 1,
+      "snapshots": [
+        {
+          "phase": 1,
+          "before_ns": 1285456055288543,
+          "after_ns": 1285456055291028
+        },
+        {
+          "phase": 2,
+          "before_ns": 1285457482542367,
+          "load_bias": 102315664769024,
+          "values": {
+            "CALLS": 15795761,
+            "FILTER_PASS": 477,
+            "RESOLVED": 477,
+            "ADMITS": 65,
+            "RETIRES": 0,
+            "LIVE": 65,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 274,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 713,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 83,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285457483241592
+        },
+        {
+          "phase": 3,
+          "before_ns": 1285460499894235,
+          "load_bias": 102315664769024,
+          "values": {
+            "CALLS": 62692824,
+            "FILTER_PASS": 1155,
+            "RESOLVED": 760,
+            "ADMITS": 586,
+            "RETIRES": 72,
+            "LIVE": 514,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 274,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 719,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 1021,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285460500675903
+        },
+        {
+          "phase": 4,
+          "before_ns": 1285462188252094,
+          "load_bias": 102315664769024,
+          "values": {
+            "CALLS": 84395339,
+            "FILTER_PASS": 50205,
+            "RESOLVED": 3835,
+            "ADMITS": 717,
+            "RETIRES": 72,
+            "LIVE": 645,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 274,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 820,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 1023,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285462189318434
+        }
+      ],
+      "instrumented_cpu": {
+        "startup_s": 1.34,
+        "command_s": 1.2100000000000004
+      }
+    },
+    {
+      "row": 2,
+      "snapshots": [
+        {
+          "phase": 1,
+          "before_ns": 1285463411284462,
+          "after_ns": 1285463411286676
+        },
+        {
+          "phase": 2,
+          "before_ns": 1285464495629008,
+          "load_bias": 103165031968768,
+          "values": {
+            "CALLS": 15790091,
+            "FILTER_PASS": 483,
+            "RESOLVED": 483,
+            "ADMITS": 66,
+            "RETIRES": 0,
+            "LIVE": 66,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 264,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 705,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 82,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285464496464918
+        },
+        {
+          "phase": 3,
+          "before_ns": 1285467695586588,
+          "load_bias": 103165031968768,
+          "values": {
+            "CALLS": 62678841,
+            "FILTER_PASS": 2112,
+            "RESOLVED": 760,
+            "ADMITS": 587,
+            "RETIRES": 75,
+            "LIVE": 512,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 264,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 708,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 1023,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285467696234117
+        },
+        {
+          "phase": 4,
+          "before_ns": 1285469417840769,
+          "load_bias": 103165031968768,
+          "values": {
+            "CALLS": 84262643,
+            "FILTER_PASS": 65144,
+            "RESOLVED": 3835,
+            "ADMITS": 717,
+            "RETIRES": 75,
+            "LIVE": 642,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 264,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 811,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 1024,
+              "capacity_bits": 1024,
+              "all_bits_set": true
+            }
+          },
+          "after_ns": 1285469418936544
+        }
+      ],
+      "instrumented_cpu": {
+        "startup_s": 1.02,
+        "command_s": 1.25
+      }
+    },
+    {
+      "row": 3,
+      "snapshots": [
+        {
+          "phase": 1,
+          "before_ns": 1285470651399629,
+          "after_ns": 1285470651402033
+        },
+        {
+          "phase": 2,
+          "before_ns": 1285471686408997,
+          "load_bias": 94914787422208,
+          "values": {
+            "CALLS": 15792889,
+            "FILTER_PASS": 483,
+            "RESOLVED": 483,
+            "ADMITS": 66,
+            "RETIRES": 0,
+            "LIVE": 66,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 263,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 714,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 83,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285471687245939
+        },
+        {
+          "phase": 3,
+          "before_ns": 1285474615924592,
+          "load_bias": 94914787422208,
+          "values": {
+            "CALLS": 62693726,
+            "FILTER_PASS": 1706,
+            "RESOLVED": 760,
+            "ADMITS": 578,
+            "RETIRES": 73,
+            "LIVE": 505,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 263,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 716,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 1022,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            }
+          },
+          "after_ns": 1285474616883151
+        },
+        {
+          "phase": 4,
+          "before_ns": 1285476255529727,
+          "load_bias": 94914787422208,
+          "values": {
+            "CALLS": 84217402,
+            "FILTER_PASS": 33870,
+            "RESOLVED": 3835,
+            "ADMITS": 716,
+            "RETIRES": 73,
+            "LIVE": 643,
+            "SYMBOL_ADDR_FILTER": {
+              "bits_set": 263,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "CLASS_PROTOTYPE_ADDR_FILTER": {
+              "bits_set": 834,
+              "capacity_bits": 1024,
+              "all_bits_set": false
+            },
+            "BUFFER_LIKE_ADDR_FILTER": {
+              "bits_set": 1024,
+              "capacity_bits": 1024,
+              "all_bits_set": true
+            }
+          },
+          "after_ns": 1285476256517520
+        }
+      ],
+      "instrumented_cpu": {
+        "startup_s": 0.97,
+        "command_s": 1.1600000000000006
+      }
+    }
+  ],
+  "inputs": {
+    "census_workload_v1.py": "9fabd8adcf79330ddf931c93b1f4c5cad614e276aa512e446b872bd758405c73",
+    "counter_observer.py": "2d63ed8ad6a901caae3adc11c9a6854d075da351f71ab232439b91fec7360371",
+    "bindings-v2.json": "a3a181d9f076c2f0283854b3b64e9dc2b2f5288b4b8f6359caf18af783442557",
+    "run_census_v2.py": "89aa7121f5c5e4fd74edf8860fed73f57cb799931304bc85427d73362097d474"
+  },
+  "finished": "2026-09-12T04:03:47.888437+00:00"
+}

@@ -130,3 +130,36 @@ ownership, the `NATIVE_HANDLE_MAGIC`/`obj_type` validation in `handle_from_addr`
 and the malloc/arena union in GC tracing all stay as they are. The 232 call
 sites of the three range predicates are **not** part of this change; auditing
 which of them need the semantic distinction is separate work.
+
+## Fixed, and the mechanism is measured (2026-09-12, arm A)
+
+`RegistryAddrIndex` sizes the canonical owner's bit array from its population
+(256 words, 16,384 bits, 2 KiB) and recomputes it from an exact live-address set
+as wrappers retire. Three rows of the same census against the fixed binary,
+beside the three rows above:
+
+| Command phase, 3 rows summed | 1,024-bit filter | Sized, reclaiming index | Change |
+|---|---:|---:|---:|
+| Classifications | 65,133,719 | 64,809,993 | same workload |
+| Filter passes | 43,150,678 | **144,246** | **−99.67%** |
+| Passes resolving to a wrapper | 9,225 | **9,225** | **identical** |
+| Passes with nothing in them | 43,141,453 | **135,021** | −99.69% |
+| Pass rate | 66.25% | **0.223%** | 298× more selective |
+
+Per row the pass rate is 0.226% / 0.292% / 0.149% against 66.33% / 57.74% /
+74.62%, and `RESOLVED` is **3,075 in every row of both arms**. That equality is
+the correctness evidence: the index changes which addresses reach the
+authoritative lookup, not what the lookup answers. In the startup phase every
+one of the 1,443 passes now resolves to a real wrapper — a 100% hit rate,
+against 4.47% before.
+
+The live population is unchanged at 642–645, so the improvement comes from
+sizing and reclamation, not from holding fewer addresses. The other three
+filters are untouched in the same rows — `BUFFER_LIKE_ADDR_FILTER` still ends at
+1,023–1,024 of 1,024 and `CLASS_PROTOTYPE_ADDR_FILTER` at 811–834 — which
+confirms the change is scoped to one owner and leaves the other two saturated
+filters as named follow-ups.
+
+**This is still not a speedup measurement.** Both arms carry the census
+counters, so neither is a CPU comparison arm; the matched CPU/RSS comparison
+runs on a census-free build against the retained control.

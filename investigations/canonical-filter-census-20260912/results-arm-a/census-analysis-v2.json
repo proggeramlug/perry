@@ -1,0 +1,218 @@
+{
+ "application_sha256": "eb0ea082e9b8327f06b49f12180eb7b126ffffd38d91700ebb6e997963e83385",
+ "rows": [
+  {
+   "row": 1,
+   "instrumented_cpu": {
+    "startup_s": 1.34,
+    "command_s": 1.2100000000000004
+   },
+   "phases": {
+    "startup": {
+     "CALLS": 15795761,
+     "FILTER_PASS": 477,
+     "RESOLVED": 477,
+     "ADMITS": 65,
+     "RETIRES": 0,
+     "pass_unresolved": 0,
+     "observed_pass_rate": 3.0197975266908636e-05,
+     "resolved_share_of_passes": 1.0,
+     "live_at_end": 65,
+     "filters": {
+      "SYMBOL_ADDR_FILTER": {
+       "bits_set": 274,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.019158072769641876
+      },
+      "CLASS_PROTOTYPE_ADDR_FILTER": {
+       "bits_set": 713,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.3375737899914384
+      },
+      "BUFFER_LIKE_ADDR_FILTER": {
+       "bits_set": 83,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.0005325181409716606
+      }
+     }
+    },
+    "command": {
+     "CALLS": 21702515,
+     "FILTER_PASS": 49050,
+     "RESOLVED": 3075,
+     "ADMITS": 131,
+     "RETIRES": 0,
+     "pass_unresolved": 45975,
+     "observed_pass_rate": 0.002260106720350153,
+     "resolved_share_of_passes": 0.06269113149847094,
+     "live_at_end": 645,
+     "filters": {
+      "SYMBOL_ADDR_FILTER": {
+       "bits_set": 274,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.019158072769641876
+      },
+      "CLASS_PROTOTYPE_ADDR_FILTER": {
+       "bits_set": 820,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.5135014653205872
+      },
+      "BUFFER_LIKE_ADDR_FILTER": {
+       "bits_set": 1023,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.9970731725916266
+      }
+     }
+    }
+   }
+  },
+  {
+   "row": 2,
+   "instrumented_cpu": {
+    "startup_s": 1.02,
+    "command_s": 1.25
+   },
+   "phases": {
+    "startup": {
+     "CALLS": 15790091,
+     "FILTER_PASS": 483,
+     "RESOLVED": 483,
+     "ADMITS": 66,
+     "RETIRES": 0,
+     "pass_unresolved": 0,
+     "observed_pass_rate": 3.0588804079723166e-05,
+     "resolved_share_of_passes": 1.0,
+     "live_at_end": 66,
+     "filters": {
+      "SYMBOL_ADDR_FILTER": {
+       "bits_set": 264,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.017136096954345703
+      },
+      "CLASS_PROTOTYPE_ADDR_FILTER": {
+       "bits_set": 705,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.32633787486702204
+      },
+      "BUFFER_LIKE_ADDR_FILTER": {
+       "bits_set": 82,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.0005135014653205872
+      }
+     }
+    },
+    "command": {
+     "CALLS": 21583802,
+     "FILTER_PASS": 63032,
+     "RESOLVED": 3075,
+     "ADMITS": 130,
+     "RETIRES": 0,
+     "pass_unresolved": 59957,
+     "observed_pass_rate": 0.002920338131344978,
+     "resolved_share_of_passes": 0.04878474425688539,
+     "live_at_end": 642,
+     "filters": {
+      "SYMBOL_ADDR_FILTER": {
+       "bits_set": 264,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.017136096954345703
+      },
+      "CLASS_PROTOTYPE_ADDR_FILTER": {
+       "bits_set": 811,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.49677838664501905
+      },
+      "BUFFER_LIKE_ADDR_FILTER": {
+       "bits_set": 1024,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "row": 3,
+   "instrumented_cpu": {
+    "startup_s": 0.97,
+    "command_s": 1.1600000000000006
+   },
+   "phases": {
+    "startup": {
+     "CALLS": 15792889,
+     "FILTER_PASS": 483,
+     "RESOLVED": 483,
+     "ADMITS": 66,
+     "RETIRES": 0,
+     "pass_unresolved": 0,
+     "observed_pass_rate": 3.058338471194219e-05,
+     "resolved_share_of_passes": 1.0,
+     "live_at_end": 66,
+     "filters": {
+      "SYMBOL_ADDR_FILTER": {
+       "bits_set": 263,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.016942105256021023
+      },
+      "CLASS_PROTOTYPE_ADDR_FILTER": {
+       "bits_set": 714,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.33899614959955215
+      },
+      "BUFFER_LIKE_ADDR_FILTER": {
+       "bits_set": 83,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.0005325181409716606
+      }
+     }
+    },
+    "command": {
+     "CALLS": 21523676,
+     "FILTER_PASS": 32164,
+     "RESOLVED": 3075,
+     "ADMITS": 138,
+     "RETIRES": 0,
+     "pass_unresolved": 29089,
+     "observed_pass_rate": 0.0014943544030304118,
+     "resolved_share_of_passes": 0.09560378062430046,
+     "live_at_end": 643,
+     "filters": {
+      "SYMBOL_ADDR_FILTER": {
+       "bits_set": 263,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.016942105256021023
+      },
+      "CLASS_PROTOTYPE_ADDR_FILTER": {
+       "bits_set": 834,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 0.5402543619275093
+      },
+      "BUFFER_LIKE_ADDR_FILTER": {
+       "bits_set": 1024,
+       "capacity_bits": 1024,
+       "estimated_pass_rate": 1.0
+      }
+     }
+    }
+   }
+  }
+ ],
+ "totals": {
+  "startup": {
+   "CALLS": 47378741,
+   "FILTER_PASS": 1443,
+   "RESOLVED": 1443,
+   "pass_unresolved": 0,
+   "observed_pass_rate": 3.0456697867931948e-05,
+   "resolved_share_of_passes": 1.0
+  },
+  "command": {
+   "CALLS": 64809993,
+   "FILTER_PASS": 144246,
+   "RESOLVED": 9225,
+   "pass_unresolved": 135021,
+   "observed_pass_rate": 0.0022256752905373714,
+   "resolved_share_of_passes": 0.06395324653716568
+  }
+ }
+}

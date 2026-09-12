@@ -15,7 +15,9 @@ from profile_samples_v3 import parse_maps
 from profile_workload_v4 import check_process, process_snapshot, save, sha
 
 HERE = Path(__file__).resolve().parent
-BINDINGS = HERE / 'bindings-v1.json'
+# The arm under measurement decides which variables exist, so the bindings
+# file is named by the runner rather than fixed here.
+BINDINGS = HERE / os.environ.get('CENSUS_BINDINGS', 'bindings-v1.json')
 
 
 class CounterObserver:

@@ -1,0 +1,60 @@
+{
+ "binary": "arm-a/cc-fix-census",
+ "binary_sha256": "eb0ea082e9b8327f06b49f12180eb7b126ffffd38d91700ebb6e997963e83385",
+ "variables": {
+  "CALLS": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter5CALLS",
+   "address": 383798776,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "FILTER_PASS": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter11FILTER_PASS",
+   "address": 383798752,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "RESOLVED": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter8RESOLVED",
+   "address": 383798808,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "ADMITS": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter6ADMITS",
+   "address": 383798784,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "RETIRES": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter7RETIRES",
+   "address": 383798800,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "LIVE": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter4LIVE",
+   "address": 383798768,
+   "bytes": 8,
+   "kind": "i64"
+  },
+  "SYMBOL_ADDR_FILTER": {
+   "symbol": "_RNvNtCscI5nJwKNRh4_13perry_runtime6symbol18SYMBOL_ADDR_FILTER",
+   "address": 383267720,
+   "bytes": 128,
+   "kind": "bitmap"
+  },
+  "CLASS_PROTOTYPE_ADDR_FILTER": {
+   "symbol": "_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state27CLASS_PROTOTYPE_ADDR_FILTER",
+   "address": 383798960,
+   "bytes": 128,
+   "kind": "bitmap"
+  },
+  "BUFFER_LIKE_ADDR_FILTER": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header23BUFFER_LIKE_ADDR_FILTER",
+   "address": 383796432,
+   "bytes": 128,
+   "kind": "bitmap"
+  }
+ }
+}
