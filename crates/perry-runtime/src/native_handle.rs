@@ -14,7 +14,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 mod canonical;
 
 pub(crate) use canonical::canonical_handle_value_owned;
-pub(crate) use canonical::canonical_filter_occupancy;
+pub(crate) use canonical::{canonical_filter_occupancy, canonical_index_live_count};
 pub use canonical::{
     canonical_handle_id_for_provider, canonical_handle_parts_from_addr,
     canonical_handle_parts_from_value, canonical_handle_value, is_canonical_handle_addr,

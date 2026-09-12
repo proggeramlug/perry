@@ -115,6 +115,7 @@ fn maybe_dump() {
 
 fn render() -> String {
     let (bits_set, capacity_bits) = crate::native_handle::canonical_filter_occupancy();
+    let index_live = crate::native_handle::canonical_index_live_count();
     let calls = CALLS.load(Ordering::Relaxed);
     let passes = FILTER_PASS.load(Ordering::Relaxed);
     let resolved = RESOLVED.load(Ordering::Relaxed);
@@ -122,8 +123,8 @@ fn render() -> String {
     let _ = writeln!(
         out,
         "[canonical-diag] calls={calls} filter_pass={passes} resolved={resolved} \
-         pass_unresolved={} admits={} retires={} live={} bits_set={bits_set} \
-         capacity_bits={capacity_bits}",
+         pass_unresolved={} admits={} retires={} live={} index_live={index_live} \
+         bits_set={bits_set} capacity_bits={capacity_bits}",
         passes.saturating_sub(resolved),
         ADMITS.load(Ordering::Relaxed),
         RETIRES.load(Ordering::Relaxed),

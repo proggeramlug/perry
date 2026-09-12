@@ -16,12 +16,26 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::ptr;
 
-/// Monotone negative filter for the generic address classifier. Canonical
-/// wrappers are uncommon, while that classifier sees every pointer-shaped
-/// receiver; reject ordinary heap addresses before resolving TLS and probing
-/// the weak identity table.
-static CANONICAL_HANDLE_ADDR_FILTER: crate::registry_latch::RegistryAddrFilter =
-    crate::registry_latch::RegistryAddrFilter::new();
+/// Negative index for the generic address classifier. Canonical wrappers are
+/// uncommon, while that classifier sees every pointer-shaped receiver; reject
+/// ordinary heap addresses before resolving TLS and probing the weak identity
+/// table.
+///
+/// **Sized from a measurement, and it releases what it retires.** The
+/// 2026-09-12 census measured this owner holding **643–648 live** wrapper
+/// addresses on an ordinary cc command, against 712–721 admissions and 69–76
+/// retirements. In the 1,024 bits a plain `RegistryAddrFilter` carries, that
+/// population admitted **57.7–74.6%** of the 21.6–21.8 M classifications the
+/// command made, of which 0.021% were genuine — so the guard had stopped
+/// guarding, and every ordinary heap pointer paid an exact malloc-registry
+/// query for it. 256 words (16,384 bits, 2 KiB, L1-resident) holds this
+/// population at a fraction of a percent, and [`RegistryAddrIndex`] recomputes
+/// the bits from the live set as wrappers retire, so a long session cannot walk
+/// back to saturation.
+///
+/// [`RegistryAddrIndex`]: crate::registry_latch::RegistryAddrIndex
+static CANONICAL_HANDLE_ADDR_INDEX: crate::registry_latch::RegistryAddrIndex<256> =
+    crate::registry_latch::RegistryAddrIndex::new();
 
 pub const NATIVE_HANDLE_PROVIDER_TIMER: u64 = 0x5045_5252_5954_494d; // PERRYTIM
 pub const NATIVE_HANDLE_PROVIDER_TEXT_ENCODER: u64 = 0x5045_5252_5954_454e; // PERRYTEN
@@ -65,6 +79,10 @@ fn canonical_handle_value_with_policy(
         CANONICAL_HANDLES.with(|table| {
             table.borrow_mut().remove(&(provider, id));
         });
+        // The wrapper at `addr` failed `canonical_parts` above, so the
+        // classifier already answers `false` for it; drop it from the index
+        // after the table, never before.
+        CANONICAL_HANDLE_ADDR_INDEX.retire(addr);
     }
 
     let value = unsafe {
@@ -90,7 +108,7 @@ fn canonical_handle_value_with_policy(
         // the weak table never crosses a runtime thread.
         (*handle).creator_thread_id = current_thread_id();
     }
-    CANONICAL_HANDLE_ADDR_FILTER.admit(addr);
+    CANONICAL_HANDLE_ADDR_INDEX.admit(addr);
     let replaced = CANONICAL_HANDLES.with(|table| {
         table.borrow_mut().insert((provider, id), addr).is_some()
     });
@@ -154,7 +172,7 @@ pub fn is_canonical_handle_addr(addr: usize) -> bool {
     if census {
         crate::hot_diag::canonical_census_note_call();
     }
-    if !CANONICAL_HANDLE_ADDR_FILTER.may_contain(addr) {
+    if !CANONICAL_HANDLE_ADDR_INDEX.may_contain(addr) {
         return false;
     }
     let resolved = canonical_handle_parts_from_addr(addr).is_some();
@@ -164,24 +182,35 @@ pub fn is_canonical_handle_addr(addr: usize) -> bool {
     resolved
 }
 
-/// Bits set in the canonical-handle filter, and its capacity. Diagnostics
-/// only: a filter whose bits are nearly all set has stopped discriminating,
-/// and the census cannot report that from outside this module.
+/// Bits set in the canonical-handle index, and its capacity. Diagnostics only:
+/// an index whose bits are nearly all set has stopped discriminating, and the
+/// census cannot report that from outside this module.
 pub(crate) fn canonical_filter_occupancy() -> (u32, u32) {
-    (
-        CANONICAL_HANDLE_ADDR_FILTER.bits_set(),
-        CANONICAL_HANDLE_ADDR_FILTER.capacity_bits(),
-    )
+    CANONICAL_HANDLE_ADDR_INDEX.occupancy()
+}
+
+/// How many wrapper addresses the index currently holds. Diagnostics only:
+/// the census reports it beside the occupancy because occupancy is only
+/// interpretable against the population it represents.
+pub(crate) fn canonical_index_live_count() -> usize {
+    CANONICAL_HANDLE_ADDR_INDEX.live_count()
 }
 
 pub(super) unsafe fn remove_finalized(provider: u64, id: i64, finalized: *mut NativeHandleHeader) {
-    CANONICAL_HANDLES.with(|table| {
+    let removed = CANONICAL_HANDLES.with(|table| {
         let mut table = table.borrow_mut();
         if table.get(&(provider, id)).copied() == Some(finalized as usize) {
             table.remove(&(provider, id));
             crate::hot_diag::canonical_census_note_retire();
+            return true;
         }
+        false
     });
+    if removed {
+        // After the table, per the index's ordering rule. The handle is already
+        // finalized, so the classifier answered `false` for it before this ran.
+        CANONICAL_HANDLE_ADDR_INDEX.retire(finalized as usize);
+    }
 }
 
 /// Retire the canonical identity when its authoritative registry entry dies.
@@ -199,6 +228,11 @@ pub(crate) fn retire(provider: u64, id: i64) {
             let _ = super::finalize_once(handle);
         }
     }
+    // Last, after the identity table and after `finalize_once`: until the
+    // handle is finalized the classifier still answers `true` for this address,
+    // and narrowing the index earlier would deny an address the runtime still
+    // recognises.
+    CANONICAL_HANDLE_ADDR_INDEX.retire(addr);
 }
 
 #[cfg(test)]
