@@ -1,0 +1,4 @@
+9f1617f46a73bc1bd25e13aa5675bf15986530b2761779752dfbadfb18cde124  crates/perry-runtime/src/registry_latch.rs
+7bd9c73dae7321782d7f13bf8443b6f9fdd4c647a95831e855eb56169115f566  crates/perry-runtime/src/native_handle/canonical.rs
+436f20e29884a3c064dc10c4dee5d5b5e51beda1eacb2237b1fc270820567eab  crates/perry-runtime/src/native_handle.rs
+c6e7c4bb423180911710ec7b0affa32b40d224d599b2a2006205c8f25b913249  crates/perry-runtime/src/hot_diag.rs

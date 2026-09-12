@@ -1,0 +1,16 @@
+{
+ "status": "complete",
+ "owner": "registry-addr-index-20260912 staged",
+ "pair": {
+  "control": {
+   "path": "/root/cc-perf-native-recv-0909/runtime-own-read-cache-20260911/cc-candidate",
+   "sha256": "42bfb149007b5c79d11b11d6acb7ad16008932945a78efe700c19bec9d3e513a",
+   "bytes": 438569928
+  },
+  "candidate": {
+   "path": "/root/cc-perf-native-recv-0909/registry-addr-index-20260912/cc-index",
+   "sha256": "4bc0b160c6ac2d6d5662a927e47d2efe5971f8668c1b1c88baf42829eafe3a3b",
+   "bytes": 438569536
+  }
+ }
+}

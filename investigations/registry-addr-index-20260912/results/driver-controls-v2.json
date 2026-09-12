@@ -1,0 +1,35 @@
+{
+  "pass": true,
+  "controls": [
+    "final-package_seen",
+    "final-source_seen",
+    "final-tool_result_blocks",
+    "final-any_tool_error",
+    "final-request_ordinal",
+    "partial-main-requests",
+    "source-before-second-Read",
+    "owner-pid",
+    "owner-start_ticks",
+    "owner-exe",
+    "owner-cwd",
+    "owner-argv",
+    "verified-timeout-escalation",
+    "changed-owner-before-escalation",
+    "wrong-owner-no-first-signal",
+    "pre-exec-and-app-cleanup-identities",
+    "constructor-enable-failure",
+    "constructor-failure-cleanup-and-receipt",
+    "disable-timeout-retained",
+    "stop-idempotence-after-error",
+    "exact-insertion-literal-newline-and-two-Read-evidence"
+  ],
+  "real_processes_launched": 0,
+  "argv_transition_rejections": [
+    "pid",
+    "start_ticks",
+    "exe",
+    "cwd",
+    "argv",
+    "undeclared-title"
+  ]
+}

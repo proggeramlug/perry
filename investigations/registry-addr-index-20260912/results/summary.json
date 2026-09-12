@@ -1,0 +1,255 @@
+{
+  "status": "complete-13-row-reconciliation",
+  "arms": {
+    "node": {
+      "startup_cpu_s": {
+        "values": [
+          0.64,
+          0.63,
+          0.63
+        ],
+        "min": 0.63,
+        "max": 0.64,
+        "median": 0.63
+      },
+      "command_cpu_s": {
+        "values": [
+          0.43999999999999995,
+          0.42999999999999994,
+          0.41999999999999993
+        ],
+        "min": 0.41999999999999993,
+        "max": 0.43999999999999995,
+        "median": 0.42999999999999994
+      },
+      "startup_plus_command_cpu_s": {
+        "values": [
+          1.08,
+          1.06,
+          1.0499999999999998
+        ],
+        "min": 1.0499999999999998,
+        "max": 1.08,
+        "median": 1.06
+      },
+      "command_wall_s": {
+        "values": [
+          0.876821731,
+          0.869816949,
+          0.869376844
+        ],
+        "min": 0.869376844,
+        "max": 0.876821731,
+        "median": 0.869816949
+      },
+      "peak_rss_mib": {
+        "values": [
+          337.71484375,
+          337.69140625,
+          334.39453125
+        ],
+        "min": 334.39453125,
+        "max": 337.71484375,
+        "median": 337.69140625
+      }
+    },
+    "control": {
+      "startup_cpu_s": {
+        "values": [
+          1.19,
+          0.97,
+          0.97,
+          0.95,
+          0.99
+        ],
+        "min": 0.95,
+        "max": 1.19,
+        "median": 0.97
+      },
+      "command_cpu_s": {
+        "values": [
+          1.2400000000000002,
+          1.2700000000000005,
+          1.27,
+          1.1999999999999997,
+          1.1799999999999997
+        ],
+        "min": 1.1799999999999997,
+        "max": 1.2700000000000005,
+        "median": 1.2400000000000002
+      },
+      "startup_plus_command_cpu_s": {
+        "values": [
+          2.43,
+          2.24,
+          2.24,
+          2.1499999999999995,
+          2.17
+        ],
+        "min": 2.1499999999999995,
+        "max": 2.43,
+        "median": 2.24
+      },
+      "command_wall_s": {
+        "values": [
+          1.738019201,
+          1.752133732,
+          1.764816887,
+          1.693512273,
+          1.662084594
+        ],
+        "min": 1.662084594,
+        "max": 1.764816887,
+        "median": 1.738019201
+      },
+      "peak_rss_mib": {
+        "values": [
+          631.12109375,
+          629.796875,
+          647.19140625,
+          632.90625,
+          632.140625
+        ],
+        "min": 629.796875,
+        "max": 647.19140625,
+        "median": 632.140625
+      }
+    },
+    "candidate": {
+      "startup_cpu_s": {
+        "values": [
+          1.01,
+          0.95,
+          0.96,
+          0.95,
+          0.95
+        ],
+        "min": 0.95,
+        "max": 1.01,
+        "median": 0.95
+      },
+      "command_cpu_s": {
+        "values": [
+          1.2400000000000002,
+          1.19,
+          1.0899999999999994,
+          1.1600000000000001,
+          1.1199999999999997
+        ],
+        "min": 1.0899999999999994,
+        "max": 1.2400000000000002,
+        "median": 1.1600000000000001
+      },
+      "startup_plus_command_cpu_s": {
+        "values": [
+          2.25,
+          2.1399999999999997,
+          2.0499999999999994,
+          2.1100000000000003,
+          2.0699999999999994
+        ],
+        "min": 2.0499999999999994,
+        "max": 2.25,
+        "median": 2.1100000000000003
+      },
+      "command_wall_s": {
+        "values": [
+          1.709403966,
+          1.706078057,
+          1.563462894,
+          1.599796296,
+          1.587541356
+        ],
+        "min": 1.563462894,
+        "max": 1.709403966,
+        "median": 1.599796296
+      },
+      "peak_rss_mib": {
+        "values": [
+          632.70703125,
+          632.07421875,
+          632.265625,
+          656.83984375,
+          634.51171875
+        ],
+        "min": 632.07421875,
+        "max": 656.83984375,
+        "median": 632.70703125
+      }
+    }
+  },
+  "paired_changes": [
+    {
+      "row": 1,
+      "startup_cpu_s_change_percent": -15.126050420168058,
+      "command_cpu_s_change_percent": 0.0,
+      "startup_plus_command_cpu_s_change_percent": -7.407407407407418,
+      "command_wall_s_change_percent": -1.6464280131966103,
+      "peak_rss_mib_change_percent": 0.2512889389541195
+    },
+    {
+      "row": 2,
+      "startup_cpu_s_change_percent": -2.0618556701030966,
+      "command_cpu_s_change_percent": -6.29921259842523,
+      "startup_plus_command_cpu_s_change_percent": -4.464285714285743,
+      "command_wall_s_change_percent": -2.628547933235048,
+      "peak_rss_mib_change_percent": 0.3615997221326328
+    },
+    {
+      "row": 3,
+      "startup_cpu_s_change_percent": -1.0309278350515427,
+      "command_cpu_s_change_percent": -14.173228346456746,
+      "startup_plus_command_cpu_s_change_percent": -8.482142857142893,
+      "command_wall_s_change_percent": -11.409341925681616,
+      "peak_rss_mib_change_percent": -2.3062390980257197
+    },
+    {
+      "row": 4,
+      "startup_cpu_s_change_percent": 0.0,
+      "command_cpu_s_change_percent": -3.3333333333332993,
+      "startup_plus_command_cpu_s_change_percent": -1.8604651162790309,
+      "command_wall_s_change_percent": -5.533823314665753,
+      "peak_rss_mib_change_percent": 3.7815385375006283
+    },
+    {
+      "row": 5,
+      "startup_cpu_s_change_percent": -4.040404040404044,
+      "command_cpu_s_change_percent": -5.084745762711873,
+      "startup_plus_command_cpu_s_change_percent": -4.6082949308756005,
+      "command_wall_s_change_percent": -4.484924429785064,
+      "peak_rss_mib_change_percent": 0.3750896013050786
+    }
+  ],
+  "candidate_vs_control_minimum_change_percent": {
+    "startup_cpu_s": 0.0,
+    "command_cpu_s": -7.627118644067821,
+    "startup_plus_command_cpu_s": -4.651162790697683,
+    "command_wall_s": -5.933614952934219,
+    "peak_rss_mib": 0.3615997221326328
+  },
+  "node": {
+    "path": "/usr/bin/node",
+    "version": "v26.8.1",
+    "sha256": "19235a9b678f84729464c52623f92de130a165452747c6826d3fdc13df3abcc3",
+    "bundle_sha256": "bc3358282800e3e99daa8e71ac5b7b1566bd0d7ca7eb94f714a7859365d3163f"
+  },
+  "controls": [
+    {
+      "name": "missing-real-row",
+      "rejected": "missing/reordered row"
+    },
+    {
+      "name": "modified-real-CPU",
+      "rejected": "CPU record disagrees with raw receipt"
+    }
+  ],
+  "analyzer_sha256": "91abf526c0bf4b9a00879daa5f5dd776e5b441a6a612d41a7ee04a98c3b5c744",
+  "inputs": {
+    "measure-v2.execution.json": "8b3c6d4f08651e42132b464ce74dc92bee98c36a3068ee2af4fb3500b7b2e399",
+    "build.execution.json": "ff2ca43594d91617600e1464f3f902575d228eba79aae4e70346d1ee89270547"
+  },
+  "outputs": {
+    "rows.csv": "c3dacf6bf254b44aee3e2d5f41746986afe85c79dfa1816d58557a0daadbee46",
+    "paired-changes.csv": "456159f8815c4c8203eb3368094065f72b460aa2349c9932616dfc706b0fa14a"
+  }
+}
