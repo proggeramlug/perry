@@ -1,0 +1,66 @@
+{
+ "binary": "cc-census",
+ "binary_sha256": "c0b32995d6ab001982233e0b171f8598984b4ad21de4212850df51474041471a",
+ "variables": {
+  "CALLS": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter5CALLS",
+   "address": 383796808,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "FILTER_PASS": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter11FILTER_PASS",
+   "address": 383796784,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "RESOLVED": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter8RESOLVED",
+   "address": 383796840,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "ADMITS": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter6ADMITS",
+   "address": 383796816,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "RETIRES": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter7RETIRES",
+   "address": 383796832,
+   "bytes": 8,
+   "kind": "u64"
+  },
+  "LIVE": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime8hot_diag16canonical_filter4LIVE",
+   "address": 383796800,
+   "bytes": 8,
+   "kind": "i64"
+  },
+  "CANONICAL_HANDLE_ADDR_FILTER": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime13native_handle9canonical28CANONICAL_HANDLE_ADDR_FILTER",
+   "address": 383268640,
+   "bytes": 128,
+   "kind": "bitmap"
+  },
+  "SYMBOL_ADDR_FILTER": {
+   "symbol": "_RNvNtCscI5nJwKNRh4_13perry_runtime6symbol18SYMBOL_ADDR_FILTER",
+   "address": 383267720,
+   "bytes": 128,
+   "kind": "bitmap"
+  },
+  "CLASS_PROTOTYPE_ADDR_FILTER": {
+   "symbol": "_RNvNtNtNtCscI5nJwKNRh4_13perry_runtime6object14class_registry5state27CLASS_PROTOTYPE_ADDR_FILTER",
+   "address": 383796992,
+   "bytes": 128,
+   "kind": "bitmap"
+  },
+  "BUFFER_LIKE_ADDR_FILTER": {
+   "symbol": "_RNvNtNtCscI5nJwKNRh4_13perry_runtime6buffer6header23BUFFER_LIKE_ADDR_FILTER",
+   "address": 383794464,
+   "bytes": 128,
+   "kind": "bitmap"
+  }
+ }
+}

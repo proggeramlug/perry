@@ -1,0 +1,3 @@
+{"row": 1, "calls": 84296167, "filter_pass": 15192413, "resolved": 3835, "admits": 720, "retires": 76, "live": 644, "bits_set": 919, "instrumented_cpu": {"startup_s": 0.97, "command_s": 1.3000000000000003}}
+{"row": 2, "calls": 84374831, "filter_pass": 13144012, "resolved": 3823, "admits": 712, "retires": 69, "live": 643, "bits_set": 908, "instrumented_cpu": {"startup_s": 0.96, "command_s": 1.31}}
+{"row": 3, "calls": 84553526, "filter_pass": 17240890, "resolved": 3829, "admits": 721, "retires": 73, "live": 648, "bits_set": 919, "instrumented_cpu": {"startup_s": 0.95, "command_s": 1.3000000000000003}}
