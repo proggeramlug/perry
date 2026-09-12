@@ -91,9 +91,10 @@ fn canonical_handle_value_with_policy(
         (*handle).creator_thread_id = current_thread_id();
     }
     CANONICAL_HANDLE_ADDR_FILTER.admit(addr);
-    CANONICAL_HANDLES.with(|table| {
-        table.borrow_mut().insert((provider, id), addr);
+    let replaced = CANONICAL_HANDLES.with(|table| {
+        table.borrow_mut().insert((provider, id), addr).is_some()
     });
+    crate::hot_diag::canonical_census_note_admit(replaced);
     value
 }
 
@@ -149,10 +150,28 @@ pub fn canonical_handle_id_for_provider(value: f64, provider: u64) -> Option<i64
 }
 
 pub fn is_canonical_handle_addr(addr: usize) -> bool {
+    let census = crate::hot_diag::canonical_census_on();
+    if census {
+        crate::hot_diag::canonical_census_note_call();
+    }
     if !CANONICAL_HANDLE_ADDR_FILTER.may_contain(addr) {
         return false;
     }
-    canonical_handle_parts_from_addr(addr).is_some()
+    let resolved = canonical_handle_parts_from_addr(addr).is_some();
+    if census {
+        crate::hot_diag::canonical_census_note_pass(resolved);
+    }
+    resolved
+}
+
+/// Bits set in the canonical-handle filter, and its capacity. Diagnostics
+/// only: a filter whose bits are nearly all set has stopped discriminating,
+/// and the census cannot report that from outside this module.
+pub(crate) fn canonical_filter_occupancy() -> (u32, u32) {
+    (
+        CANONICAL_HANDLE_ADDR_FILTER.bits_set(),
+        CANONICAL_HANDLE_ADDR_FILTER.capacity_bits(),
+    )
 }
 
 pub(super) unsafe fn remove_finalized(provider: u64, id: i64, finalized: *mut NativeHandleHeader) {
@@ -160,6 +179,7 @@ pub(super) unsafe fn remove_finalized(provider: u64, id: i64, finalized: *mut Na
         let mut table = table.borrow_mut();
         if table.get(&(provider, id)).copied() == Some(finalized as usize) {
             table.remove(&(provider, id));
+            crate::hot_diag::canonical_census_note_retire();
         }
     });
 }
@@ -172,6 +192,7 @@ pub(crate) fn retire(provider: u64, id: i64) {
     let Some(addr) = addr else {
         return;
     };
+    crate::hot_diag::canonical_census_note_retire();
     unsafe {
         let handle = handle_from_addr(addr);
         if canonical_parts(handle) == Some((provider, id)) {

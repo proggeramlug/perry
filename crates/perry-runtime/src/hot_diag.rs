@@ -65,6 +65,12 @@ pub(crate) fn write_sink(sink: &Sink, text: &str) {
 const TICK_EVERY: u32 = 256;
 const DUMP_INTERVAL_MS: u128 = 1000;
 
+mod canonical_filter;
+pub use canonical_filter::{
+    canonical_census_note_admit, canonical_census_note_call, canonical_census_note_pass,
+    canonical_census_note_retire, canonical_census_on,
+};
+
 mod receiver_repr;
 pub use receiver_repr::{
     receiver_repr_note_constructed, receiver_repr_note_decoded_pointer, receiver_repr_note_value,

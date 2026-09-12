@@ -404,6 +404,12 @@ impl RegistryAddrFilter {
         }
     }
 
+    /// How many bits this filter has in total. Diagnostics and tests only:
+    /// an occupancy count means nothing without the capacity it is a share of.
+    pub fn capacity_bits(&self) -> u32 {
+        Self::BITS as u32
+    }
+
     /// How many bits are set. Diagnostics and tests only: a filter whose bits
     /// are nearly all set has stopped discriminating, and a test that wants to
     /// prove the fast path RAN needs to know the filter is not saturated.
