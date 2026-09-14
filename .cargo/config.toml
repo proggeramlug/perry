@@ -27,6 +27,8 @@ global-min-publish-age = "7 days"
 # aborts loudly if the tables are missing (perry-runtime/src/eh.rs).
 [build]
 rustflags = ["-C", "force-unwind-tables=yes"]
+# LANE RULE (local worktree only, never commit): no builds on this Mac — cargo goes through ./remote.sh; CARGO_TARGET_DIR on perrymaster overrides this.
+target-dir = "/nonexistent-DO-NOT-BUILD-LOCALLY-use-remote.sh"
 
 # #9486: x86_64 needs frame pointers, and cannot inherit them from `[build]`.
 #
