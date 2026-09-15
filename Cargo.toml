@@ -337,6 +337,12 @@ codegen-units = 1
 [profile.dist.package.perry-ext-ws]
 codegen-units = 1
 
+[patch.crates-io]
+# Prototype only (#10166): perex main f0b1b0b adds `impl ScratchOwner for &mut O`
+# so a host can lend scratch instead of giving it up, and `Search::restart_at`.
+# 0.1.6 is unpublished; this branch must not open a PR until it is.
+perex = { git = "https://github.com/PerryTS/perex.git", rev = "f0b1b0b9833ef3a50ccb4ae9df2e872d0811f7c8" }
+
 [workspace.package]
 version = "0.5.1569"
 edition = "2021"
