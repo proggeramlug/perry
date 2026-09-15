@@ -965,20 +965,27 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     // a body reassigning its local `module` can't clobber it (Node holds the
     // real module ref the same way), so named/default-export resolution stays
     // correct regardless of what the body does to its `module` local.
-    const __cjs_module = {{ exports: {{}} }};
-    // #6769: the Node `Module` record surface. Set before user code so a
-    // recursive load of this module observes the same shape Node exposes.
-    __cjs_module.__perry_cjs_record = true;
-    __cjs_module.__perry_cjs_factory = {cjs_factory_value};
-    __cjs_module.id = {module_filename_literal};
-    __cjs_module.path = {module_dir_literal};
-    __cjs_module.filename = {module_filename_literal};
-    __cjs_module.loaded = false;
-    __cjs_module.children = [];
-    __cjs_module.parent = globalThis.__perry_cjs_pending_parent;
+    // #6769: the Node `Module` record surface, built as ONE object literal so
+    // the record is allocated with its final shape. It used to be eleven
+    // sequential assignments onto `{{ exports: {{}} }}`, which walked eleven
+    // shape transitions and eleven cold property stores per CommonJS module —
+    // about 10k instructions each at module-init time, paid by every module in
+    // the graph before any user code ran. Key order is unchanged, so
+    // enumeration order still matches what Node exposes.
+    const __cjs_module = {{
+        exports: {{}},
+        __perry_cjs_record: true,
+        __perry_cjs_factory: {cjs_factory_value},
+        id: {module_filename_literal},
+        path: {module_dir_literal},
+        filename: {module_filename_literal},
+        loaded: false,
+        children: [],
+        parent: globalThis.__perry_cjs_pending_parent,
+        paths: [{module_dir_literal} + '/node_modules'],
+        require: undefined,
+    }};
     globalThis.__perry_cjs_pending_parent = undefined;
-    __cjs_module.paths = [{module_dir_literal} + '/node_modules'];
-    __cjs_module.require = undefined;
     // Node populates `module.parent` before the body evaluates, so link it
     // here rather than at the tail's registry publication.
     __perry_link_path_module_parent(__cjs_module);
