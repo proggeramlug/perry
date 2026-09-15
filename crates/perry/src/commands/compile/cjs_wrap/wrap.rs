@@ -1078,12 +1078,13 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
         }}
         throw __perry_cjs_require_error('error', 'MODULE_NOT_FOUND', "Cannot find module '" + specifier + "'");
     }}
-    Object.defineProperty(require, 'name', {{
-        value: 'require',
-        writable: false,
-        enumerable: false,
-        configurable: true,
-    }});
+    // No `defineProperty(require, 'name', ...)`: a `function require(...)`
+    // declaration already carries exactly
+    // {{value:'require', writable:false, enumerable:false, configurable:true}},
+    // verified identical in Node 26 and Perry. The redundant install also gave
+    // the require object OBJ_FLAG_HAS_DESCRIPTORS, which pushed every later
+    // `require.resolve = ...` / `require.cache = ...` assignment onto the
+    // descriptor-bearing store path (#10287) in every CommonJS module.
     require.resolve = function resolve(specifier, options) {{
         if (typeof specifier !== 'string') throw __perry_cjs_require_error('type', 'ERR_INVALID_ARG_TYPE', 'The "request" argument must be of type string.');
 {require_resolve_cases}
