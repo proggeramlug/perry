@@ -560,7 +560,7 @@ pub(crate) unsafe fn rekey_stable_tombstone_shape_after_squeeze(
     if !super::is_shape_id(old_id) {
         return None;
     }
-    super::shapes::shape_diag::note(super::shapes::shape_diag::SLOT_LIST);
+    crate::object::shapes::shape_diag::note(crate::object::shapes::shape_diag::SLOT_LIST);
     let new_id = super::alloc_shape_id().ok()?;
     let generation = super::SHAPE_SEMANTIC_NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     if generation == 0 {

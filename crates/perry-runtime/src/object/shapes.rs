@@ -539,6 +539,39 @@ pub(crate) mod shape_diag {
         }
         eprintln!("{l}");
     }
+    /// Facts of every freshly minted shape, so fragmentation can be attributed:
+    /// identical key counts under many DIFFERENT inline capacities would mean
+    /// allocation capacity, not key identity, is splitting the shapes.
+    pub fn note_facts(logical_key_count: u32, live_inline_slot_count: u32, keys_id: u64) {
+        if !on() {
+            return;
+        }
+        use std::collections::HashMap;
+        static F: std::sync::Mutex<Option<(HashMap<(u32, u32), u64>, HashMap<u64, u64>)>> =
+            std::sync::Mutex::new(None);
+        let mut g = F.lock().unwrap();
+        let (by_shape, by_keys) = g.get_or_insert_with(|| (HashMap::new(), HashMap::new()));
+        *by_shape
+            .entry((logical_key_count, live_inline_slot_count))
+            .or_insert(0) += 1;
+        *by_keys.entry(keys_id).or_insert(0) += 1;
+        if by_shape.len() % 64 == 0 {
+            let mut v: Vec<_> = by_shape.iter().map(|(k, c)| (*k, *c)).collect();
+            v.sort_by_key(|(_, c)| std::cmp::Reverse(*c));
+            let top: Vec<String> = v
+                .iter()
+                .take(6)
+                .map(|((kc, live), c)| format!("keys={kc},live={live}:{c}"))
+                .collect();
+            eprintln!(
+                "[shape-facts] distinct_(keycount,live)={} distinct_key_arrays={} top=[{}]",
+                by_shape.len(),
+                by_keys.len(),
+                top.join(" ")
+            );
+        }
+    }
+
     #[inline]
     pub fn note(i: usize) {
         if !on() {
@@ -627,6 +660,7 @@ pub(crate) fn shape_descriptor_ensure_with_holes(
         }
     }
     shape_diag::note(shape_diag::ENSURE_STRUCTURAL);
+    shape_diag::note_facts(logical_key_count, live_inline_slot_count, keys_id);
     let id = alloc_shape_id().map_err(|_| ShapeDescriptorError::IdExhausted)?;
     let record = ShapeRecord::new(
         keys_id,
