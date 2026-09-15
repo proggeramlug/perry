@@ -1624,6 +1624,17 @@ pub(crate) unsafe fn transition_object_shape_semantics(
 /// A pure mix has no capacity, so an agreement reached once holds for the life
 /// of the process.
 ///
+/// Keyed on the predecessor's KEYS ARRAY and prior generation rather than its
+/// shape id. A shape id also encodes `live_inline_slot_count`, which says how
+/// many slots are filled — nothing about descriptor semantics. Keying on it
+/// meant two receivers sharing a keys array and repeating the same install
+/// still minted different generations whenever they were at different fill
+/// levels, and that difference then fed the NEXT install's key, so one
+/// divergence amplified for the life of the object. Keys array + prior
+/// generation + the install itself is the complete descriptor-state identity:
+/// same array, same history, same operation implies the same descriptor state
+/// by induction.
+///
 /// Bit 63 is set so these can never alias a counter-allocated generation from
 /// [`transition_object_shape_semantics`] (that counter starts at 1 and aborts
 /// long before it could reach 2^63). Distinct transitions collide only on a
@@ -1631,19 +1642,21 @@ pub(crate) unsafe fn transition_object_shape_semantics(
 /// the structural facts (keys array, key count, live slots, kind) are also
 /// identical.
 fn deterministic_semantic_generation(
-    prev_shape_id: u32,
+    prev_keys_id: u64,
+    prev_generation: u64,
     key_bytes: &[u8],
     attrs: u8,
 ) -> Option<u64> {
-    if prev_shape_id == 0 {
+    if prev_keys_id == 0 {
         // No predecessor identity to key on: keep the unique generation.
         return None;
     }
     let key_hash = crate::object::key_bytes_hash(key_bytes.as_ptr(), key_bytes.len());
-    // SplitMix64 finalizer over the three components, so nearby shape ids and
-    // one-byte key differences land far apart.
+    // SplitMix64 finalizer over the components, so nearby ids and one-byte key
+    // differences land far apart.
     let mut x = key_hash
-        ^ (u64::from(prev_shape_id) << 32 | u64::from(prev_shape_id))
+        ^ prev_keys_id.rotate_left(17)
+        ^ prev_generation.rotate_left(33)
         ^ (u64::from(attrs) << 24);
     x ^= x >> 30;
     x = x.wrapping_mul(0xbf58_476d_1ce4_e5b9);
@@ -1684,9 +1697,12 @@ pub(crate) unsafe fn transition_object_shape_semantics_for_data_descriptor(
         synchronize_object_shape_descriptor(obj);
         object_shape_descriptor(obj).expect("shape synchronization must publish a descriptor")
     });
-    let Some(generation) =
-        deterministic_semantic_generation(object_shape_stamp(obj), key_bytes, attrs)
-    else {
+    let Some(generation) = deterministic_semantic_generation(
+        current.keys as usize as u64,
+        current.semantic_generation,
+        key_bytes,
+        attrs,
+    ) else {
         // Table unavailable (teardown) or the counter wrapped: fall back to the
         // unique-generation transition, which is always correct.
         return transition_object_shape_semantics(obj);
