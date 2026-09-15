@@ -589,7 +589,7 @@ impl ObjectHotTables {
 /// When keys_array length exceeds this, build the sidecar hash index
 /// on the next lookup. Below this threshold, the linear scan is
 /// faster than the hash overhead (memory access, cache footprint).
-const KEYS_INDEX_THRESHOLD: u32 = 32;
+const KEYS_INDEX_THRESHOLD: u32 = 8;
 
 #[path = "keys_lookup.rs"]
 mod keys_lookup;
