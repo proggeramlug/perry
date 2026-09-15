@@ -115,7 +115,13 @@ fn the_canary_chain_still_reports_a_genuine_barrier() {
 /// `defineProperty(require, 'name', …)`, `require.cache = {}`,
 /// `require.extensions = { … }`, and the transpiler's
 /// `defineProperty(exports, "__esModule", …)`.
-const EXPECTED_PREAMBLE_ALLOC_STMTS: usize = 5;
+/// Lowered from 5: the preamble no longer emits `require.cache = {}`,
+/// `require.extensions = { … }` or `Object.defineProperty(require, 'name', …)`.
+/// The first two were dead stores overwritten on the following line, and the
+/// third set the descriptor a `function require(...)` declaration already has.
+/// Their arms in `cjs_scaffolding.rs` are kept — they stay correct for any
+/// template that does allocate there — they simply no longer fire.
+const EXPECTED_PREAMBLE_ALLOC_STMTS: usize = 2;
 
 /// The #7152 half of the canary. Red means `wrap.rs` and
 /// `perry-codegen/src/collectors/cjs_scaffolding.rs` disagree about what the
@@ -136,11 +142,6 @@ fn the_cjs_preamble_is_still_recognised_as_scaffolding_allocation() {
         (
             "var module = __cjs_module;",
             "R4 (the alias that denies the record)",
-        ),
-        ("require.cache = {}", "the `require.cache` allocation"),
-        (
-            "require.extensions = {",
-            "the `require.extensions` allocation",
         ),
     ] {
         assert!(
