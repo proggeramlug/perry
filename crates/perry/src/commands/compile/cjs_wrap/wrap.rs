@@ -965,32 +965,16 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     // a body reassigning its local `module` can't clobber it (Node holds the
     // real module ref the same way), so named/default-export resolution stays
     // correct regardless of what the body does to its `module` local.
+    const __cjs_module = {{ exports: {{}} }};
     // #6769: the Node `Module` record surface. Set before user code so a
     // recursive load of this module observes the same shape Node exposes.
-    //
-    // The eight fixed fields are ONE object literal so the record is allocated
-    // with its final shape instead of walking eight shape transitions and
-    // eight cold property stores (~10k instructions each) in every CommonJS
-    // module. This is exactly the folding `cjs_scaffolding.rs`'s `record_binding`
-    // already anticipates — its `folded_template` arm matches this field list
-    // positionally — so the `Ptr<Shape>` scaffolding recogniser keeps firing.
-    // Adding a field here, or reordering one, silently drops the record back to
-    // being reported as a denied user candidate; `preamble_canary_tests` is what
-    // catches that.
-    //
-    // The remaining three stay assignments: `parent` reads and then clears a
-    // global, `paths` concatenates, and `require` is patched later — none of
-    // them are part of the recognised template.
-    const __cjs_module = {{
-        exports: {{}},
-        __perry_cjs_record: true,
-        __perry_cjs_factory: {cjs_factory_value},
-        id: {module_filename_literal},
-        path: {module_dir_literal},
-        filename: {module_filename_literal},
-        loaded: false,
-        children: [],
-    }};
+    __cjs_module.__perry_cjs_record = true;
+    __cjs_module.__perry_cjs_factory = {cjs_factory_value};
+    __cjs_module.id = {module_filename_literal};
+    __cjs_module.path = {module_dir_literal};
+    __cjs_module.filename = {module_filename_literal};
+    __cjs_module.loaded = false;
+    __cjs_module.children = [];
     __cjs_module.parent = globalThis.__perry_cjs_pending_parent;
     globalThis.__perry_cjs_pending_parent = undefined;
     __cjs_module.paths = [{module_dir_literal} + '/node_modules'];
