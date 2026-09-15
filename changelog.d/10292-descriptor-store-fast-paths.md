@@ -14,8 +14,15 @@ fast path, because a store that falls back appends to a private keys array and
 takes the receiver off the shared transition chain permanently, costing every
 later store on that object as well.
 
-Building 5,000 objects that define one non-enumerable property and then assign
-60 methods — zod v4's schema constructor shape — drops from 13.9-18.7 billion
-instructions and ~255 MB to 1.2-4.4 billion and ~44 MB. Constructing 300 real
-zod v4 `z.object` schemas drops from 21.9 to 12.7 billion instructions
-(-41.8%); the same fixture without a descriptor is unchanged.
+The store-plan cache is vetted the same way. It exists to stop every store
+re-running the interception vet, but it refused any receiver carrying a
+descriptor at all — so no zod schema object ever held a plan, and each of its
+stores re-walked the prototype chain, the class registry and
+`Object.prototype`. It is now denied only for the keys a descriptor can
+actually cover.
+
+Constructing 300 real zod v4 `z.object` schemas drops from 21.9 to 11.8
+billion instructions (-46%). A fixture building 2,000 receivers that define one
+non-enumerable property and then assign 40 properties drops from 3.9 to 0.8
+billion (-79%), and at 80 properties from 7.7 to 1.8 billion (-76%). The same
+fixtures without a descriptor are unchanged.
