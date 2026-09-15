@@ -505,6 +505,52 @@ fn alloc_shape_id_from(next: &std::sync::atomic::AtomicU32) -> Result<u32, Shape
     }
 }
 
+/// TEMPORARY shape-source telemetry (`PERRY_SHAPE_DIAG=1`). Never merged.
+pub(crate) mod shape_diag {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    pub const ENSURE_STRUCTURAL: usize = 0;
+    pub const ENSURE_953: usize = 1;
+    pub const SLOT_LIST: usize = 2;
+    pub const PRIVATE_APPEND: usize = 3;
+    pub const LANE_ADOPT: usize = 4;
+    pub static C: [AtomicU64; 5] = [
+        AtomicU64::new(0),
+        AtomicU64::new(0),
+        AtomicU64::new(0),
+        AtomicU64::new(0),
+        AtomicU64::new(0),
+    ];
+    static REG: AtomicU64 = AtomicU64::new(0);
+    pub fn on() -> bool {
+        static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        *ON.get_or_init(|| std::env::var_os("PERRY_SHAPE_DIAG").is_some())
+    }
+    extern "C" fn report() {
+        let n = [
+            "ensure_structural",
+            "ensure_953",
+            "slot_list",
+            "private_append",
+            "lane_adopt",
+        ];
+        let mut l = String::from("[shapes]");
+        for (i, name) in n.iter().enumerate() {
+            l.push_str(&format!(" {}={}", name, C[i].load(Ordering::Relaxed)));
+        }
+        eprintln!("{l}");
+    }
+    #[inline]
+    pub fn note(i: usize) {
+        if !on() {
+            return;
+        }
+        C[i].fetch_add(1, Ordering::Relaxed);
+        if REG.swap(1, Ordering::Relaxed) == 0 {
+            unsafe { libc::atexit(report) };
+        }
+    }
+}
+
 fn alloc_shape_id() -> Result<u32, ShapeIdExhausted> {
     alloc_shape_id_from(&SHAPE_ID_NEXT)
 }
@@ -580,6 +626,7 @@ pub(crate) fn shape_descriptor_ensure_with_holes(
             }
         }
     }
+    shape_diag::note(shape_diag::ENSURE_STRUCTURAL);
     let id = alloc_shape_id().map_err(|_| ShapeDescriptorError::IdExhausted)?;
     let record = ShapeRecord::new(
         keys_id,
@@ -950,6 +997,7 @@ static KEEP_JS_SHAPE_ORDINARY_INLINE_SLOT_FOR_KEY: extern "C" fn(u32, u64) -> i3
 /// keys alone: two objects with identical property names but different raw
 /// slot representations must never share a pre-baked GC descriptor.
 pub(crate) fn mint_registered_typed_shape_id(keys: *const ArrayHeader, key_count: u32) -> u32 {
+    shape_diag::note(shape_diag::ENSURE_953);
     let id = alloc_shape_id().unwrap_or_else(|_| shape_id_exhausted_abort());
     if !shapes_slot_list::install_external_shape_id(id, keys, key_count, key_count) {
         invalid_shape_facts_abort();
