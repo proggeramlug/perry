@@ -187,24 +187,13 @@ impl RepselContextFlags {
             RepselBody::Entry => Self {
                 allows_canonical_i32: gates.canonical_i32,
                 allows_canonical_str: gates.canonical_str,
-                // Was unconditionally off because #6991 — "compiled constructor
-                // receiver goes stale across the globalThis-population
-                // collection" — was open, and module init is exactly where that
-                // collection runs. #6991 was fixed on 2026-08-02 by #7249:
-                // `populate_global_this_builtins` now runs inside a
-                // `GcSuppressScope`, so populating `globalThis` no longer
-                // relocates anything. The exclusion outlived its reason.
-                //
-                // It matters more than any other single gate for startup. Entry
-                // bodies are where every module-level initializer and every
-                // CommonJS preamble runs, and with the flag clear
-                // `FnCtx::ptr_shape_receiver_fact` returned None for the WHOLE
-                // body: the shape proof was made, counted as a win, and then
-                // dropped at every access site, so each property store fell back
-                // to `js_put_value_set` with its inline-cache miss path.
-                allows_ptr_shape: gates.ptr_shape,
+                // Unconditionally off, regardless of `gates.ptr_shape`: the
+                // exclusion is structural (#6991), not a knob. Written as a
+                // literal so a future reader cannot mistake it for something
+                // `PERRY_PTR_SHAPE_LOCALS=1` could turn back on.
+                allows_ptr_shape: false,
                 canonical_denial: None,
-                ptr_shape_denial: None,
+                ptr_shape_denial: Some(MODULE_INIT_CONTEXT),
             },
         }
     }
