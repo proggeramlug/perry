@@ -1196,8 +1196,32 @@ pub fn closure_set_dynamic_prop(ptr: usize, prop: &str, value: f64) {
     note_young_closure_owner(ptr, value.to_bits());
     if let Ok(mut props) = get_closure_props().lock() {
         let closure_props = props.entry(ptr).or_default();
+        // Re-barrier EVERY value only when the map's buffer can have moved.
+        //
+        // The barrier registers each value's address as an external slot, so
+        // it has to be redone when a rehash relocates them — but it used to run
+        // on every insert, making a sequence of n stores onto one function
+        // O(n^2) in remembered-set registrations. Storing the six properties
+        // the CommonJS `require` object needs cost ~29k instructions EACH,
+        // twelve times an ordinary object store.
+        //
+        // `HashMap` only moves its entries when it grows, so comparing capacity
+        // across the insert distinguishes the two cases exactly. Without a
+        // growth the inserted slot is the only address that changed, and
+        // barriering it alone keeps the same invariant.
+        let capacity_before = closure_props.values.capacity();
         closure_props.insert(prop.to_string(), value);
-        barrier_closure_dynamic_props(ptr, closure_props);
+        if closure_props.values.capacity() == capacity_before {
+            if let Some(slot) = closure_props.values.get_mut(prop) {
+                crate::gc::runtime_write_barrier_external_slot(
+                    ptr,
+                    slot as *mut f64 as usize,
+                    value.to_bits(),
+                );
+            }
+        } else {
+            barrier_closure_dynamic_props(ptr, closure_props);
+        }
     }
     // #3655: re-defining a previously deleted slot makes it present again.
     if let Ok(mut deleted) = get_closure_deleted_keys().lock() {
