@@ -416,7 +416,7 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
         .collect::<Vec<_>>()
         .join("\n");
     let imports = format!(
-        "import {{ createRequire as __perry_cjs_create_require }} from 'node:module';\n{imports}"
+        "import {{ createRequire as __perry_cjs_create_require, isBuiltin as __perry_cjs_require_is_builtin }} from 'node:module';\n{imports}"
     );
 
     // An UNRESOLVABLE adopted specifier (`require('@opentelemetry/api')`
@@ -952,11 +952,6 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     // `require(specifier)` for one of those fell through to compiled-module
     // resolution and raised `MODULE_NOT_FOUND` instead of routing through
     // `createRequire`. Each entry emits both the bare and `node:` spelling.
-    let builtin_predicate_cases = perry_hir::NODE_BUILTIN_MODULES
-        .iter()
-        .map(|name| format!("case '{name}': case 'node:{name}':"))
-        .collect::<Vec<_>>()
-        .join("\n            ");
     let cjs_preamble = format!(
         r#"    // #3527: `module`/`exports` are reassignable `var`s (mirroring Node, where
     // they are wrapper-function parameters), so CJS bodies that do
@@ -998,14 +993,6 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
         const err = kind === 'type' ? new TypeError(message) : new Error(message);
         err.code = code;
         return err;
-    }}
-    function __perry_cjs_require_is_builtin(specifier) {{
-        switch (specifier) {{
-            {builtin_predicate_cases}
-                return true;
-            default:
-                return false;
-        }}
     }}
     function require(specifier) {{
         if (typeof specifier !== 'string') throw __perry_cjs_require_error('type', 'ERR_INVALID_ARG_TYPE', 'The "id" argument must be of type string.');
