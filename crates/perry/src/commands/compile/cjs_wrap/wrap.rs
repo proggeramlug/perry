@@ -416,7 +416,7 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
         .collect::<Vec<_>>()
         .join("\n");
     let imports = format!(
-        "import {{ createRequire as __perry_cjs_create_require }} from 'node:module';\n{imports}"
+        "import {{ createRequire as __perry_cjs_create_require, isBuiltin as __perry_cjs_require_is_builtin }} from 'node:module';\n{imports}"
     );
 
     // An UNRESOLVABLE adopted specifier (`require('@opentelemetry/api')`
@@ -952,11 +952,6 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     // `require(specifier)` for one of those fell through to compiled-module
     // resolution and raised `MODULE_NOT_FOUND` instead of routing through
     // `createRequire`. Each entry emits both the bare and `node:` spelling.
-    let builtin_predicate_cases = perry_hir::NODE_BUILTIN_MODULES
-        .iter()
-        .map(|name| format!("case '{name}': case 'node:{name}':"))
-        .collect::<Vec<_>>()
-        .join("\n            ");
     let cjs_preamble = format!(
         r#"    // #3527: `module`/`exports` are reassignable `var`s (mirroring Node, where
     // they are wrapper-function parameters), so CJS bodies that do
@@ -967,20 +962,20 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     // a body reassigning its local `module` can't clobber it (Node holds the
     // real module ref the same way), so named/default-export resolution stays
     // correct regardless of what the body does to its `module` local.
-    const __cjs_module = {{ exports: {{}} }};
-    // #6769: the Node `Module` record surface. Set before user code so a
-    // recursive load of this module observes the same shape Node exposes.
-    __cjs_module.__perry_cjs_record = true;
-    __cjs_module.__perry_cjs_factory = {cjs_factory_value};
-    __cjs_module.id = {module_filename_literal};
-    __cjs_module.path = {module_dir_literal};
-    __cjs_module.filename = {module_filename_literal};
-    __cjs_module.loaded = false;
-    __cjs_module.children = [];
-    __cjs_module.parent = globalThis.__perry_cjs_pending_parent;
+    const __cjs_module = {{
+        exports: {{}},
+        __perry_cjs_record: true,
+        __perry_cjs_factory: {cjs_factory_value},
+        id: {module_filename_literal},
+        path: {module_dir_literal},
+        filename: {module_filename_literal},
+        loaded: false,
+        children: [],
+        parent: globalThis.__perry_cjs_pending_parent,
+        paths: [{module_dir_literal} + '/node_modules'],
+        require: undefined,
+    }};
     globalThis.__perry_cjs_pending_parent = undefined;
-    __cjs_module.paths = [{module_dir_literal} + '/node_modules'];
-    __cjs_module.require = undefined;
     // Node populates `module.parent` before the body evaluates, so link it
     // here rather than at the tail's registry publication.
     __perry_link_path_module_parent(__cjs_module);
@@ -998,14 +993,6 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
         const err = kind === 'type' ? new TypeError(message) : new Error(message);
         err.code = code;
         return err;
-    }}
-    function __perry_cjs_require_is_builtin(specifier) {{
-        switch (specifier) {{
-            {builtin_predicate_cases}
-                return true;
-            default:
-                return false;
-        }}
     }}
     function require(specifier) {{
         if (typeof specifier !== 'string') throw __perry_cjs_require_error('type', 'ERR_INVALID_ARG_TYPE', 'The "id" argument must be of type string.');
