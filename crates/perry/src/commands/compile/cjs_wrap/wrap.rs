@@ -992,7 +992,8 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     __perry_register_path_module_partial({module_path_literal}, __cjs_module);
     var module = __cjs_module;
     var exports = __cjs_module.exports;
-    const __perry_cjs_base_require = __perry_cjs_create_require({module_filename_literal});
+    const __perry_cjs_base_require = (globalThis.__perry_cjs_shared_require
+        || (globalThis.__perry_cjs_shared_require = __perry_cjs_create_require({module_filename_literal})));
     __perry_cjs_base_require.cache[{module_filename_literal}] = __cjs_module;
     function __perry_cjs_require_error(kind, code, message) {{
         const err = kind === 'type' ? new TypeError(message) : new Error(message);
@@ -1016,7 +1017,7 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
         // createRequire at runtime, which calls js_create_native_module_namespace
         // under the hood — the same path Node.js uses for require("process").
         if (__perry_cjs_require_is_builtin(specifier)) {{
-            return __perry_cjs_create_require({module_path_literal})(specifier);
+            return __perry_cjs_base_require(specifier);
         }}
         // Runtime `require(path)` of a module Perry AOT-compiled but that is
         // only reachable via a computed path. Next's webpack runtime uses both
@@ -1090,12 +1091,6 @@ pub(in crate::commands::compile) fn wrap_commonjs_with_body_offset(
     require.resolve.paths = function paths(specifier) {{
         if (typeof specifier !== 'string') throw __perry_cjs_require_error('type', 'ERR_INVALID_ARG_TYPE', 'The "request" argument must be of type string.');
         return null;
-    }};
-    require.cache = {{}};
-    require.extensions = {{
-        '.js': function(module, filename) {{}},
-        '.json': function(module, filename) {{}},
-        '.node': function(module, filename) {{}},
     }};
     require.cache = __perry_cjs_base_require.cache;
     require.extensions = __perry_cjs_base_require.extensions;
