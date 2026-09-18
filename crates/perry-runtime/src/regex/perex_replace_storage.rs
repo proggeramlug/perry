@@ -524,13 +524,23 @@ impl<'a> Pieces<'a> {
             u32::MAX as usize - crate::gc::GC_HEADER_SIZE - std::mem::size_of::<StringHeader>() - 7,
         );
         let mut measured = Encoder::default();
+        // Poll on units read rather than per piece. `try_fold` stops at
+        // QUANTUM units *or* at the end of a piece, and a replacement's pieces
+        // are usually a handful of units each, so a poll per piece ran the
+        // safepoint's whole trigger ladder thousands of times per QUANTUM of
+        // real work. What a safepoint owes -- at most QUANTUM units of reading
+        // between polls -- is unchanged.
+        let mut measured_polled_at = 0usize;
         self.walk(original, template, budget, |reader, budget| loop {
             let p = reader
                 .try_fold(api::QUANTUM, budget, |u| {
                     measured.push(u, limit, &mut |_| Ok(()))
                 })
                 .map_err(|e| read_error(e, |e| e))?;
-            host::poll()?;
+            if measured.units.saturating_sub(measured_polled_at) >= api::QUANTUM {
+                measured_polled_at = measured.units;
+                host::poll()?;
+            }
             if p == ReadProgress::Complete {
                 return Ok(());
             }
@@ -550,6 +560,8 @@ impl<'a> Pieces<'a> {
         let output = scope.root_string_ptr(output);
         let mut encoded = Encoder::default();
         let mut written = 0usize;
+        // As in the measuring pass above.
+        let mut encoded_polled_at = 0usize;
         self.walk(original, template, budget, |reader, budget| loop {
             let p = output.with_mut_ptr::<StringHeader, _>(|header| {
                 let mut emit = |bytes: &[u8]| {
@@ -582,7 +594,10 @@ impl<'a> Pieces<'a> {
                 }
                 p
             })?;
-            host::poll()?;
+            if encoded.units.saturating_sub(encoded_polled_at) >= api::QUANTUM {
+                encoded_polled_at = encoded.units;
+                host::poll()?;
+            }
             if p == ReadProgress::Complete {
                 return Ok(());
             }
