@@ -1130,6 +1130,49 @@ pub(crate) fn lower(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String> {
                         || crate::type_analysis::expr_produces_canonical_raw_f64(ctx, right));
                 let materialization_hazard =
                     add_operands_have_pod_materialization_hazard(ctx, left, right);
+                // L14 PROBE (`PERRY_L14_ADD=1`, default off, no emitted-code
+                // effect): WHICH operand of this decision fails, for a `+`
+                // that reaches `js_dynamic_string_or_number_add`. The leaf
+                // predicate `expr_produces_canonical_raw_f64` is consulted
+                // only inside `lower_guarded_numeric_add`, i.e. strictly
+                // AFTER this branch, so a `+` that leaves here never reaches
+                // it — which is why three separate fixes to that predicate
+                // changed nothing (#10777).
+                if std::env::var("PERRY_L14_ADD").as_deref() == Ok("1") {
+                    let d = |e: &Expr| -> &'static str {
+                        match e {
+                            Expr::LocalGet(_) => "LocalGet",
+                            Expr::PropertyGet { .. } => "PropertyGet",
+                            Expr::Binary { .. } => "Binary",
+                            Expr::Integer(_) | Expr::Number(_) => "Literal",
+                            _ => "other",
+                        }
+                    };
+                    eprintln!(
+                        "L14ADD left={}(num={} canon={} declonly={}) \
+                         right={}(num={} canon={} declonly={}) \
+                         both_numeric={} bool_add={} mat_hazard={} shared_guard={} \
+                         => {}",
+                        d(left),
+                        crate::type_analysis::is_numeric_expr(ctx, left),
+                        crate::type_analysis::expr_produces_canonical_raw_f64(ctx, left),
+                        numeric_proof_is_declared_only(ctx, left),
+                        d(right),
+                        crate::type_analysis::is_numeric_expr(ctx, right),
+                        crate::type_analysis::expr_produces_canonical_raw_f64(ctx, right),
+                        numeric_proof_is_declared_only(ctx, right),
+                        both_numeric,
+                        boolean_numeric_add,
+                        materialization_hazard,
+                        dynamic_add_tree_benefits_shared_guard(expr),
+                        if !(both_numeric || boolean_numeric_add) || materialization_hazard {
+                            if dynamic_add_tree_benefits_shared_guard(expr) && !materialization_hazard
+                            { "GUARDED" } else { "DYNAMIC_HELPER" }
+                        } else if numeric_proof_is_declared_only(ctx, left)
+                            || numeric_proof_is_declared_only(ctx, right)
+                        { "GUARDED(declared_only)" } else { "INLINE_FADD" }
+                    );
+                }
                 if !(both_numeric || boolean_numeric_add) || materialization_hazard {
                     if dynamic_add_tree_benefits_shared_guard(expr) && !materialization_hazard {
                         return lower_guarded_numeric_add(ctx, expr);
