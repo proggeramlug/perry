@@ -745,6 +745,34 @@ pub(crate) fn expr_produces_canonical_raw_f64(ctx: &FnCtx<'_>, e: &Expr) -> bool
         Expr::PropertyGet {
             object, property, ..
         } => {
+            // L14 DIAGNOSTIC (`PERRY_L14_DIAG=1`, default off, no emitted-code
+            // effect): the coordinator's two-worlds question. Is
+            // `numeric_fields` POPULATED BUT MISSING the field (the conjunct is
+            // right and something upstream failed to record it), or EMPTY /
+            // the fact not reaching this arm at all (a wiring problem)?
+            // Printing it beats another reasoned guess, which is the lesson
+            // this lane has just paid for.
+            if std::env::var("PERRY_L14_DIAG").as_deref() == Ok("1") {
+                match ctx.ptr_shape_receiver_fact(object.as_ref()) {
+                    None => eprintln!(
+                        "L14DIAG prop={property} fact=NONE recv_class={:?}",
+                        receiver_class_name(ctx, object)
+                    ),
+                    Some(f) => {
+                        let mut fields: Vec<&str> =
+                            f.numeric_fields.iter().map(|s| s.as_str()).collect();
+                        fields.sort_unstable();
+                        eprintln!(
+                            "L14DIAG prop={property} fact=SOME class={} numeric_fields={:?} \
+                             contains={} recv_class={:?}",
+                            f.class_name,
+                            fields,
+                            f.numeric_fields.contains(property.as_str()),
+                            receiver_class_name(ctx, object)
+                        );
+                    }
+                }
+            }
             let Some(fact) = ctx.ptr_shape_receiver_fact(object.as_ref()) else {
                 return false;
             };
