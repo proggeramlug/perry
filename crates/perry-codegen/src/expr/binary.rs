@@ -191,6 +191,64 @@ fn lower_guarded_numeric_add(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String>
         .iter()
         .map(|leaf| !crate::type_analysis::expr_produces_canonical_raw_f64(ctx, leaf))
         .collect();
+    // L14 CENSUS (`PERRY_L14_CENSUS=1`, default off, no emitted-code effect):
+    // for every guarded diamond, classify each UNVOUCHED leaf — the thing
+    // that forced the diamond — so the 952 guarded `+` sites on a real
+    // program can be priced against steps 4b / 5 / 5L instead of a fixture.
+    if std::env::var("PERRY_L14_CENSUS").as_deref() == Ok("1")
+        && needs_test.iter().any(|t| *t)
+    {
+        fn variant<T: std::fmt::Debug>(v: &T) -> String {
+            let s = format!("{v:?}");
+            s.split(|c: char| c == ' ' || c == '(' || c == '{')
+                .next()
+                .unwrap_or("?")
+                .to_string()
+        }
+        let classify = |leaf: &Expr| -> String {
+            match leaf {
+                Expr::LocalGet(id) => {
+                    let ty = ctx.local_types.get(id).map(variant).unwrap_or_else(|| "untyped".into());
+                    let why = if ctx.module_globals.contains_key(id) {
+                        "modglobal"
+                    } else if ctx.boxed_vars.contains(id) {
+                        "boxed"
+                    } else if ctx.closure_captures.contains_key(id) {
+                        "captured"
+                    } else if ctx.number_by_construction_locals.contains(id) {
+                        "nbc_but_unvouched"
+                    } else {
+                        "not_nbc"
+                    };
+                    format!("local[{ty}|{why}]")
+                }
+                Expr::PropertyGet { object, .. } => {
+                    let recv = match object.as_ref() {
+                        Expr::This => "this".to_string(),
+                        Expr::LocalGet(id) => {
+                            if ctx.module_globals.contains_key(id) {
+                                "modglobal".to_string()
+                            } else {
+                                let ty = ctx.local_types.get(id).map(variant).unwrap_or_else(|| "untyped".into());
+                                let shaped = ctx.ptr_shape_receiver_fact(object.as_ref()).is_some();
+                                format!("local:{ty}{}", if shaped { "+shape" } else { "" })
+                            }
+                        }
+                        other => variant(other),
+                    };
+                    format!("prop[{recv}]")
+                }
+                other => variant(other),
+            }
+        };
+        let fn_name = ctx.source_function.clone();
+        for (leaf, tested) in leaves.iter().zip(needs_test.iter()) {
+            if *tested {
+                eprintln!("L14CENSUS fn={fn_name} leaves={} class={}", leaves.len(), classify(leaf));
+            }
+        }
+        eprintln!("L14DIAMOND fn={fn_name} leaves={} unvouched={}", leaves.len(), needs_test.iter().filter(|t| **t).count());
+    }
 
     with_operands_rooted(ctx, &leaves, |ctx, values| {
         let mut cond: Option<String> = None;
