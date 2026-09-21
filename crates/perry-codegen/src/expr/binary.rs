@@ -191,6 +191,50 @@ fn lower_guarded_numeric_add(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String>
         .iter()
         .map(|leaf| !crate::type_analysis::expr_produces_canonical_raw_f64(ctx, leaf))
         .collect();
+    // L14 PROBE (`PERRY_L14_LEAF=1`, default off, no emitted-code effect):
+    // THE decision. Which leaf of this `+` tree failed to vouch, and — for a
+    // `LocalGet` — which membership sets it is in. The second half separates
+    // "5L's model is wrong" from "5L's first implementation was seeded from
+    // the wrong set": `canonical_f64_locals` is seeded from
+    // `number_by_construction_locals`, which `hir_facts.rs` computes BEFORE
+    // `collect_shape_proven_ptr_locals`, so if `h`'s proof needs `o.a` to be
+    // numeric-by-construction the seed may simply be empty.
+    if std::env::var("PERRY_L14_LEAF").as_deref() == Ok("1") {
+        let any_tested = needs_test.iter().any(|t| *t);
+        eprintln!(
+            "L14LEAF tree_leaves={} diamond={}",
+            leaves.len(),
+            if any_tested { "YES" } else { "no (all vouched)" }
+        );
+        for (leaf, tested) in leaves.iter().zip(needs_test.iter()) {
+            let kind = match leaf {
+                Expr::LocalGet(_) => "LocalGet",
+                Expr::PropertyGet { property, .. } => {
+                    if property.is_empty() { "PropertyGet" } else { "PropertyGet" }
+                }
+                Expr::Binary { .. } => "Binary",
+                Expr::Integer(_) | Expr::Number(_) => "Literal",
+                _ => "other",
+            };
+            let sets = if let Expr::LocalGet(id) = leaf {
+                format!(
+                    " id={id} nbc={} canonf64={} integer={} i32slot={} boxed={} modglobal={}",
+                    ctx.number_by_construction_locals.contains(id),
+                    ctx.canonical_f64_locals.contains(id),
+                    ctx.integer_locals.contains(id),
+                    ctx.i32_counter_slots.contains_key(id),
+                    ctx.boxed_vars.contains(id),
+                    ctx.module_globals.contains_key(id),
+                )
+            } else {
+                String::new()
+            };
+            eprintln!(
+                "L14LEAF   leaf={kind:<12} vouched={:<5} TESTED={}{}",
+                !*tested, tested, sets
+            );
+        }
+    }
 
     with_operands_rooted(ctx, &leaves, |ctx, values| {
         let mut cond: Option<String> = None;
