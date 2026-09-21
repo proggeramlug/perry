@@ -1240,6 +1240,7 @@ pub(super) fn compile_function(
         int_valued_i64_locals: native_facts.int_valued_i64_locals(),
         not_bigint_locals: native_facts.not_bigint_locals(),
         number_by_construction_locals: native_facts.number_by_construction_locals(),
+        canonical_f64_locals: native_facts.canonical_f64_locals(),
         unsigned_i32_locals: native_facts.unsigned_i32_locals(),
         shadow_slot_map,
         persistent_shadow_slots: std::collections::HashSet::new(),

@@ -100,6 +100,11 @@ pub(crate) struct RepresentationFacts {
     /// The proof is structural, never a declared type (Perry does not enforce
     /// annotations): see `collect_number_by_construction_locals`.
     pub number_by_construction_locals: HashSet<u32>,
+
+    /// L14 (#10898): the subset of the above whose BITS are also proven
+    /// canonical — they cannot alias a NaN-box tag. Empty unless
+    /// `PERRY_CANONICAL_F64_LOCALS=1`. See `collect_canonical_f64_locals`.
+    pub canonical_f64_locals: HashSet<u32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -267,6 +272,10 @@ impl TypeFacts {
 
     pub(crate) fn number_by_construction_locals(&self) -> &HashSet<u32> {
         &self.representation.number_by_construction_locals
+    }
+
+    pub(crate) fn canonical_f64_locals(&self) -> &HashSet<u32> {
+        &self.representation.canonical_f64_locals
     }
 
     pub(crate) fn array_kind(&self, local_id: u32) -> ArrayKindFact {
@@ -615,6 +624,13 @@ pub(crate) fn collect_type_facts(
         &not_bigint_locals,
         module_global_proven_types,
     );
+    // L14 (#10898): the canonical-BITS subset. Separate call, so the stronger
+    // claim can never be mistaken for the weaker one at a use site.
+    let canonical_f64_locals = super::collect_canonical_f64_locals(
+        &number_by_construction_locals,
+        binding_types,
+        module_global_proven_types,
+    );
     let (mut array_facts, effect_facts, materialization_hazards) =
         collect_array_facts(stmts, params, module_globals, binding_types);
     // #7469: at-allocation all-pointer element-layout declaration candidates.
@@ -777,6 +793,7 @@ pub(crate) fn collect_type_facts(
             loop_induction,
             unprofitable_canonical_i32_locals,
             number_by_construction_locals,
+            canonical_f64_locals,
         },
         arrays: array_facts,
         effect: effect_facts,

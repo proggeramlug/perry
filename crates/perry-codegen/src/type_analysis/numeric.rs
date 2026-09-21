@@ -655,6 +655,33 @@ pub(crate) fn expr_produces_canonical_raw_f64(ctx: &FnCtx<'_>, e: &Expr) -> bool
         // `local_get_produces_non_pointer_bits_by_dataflow`: plain slot, not
         // boxed, captured, or a module global (those can be rebound by code
         // the dataflow walk cannot see).
+        // L14 (#10898): the F64 twin of the integer arm below. The integer
+        // arm's storage conditions are shared verbatim — plain slot, not
+        // boxed, not captured, not a module global — because the hazard they
+        // guard (a write the dataflow walk cannot see) is the same one. What
+        // differs is the value argument: the integer arm says "can never be
+        // NaN", which is not available to an f64 accumulator, so this arm
+        // rests on `collect_canonical_f64_locals` proving the BITS canonical
+        // rather than the value integral. That set is empty unless
+        // `PERRY_CANONICAL_F64_LOCALS=1`, so this arm changes no emitted byte
+        // by default.
+        //
+        // This is the whole of the 32-vs-11.5 gap measured in the L14
+        // scoping doc: `let h = 0; h = h + o.a` over a `Ptr<Shape>`-proven
+        // receiver with a `number`-declared field has every ingredient of a
+        // bare `fadd` except a vouched accumulator, so
+        // `lower_guarded_numeric_add` tests the leaf every iteration and its
+        // cold arm keeps the whole tree on
+        // `js_dynamic_string_or_number_add`.
+        Expr::LocalGet(id)
+            if ctx.canonical_f64_locals.contains(id)
+                && (ctx.locals.contains_key(id) || ctx.local_slot_reps.contains_key(id))
+                && !ctx.boxed_vars.contains(id)
+                && !ctx.closure_captures.contains_key(id)
+                && !ctx.module_globals.contains_key(id) =>
+        {
+            true
+        }
         Expr::LocalGet(id) => {
             (ctx.i32_counter_slots.contains_key(id) || ctx.integer_locals.contains(id))
                 && (ctx.locals.contains_key(id) || ctx.local_slot_reps.contains_key(id))

@@ -743,3 +743,88 @@ mod tests {
         assert!(!numeric.contains(&acc));
     }
 }
+
+// ── L14: the CANONICAL-BITS subset (#10898) ────────────────────────────────
+
+/// `PERRY_CANONICAL_F64_LOCALS` gate. **Default OFF** — this is an existence
+/// proof, not a shipped selection. When off the set is empty, so
+/// `expr_produces_canonical_raw_f64`'s arm is a lookup that always misses and
+/// every emitted byte is identical to the pre-change build. Keyed into the
+/// object cache exactly like `PERRY_CANONICAL_I32_LOCALS`, so a warm cache
+/// cannot serve an object built under the other setting.
+pub(crate) fn canonical_f64_locals_enabled() -> bool {
+    use std::sync::OnceLock;
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        matches!(
+            std::env::var("PERRY_CANONICAL_F64_LOCALS").as_deref(),
+            Ok("1") | Ok("on") | Ok("true")
+        )
+    })
+}
+
+/// Float-kind views are the ONE admitted source of arbitrary double bits.
+///
+/// An integer-kind view's elements are integers (never NaN) and an
+/// out-of-bounds read is `undefined`, which the Number proof already rejects.
+/// `Float32Array` / `Float64Array` / `DataView` elements are raw memory and
+/// may hold any bit pattern, including a signalling NaN.
+fn class_name_is_float_view(name: &str) -> bool {
+    matches!(name, "Float32Array" | "Float64Array" | "DataView")
+}
+
+/// Locals that hold a JS Number by construction **and** whose bits are proven
+/// CANONICAL — they cannot alias a NaN-box tag.
+///
+/// ## Why this is not `number_by_construction_locals`
+///
+/// That set proves "the value is a JS Number". `expr_produces_canonical_raw_f64`
+/// needs strictly more: that the *bits* cannot be mistaken for a tag. A Number
+/// may be a NaN, and a NaN whose top 16 bits land in `0x7FF9..=0x7FFF` IS a tag
+/// pattern. #10779 proved such a NaN is reachable rather than theoretical: a
+/// positive **signalling** NaN in `0x7FF1..=0x7FF7` quiets INTO the band under
+/// `* 1` (mantissa bit 51 gets set), and a negative payload NaN lands in the
+/// band under `fneg` / `Math.abs`.
+///
+/// The existing integer arm of that predicate discharges this by a dataflow
+/// argument that does not generalise — *"an integer-provenance local … can
+/// never be NaN"*. An F64 local can be.
+///
+/// ## Why the subset is (almost) the whole set
+///
+/// Every admitted *source* of a Number canonicalises at its own store:
+/// `canonicalize_array_numeric_store_bits` for array elements,
+/// `js_array_numeric_value_to_raw_f64` for raw-f64 class fields
+/// (`expr/property_set.rs`), and arithmetic on canonical doubles is closed —
+/// x86 `addsd`/`mulsd` return the DEFAULT quiet NaN `0x7FF8…` for an invalid
+/// operation and propagate an already-quiet NaN unchanged, and `0x7FF8` sits
+/// one below the tag floor `0x7FF9`. The single exception is a typed-array
+/// VIEW element, which is raw memory.
+///
+/// ## The shape of this slice's approximation, stated plainly
+///
+/// The shipping version of this fact wants a per-local fixpoint over the write
+/// chain. **This slice takes the blunt exclusion instead: if the body can see a
+/// float-kind view at all, the set is empty.** That is strictly weaker than the
+/// fixpoint and obviously sound by inspection, which is the right trade for a
+/// default-off existence proof — a missed local is the pre-existing behaviour.
+pub(crate) fn collect_canonical_f64_locals(
+    number_by_construction: &HashSet<u32>,
+    binding_types: &HashMap<u32, HirType>,
+    module_global_proven_types: &HashMap<u32, HirType>,
+) -> HashSet<u32> {
+    if !canonical_f64_locals_enabled() || number_by_construction.is_empty() {
+        return HashSet::new();
+    }
+    let names_a_float_view = |ty: &HirType| match ty {
+        HirType::Named(name) => class_name_is_float_view(name),
+        HirType::Generic { base, .. } => class_name_is_float_view(base),
+        _ => false,
+    };
+    let float_view_in_scope = binding_types.values().any(names_a_float_view)
+        || module_global_proven_types.values().any(names_a_float_view);
+    if float_view_in_scope {
+        return HashSet::new();
+    }
+    number_by_construction.clone()
+}

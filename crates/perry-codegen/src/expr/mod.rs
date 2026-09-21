@@ -913,6 +913,13 @@ pub(crate) struct FnCtx<'a> {
     /// `collectors::collect_number_by_construction_locals`.
     pub number_by_construction_locals: &'a std::collections::HashSet<u32>,
 
+    /// L14 (#10898): the subset of the above whose BITS are proven canonical
+    /// (cannot alias a NaN-box tag). Strictly stronger than "is a Number" —
+    /// see `collectors::collect_canonical_f64_locals` for why the two differ
+    /// and what #10779 proved about signalling NaNs. Empty unless
+    /// `PERRY_CANONICAL_F64_LOCALS=1`.
+    pub canonical_f64_locals: &'a std::collections::HashSet<u32>,
+
     /// Gen-GC Phase A sub-phase 3a: pointer-typed local → shadow-
     /// frame slot index. Empty when `PERRY_SHADOW_STACK` is off.
     /// Sub-phase 3b uses this map at `Stmt::Let` / `LocalSet`

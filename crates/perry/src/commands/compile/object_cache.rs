@@ -1395,6 +1395,19 @@ fn compute_object_cache_key_with_env(
             .unwrap_or(""),
     );
 
+    // L14 (#10898) — canonical-f64 locals, DEFAULT OFF. `=1` vouches a
+    // proven-canonical f64 accumulator to `expr_produces_canonical_raw_f64`,
+    // which removes its per-iteration leaf test from
+    // `lower_guarded_numeric_add` and lets the whole `+` tree take the
+    // `fadd` arm. Different IR, different .o bytes — and the A/B is only
+    // honest if a warm cache cannot serve the other arm's object.
+    h.field(
+        "env_canonical_f64_locals",
+        env_var("PERRY_CANONICAL_F64_LOCALS")
+            .as_deref()
+            .unwrap_or(""),
+    );
+
     h.finish()
 }
 
