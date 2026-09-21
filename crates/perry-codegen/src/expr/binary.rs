@@ -250,6 +250,49 @@ fn lower_guarded_numeric_add(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String>
         eprintln!("L14DIAMOND fn={fn_name} leaves={} unvouched={}", leaves.len(), needs_test.iter().filter(|t| **t).count());
     }
 
+    // L14 DYNAMIC CENSUS (`PERRY_L14_DYNCENSUS=1` at compile time, AND the
+    // existing typed-feedback emission switch `PERRY_TYPED_FEEDBACK=1`; run the
+    // binary with `PERRY_TYPED_FEEDBACK_TRACE=<file>`). Reuses the shipped
+    // typed-feedback site registry: `record_guard_pass` in the fast (all-number)
+    // arm, `record_guard_fail` in the cold arm. A site must be REGISTERED or the
+    // runtime silently drops its records, so registration is not optional.
+    // Loop depth counts only entries with a non-empty continue label: loops push
+    // their continue target, `switch` pushes `String::new()`.
+    let l14_dyn: Option<(String, String, usize)> = if std::env::var("PERRY_L14_DYNCENSUS").as_deref()
+        == Ok("1")
+        && crate::expr::typed_feedback_emission_enabled()
+        && needs_test.iter().any(|t| *t)
+    {
+        let kinds: Vec<&'static str> = leaves
+            .iter()
+            .zip(needs_test.iter())
+            .filter(|(_, t)| **t)
+            .map(|(leaf, _)| match leaf {
+                Expr::PropertyGet { .. } => "prop",
+                Expr::LocalGet(_) => "local",
+                Expr::Call { .. } => "call",
+                _ => "other",
+            })
+            .collect();
+        let bucket = if kinds.iter().all(|k| *k == "prop") {
+            "A"
+        } else if kinds.iter().any(|k| *k == "local")
+            && kinds.iter().all(|k| *k == "prop" || *k == "local")
+        {
+            "B"
+        } else {
+            "C"
+        };
+        let depth = ctx
+            .loop_targets
+            .iter()
+            .filter(|(cont, _, _)| !cont.is_empty())
+            .count();
+        Some((bucket.to_string(), kinds.join(","), depth))
+    } else {
+        None
+    };
+
     with_operands_rooted(ctx, &leaves, |ctx, values| {
         let mut cond: Option<String> = None;
         for (value, is_tested) in values.iter().zip(needs_test.iter()) {
@@ -276,6 +319,22 @@ fn lower_guarded_numeric_add(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String>
             return Ok(rebuild_add_tree(ctx, expr, values, &mut 0, true));
         };
 
+        let l14_site: Option<String> = l14_dyn.as_ref().map(|(bucket, kinds, depth)| {
+            let site = crate::expr::emit_typed_feedback_register_site(
+                ctx,
+                crate::expr::TypedFeedbackKind::HelperReturn,
+                "l14_add_diamond",
+                crate::expr::TypedFeedbackContract::new(
+                    "l14_both_number",
+                    "js_dynamic_string_or_number_add",
+                ),
+            );
+            eprintln!(
+                "L14DYN site={site} fn={} depth={depth} bucket={bucket} unvouched={kinds}",
+                ctx.source_function
+            );
+            site
+        });
         let fast_idx = ctx.new_block("guarded_add.numeric");
         let slow_idx = ctx.new_block("guarded_add.dynamic");
         let merge_idx = ctx.new_block("guarded_add.merge");
@@ -285,11 +344,25 @@ fn lower_guarded_numeric_add(ctx: &mut FnCtx<'_>, expr: &Expr) -> Result<String>
         ctx.block().cond_br(&all_num, &fast_label, &slow_label);
 
         ctx.current_block = fast_idx;
+        if let Some(site) = &l14_site {
+            crate::expr::emit_typed_feedback_record_call(
+                ctx.block(),
+                "js_typed_feedback_record_guard_pass",
+                &[(I64, site)],
+            );
+        }
         let fast_val = rebuild_add_tree(ctx, expr, values, &mut 0, true);
         let fast_end = ctx.block().label.clone();
         ctx.block().br(&merge_label);
 
         ctx.current_block = slow_idx;
+        if let Some(site) = &l14_site {
+            crate::expr::emit_typed_feedback_record_call(
+                ctx.block(),
+                "js_typed_feedback_record_guard_fail",
+                &[(I64, site)],
+            );
+        }
         crate::expr::emit_versioned_loop_callback_deopt(ctx);
         let slow_val = rebuild_add_tree(ctx, expr, values, &mut 0, false);
         let slow_end = ctx.block().label.clone();
