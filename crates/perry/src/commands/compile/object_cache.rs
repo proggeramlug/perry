@@ -1401,6 +1401,15 @@ fn compute_object_cache_key_with_env(
     // `lower_guarded_numeric_add` and lets the whole `+` tree take the
     // `fadd` arm. Different IR, different .o bytes — and the A/B is only
     // honest if a warm cache cannot serve the other arm's object.
+    // L14 (#10777) — the numeric-provenance fact ordering. `=1` lets the
+    // function-scope `number_by_construction` fixpoint see the `Ptr<Shape>`
+    // receiver proofs that are computed before it, which flips
+    // `both_numeric` and with it the `+` lowering. Different IR, different
+    // .o bytes.
+    h.field(
+        "env_l14_nbc_order",
+        env_var("PERRY_L14_NBC_ORDER").as_deref().unwrap_or(""),
+    );
     h.field(
         "env_canonical_f64_locals",
         env_var("PERRY_CANONICAL_F64_LOCALS")

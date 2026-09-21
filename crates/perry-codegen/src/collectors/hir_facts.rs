@@ -610,27 +610,6 @@ pub(crate) fn collect_type_facts(
     // is a consequence of the range proof, not an additional assumption.
     integer_locals.extend(loop_bounded_i32_locals.iter().copied());
     let not_bigint_locals = not_bigint.into_locals();
-    // #8105: locals that hold a JS Number by construction. Computed here, not
-    // inside the `Ptr<Shape>` pass, so the fact does not vanish under
-    // `PERRY_PTR_SHAPE_LOCALS=0` — `is_numeric_expr` is not a repsel consumer.
-    let number_by_construction_locals = super::collect_number_by_construction_locals(
-        stmts,
-        params,
-        boxed_vars,
-        module_globals,
-        binding_types,
-        spec_ta_lens,
-        spec_numeric_params,
-        &not_bigint_locals,
-        module_global_proven_types,
-    );
-    // L14 (#10898): the canonical-BITS subset. Separate call, so the stronger
-    // claim can never be mistaken for the weaker one at a use site.
-    let canonical_f64_locals = super::collect_canonical_f64_locals(
-        &number_by_construction_locals,
-        binding_types,
-        module_global_proven_types,
-    );
     let (mut array_facts, effect_facts, materialization_hazards) =
         collect_array_facts(stmts, params, module_globals, binding_types);
     // #7469: at-allocation all-pointer element-layout declaration candidates.
@@ -752,6 +731,46 @@ pub(crate) fn collect_type_facts(
             spec_numeric_params,
         );
     array_facts.exact_numeric_element_fields = exact_numeric_element_fields;
+
+    // #8105 / L14 (#10777): locals that hold a JS Number by construction.
+    //
+    // MOVED here from before `collect_shape_proven_ptr_locals` (it used to sit
+    // beside `not_bigint_locals`). The old position asked
+    // "is `h` Number-producing?" for `h = h + o.a` BEFORE `o`'s receiver proof
+    // existed, so `expr_numeric_by_construction`'s `PropertyGet` arm — gated on
+    // a tracked member — could never fire and the accumulator was never
+    // admitted, however completely `o`'s shape was proven. The probe that found
+    // this reported `left=LocalGet(num=false) right=PropertyGet(num=true)`, i.e.
+    // the slot was proven and the local was not.
+    //
+    // The move is a pure reordering: nothing between the two positions consumes
+    // this fact, and the computation has no side effects. The comment it
+    // replaces claimed the early position kept the fact alive under
+    // `PERRY_PTR_SHAPE_LOCALS=0`; that still holds, because an empty
+    // `shape_proven_ptr_locals` yields empty inputs below and the fixpoint then
+    // computes exactly what it computed before.
+    let (nbc_shape_members, nbc_shape_numeric_fields) =
+        super::number_by_construction::shape_numeric_inputs(&shape_proven_ptr_locals);
+    let number_by_construction_locals = super::collect_number_by_construction_locals(
+        stmts,
+        params,
+        boxed_vars,
+        module_globals,
+        binding_types,
+        spec_ta_lens,
+        spec_numeric_params,
+        &not_bigint_locals,
+        module_global_proven_types,
+        &nbc_shape_members,
+        &nbc_shape_numeric_fields,
+    );
+    // L14 (#10898): the canonical-BITS subset. Separate call, so the stronger
+    // claim can never be mistaken for the weaker one at a use site.
+    let canonical_f64_locals = super::collect_canonical_f64_locals(
+        &number_by_construction_locals,
+        binding_types,
+        module_global_proven_types,
+    );
     let guarded_argument_route_locals = if module_dispatch.has_argument_shape_routes() {
         super::ptr_shape::collect_guarded_argument_route_locals(
             stmts,
