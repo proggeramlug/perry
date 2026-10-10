@@ -896,3 +896,62 @@ fn mutable_key_lists_cannot_publish_symbol_absence() {
         );
     }
 }
+
+/// Plain births combine presence and kind in one masked compare; neither
+/// absent Ordinary-zero nor a different kind of the same width may pass.
+#[test]
+fn plain_birth_validation_checks_presence_kind_and_width() {
+    let empty = ShapeRecord::EMPTY;
+    assert!(
+        !empty.admits_plain_birth(0),
+        "an absent zero-slot record is not a birth"
+    );
+    for kind in [
+        ShapeObjectKind::Ordinary,
+        ShapeObjectKind::Class,
+        ShapeObjectKind::Dictionary,
+        ShapeObjectKind::Function,
+        ShapeObjectKind::FunctionDictionary,
+        ShapeObjectKind::OrdinaryUnmarked,
+        ShapeObjectKind::OrdinaryNumericProof,
+        ShapeObjectKind::NativeNamespace,
+        ShapeObjectKind::FunctionBoundCall,
+        ShapeObjectKind::FunctionBoundApply,
+        ShapeObjectKind::FunctionBound,
+        ShapeObjectKind::OrdinaryNativeAlias,
+    ] {
+        let mut record = ShapeRecord::new(0, 0, 2, 0, kind, 0);
+        assert_eq!(
+            record.admits_plain_birth(2),
+            kind == ShapeObjectKind::Ordinary
+        );
+        assert!(
+            !record.admits_plain_birth(1),
+            "a different live width must miss"
+        );
+        // Carrier and summary changes must not invalidate immutable birth facts.
+        record.set(RECORD_FLAG_EXTERNAL_CARRIER, true);
+        record.set(RECORD_FLAG_CARRIED_SEEN, true);
+        assert_eq!(
+            record.admits_plain_birth(2),
+            kind == ShapeObjectKind::Ordinary
+        );
+    }
+}
+
+#[test]
+fn plain_birth_validation_rejects_ids_outside_the_ordinary_directory() {
+    for id in [
+        0,
+        SHAPE_ID_BASE - 1,
+        DICTIONARY_SHAPE_ID_BASE,
+        EXOTIC_SHAPE_ID_BASE,
+        super::super::SHAPE_ID_END,
+        u32::MAX,
+    ] {
+        assert!(
+            super::super::plain_birth_rep_by_id(id, 0).is_none(),
+            "id {id:#x}"
+        );
+    }
+}

@@ -143,6 +143,15 @@ fn arena_alloc_no_collect(size: usize, align: usize) -> *mut u8 {
     if !raw.is_null() {
         return raw;
     }
+    arena_alloc_no_collect_slow(size, align)
+}
+
+// Keep block synchronization and the non-inline current-block attempt out
+// of every no-collection caller's hot nursery bump. This retains the same
+// allocation contract, accounting and sampling behavior on a refusal.
+#[cold]
+#[inline(never)]
+fn arena_alloc_no_collect_slow(size: usize, align: usize) -> *mut u8 {
     unsafe {
         let inline_ptr = crate::arena::hot_inline_state();
         let arena_ptr = crate::arena::hot_arena();

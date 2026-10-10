@@ -1010,7 +1010,10 @@ impl ShapeObjectKind {
     pub(crate) fn is_function_layout(self) -> bool {
         matches!(
             self,
-            Self::Function | Self::FunctionBoundCall | Self::FunctionBoundApply | Self::FunctionBound
+            Self::Function
+                | Self::FunctionBoundCall
+                | Self::FunctionBoundApply
+                | Self::FunctionBound
         )
     }
 
@@ -2565,6 +2568,21 @@ pub(crate) fn shape_descriptor_by_id(shape_id: u32) -> Option<ShapeDescriptor> {
 pub(crate) fn shape_record_by_id(shape_id: u32) -> Option<ShapeRecordRef> {
     let record = ShapeSlab::agent_record_present(shape_id)?;
     std::ptr::NonNull::new(record).map(ShapeRecordRef)
+}
+
+/// Validate a plain birth in the authoritative ordinary-band record.
+/// Dictionary/exotic ids cannot carry an ordinary birth layout; the existing
+/// ordinary-directory probe rejects them with its page bound, avoiding the
+/// general lookup's band selection. No prototype word or pointer is memoized.
+#[inline(always)]
+pub(crate) fn plain_birth_rep_by_id(shape_id: u32, field_count: u32) -> Option<u64> {
+    // SAFETY: the directory is this agent's live published ordinary band.
+    let record =
+        unsafe { ShapeSlab::ordinary_record_in(ShapeSlab::ordinary_dir_addr(), shape_id) }?;
+    record.admits_plain_birth(field_count).then(|| {
+        // SAFETY: a present record, read before any collection point.
+        unsafe { ShapeRecordRef(std::ptr::NonNull::from(record)).rep() }
+    })
 }
 
 /// Whether a previously published ShapeId no longer names a live record in

@@ -104,6 +104,9 @@ pub(super) const RECORD_FLAG_BIRTH_OWNER: u8 = 1 << 5;
 pub(super) const RECORD_FLAG_CARRIED_SEEN: u8 = 1 << 6;
 pub(super) const RECORD_FLAG_EXTERNAL_CARRIER: u8 = 1 << 7;
 
+#[path = "shapes_store/kind.rs"]
+mod kind;
+
 /// The table-owned record of one ShapeId. `keys` is first and 8-aligned: it
 /// is the word the collector marks through and rewrites in place.
 #[repr(C)]
@@ -358,25 +361,6 @@ impl ShapeRecord {
         self.flags_and_kind = (self.flags_and_kind & !RECORD_BIRTHS_MASK) | bits;
     }
 
-    #[inline]
-    pub(super) fn object_kind(&self) -> ShapeObjectKind {
-        let code = (self.flags_and_kind & RECORD_KIND_MASK) >> RECORD_KIND_SHIFT;
-        match code {
-            0 => ShapeObjectKind::Ordinary,
-            1 => ShapeObjectKind::Class,
-            2 => ShapeObjectKind::Dictionary,
-            3 => ShapeObjectKind::Function,
-            4 => ShapeObjectKind::FunctionDictionary,
-            5 => ShapeObjectKind::OrdinaryUnmarked,
-            6 => ShapeObjectKind::OrdinaryNumericProof,
-            7 => ShapeObjectKind::NativeNamespace,
-            8 => ShapeObjectKind::FunctionBoundCall,
-            9 => ShapeObjectKind::FunctionBoundApply,
-            10 => ShapeObjectKind::FunctionBound,
-            _ => ShapeObjectKind::OrdinaryNativeAlias,
-        }
-    }
-
     /// A fresh, facts-indexed record with every liveness bit clear.
     pub(super) fn new(
         keys: u64,
@@ -391,7 +375,10 @@ impl ShapeRecord {
         // that reported the wrong one would be a wrong identity match,
         // because `facts_match` compares the full enum.
         let kind_code = object_kind.code() as u32;
-        debug_assert!(kind_code <= RECORD_KIND_MAX_CODE, "kind has no packed decoder");
+        debug_assert!(
+            kind_code <= RECORD_KIND_MAX_CODE,
+            "kind has no packed decoder"
+        );
         let kind_bits = kind_code << RECORD_KIND_SHIFT;
         debug_assert!(kind_bits & !RECORD_KIND_MASK == 0, "kind does not fit");
         let mut record = ShapeRecord {

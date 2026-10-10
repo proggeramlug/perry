@@ -220,7 +220,7 @@ fn object_alloc_with_parent_impl<const PREMARK_PLAIN: bool, const BORN_NULL: boo
             // GC_STORE_AUDIT(INIT): freshly allocated object field slot is initialized pointer-free.
             ptr::write(fields_ptr.add(i), JSValue::undefined());
         }
-        crate::gc::layout_init_pointer_free(ptr as *mut u8);
+        // GC_TYPE_OBJECT layout is carried by its shape, not header layout bits.
         if PREMARK_PLAIN {
             crate::object::shapes::store_kind::premark_plain_ordinary(ptr);
         }
@@ -298,16 +298,8 @@ pub(crate) fn object_alloc_plain_born(
     field_count: u32,
     shape_id: u32,
 ) -> (*mut ObjectHeader, Option<u64>) {
-    // The record in place: its facts, no lifted descriptor copy.
-    let fits = || {
-        crate::object::shapes::shape_record_by_id(shape_id)
-            .filter(|shape| {
-                shape.object_kind() == crate::object::shapes::ShapeObjectKind::Ordinary
-                    && shape.live_inline_slot_count() == field_count
-            })
-            .map(|shape| shape.rep())
-    };
-    if let Some(rep) = fits() {
+    // Presence, ordinary kind and width are read from the same record.
+    if let Some(rep) = shapes::plain_birth_rep_by_id(shape_id, field_count) {
         let alloc_width = (field_count as usize).max(crate::object::INLINE_SLOT_FLOOR);
         let size = std::mem::size_of::<ObjectHeader>() + alloc_width * 8;
         let fast = crate::arena::arena_alloc_gc_no_collect(size, 8, crate::gc::GC_TYPE_OBJECT)
@@ -321,7 +313,7 @@ pub(crate) fn object_alloc_plain_born(
             return (fast, Some(rep));
         }
     }
-    object_alloc_plain_born_slow(field_count, shape_id, fits)
+    object_alloc_plain_born_slow(field_count, shape_id)
 }
 
 /// [`object_alloc_plain_born`] through the collecting allocator.
@@ -331,12 +323,11 @@ pub(crate) fn object_alloc_plain_born(
 fn object_alloc_plain_born_slow(
     field_count: u32,
     shape_id: u32,
-    fits: impl Fn() -> Option<u64>,
 ) -> (*mut ObjectHeader, Option<u64>) {
     let object = object_alloc_unpublished(0, field_count);
     unsafe {
         crate::object::shapes::store_kind::premark_plain_ordinary(object);
-        let rep = fits();
+        let rep = shapes::plain_birth_rep_by_id(shape_id, field_count);
         if rep.is_some() {
             if crate::arena::pointer_in_nursery(object as usize) {
                 // GC_STORE_AUDIT(POINTER_FREE): fresh nursery receiver's scalar ShapeId.
@@ -371,7 +362,7 @@ fn object_alloc_born_impl(
             // GC_STORE_AUDIT(INIT): freshly allocated object field slot is initialized pointer-free.
             ptr::write(fields_ptr.add(i), JSValue::undefined());
         }
-        crate::gc::layout_init_pointer_free(ptr as *mut u8);
+        // GC_TYPE_OBJECT layout is carried by its shape, not header layout bits.
         if premark_plain {
             crate::object::shapes::store_kind::premark_plain_ordinary(ptr);
         }
@@ -494,7 +485,7 @@ pub extern "C" fn js_object_alloc_fast(class_id: u32, field_count: u32) -> *mut 
         (*ptr).parent_class_id = 0;
         // GC_STORE_AUDIT(INIT): fresh object starts with no per-object meta record (#6759 B).
         (*ptr).meta = ptr::null_mut();
-        crate::gc::layout_init_pointer_free(ptr as *mut u8);
+        // GC_TYPE_OBJECT layout is carried by its shape, not header layout bits.
         // #8113: the birth live-slot bound is published here and nowhere else.
         crate::object::shapes::birth_publish_object_shape(ptr, field_count);
     }
@@ -526,7 +517,7 @@ pub extern "C" fn js_object_alloc_fast_with_parent(
         (*ptr).parent_class_id = parent_class_id;
         // GC_STORE_AUDIT(INIT): fresh object starts with no per-object meta record (#6759 B).
         (*ptr).meta = ptr::null_mut();
-        crate::gc::layout_init_pointer_free(ptr as *mut u8);
+        // GC_TYPE_OBJECT layout is carried by its shape, not header layout bits.
         // #8113: the birth live-slot bound is published here and nowhere else.
         crate::object::shapes::birth_publish_object_shape(ptr, field_count);
     }
