@@ -398,9 +398,12 @@ fn test_string_method_replace_roots_receiver_across_pattern_materialization_gc()
     let rooted_receiver = receiver_root.get_raw_const_ptr::<crate::StringHeader>();
     unsafe {
         assert_string_bytes(rooted_receiver, b"a-a");
-        let result_value = crate::value::JSValue::from_bits(result_root.get_nanbox_u64());
-        assert!(result_value.is_string(), "replace should return a string");
-        assert_string_bytes(result_value.as_string_ptr(), b"a:a");
+        // A result of at most five ASCII units is an immediate string.
+        let mut scratch = [0u8; crate::value::SHORT_STRING_MAX_LEN];
+        let (data, len) =
+            crate::string::str_bytes_from_jsvalue(result_root.get_nanbox_f64(), &mut scratch)
+                .expect("replace should return a string");
+        assert_eq!(std::slice::from_raw_parts(data, len as usize), b"a:a");
     }
 }
 

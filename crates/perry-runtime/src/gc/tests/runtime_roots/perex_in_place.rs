@@ -43,8 +43,8 @@ fn refcount(input: &RuntimeHandle<'_>) -> u32 {
     input.with_const_ptr::<StringHeader, _>(|s| unsafe { (*s).refcount })
 }
 
-/// Run one builtin exec, reporting every capture span, with `poll` as the
-/// search's safepoint.
+/// Run one builtin search in place (RegExpBuiltinExec on raw addresses),
+/// reporting every capture span, with `poll` as the search's safepoint.
 fn spans(
     receiver: &RuntimeHandle<'_>,
     input: &RuntimeHandle<'_>,
@@ -52,17 +52,29 @@ fn spans(
 ) -> Option<Vec<u32>> {
     let memory = MemoryBudget::new(api::SCRATCH_BYTES);
     let mut budget = Budget::new(api::WORK);
-    let mut spans = Vec::new();
-    let found = api::finish(api::execute_rooted(
-        receiver,
-        input,
-        ExecOutput::Spans(&mut spans),
+    let mut captures = None;
+    let found = api::finish(api::search_builtin(
+        api::regexp(receiver),
+        crate::regex::regexp_data_ptr(api::regexp(receiver)),
+        input.with_const_ptr::<StringHeader, _>(|s| s),
+        crate::regex::get_last_index(api::regexp(receiver)),
+        crate::regex::perex_runtime::CaptureMode::All,
         &mut budget,
         &memory,
+        &mut captures,
         poll,
-        None,
     ));
-    found.map(|_| spans)
+    found.map(|_| {
+        captures
+            .as_ref()
+            .expect("a match under All carries its captures")
+            .iter()
+            .flat_map(|capture| match capture {
+                Some(span) => [span.start() as u32, span.end() as u32],
+                None => [u32::MAX, u32::MAX],
+            })
+            .collect()
+    })
 }
 
 #[test]
