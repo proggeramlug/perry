@@ -346,6 +346,48 @@ impl<'b, 's> Reuse<'b, 's> {
             .flatten()
     }
 
+    /// How many capture groups (group zero included) the reused program has.
+    pub(crate) fn capture_count(&self) -> Option<usize> {
+        let reused = self.program.as_ref()?;
+        reused
+            .bound
+            .with_view(|program| program.capture_count())
+            .ok()
+    }
+
+    /// One search of the reused program over the reused subject from `start`,
+    /// seeking from where the previous one stood. Only RegExpBuiltinExec's
+    /// search: it neither reads nor writes `lastIndex`, whose steps belong to
+    /// a caller that has proven them unobservable. The bindings reacquire
+    /// their storage, so a collection between searches does not matter.
+    pub(crate) fn find<'mem>(
+        &self,
+        start: usize,
+        mode: CaptureMode,
+        budget: &mut Budget,
+        memory: &'mem MemoryBudget,
+        captures: &mut Option<host::Captures<'mem>>,
+    ) -> Result<Option<Span>, EngineError> {
+        let reused = self.program.as_ref().ok_or(EngineError::InvalidSpan)?;
+        let (full, position) = host::find_near_into(
+            &reused.bound,
+            self.subject,
+            start,
+            self.near.get(),
+            true,
+            mode,
+            budget,
+            memory,
+            QUANTUM,
+            captures,
+            &mut host::poll,
+        )?;
+        if position.is_some() {
+            self.near.set(position);
+        }
+        Ok(full)
+    }
+
     fn program_for(&self, current: *const RegExpHeader) -> Option<&BoundProgram<GcProgram<'s>>> {
         let reused = self.program.as_ref()?;
         let bound = reused.receiver.with_const_ptr::<RegExpHeader, _>(|p| p);
@@ -479,22 +521,18 @@ pub(crate) fn execute_with_resources(
 }
 
 /// What a builtin search produces when it matches.
-pub(crate) enum ExecOutput<'v> {
+pub(crate) enum ExecOutput {
     /// Only the full match (`test`).
     Test,
     /// The exec result array and its groups object.
     Object,
-    /// Every capture span, group zero first, appended to the vector as
-    /// UTF-16 `start, end` pairs, with `u32::MAX, u32::MAX` for an unset
-    /// group. No JS object is created (#10165).
-    Spans(&'v mut Vec<u32>),
 }
 
 /// [`execute_with_resources`] with an explicit output.
 pub(crate) fn execute_output(
     receiver: *mut RegExpHeader,
     input: *const StringHeader,
-    output: ExecOutput<'_>,
+    output: ExecOutput,
     budget: &mut Budget,
     memory: &MemoryBudget,
     poll: &mut impl FnMut() -> Result<(), EngineError>,
@@ -527,7 +565,7 @@ pub(crate) fn regexp(receiver: &RuntimeHandle<'_>) -> *mut RegExpHeader {
 pub(crate) fn execute_rooted(
     receiver: &RuntimeHandle<'_>,
     input: &RuntimeHandle<'_>,
-    output: ExecOutput<'_>,
+    output: ExecOutput,
     budget: &mut Budget,
     memory: &MemoryBudget,
     poll: &mut impl FnMut() -> Result<(), EngineError>,
@@ -637,24 +675,6 @@ pub(crate) fn execute_rooted(
                     poll,
                 )
             })??
-        }
-        ExecOutput::Spans(spans) => {
-            let captures = captures.as_ref().ok_or(EngineError::InvalidSpan)?;
-            spans
-                .try_reserve(captures.len() * 2)
-                .map_err(|_| StorageError::Allocation)?;
-            for capture in captures.iter() {
-                let (start, end) = match capture {
-                    Some(span) => (
-                        u32::try_from(span.start()).map_err(|_| StorageError::Limit)?,
-                        u32::try_from(span.end()).map_err(|_| StorageError::Limit)?,
-                    ),
-                    None => (u32::MAX, u32::MAX),
-                };
-                spans.push(start);
-                spans.push(end);
-            }
-            (std::ptr::null_mut(), std::ptr::null_mut())
         }
         ExecOutput::Test => (std::ptr::null_mut(), std::ptr::null_mut()),
     };

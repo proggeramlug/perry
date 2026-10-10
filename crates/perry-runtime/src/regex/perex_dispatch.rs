@@ -188,6 +188,15 @@ fn execute_override(
 }
 
 pub(crate) fn to_string(value: &RuntimeHandle<'_>) -> Result<*mut StringHeader, EngineError> {
+    // A string is its own ToString: no conversion runs, so no trap is armed.
+    // An immediate is copied to the heap, which allocates but never throws.
+    let v = crate::value::JSValue::from_bits(value.get_nanbox_u64());
+    if v.is_string() || v.is_short_string() {
+        let string = crate::value::js_get_string_pointer_unified(value.get_nanbox_f64())
+            as *mut StringHeader;
+        crate::string::js_string_addref(string);
+        return Ok(string);
+    }
     let scope = RuntimeHandleScope::new();
     let primitive = if crate::proxy::reflect_value_is_object(value.get_nanbox_f64()) {
         scope.root_nanbox_f64(to_primitive(value, true)?)
