@@ -306,12 +306,8 @@ impl Parts for Literal {
 /// the builtin, and for replaceAll also its `@@match` (IsRegExp), so every Get
 /// String.prototype.replace/replaceAll makes of it is unobservable. The flag
 /// accessors are part of the proof, so `global` is read from the header.
-fn builtin_replace(all: bool, search: f64) -> Option<bool> {
-    use crate::object::regex_read_sites::{method, Method};
-    if !method(search, Method::Replace)
-        || (all
-            && (!method(search, Method::Match) || !crate::object::regex_read_sites::flags(search)))
-    {
+fn builtin_replace(_all: bool, search: f64) -> Option<bool> {
+    if !crate::object::regex_read_sites::builtin_behavior(search) {
         return None;
     }
     let re = crate::value::js_nanbox_get_pointer(search) as *const super::RegExpHeader;

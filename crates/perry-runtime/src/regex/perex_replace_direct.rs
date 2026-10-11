@@ -78,7 +78,7 @@ pub(super) fn admissible(receiver: &RuntimeHandle<'_>, reuse: &Reuse<'_, '_>) ->
     }
     let value = receiver.get_nanbox_f64();
     let re = crate::value::js_nanbox_get_pointer(value) as *const RegExpHeader;
-    crate::object::regex_read_sites::exec_is_builtin(value)
+    crate::object::regex_read_sites::builtin_behavior(value)
         && reuse.name_count(re) == Some(0)
         && JSValue::from_bits(crate::regex::get_last_index(re).to_bits()).is_number()
 }

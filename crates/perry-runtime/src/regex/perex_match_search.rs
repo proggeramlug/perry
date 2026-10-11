@@ -302,12 +302,7 @@ pub(crate) fn string(
             "String method called on null or undefined",
         ));
     }
-    if matches!(operation, Operation::Match)
-        && crate::object::regex_read_sites::method(
-            pattern,
-            crate::object::regex_read_sites::Method::Match,
-        )
-    {
+    if crate::object::regex_read_sites::builtin_behavior(pattern) {
         // `Get(pattern, @@match)` would reach the builtin without running
         // code; through the generic property path it was ~8% of a short
         // `match` (#10518). Call what it would have returned.
